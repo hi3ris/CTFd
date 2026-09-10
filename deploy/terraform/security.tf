@@ -95,15 +95,6 @@ resource "aws_vpc_security_group_ingress_rule" "arena_ssh_from_front" {
   ip_protocol                  = "tcp"
 }
 
-resource "aws_vpc_security_group_ingress_rule" "arena_ollama_from_front" {
-  security_group_id            = aws_security_group.arena.id
-  description                  = "Ollama : challenges IA appeles par le plugin CTFd"
-  referenced_security_group_id = aws_security_group.front.id
-  from_port                    = 11434
-  to_port                      = 11434
-  ip_protocol                  = "tcp"
-}
-
 resource "aws_vpc_security_group_egress_rule" "arena_all" {
   security_group_id = aws_security_group.arena.id
   description       = "Sortie libre (pull des images, frpc vers le front)"
@@ -120,4 +111,43 @@ resource "aws_vpc_security_group_ingress_rule" "front_frp_bind" {
   from_port                    = 7000
   to_port                      = 7000
   ip_protocol                  = "tcp"
+}
+
+# ---------------------------------------------------------------------------
+
+resource "aws_security_group" "ai" {
+  name        = "${var.project_name}-ai"
+  description = "Ollama sur GPU. Aucune entree publique : seul le front l'interroge."
+  vpc_id      = aws_vpc.main.id
+
+  tags = { Name = "${var.project_name}-ai" }
+}
+
+resource "aws_vpc_security_group_ingress_rule" "ai_ssh_admin" {
+  for_each = toset(var.admin_cidrs)
+
+  security_group_id = aws_security_group.ai.id
+  description       = "SSH admin"
+  cidr_ipv4         = each.value
+  from_port         = 22
+  to_port           = 22
+  ip_protocol       = "tcp"
+}
+
+# Le modele n'est jamais joignable depuis Internet : un joueur qui atteindrait
+# directement Ollama contournerait les garde-fous et le rate-limit du plugin.
+resource "aws_vpc_security_group_ingress_rule" "ai_ollama_from_front" {
+  security_group_id            = aws_security_group.ai.id
+  description                  = "API Ollama, depuis le front uniquement"
+  referenced_security_group_id = aws_security_group.front.id
+  from_port                    = 11434
+  to_port                      = 11434
+  ip_protocol                  = "tcp"
+}
+
+resource "aws_vpc_security_group_egress_rule" "ai_all" {
+  security_group_id = aws_security_group.ai.id
+  description       = "Sortie libre (pilotes NVIDIA, poids du modele)"
+  cidr_ipv4         = "0.0.0.0/0"
+  ip_protocol       = "-1"
 }

@@ -20,19 +20,22 @@ resource "aws_key_pair" "admin" {
 }
 
 resource "aws_instance" "front" {
+  count = local.front_enabled ? 1 : 0
+
   ami                    = data.aws_ami.ubuntu_arm64.id
-  instance_type          = var.front_instance_type
+  instance_type          = local.current.front
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.front.id]
   key_name               = aws_key_pair.admin.key_name
 
   root_block_device {
     volume_type = "gp3"
-    volume_size = var.front_volume_gb
+    volume_size = 30
     encrypted   = true
 
-    # Le disque survit a un `terraform taint` de l'instance uniquement si on
-    # le detache manuellement ; la vraie sauvegarde reste `make backup`.
+    # Le front est detruit apres chaque edition : la persistance ne repose
+    # pas sur ce disque mais sur les sauvegardes envoyees dans S3 par
+    # `make season-down`.
     delete_on_termination = true
   }
 
@@ -58,7 +61,9 @@ resource "aws_instance" "front" {
 # l'annee. Cout ~3.60 USD/mois (AWS facture toutes les IPv4 publiques depuis
 # fevrier 2024, attachees ou non).
 resource "aws_eip" "front" {
-  instance = aws_instance.front.id
+  count = local.front_enabled ? 1 : 0
+
+  instance = aws_instance.front[0].id
   domain   = "vpc"
 
   tags = { Name = "${var.project_name}-front" }

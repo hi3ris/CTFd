@@ -89,28 +89,6 @@ systemctl daemon-reload
 systemctl enable frpc
 # Pas de `start` ici : le jeton n'est pas encore injecte.
 
-# --- Ollama : backend des challenges IA de type prompt injection -------------
-curl -fsSL https://ollama.com/install.sh | sh
-
-# Par defaut Ollama n'ecoute que sur 127.0.0.1. Le plugin CTFd tourne sur le
-# front, donc il faut ecouter sur le reseau prive. Le groupe de securite
-# n'autorise que le front sur le port 11434.
-mkdir -p /etc/systemd/system/ollama.service.d
-cat > /etc/systemd/system/ollama.service.d/override.conf <<'EOF'
-[Service]
-Environment="OLLAMA_HOST=0.0.0.0:11434"
-Environment="OLLAMA_KEEP_ALIVE=30m"
-Environment="OLLAMA_NUM_PARALLEL=4"
-EOF
-
-systemctl daemon-reload
-systemctl enable --now ollama
-
-# Pre-telechargement du modele : ~5 Go, autant le faire au boot plutot que
-# pendant l'evenement.
-sleep 10
-ollama pull llama3.1:8b || true
-
 # Plage de ports reservee aux instances de challenge, pour memoire.
 echo "WHALE_PORT_RANGE=${port_range_start}-${port_range_end}" > /etc/ctf-arena.env
 

@@ -1,5 +1,5 @@
 variable "aws_region" {
-  description = "Region AWS. eu-west-3 (Paris) est le plus proche pour la France."
+  description = "Region AWS. eu-west-3 (Paris) : latence minimale et instances GPU g4dn disponibles."
   type        = string
   default     = "eu-west-3"
 }
@@ -11,63 +11,55 @@ variable "project_name" {
 }
 
 # ---------------------------------------------------------------------------
-# Front : allume toute l'annee. On vise le cout minimal.
+# Phase de l'evenement : c'est LE levier de cout.
 # ---------------------------------------------------------------------------
 
-variable "front_instance_type" {
+variable "phase" {
   description = <<-EOT
-    Instance du front CTFd (ARM Graviton, ~40% moins cher qu'un equivalent x86).
-    t4g.small = 2 vCPU / 2 Go, suffisant pour CTFd + MariaDB + Redis hors evenement.
-    Passer a t4g.medium le temps de l'evenement si le scoreboard rame.
+    Etat courant du CTF. Determine quelles machines existent et leur taille.
+
+      off           Hors evenement. Aucune instance EC2. Seules subsistent
+                    les archives statiques sur S3/CloudFront (~0.50 USD/mois).
+      setup         Front seul, petite taille. Pour preparer les challenges,
+                    tester, ouvrir les inscriptions.
+      preselection  Front + arena + noeud IA, dimensionnes pour ~300 joueurs.
+      final         Front + arena + noeud IA, dimensionnes pour ~50 joueurs.
+
+    Bascule via `make phase-<nom>`.
   EOT
   type        = string
-  default     = "t4g.small"
+  default     = "off"
+
+  validation {
+    condition     = contains(["off", "setup", "preselection", "final"], var.phase)
+    error_message = "phase doit valoir off, setup, preselection ou final."
+  }
 }
 
-variable "front_volume_gb" {
-  description = "Taille du disque du front (gp3). Contient la base et les uploads."
-  type        = number
-  default     = 20
-}
-
-# ---------------------------------------------------------------------------
-# Arena : allumee UNIQUEMENT pendant l'evenement.
-# ---------------------------------------------------------------------------
-
-variable "arena_enabled" {
+variable "expected_players" {
   description = <<-EOT
-    false (defaut) = aucune instance arena n'existe, donc 0 EUR facture.
-    true            = l'arena est creee pour l'evenement.
-    Bascule via `make event-up` / `make event-down`.
+    Nombre de joueurs attendus par phase. Sert uniquement a documenter le
+    dimensionnement retenu dans locals.tf ; changez les types d'instance la-bas
+    si ces chiffres bougent beaucoup.
   EOT
-  type        = bool
-  default     = false
+  type        = map(number)
+  default = {
+    preselection = 300
+    final        = 50
+  }
 }
 
-variable "arena_instance_type" {
+# ---------------------------------------------------------------------------
+# Modele de langage des challenges IA
+# ---------------------------------------------------------------------------
+
+variable "ollama_model" {
   description = <<-EOT
-    Instance arena, obligatoirement x86-64 : les challenges pwn/reverse sont
-    compiles pour x86 et Ollama tourne nettement mieux dessus.
-    c6a.2xlarge = 8 vCPU / 16 Go, ~0.31 USD/h en eu-west-3.
+    Modele servi par Ollama pour les challenges de type prompt injection.
+    llama3.1:8b tient largement sur le GPU T4 16 Go d'une g4dn.xlarge.
   EOT
   type        = string
-  default     = "c6a.2xlarge"
-}
-
-variable "arena_volume_gb" {
-  description = "Disque de l'arena : images Docker des challenges + modeles Ollama (~5 Go par modele)."
-  type        = number
-  default     = 100
-}
-
-variable "arena_use_spot" {
-  description = <<-EOT
-    true = instance Spot (~70% moins chere) mais interruptible par AWS.
-    A eviter le jour J : une interruption tue toutes les instances des equipes.
-    Utile pour les repetitions et les tests.
-  EOT
-  type        = bool
-  default     = false
+  default     = "llama3.1:8b"
 }
 
 # ---------------------------------------------------------------------------
@@ -81,27 +73,40 @@ variable "ssh_public_key" {
 
 variable "admin_cidrs" {
   description = <<-EOT
-    IPs autorisees a se connecter en SSH et a l'admin CTFd.
-    NE PAS laisser 0.0.0.0/0 : mettez l'IP publique de votre bureau/VPN.
+    IPs autorisees en SSH. NE PAS laisser 0.0.0.0/0 : mettez l'IP publique de
+    votre bureau ou de votre VPN.
   EOT
   type        = list(string)
 }
 
 variable "player_cidrs" {
-  description = "IPs autorisees a atteindre le CTF (HTTP/HTTPS et instances de challenge). 0.0.0.0/0 = ouvert a tous."
+  description = "IPs autorisees a atteindre le CTF. 0.0.0.0/0 = ouvert a tous."
   type        = list(string)
   default     = ["0.0.0.0/0"]
 }
 
 variable "domain_name" {
-  description = "Nom de domaine du CTF (ex: ctf.exemple.com). Laisser vide pour utiliser l'IP publique."
+  description = <<-EOT
+    Nom de domaine du CTF (ex: ctf.exemple.com). Il pointe sur le front pendant
+    l'evenement, et sur les archives statiques le reste de l'annee.
+  EOT
   type        = string
   default     = ""
 }
 
 # ---------------------------------------------------------------------------
-# Plage de ports des instances de challenge (ctfd-whale via frp)
+# Divers
 # ---------------------------------------------------------------------------
+
+variable "arena_use_spot" {
+  description = <<-EOT
+    true = instances Spot (~-70%) mais interruptibles par AWS.
+    A garder sur false les 23-24 et 29-30 octobre : une interruption tuerait
+    toutes les instances des equipes en cours de resolution.
+  EOT
+  type        = bool
+  default     = false
+}
 
 variable "whale_port_range_start" {
   description = "Premier port TCP alloue aux instances de challenge par equipe."

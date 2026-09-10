@@ -15,10 +15,10 @@ data "aws_ami" "ubuntu_x86" {
 }
 
 resource "aws_instance" "arena" {
-  count = var.arena_enabled ? 1 : 0
+  count = local.arena_enabled ? 1 : 0
 
   ami                    = data.aws_ami.ubuntu_x86.id
-  instance_type          = var.arena_instance_type
+  instance_type          = local.current.arena
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.arena.id]
   key_name               = aws_key_pair.admin.key_name
@@ -40,13 +40,13 @@ resource "aws_instance" "arena" {
 
   root_block_device {
     volume_type           = "gp3"
-    volume_size           = var.arena_volume_gb
+    volume_size           = 100
     encrypted             = true
     delete_on_termination = true
   }
 
   user_data = templatefile("${path.module}/templates/arena-userdata.sh.tftpl", {
-    front_private_ip = aws_instance.front.private_ip
+    front_private_ip = aws_instance.front[0].private_ip
     frp_bind_port    = 7000
     port_range_start = var.whale_port_range_start
     port_range_end   = var.whale_port_range_end

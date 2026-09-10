@@ -1,6 +1,6 @@
 # Copier en terraform.tfvars et adapter.
 
-aws_region   = "eu-west-3" # Paris
+aws_region   = "eu-west-3" # Paris : latence minimale et GPU g4dn disponibles
 project_name = "ctf"
 
 # Contenu de votre cle publique SSH.
@@ -9,16 +9,19 @@ ssh_public_key = "ssh-ed25519 AAAA... vous@machine"
 # IP publique de votre bureau / VPN. NE PAS mettre 0.0.0.0/0 ici.
 admin_cidrs = ["203.0.113.42/32"]
 
-# Qui peut atteindre le CTF. Ouvert a tous pendant l'evenement.
+# Qui peut atteindre le CTF pendant l'evenement.
 player_cidrs = ["0.0.0.0/0"]
 
-# Domaine du CTF (optionnel ; sans lui on utilise l'IP publique).
+# Domaine du CTF (optionnel).
 domain_name = "ctf.exemple.com"
 
-# --- Cout --------------------------------------------------------------------
-# Laisser false toute l'annee. `make event-up` le bascule a true.
-arena_enabled = false
+# --- Phase ------------------------------------------------------------------
+# Laisser "off" ici : les commandes `make phase-*` passent la valeur voulue.
+# off | setup | preselection | final
+phase = "off"
 
-front_instance_type = "t4g.small"   # ~12 USD/mois
-arena_instance_type = "c6a.2xlarge" # ~0.31 USD/h, uniquement pendant l'evenement
-arena_use_spot      = false         # true pour les repetitions, false le jour J
+# Modele servi par Ollama pour les challenges de type prompt injection.
+ollama_model = "llama3.1:8b"
+
+# true pour les repetitions (-70% sur l'arena), false les 23-24 et 29-30 octobre.
+arena_use_spot = false
