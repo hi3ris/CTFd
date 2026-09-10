@@ -1,0 +1,50 @@
+# ctfcli challenge definition
+# Challenge ID (for requirements wiring / HMAC namespace): misc-git-archaeology
+# This is a pure downloadable challenge with a STATIC flag (no served container),
+# per the authoring rules: crypto/reverse/forensics-style artifacts may carry a
+# static flag in challenge.yml.
+#
+# requirements: none (standalone; not part of a prerequisite chain)
+
+name: "git-archaeology"
+author: "ctf-authoring"
+category: "misc"
+type: "dynamic"
+
+description: |-
+  Our intern force-pushed away a mistake. "It's gone," they said. Nothing is
+  ever *gone* in git.
+
+  You're handed a snapshot of the `logparse-cli` repository (the full working
+  tree **and** its `.git` directory). At some point a real production
+  credential was committed and then "removed" - but the branch history you see
+  with `git log` is clean. The secret is still in there somewhere.
+
+  Recover the leaked credential.
+
+  There is one obviously-fake placeholder token in the repo to ignore; the real
+  one is the upload_token that was scrubbed from the analytics config.
+
+  Flag format: CTF{...}
+
+value: 100
+extra:
+  initial: 100
+  decay: 25
+  minimum: 50
+
+connection_info: "Download logparse-cli.tar.gz - no server needed. Extract and dig."
+
+files:
+  - logparse-cli.tar.gz
+
+flags:
+  - "CTF{d4ngling_c0mmit_lives_in_ref10g}"
+
+tags:
+  - misc
+  - forensics
+  - git
+  - easy
+
+state: visible

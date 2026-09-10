@@ -1,0 +1,70 @@
+name: format-string-101
+author: ctf-2026
+category: pwn
+type: dynamic
+
+description: |
+  **format-string-101** -- a classic format-string leak + write, served as
+  pwn-as-a-service.
+
+  Connect over TCP and you get a fresh process with two live, per-connection
+  values printed in the banner:
+
+    - the address of a global `auth` cell (stable across connections), and
+    - a random 32-bit `nonce` for THIS connection.
+
+  A single `printf(user_input)` uses your input as the format string. Your goal
+  is to make `auth == nonce`. When the service observes that effect it returns
+  the flag. You get up to 16 input lines per connection: leak the stack to find
+  your argument offset, then write.
+
+  Because the nonce is regenerated every connection, a replayed `%n` payload is
+  worthless -- you must read the printed target and build the write live.
+
+  The downloadable `chall` binary is for offline analysis only. It contains **no
+  flag**: the per-team flag lives solely in the running service's environment
+  and is emitted only after the auth check passes. Reading the binary alone will
+  not give you a flag.
+
+  Provided files: `chall` (x86-64 ELF), `chall.c` (source).
+
+  Connect:  `nc <host> <port>`
+
+  Flag format: `CTF{...}`
+
+# Dynamic scoring (easy).
+value: 150
+extra:
+  initial: 150
+  decay: 40
+  minimum: 50
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container derives it at runtime from the injected
+# TEAM_SECRET as:
+#     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-format-string-101")[:24] + "}"
+# (see flag.py). The platform's custom per-account flag class recomputes and
+# validates each team's flag on submission. flags is intentionally left empty.
+flags: []
+
+tags:
+  - pwn
+  - format-string
+  - printf
+  - leak-and-write
+  - beginner
+
+# Prerequisite chain: none. This is a standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id, e.g.:
+#     requirements:
+#       - pwn-format-string-101   )
+
+# Served challenge: the platform instancier starts one container per team and
+# injects TEAM_SECRET. connection_info is templated with the team's host:port.
+connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.
+image: ctf-format-string-101:latest

@@ -1,0 +1,42 @@
+# Run notes for proto-fuzz.
+#
+# The platform instancier builds/starts one container PER TEAM and injects that
+# team's TEAM_SECRET. This compose file documents the runtime contract and is
+# handy for local playtesting.
+#
+#   Build the image (name matters -- `make push-images` matches ^ctf-):
+#     docker build -t ctf-proto-fuzz:latest .
+#
+#   Run one instance locally:
+#     TEAM_SECRET=playtest-team-01 docker compose up
+#
+#   Poke it by hand:
+#     nc localhost 9109
+#       FZLP/1 ready
+#       PING
+#       PONG
+#
+#   Solve it:
+#     python3 solution/solve.py localhost 9109
+#
+# In the arena the flag is derived from the real per-team TEAM_SECRET; locally
+# it falls back to a dev value (see flag.py). Nothing sensitive is baked in.
+services:
+  proto-fuzz:
+    build: .
+    image: ctf-proto-fuzz:latest
+    environment:
+      # Per-team secret. In production this is set by the instancier, never here.
+      - TEAM_SECRET=${TEAM_SECRET:-local-dev-secret}
+    ports:
+      - "9109:9109"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+          pids: 64
+    restart: unless-stopped

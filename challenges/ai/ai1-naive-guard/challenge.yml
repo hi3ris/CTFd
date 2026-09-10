@@ -1,0 +1,71 @@
+name: ai1-naive-guard
+author: dagbanjaphet
+category: ai
+description: |
+  **Level 1 of the AI track.** Nimbus Robotics wired up a quick support
+  assistant on top of a local `llama3.1:8b` and gave it a one-paragraph system
+  prompt telling it to guard an internal access code. That is the entire
+  defence.
+
+  Your instance runs a live chat at the URL below. The assistant is protecting
+  a per-team code shaped like `SIGMA-XXXX-XXXX-XXXX-XXXX`. Talk it out of the
+  model with prompt injection, then paste the code into the **Submit secret**
+  box (or `POST /verify {"secret": "..."}`).
+
+  The service is the oracle. Verification is a **deterministic check on the
+  server** -- a constant-time comparison against this instance's real code,
+  never a question put back to the model. The flag is emitted only after you
+  submit the actual code, so the flag never appears in the chat and no chat
+  reply is ever "the flag". Submissions are unlimited and never penalised.
+
+  Notes:
+  - Each team gets a persona chosen from a pool, so a payload tuned to one
+    instance may need a small tweak on another.
+  - The assistant will happily hand out a **public demo token** if you ask for
+    a sample. That is not the guarded code; `/verify` will tell you so. Don't
+    waste a submission being fooled by it.
+
+  Flag format: `CTF{...}`
+
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 30
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ai-ai1-naive-guard")[:24] + "}"
+# and is emitted by the running instance only after /verify confirms (server
+# side, deterministically) that the player recovered this instance's SIGMA
+# secret. The SIGMA secret is a SEPARATE derivation from the same TEAM_SECRET
+# (label ".../guard-secret") and is intentionally NOT the flag.
+#
+# The static flag below is a placeholder for the local demo TEAM_SECRET only;
+# CTFd validates the real per-team flag via the custom HMAC flag class, so no
+# usable static flag is shipped to production.
+flags:
+  - type: static
+    content: CTF{PLACEHOLDER_replaced_by_per_team_HMAC}
+
+tags:
+  - ai
+  - prompt-injection
+  - llm
+  - medium
+
+connection_info: http://{host}:8080/
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-ai1-naive-guard:latest so
+# `make push-images` finds it. Requires a per-team Ollama backend serving
+# llama3.1:8b, reachable at OLLAMA_URL.
+image: ctf-ai1-naive-guard:latest
+
+# --- Prerequisite chain ----------------------------------------------------
+# Requires Level 0 of the AI track. Prerequisites are wired by challenge ID at
+# import time; this challenge declares:
+#     requirements:
+#       - ai-ai0-leaked-transcript

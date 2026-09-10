@@ -22,7 +22,7 @@ Design
 * The public key Q = d*G is published so any candidate key is trivially
   checkable; the flag is derived deterministically from the true key.
 """
-import hashlib, json, secrets
+import hashlib, json, os, secrets, sys
 
 # ---- secp256k1 ------------------------------------------------------------
 P  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
@@ -69,6 +69,12 @@ def sign(d, msg, k):
 
 # ---- generate -------------------------------------------------------------
 def main():
+    out = __file__.rsplit("/", 2)[0] + "/capture.json"
+    if os.path.exists(out) and os.environ.get("FORCE") != "1":
+        sys.exit("refusing to overwrite committed capture.json "
+                 "(the flag in challenge.yml/flag.py is tied to it); set FORCE=1 "
+                 "to regenerate, then update the flag and the private key in flag.py")
+
     rng = secrets.SystemRandom()
     d = rng.randrange(1, Q_ORDER)
     Q = ec_mul(d, G)
@@ -104,7 +110,7 @@ def main():
         "n": hex(Q_ORDER),
         "signatures": sigs,
     }
-    with open(__file__.rsplit("/", 2)[0] + "/capture.json", "w") as f:
+    with open(out, "w") as f:
         json.dump(artifact, f, indent=2)
 
     flag = "CTF{" + hashlib.sha256(("%064x" % d).encode()).hexdigest()[:32] + "}"

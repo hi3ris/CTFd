@@ -48,7 +48,7 @@ def h_of(msg): return int.from_bytes(hashlib.sha256(msg.encode()).digest(), "big
 # ---- pure-python integer LLL (de Weger / Cohen Alg. 2.6.7, delta = 3/4) ----
 # Exact integer arithmetic only -> no fraction blow-up, fast enough in pure
 # Python for the ~50-dimensional lattice this attack needs.
-def lll(basis):
+def lll(basis, dn=99, dd=100):                     # delta = dn/dd
     b = [None] + [row[:] for row in basis]        # 1-indexed
     n = len(basis)
     def dot(u, v): return sum(x * y for x, y in zip(u, v))
@@ -90,7 +90,7 @@ def lll(basis):
                 else:
                     d[k] = u
         red(k, k - 1)
-        if 4 * d[k] * d[k - 2] < 3 * d[k - 1] * d[k - 1] - 4 * lam[k][k - 1] ** 2:
+        if dd * d[k] * d[k - 2] < dn * d[k - 1] * d[k - 1] - dd * lam[k][k - 1] ** 2:
             swap(k, kmax)
             k = max(k - 1, 2)
         else:
@@ -113,7 +113,11 @@ def solve(path):
     print(f"[*] {len(sigs)} signatures, {len(sigs)-len(good)} dropped as equal-r decoy, "
           f"{len(good)} biased signatures used")
 
-    m = min(52, len(good))        # subset size for the lattice
+    import os
+    # Subset size for the lattice. 8-bit bias needs a comfortable margin: ~58
+    # signatures reduce reliably (dim 59). With fpylll this is sub-second; with
+    # the pure-Python fallback expect a few minutes. Override with M=<n>.
+    m = min(int(os.environ.get("M", "58")), len(good))
     sub = good[:m]
     B_bound = 1 << 248             # 0 < k < 2**248
 
@@ -124,33 +128,46 @@ def solve(path):
         t.append(r * sinv % N)
         a.append(z * sinv % N)
 
-    # Integer lattice (dim m+2), scale = N so entries stay integers:
-    #   rows 0..m-1 : N^2 * e_i
-    #   row m       : [N*t_0 ... N*t_{m-1}, B, 0]
-    #   row m+1     : [N*a_0 ... N*a_{m-1}, 0, N*B]
-    # Target vector ~ (N*k_0, ..., N*k_{m-1}, d*B, N*B), all ~2^504 => short.
-    dim = m + 2
+    # Eliminate d with sig 0 as reference:  d = (k_0 - a_0) * t_0^{-1}, so
+    #   k_i = c_i * k_0 + e_i  (mod N),   c_i = t_i / t_0,  e_i = a_i - c_i a_0.
+    # All k_i are < B, so (k_0, k_1, ..., k_{m-1}, K) is a very short vector of
+    # a lattice with entries only ~N (not ~N^2 -> far smaller Gram dets, fast):
+    #   R0  = [1, c_1, ..., c_{m-1}, 0]
+    #   R_i = [0, ...N at col i..., 0]           (i = 1..m-1)
+    #   R_e = [0, e_1, ..., e_{m-1}, K]          (K ~ B, Kannan embedding)
+    hk = B_bound // 2                               # recenter k around B/2
+    t0inv = pow(t[0], -1, N)
+    c = [t[i] * t0inv % N for i in range(m)]        # c[0] == 1
+    e = [(a[i] - c[i] * a[0]) % N for i in range(m)]
+    ep = [(c[i] * hk + e[i] - hk) % N for i in range(m)]   # recentered constants
+    K = hk
+    dim = m + 1
     M = [[0] * dim for _ in range(dim)]
-    for i in range(m):
-        M[i][i] = N * N
-    for i in range(m):
-        M[m][i]   = N * t[i]
-        M[m + 1][i] = N * a[i]
-    M[m][m]       = B_bound
-    M[m + 1][m + 1] = N * B_bound
+    M[0][0] = 1
+    for i in range(1, m):
+        M[0][i] = c[i]
+        M[i][i] = N
+    for i in range(1, m):
+        M[m][i] = ep[i]
+    M[m][m] = K
 
     print("[*] running LLL on a", dim, "x", dim, "lattice ...")
-    R = lll(M)
+    try:
+        from fpylll import IntegerMatrix, LLL as _LLL   # optional, sub-second
+        im = IntegerMatrix.from_matrix(M)
+        _LLL.reduction(im)
+        R = [[im[i, j] for j in range(dim)] for i in range(dim)]
+        print("[*] (used fpylll)")
+    except Exception:
+        R = lll(M)                                       # pure-python fallback
 
-    # Recover d: for each reduced row, each sign, each index j, turn the
-    # candidate nonce back into a private key and check against the public key.
+    # Recover d: each column i (0..m-1) of a short row is a recentered candidate
+    # nonce k_i - B/2 for signature i; undo the shift, turn it into d, and check
+    # against the public key.
     for row in R:
         for sign in (1, -1):
             for j in range(m):
-                kj = sign * row[j]
-                if kj % N == 0:
-                    continue
-                kj //= N
+                kj = sign * row[j] + hk
                 if not (0 < kj < B_bound):
                     continue
                 try:

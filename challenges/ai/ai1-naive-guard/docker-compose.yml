@@ -1,0 +1,47 @@
+# Local run notes for authors / playtesters. In production the platform
+# instancier injects TEAM_SECRET per team and points OLLAMA_URL at that team's
+# Ollama backend. This compose file is only for a local build + smoke test.
+#
+#   docker compose up --build
+#   # first run pulls llama3.1:8b into the ollama volume (a few GB, one-time)
+#   docker compose exec ollama ollama pull llama3.1:8b
+#   # then browse http://localhost:8080/
+#
+# The guard service does NOT need a GPU; the Ollama sidecar will use one if the
+# host exposes it (uncomment the deploy block), otherwise it runs on CPU.
+services:
+  ollama:
+    image: ollama/ollama:latest
+    # Not published to the host in production; the guard talks to it over the
+    # internal network only.
+    expose:
+      - "11434"
+    volumes:
+      - ollama:/root/.ollama
+    # deploy:                     # uncomment on a GPU host
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+
+  guard:
+    build:
+      context: .
+    image: ctf-ai1-naive-guard:latest
+    depends_on:
+      - ollama
+    ports:
+      - "8080:8080"
+    environment:
+      # local demo value ONLY -- never ship this
+      TEAM_SECRET: "local-demo-team-secret"
+      OLLAMA_URL: "http://ollama:11434"
+      OLLAMA_MODEL: "llama3.1:8b"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 256m
+
+volumes:
+  ollama:

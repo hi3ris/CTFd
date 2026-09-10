@@ -1,0 +1,76 @@
+name: synthvm
+author: challenge-team
+category: reverse
+description: |-
+  We pulled a "license core" off a device. It does not check your key with
+  normal code: it ships a bespoke bytecode machine (a register+stack VM, ~80
+  opcodes) and a ~6000-instruction program, and that program is what validates
+  the key.
+
+  Two things will trip up an autopilot read of the binary:
+
+    - The opcode dispatch is REMAPPED AT RUNTIME. The bytes in the embedded
+      program are not the internal opcode numbers. An init routine builds a
+      256-entry permutation from a seed and routes every fetched byte through
+      it, so the "switch" you see statically does not line up with the bytes in
+      the program. Recover (or trace) that permutation first.
+
+    - Immediate operands use a home-grown varint. It is not LEB128; work out
+      the encoding before you trust any disassembly.
+
+  There is NO flag string in the binary. The key you enter IS the flag: the
+  program transforms your input through several rounds (a per-byte add-carry, an
+  invented S-box, a byte rotate, and a per-position XOR) and compares the result
+  to an embedded target. When your input matches, it prints "Access granted".
+  Recover the exact input that passes, and that input is the flag.
+
+  Intended path: write a disassembler + tracer for the VM, lift the program,
+  understand the round function, then invert it. grep/strings will not hand you
+  anything. One region of the program is a dead-code decoy that inverts to a
+  plausible-but-wrong key; the control-flow graph refutes it in minutes
+  (nothing branches to it).
+
+  The binary is a stripped x86-64 ELF. No network access is required;
+  everything you need is inside the file.
+
+  Flag format: CTF{...}
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the flag logic locally (explicitly allowed by the guardrails for RE).
+# The flag never appears in plaintext in the binary - only its round-transformed
+# image is stored (as CMPI immediates). Static flag below.
+#
+# Invented ISA (not DER/protobuf/known-VM): an 80-opcode register+stack machine
+# with:
+#   - a RUNTIME-REMAPPED opcode dispatch (keyed Fisher-Yates over xorshift32),
+#     so program bytes != internal opcodes,
+#   - a custom varint whose continuation flag is the LOW bit (not LEB128),
+#   - an invented 8-bit S-box (a full bijection from a second seed),
+#   - carry feedback that chains on the OUTPUT byte, and branch operands that
+#     are ABSOLUTE program offsets.
+# The ~6000-instruction check is fully unrolled so the difficulty is in lifting
+# and reasoning about the program, not in a small loop. See src/gen.py for the
+# full spec (dev-only, not shipped).
+#
+# Single out-of-distribution VM challenge for this set (cap: 1). Standalone:
+# no 'requirements' chain. Nothing served: no connection_info.
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 45
+  minimum: 150
+
+flags:
+  - CTF{synthvm_d1sp4tch_rem4pped_at_runtime}
+
+tags:
+  - reverse
+  - elf
+  - bytecode-vm
+  - custom-encoding
+  - static-analysis
+
+files:
+  - synthvm

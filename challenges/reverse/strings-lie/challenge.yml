@@ -1,0 +1,42 @@
+name: strings-lie
+author: challenge-team
+category: reverse
+description: |-
+  We recovered a tiny "secret vault" binary. Run it and it happily prints a
+  flag right there in the banner. Submit it and... it is rejected.
+
+  The obvious string is a decoy. The real flag is never stored as plaintext in
+  the file - the program reconstructs it only after your input passes an
+  arithmetic check. Read the code, not the strings.
+
+  The binary is a static x86-64 ELF; you do not need network access. Everything
+  you need is inside the file.
+
+  Flag format: CTF{...}
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the flag logic locally (explicitly allowed by the guardrails for RE).
+# The real flag never appears in plaintext in the binary; strings(1) only hits
+# the decoy. Static flag below.
+
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 30
+  minimum: 50
+
+flags:
+  - CTF{str1ngs_l1e_read_the_c0de}
+
+tags:
+  - reverse
+  - elf
+  - beginner
+  - static-analysis
+
+files:
+  - chall
+
+# No 'requirements' - standalone challenge, not part of a prereq chain.
+# No connection_info - nothing is served; players download 'chall'.

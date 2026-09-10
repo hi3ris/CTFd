@@ -1,0 +1,171 @@
+{
+  "note": "Sample transcript from a DISPOSABLE sample seed (NOT a live instance). Use it to validate your factorial-base decode, to infer how many low bits are withheld, and to infer which card of a dealt order is the 'high card'. The live service uses a fresh secret seed per connection.",
+  "rng": "truncated-LCG",
+  "modulus": 1099511627776,
+  "multiplier": 2654435761,
+  "increment": 3039632973,
+  "deck": 11,
+  "sample_seed_commitment": "484ef3482fac5dfd8e4caec01f6d2cf4e427722abdd71ac1fa6ff8f84d4307d1",
+  "hands": [
+    {
+      "hand": 1,
+      "your_call": 0,
+      "shuffle": [
+        2,
+        4,
+        8,
+        3,
+        1,
+        10,
+        5,
+        6,
+        9,
+        0,
+        7
+      ],
+      "high_card": 2,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 2,
+      "your_call": 3,
+      "shuffle": [
+        4,
+        5,
+        10,
+        6,
+        0,
+        1,
+        8,
+        2,
+        7,
+        3,
+        9
+      ],
+      "high_card": 4,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 3,
+      "your_call": 7,
+      "shuffle": [
+        3,
+        5,
+        2,
+        8,
+        0,
+        1,
+        9,
+        10,
+        7,
+        6,
+        4
+      ],
+      "high_card": 3,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 4,
+      "your_call": 1,
+      "shuffle": [
+        2,
+        1,
+        4,
+        8,
+        3,
+        10,
+        5,
+        0,
+        6,
+        7,
+        9
+      ],
+      "high_card": 2,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 5,
+      "your_call": 10,
+      "shuffle": [
+        4,
+        2,
+        8,
+        1,
+        6,
+        0,
+        10,
+        7,
+        9,
+        3,
+        5
+      ],
+      "high_card": 4,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 6,
+      "your_call": 4,
+      "shuffle": [
+        1,
+        5,
+        7,
+        0,
+        10,
+        9,
+        8,
+        2,
+        3,
+        4,
+        6
+      ],
+      "high_card": 1,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 7,
+      "your_call": 2,
+      "shuffle": [
+        4,
+        2,
+        1,
+        0,
+        9,
+        3,
+        7,
+        6,
+        5,
+        10,
+        8
+      ],
+      "high_card": 4,
+      "result": "MISS",
+      "streak": 0
+    },
+    {
+      "hand": 8,
+      "your_call": 9,
+      "shuffle": [
+        0,
+        1,
+        9,
+        2,
+        4,
+        8,
+        6,
+        7,
+        3,
+        5,
+        10
+      ],
+      "high_card": 0,
+      "result": "MISS",
+      "streak": 0
+    }
+  ]
+}

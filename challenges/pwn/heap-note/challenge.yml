@@ -1,0 +1,72 @@
+name: heap-note
+author: dagbanjaphet
+category: pwn
+description: |
+  A tiny note-taking service on a **pinned glibc 2.31** (Ubuntu 20.04,
+  `2.31-0ubuntu9.18`). You can `alloc`, `free`, `edit` and `view` up to 16
+  fixed-slot notes.
+
+  The bug is a classic **use-after-free**: `free` does not clear the slot, and
+  neither `edit` nor `view` checks whether a slot is still live -- so you can
+  **read** a freed chunk (leak) and **write** into a freed chunk
+  (edit-after-free). tcache is in play; glibc 2.31 predates safe-linking, so
+  tcache forward pointers are stored **un-mangled**.
+
+  There is **no downloadable flag**. The binary you get is byte-identical to the
+  one the service runs, and it contains no flag. Winning means actually
+  **hijacking control flow into `win()`** -- the service verifies that *effect*
+  and only then prints this team's flag (read from the process environment at
+  runtime, never from a file). A stack `ret2win` is not available; the input
+  paths are all length-bounded. This is a heap problem.
+
+  The handout ships the exact `libc.so.6` and `ld-2.31.so` the service uses, so
+  your offsets offline match the offsets online.
+
+  Decoy warning: there is one hard-coded `CTF{...}` string inside the binary.
+  By this event's rules a constant baked into a shipped artifact is never a real
+  flag -- it is unreachable and reads no environment. Don't submit it; don't
+  waste time on it.
+
+  Flag format: `CTF{...}`
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 25
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-heap-note")[:24] + "}"
+# and is emitted by the running instance only after control flow reaches win().
+# The static entry below is a placeholder for the demo TEAM_SECRET used in local
+# builds; CTFd validates the real per-team flag via the custom HMAC flag class,
+# so no static flag is shipped to production.
+flags:
+  - type: static
+    content: CTF{PLACEHOLDER_replaced_by_per_team_HMAC}
+
+tags:
+  - pwn
+  - heap
+  - use-after-free
+  - tcache
+  - tcache-poisoning
+  - glibc-2.31
+
+files:
+  - handout/chall
+  - handout/libc.so.6
+  - handout/ld-2.31.so
+
+# challenge-id (for HMAC / requirements wiring): pwn-heap-note
+# No prerequisites; standalone.
+
+connection_info: nc {host} 9022
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-heap-note:latest so
+# `make push-images` finds it.
+image: ctf-heap-note:latest

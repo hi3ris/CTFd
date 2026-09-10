@@ -1,0 +1,24 @@
+# Local run notes for ai2-output-filter.
+#
+#   docker compose up --build
+#   curl -s localhost:8080/ | python3 -m json.tool
+#
+# In production the platform sets TEAM_SECRET per team and does the port
+# mapping; this file is for local development and adversarial pre-testing only.
+services:
+  ai2-output-filter:
+    build: .
+    image: ctf-ai2-output-filter:latest
+    environment:
+      # Local dev value only. The platform overrides this per team.
+      TEAM_SECRET: "local-dev-team-secret"
+    ports:
+      - "8080:8080"
+    read_only: true
+    tmpfs:
+      - /tmp
+    security_opt:
+      - no-new-privileges:true
+    mem_limit: 128m
+    pids_limit: 128
+    restart: unless-stopped

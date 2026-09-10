@@ -1,0 +1,56 @@
+name: packed-vm-lite
+author: challenge-team
+category: reverse
+description: |-
+  We pulled a small license checker off an embedded device. Instead of checking
+  your serial with normal code, it ships a tiny custom bytecode program and an
+  interpreter (~30 opcodes, a register+stack machine) that runs it. The bytecode
+  is what actually validates the serial.
+
+  There is no flag string in the binary. When you enter the serial the VM
+  accepts, the program prints the flag as CTF{ + <your serial> + }, rebuilt from
+  your input - so you must recover the exact 24-character serial the interpreter
+  accepts. grep/strings will not hand it to you.
+
+  Reverse the opcode dispatch table, understand what the loop does to each
+  serial byte (hint: a variable rotate, a per-index key, and feedback from the
+  previous byte), then invert it.
+
+  The serial is exactly 24 characters. Flag format: CTF{...}
+
+  The binary is a stripped x86-64 ELF; everything you need is inside the file.
+  No network access required.
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the flag logic locally (explicitly allowed by the guardrails for RE).
+# The flag never appears in plaintext in the binary - it is reconstructed at
+# runtime from the accepted serial. Static flag below.
+#
+# Invented ISA (not DER/protobuf/etc): a bespoke 1-byte-opcode register+stack
+# machine. Semantics that resist "recognise the format": LOADK/LOADT index into
+# embedded tables, ROLV rotates by a stack-supplied amount, feedback chains on
+# the RAW plaintext byte (not the transformed value), and jump operands are
+# ABSOLUTE program offsets. Two present-but-unused opcodes (RORV, NOT) are wrong
+# turns. See src/gen.py for the full spec.
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 30
+  minimum: 120
+
+flags:
+  - CTF{vm_bytec0de_1s_n0t_h4rd!}
+
+tags:
+  - reverse
+  - elf
+  - bytecode-vm
+  - static-analysis
+
+files:
+  - vmcheck
+
+# No 'requirements' - standalone challenge, not part of a prereq chain.
+# No connection_info - nothing is served; players download 'vmcheck'.

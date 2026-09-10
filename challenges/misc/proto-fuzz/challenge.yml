@@ -1,0 +1,71 @@
+name: proto-fuzz
+author: ctf-2026
+category: misc
+type: dynamic
+
+description: |
+  **proto-fuzz** -- a tiny home-grown line protocol, **FZLP/1**, served over
+  TCP. It provisions "channels". It also has a maintenance command it does not
+  advertise, reachable only if you push the protocol somewhere its authors did
+  not intend.
+
+  Connect and you get a banner and a handful of verbs. A partial protocol note
+  and a captured normal session are provided as a handout. The note documents
+  how `CFG <n>` is *supposed* to work; it does not document how it actually
+  behaves at the edges. That gap is the challenge.
+
+  This is a **server-side oracle**: nothing you download contains the flag. The
+  service verifies an *effect* -- that a particular hidden state has been reached
+  -- and only then emits the flag. Reading the handout alone will not give you a
+  flag; you have to drive the socket and find the edge.
+
+  Provided files (handout): `PROTOCOL.md` (partial spec), `session.log` (a
+  normal, benign transcript).
+
+  Connect:  `nc <host> <port>`
+
+  Flag format: `CTF{...}`
+
+# Dynamic scoring (medium).
+value: 350
+extra:
+  initial: 350
+  decay: 35
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container derives it at runtime from the injected
+# TEAM_SECRET as:
+#     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "misc-proto-fuzz")[:24] + "}"
+# (see flag.py). The platform's custom per-account flag class recomputes and
+# validates each team's flag on submission. flags is intentionally left empty.
+flags: []
+
+tags:
+  - misc
+  - protocol
+  - fuzzing
+  - off-by-one
+  - network
+
+# Prerequisite chain: none. This is a standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id, e.g.:
+#     requirements:
+#       - misc-proto-fuzz   )
+
+# Served challenge: the platform instancier starts one container per team and
+# injects TEAM_SECRET. connection_info is templated with the team's host:port.
+connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)"
+
+# Handout files (partial spec + benign transcript). No flag inside either.
+files:
+  - handout/PROTOCOL.md
+  - handout/session.log
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.
+image: ctf-proto-fuzz:latest
+
+state: visible

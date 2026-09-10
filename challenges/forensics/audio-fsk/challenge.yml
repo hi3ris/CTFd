@@ -1,0 +1,57 @@
+name: "Audio FSK"
+author: "ctf-team"
+category: forensics
+description: |
+  We intercepted a short RF downlink and saved the demodulated baseband to a WAV
+  file. It carries data as **binary FSK** — two audio tones, one per bit — but it
+  does **not** use the textbook Bell-103/Bell-202 tone pairs or standard UART
+  framing, so pointing `minimodem` at it with default settings gets you nothing.
+
+  Read `SIGNAL_BRIEF.md`: it describes the frame layout (preamble → sync word →
+  length → payload → CRC-8) but leaves the physical-layer constants for you to
+  recover from the recording — the two tone frequencies, the baud rate, which
+  tone is `1` vs `0`, and the bit order. The modulator is continuous-phase, and
+  the CRC-8 (polynomial 0x07, over length‖payload) lets you confirm when you have
+  framed it correctly.
+
+  Demodulate the primary downlink, reassemble the frame, and read the payload.
+  The flag is embedded in the payload text. This is solvable entirely by signal
+  processing — you do not need to listen to the audio.
+
+  Notes:
+    * A second, much fainter tone burst appears later in the recording. It is a
+      standard Bell-202 8N1 link that decodes "too easily" — it is a decoy and
+      does not carry the real flag. The real downlink is CRC-verified.
+
+  Flag format: CTF{...}  (lowercase letters, digits and underscores inside).
+
+# This is a STATIC, downloadable forensics artifact: the challenge IS the WAV
+# recording, so the flag is baked into the modulated bitstream. No served
+# component and no per-team HMAC flag (see deploy/anti-llm-guardrails.md, the
+# reverse/forensics static-artifact exception).
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 45
+  minimum: 150
+
+flags:
+  - "CTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
+
+files:
+  - transmission.wav
+  - SIGNAL_BRIEF.md
+
+tags:
+  - forensics
+  - dsp
+  - fsk
+  - audio
+  - signal-processing
+  - hard
+
+connection_info: null
