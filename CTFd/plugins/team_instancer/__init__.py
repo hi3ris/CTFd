@@ -17,12 +17,13 @@ import time
 
 from flask import Blueprint, request
 
-from CTFd.models import Challenges, Solves, db
+from CTFd.models import Challenges, Flags, Solves, db
 from CTFd.plugins import register_plugin_assets_directory
 from CTFd.plugins.challenges import CHALLENGE_CLASSES, BaseChallenge
 from CTFd.plugins.dynamic_challenges.decay import DECAY_FUNCTIONS, logarithmic
 from CTFd.plugins.migrations import upgrade
-from CTFd.utils.decorators import authed_only, during_ctf_time_only
+from CTFd.utils.decorators import authed_only, during_ctf_time_only, ratelimit
+from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.user import get_current_user
 from CTFd.utils.config import is_teams_mode
 
@@ -151,8 +152,10 @@ def _json(payload, code=200):
 
 
 @bp.route("/spawn", methods=["POST"])
+@check_challenge_visibility
 @authed_only
 @during_ctf_time_only
+@ratelimit(method="POST", limit=6, interval=60)
 def spawn():
     if not settings.is_active():
         return _json({"success": False, "error": "Instancier inactif hors evenement."}, 503)
@@ -193,8 +196,18 @@ def spawn():
     if TeamInstance.query.count() >= settings.MAX_TOTAL:
         return _json({"success": False, "error": "Capacite maximale atteinte, reessayez bientot."}, 503)
 
-    from CTFd.plugins.team_hmac_flag import team_secret_for
-    team_secret = team_secret_for(account_id)
+    # The challenge id label lives in the team_hmac flag's content. We inject
+    # only the per-challenge secret and the concrete flag — never the team
+    # master secret, so a compromised container cannot yield other flags.
+    from CTFd.plugins.team_hmac_flag import challenge_secret_for, expected_flag
+    flag_row = Flags.query.filter_by(challenge_id=challenge.id, type="team_hmac").first()
+    if flag_row is None or not (flag_row.content or "").strip():
+        return _json({"success": False, "error": "Challenge mal configure (flag team_hmac absent)."}, 500)
+    label = flag_row.content.strip()
+    container_env = {
+        "FLAG": expected_flag(account_id, label),
+        "CHALLENGE_SECRET": challenge_secret_for(account_id, label),
+    }
 
     instance = TeamInstance(
         account_id=account_id, challenge_id=challenge.id, status="spawning",
@@ -215,7 +228,7 @@ def spawn():
     instance.port = port
 
     try:
-        cid, net = backend.spawn_container(account_id, challenge, team_secret, port)
+        cid, net = backend.spawn_container(account_id, challenge, container_env, port)
         instance.container_id = cid
         instance.network_name = net
         backend.add_frp_for(instance)
@@ -313,7 +326,10 @@ def _reap_once(app):
                 live = backend.list_live_container_ids()
                 for inst in TeamInstance.query.all():
                     if inst.container_id and inst.container_id not in live:
-                        frp.release_port(inst.id)
+                        # Full teardown, not just release_port: otherwise the
+                        # dead instance's frp proxy stanza survives and, when
+                        # its port is reallocated, two proxies claim it.
+                        backend.teardown(inst)
                         db.session.delete(inst)
                 db.session.commit()
             except Exception:

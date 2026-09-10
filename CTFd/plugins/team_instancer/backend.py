@@ -13,9 +13,15 @@ The pure text/allocation logic it relies on lives in frp.py and is unit-tested.
 """
 
 import base64
+import fcntl
 import urllib.request
 
 from . import frp, settings
+
+# Serializes the frpc config read-modify-write so concurrent spawns/teardowns/
+# reaps across gunicorn workers cannot clobber each other's proxy stanzas
+# (GET /api/config -> mutate -> PUT overwrites the whole file).
+_FRPC_LOCK_PATH = "/tmp/ctfd_instancer_frpc.lock"
 
 # docker SDK is only needed when the instancer is active; import lazily so the
 # plugin loads even where the package is absent (e.g. a bare dev CTFd).
@@ -54,24 +60,54 @@ def _frpc_request(method, path, body=None):
         return resp.read().decode()
 
 
+class _FrpcLock:
+    """Cross-process/host lock around the frpc config read-modify-write."""
+
+    def __enter__(self):
+        self._fh = open(_FRPC_LOCK_PATH, "w")
+        fcntl.flock(self._fh, fcntl.LOCK_EX)
+        return self
+
+    def __exit__(self, *exc):
+        try:
+            fcntl.flock(self._fh, fcntl.LOCK_UN)
+        finally:
+            self._fh.close()
+
+
 def _frpc_add(name, port):
-    cfg = _frpc_request("GET", "/api/config")
-    _frpc_request("PUT", "/api/config", frp.add_proxy(cfg, name, port))
-    _frpc_request("GET", "/api/reload")
+    with _FrpcLock():
+        cfg = _frpc_request("GET", "/api/config")
+        _frpc_request("PUT", "/api/config", frp.add_proxy(cfg, name, port))
+        _frpc_request("GET", "/api/reload")
 
 
 def _frpc_remove(name):
-    cfg = _frpc_request("GET", "/api/config")
-    _frpc_request("PUT", "/api/config", frp.remove_proxy(cfg, name))
-    _frpc_request("GET", "/api/reload")
+    with _FrpcLock():
+        cfg = _frpc_request("GET", "/api/config")
+        _frpc_request("PUT", "/api/config", frp.remove_proxy(cfg, name))
+        _frpc_request("GET", "/api/reload")
 
 
 # --- Container lifecycle ---------------------------------------------------
 
-def spawn_container(account_id, challenge, team_secret, port):
+def container_name(account_id, challenge_id):
+    return f"ti-{account_id}-{challenge_id}"
+
+
+def _remove_by_name(client, name):
+    try:
+        client.containers.get(name).remove(force=True)
+    except Exception:
+        pass
+
+
+def spawn_container(account_id, challenge, env, port):
     """Create the per-team container, publishing its internal port on the arena
-    loopback at `port`, and inject only TEAM_SECRET (the container derives its
-    own flag). Returns (container_id, network_name)."""
+    loopback at `port`. `env` carries the concrete FLAG and the per-challenge
+    CHALLENGE_SECRET only — never the team master secret, so owning this
+    container cannot yield another challenge's flag. Returns
+    (container_id, network_name)."""
     client = _client()
     net_name = f"ctfd_team_{account_id}"
     try:
@@ -79,12 +115,17 @@ def spawn_container(account_id, challenge, team_secret, port):
     except Exception:
         pass  # already exists
 
+    # A stale container with the deterministic name would make run() 409. Remove
+    # any orphan first so a spawn is never permanently wedged by a name clash.
+    name = container_name(account_id, challenge.id)
+    _remove_by_name(client, name)
+
     mem = getattr(challenge, "mem_limit", None) or settings.DEFAULT_MEM_LIMIT
     container = client.containers.run(
         image=challenge.docker_image,          # local image, no registry pull
         detach=True,
-        name=f"ti-{account_id}-{challenge.id}",
-        environment={"TEAM_SECRET": team_secret},
+        name=name,
+        environment=dict(env),
         network=net_name,
         ports={f"{challenge.internal_port}/tcp": ("127.0.0.1", port)},
         labels={
@@ -117,6 +158,9 @@ def teardown(instance):
                     c.remove(force=True)
                 except Exception:
                     pass
+            # Also remove by deterministic name: covers a container that was
+            # created but whose id never made it into the row (spawn failure).
+            _remove_by_name(client, container_name(instance.account_id, instance.challenge_id))
             if instance.network_name:
                 try:
                     net = client.networks.get(instance.network_name)

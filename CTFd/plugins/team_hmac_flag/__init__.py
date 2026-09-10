@@ -55,14 +55,23 @@ def team_secret_for(account_id: int) -> str:
     ).hexdigest()
 
 
-def expected_flag(account_id: int, challenge_id: str) -> str:
-    secret = team_secret_for(account_id)
-    digest = hmac.new(
-        secret.encode("utf-8"),
+def challenge_secret_for(account_id: int, challenge_id: str) -> str:
+    """The PER-CHALLENGE secret an instance receives (env CHALLENGE_SECRET).
+
+    Derived from the team secret and the challenge id, so it is unique per team
+    AND per challenge. Crucially it is NOT the team master secret: a player who
+    fully owns one challenge's container (the goal of a pwn challenge) learns
+    only this challenge's secret and cannot recompute any other challenge's
+    flag for their team. The flag is the first 24 hex of this value."""
+    return hmac.new(
+        team_secret_for(account_id).encode("utf-8"),
         challenge_id.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return FLAG_PREFIX + digest[:DIGEST_LEN] + FLAG_SUFFIX
+
+
+def expected_flag(account_id: int, challenge_id: str) -> str:
+    return FLAG_PREFIX + challenge_secret_for(account_id, challenge_id)[:DIGEST_LEN] + FLAG_SUFFIX
 
 
 class CTFdTeamHmacFlag(BaseFlag):

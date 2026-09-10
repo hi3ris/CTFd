@@ -8,8 +8,9 @@
 - FrpPort: the pool of public ports, one row per port, allocated atomically.
 """
 
+import datetime
+
 from CTFd.models import Challenges, db
-from sqlalchemy.sql import func
 
 
 class TeamInstanceChallenge(Challenges):
@@ -46,9 +47,13 @@ class TeamInstance(db.Model):
     network_name = db.Column(db.String(128))
     proxy_name = db.Column(db.String(64))
     status = db.Column(db.String(16), default="spawning")  # spawning|running|stopped|error
-    created_at = db.Column(db.DateTime, server_default=func.now())
+    # Python-side defaults (NOT server_default): SQLAlchemy populates them on
+    # INSERT on every backend. A server_default is DDL-only and would be emitted
+    # by create_all (SQLite dev) but not by the Alembic migration (MariaDB prod),
+    # leaving start_time NULL in prod so instances would never be reaped.
+    created_at = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     # start_time anchors the TTL; renew pushes it forward.
-    start_time = db.Column(db.DateTime, server_default=func.now())
+    start_time = db.Column(db.DateTime, default=datetime.datetime.utcnow)
     renew_count = db.Column(db.Integer, default=0)
 
     # One instance per (team, challenge): blocks double-spawn at the DB level.

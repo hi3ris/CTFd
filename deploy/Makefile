@@ -26,6 +26,8 @@ AI_PRIV     = $(call tfout,ai_private_ip)
 BUCKET      = $(call tfout,archive_bucket)
 REGION      = $(call tfout,aws_region)
 PHASE       = $(call tfout,phase)
+WHALE_PORT_START = $(call tfout,whale_port_range_start)
+WHALE_PORT_END   = $(call tfout,whale_port_range_end)
 
 FRONT_SSH = ssh $(SSH_OPTS) ubuntu@$(FRONT_IP)
 ARENA_SSH = ssh $(SSH_OPTS) ubuntu@$(ARENA_IP)
