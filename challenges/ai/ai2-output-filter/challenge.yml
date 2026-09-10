@@ -45,8 +45,8 @@ extra:
 # validation. The value below is the LOCAL-DEV flag (TEAM_SECRET=local-dev-team-secret)
 # and is replaced per team at import time by the custom HMAC flag class.
 flags:
-  - CTF{f4d7d2743edd33f25f52656b}
-
+  - type: team_hmac
+    content: ai-ai2-output-filter
 tags:
   - ai
   - prompt-injection
