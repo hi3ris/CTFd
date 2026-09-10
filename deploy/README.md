@@ -39,10 +39,12 @@ Trois machines, trois roles, chacune allumee uniquement quand elle sert :
   seul point d'entree public.
 - **Arena** — x86 obligatoire : les challenges pwn et reverse sont compiles
   pour cette architecture. Heberge un conteneur par equipe et par challenge.
-- **Noeud IA** — GPU T4 (`g4dn.xlarge`). En preselection, ~300 joueurs peuvent
-  discuter avec le modele en meme temps ; sur CPU un modele 8B sert quelques
+- **Noeud IA** — GPU T4 (`g4dn.xlarge`). Sur CPU, un modele 8B sert quelques
   tokens par seconde et s'effondre des la dizaine de requetes paralleles. Le
-  GPU absorbe la charge pour ~0.60 USD/h.
+  GPU absorbe la pointe pour ~0.60 USD/h. Les challenges IA sont organises en
+  chaine (chaque niveau debloque le suivant, le premier ne consomme aucune
+  inference), ce qui limite naturellement le nombre de joueurs qui atteignent
+  les niveaux gourmands : voir `ai-challenges-design.md`.
 
 ## Cout estime pour l'edition 2026
 
@@ -147,8 +149,9 @@ le site statique jusqu'a l'edition suivante.
 
 - **Lot 2** — plugin `ctfd-whale` + challenge Docker par equipe de demo, avec
   flag dynamique par equipe.
-- **Lot 3** — plugin `ai_challenges` : backend Ollama, chat, rate-limit par
-  equipe, journalisation des tentatives, gestion du 503 quand la file est
-  pleine.
-- **Lot 4** — challenges d'exemple, type A (prompt injection, 3 niveaux) et
-  type B (pickle RCE, adversarial example).
+- **Lot 3** — plugin `ai_challenges` : backend Ollama, chat, controle
+  d'admission par niveau, journalisation des tentatives, gestion du 503 quand
+  la file est pleine. Conception detaillee dans `ai-challenges-design.md`.
+- **Lot 4** — challenges d'exemple : la chaine IA a quatre niveaux (dont un
+  sans inference) et deux challenges ML security (pickle RCE, adversarial
+  example).
