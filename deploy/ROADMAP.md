@@ -100,49 +100,51 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 ---
 
-## Lot 2 — Instancier par équipe (`ctfd-whale`) 🔴 PROCHAINE ÉTAPE
+## Lot 2 — Instancier par équipe (`team_instancer`) 🟡 CONSTRUIT (validation live au Lot 5)
 
-C'est le maillon bloquant : sans lui, les **15 challenges servis** ne peuvent ni spawner
-d'instance par équipe ni recevoir leur `TEAM_SECRET`.
+**Décision : build-maison** (`CTFd/plugins/team_instancer/`), pas `ctfd-whale` — celui-ci
+casse chez nous sur 5 points (clé sur `user_id`, flag en boucle fermée conflictuel avec
+`team_hmac`, services Swarm qui tenteraient un pull, admin frpc injoignable). On réutilise
+les patrons, on importe `team_hmac_flag.team_secret_for()` pour ne jamais redériver le secret.
 
-### 2.1 Installation du plugin
-- [ ] 🤖 Installer `ctfd-whale` sous `CTFd/plugins/ctfd-whale/` (ou équivalent maintenu),
-      épingler une version, ajouter ses `requirements.txt` au build de l'image CTFd.
-- [ ] 🤖 Vérifier compat CTFd 3.7.7 (le plugin cible des versions précises — adapter si besoin).
+### 2.1 Squelette plugin & type de challenge
+- [x] 🤖 Type `team_instance` (hérite du scoring dynamique + `docker_image`/`internal_port`),
+      enregistré dans `CHALLENGE_CLASSES`, assets create/update/view. Charge même si inactif.
+- [x] 🤖 Les 15 challenges servis convertis `type: dynamic → team_instance` (+ `extra`), flag `team_hmac`.
 
-### 2.2 Connexion au Docker de l'arena
-- [ ] 🤖 Configurer whale pour piloter le démon Docker de l'arena **via `dockerproxy`**
-      (`tcp://dockerproxy:2375` sur le réseau interne), pas un socket exposé.
-- [ ] 🤖 Vérifier que `make link` fournit déjà `DOCKER_HOST` à CTFd (fait) et que whale le lit.
-- [ ] 🤖 Réseau Swarm : une instance par équipe dans un réseau **isolé** (pas de lien
-      équipe A ↔ équipe B). L'overlay `ctfd_challenges` existe déjà côté arena.
+### 2.2 Modèle & migration
+- [x] 🤖 Tables `team_instance` (clé équipe, unicité `(account_id, challenge_id)`) + `frp_port`.
+      Révision Alembic ; `create_all` sur SQLite dev.
+- [ ] 🧑🤖 Exécuter réellement la migration sur **MariaDB** prod (vérifier `SKIP LOCKED` / version).
 
-### 2.3 Exposition via FRP
-- [ ] 🤖 Câbler whale ↔ `frpc` (arena) ↔ `frps` (front) : chaque instance obtient un
-      port/sous-domaine unique dans la plage `whale_port_range_start..end` (déjà ouverte).
-- [ ] 🤖 Vérifier que l'admin FRP reste sur `127.0.0.1` (déjà durci) et que whale y accède
-      par le bon canal.
+### 2.3 Client Docker & création
+- [x] 🤖 `containers.run` sur `DOCKER_HOST` (image locale, pas de pull), env **`TEAM_SECRET` seul**,
+      réseau overlay par équipe, limites mem/cpu/**pids**, labels.
+- [ ] ⚠🧑🤖 **Répétition** : que le socket tunnelé porte `containers.run` sur image locale ;
+      que `-p 127.0.0.1:P` marche sur l'arena ; création overlay `--attachable`.
 
-### 2.4 Injection du secret par équipe (le point clé)
-- [ ] 🤖 Adapter whale pour injecter dans chaque conteneur
-      `TEAM_SECRET = HMAC(CTF_TEAM_FLAG_SECRET, team_id)` — **exactement** la dérivation du
-      plugin `team_hmac` (déjà prouvée byte-à-byte). C'est ce qui fait qu'un flag résolu est
-      accepté au scoreboard.
-- [ ] 🤖 Test d'intégration : spawn d'une instance de démo → le flag émis par le conteneur
-      == `team_hmac.expected_flag(team_id, challenge_id)`. Automatiser en smoke test.
+### 2.4 Câblage FRP
+- [x] 🤖 Allocation de port atomique (`FOR UPDATE SKIP LOCKED`), génération/parsing du bloc TOML
+      (idempotent, testé en unitaire), reload frpc. **Voie B retenue** : forward du 7400 via
+      `dockerproxy` (+ `allowPorts` durci sur frps). dockerproxy/compose/Makefile/.env câblés.
+- [ ] ⚠🧑🤖 **Répétition** : joignabilité réelle de frpc admin via le tunnel ; `PUT /api/config`
+      + reload effectifs ; connexion joueur `front_ip:port` de bout en bout. **Risque #1.**
 
-### 2.5 Contrôles d'admission (infra)
-- [ ] 🤖 Rate limits **généreux** sur l'instancier (spawn/renew/destroy) par équipe.
-- [ ] 🤖 Limites CPU / mémoire / PID par service Swarm (anti fork-bomb / fuzzer).
-- [ ] 🤖 TTL + bouton renew/destroy par instance ; nettoyage des instances orphelines.
+### 2.5 Routes & admission
+- [x] 🤖 Blueprint spawn/renew/destroy/status, `@authed_only`+`during_ctf_time`, **garde de
+      prérequis** (rejeu de `challenges.py`), caps (`MAX_PER_TEAM`, global, unicité), rate-limit.
+- [ ] 🧑 Tenue sous ~300 équipes concurrentes sur le canal ssh unique (test de charge Lot 5).
 
-### 2.6 Validation
-- [ ] 🤖 Déployer **1 challenge de démo** (ex. `web/race-the-coupon`) de bout en bout :
-      import → spawn par équipe → exploit → flag accepté. `make check-arena` vert.
-- [ ] 🧑 Test manuel avec 2 comptes équipe distincts : flags différents, isolation réseau OK.
+### 2.6 TTL, reaper, réconciliation
+- [x] 🤖 Reaper thread dépendance-zéro (verrou `fcntl`, un seul worker), teardown idempotent,
+      réconciliation DB↔Docker, purge au reboot arena.
+- [ ] ⚠🧑🤖 **Répétition** : réconciliation contre l'état arena réel.
 
-**Définition de « fait » Lot 2** : une équipe clique « Start », obtient une instance isolée
-avec son flag propre, l'exploite, et le scoreboard l'accepte.
+**⚠ Décision capacité à figer avant Lot 5** : la plage 28000-28500 = **501 instances
+concurrentes** max. TTL 1 h + reaping le tiennent, mais élargir la plage si besoin de marge.
+
+**Définition de « fait » Lot 2** : validé à la répétition (Lot 5) — une équipe clique
+« Démarrer », obtient une instance isolée avec son flag propre, l'exploite, scoreboard OK.
 
 ---
 

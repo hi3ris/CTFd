@@ -32,8 +32,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 500
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-adversarial-gate:latest
+  internal_port: 8080
   initial: 500
   decay: 25
   minimum: 100
@@ -66,8 +68,6 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-adversarial-gate:latest so
 # `make push-images` finds it. CPU-only; no GPU or model download required.
-image: ctf-adversarial-gate:latest
-
 # --- Prerequisite chain ----------------------------------------------------
 # Standalone (no prerequisite). If wired into an ML track later, prerequisites
 # are attached by challenge ID at import time, e.g.:

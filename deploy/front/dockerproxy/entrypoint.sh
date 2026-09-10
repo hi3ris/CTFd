@@ -34,4 +34,5 @@ exec ssh -N \
   -o ExitOnForwardFailure=yes \
   -i /root/.ssh/id_ed25519 \
   -L "0.0.0.0:2375:/var/run/docker.sock" \
+  -L "0.0.0.0:7400:127.0.0.1:7400" \
   "${ARENA_USER}@${ARENA_HOST}"

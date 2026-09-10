@@ -30,8 +30,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 350
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-padding-oracle-lite:latest
+  internal_port: 9007
   initial: 350
   decay: 30
   minimum: 100
@@ -65,4 +67,3 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-padding-oracle-lite:latest so
 # `make push-images` finds it.
-image: ctf-padding-oracle-lite:latest

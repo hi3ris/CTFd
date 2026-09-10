@@ -38,8 +38,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 500
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-ai3-tool-abuse:latest
+  internal_port: 8080
   initial: 500
   decay: 25
   minimum: 100
@@ -74,8 +76,6 @@ version: "0.1"
 # Served challenge -- image must be named ctf-ai3-tool-abuse:latest so
 # `make push-images` finds it. Requires a per-team tool-capable Ollama backend
 # (llama3.1:8b) reachable at OLLAMA_URL.
-image: ctf-ai3-tool-abuse:latest
-
 # --- Prerequisite chain ----------------------------------------------------
 # Requires Level 2 of the AI track. Prerequisites are wired by challenge ID at
 # import time; this challenge declares:

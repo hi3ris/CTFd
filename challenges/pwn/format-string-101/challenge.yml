@@ -1,8 +1,7 @@
 name: format-string-101
 author: ctf-2026
 category: pwn
-type: dynamic
-
+type: team_instance
 description: |
   **format-string-101** -- a classic format-string leak + write, served as
   pwn-as-a-service.
@@ -35,6 +34,8 @@ description: |
 # Dynamic scoring (easy).
 value: 150
 extra:
+  docker_image: ctf-format-string-101:latest
+  internal_port: 9101
   initial: 150
   decay: 40
   minimum: 50
@@ -68,4 +69,3 @@ connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)
 
 # Image built from the Dockerfile in this directory; must be named ctf-<name>
 # so `make push-images` picks it up.
-image: ctf-format-string-101:latest

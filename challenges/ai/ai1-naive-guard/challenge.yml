@@ -28,8 +28,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 300
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-ai1-naive-guard:latest
+  internal_port: 8080
   initial: 300
   decay: 30
   minimum: 100
@@ -61,8 +63,6 @@ version: "0.1"
 # Served challenge -- image must be named ctf-ai1-naive-guard:latest so
 # `make push-images` finds it. Requires a per-team Ollama backend serving
 # llama3.1:8b, reachable at OLLAMA_URL.
-image: ctf-ai1-naive-guard:latest
-
 # --- Prerequisite chain ----------------------------------------------------
 # Requires Level 0 of the AI track. Prerequisites are wired by challenge ID at
 # import time; this challenge declares:

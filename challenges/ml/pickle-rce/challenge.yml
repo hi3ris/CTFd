@@ -38,8 +38,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 350
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-pickle-rce:latest
+  internal_port: 9080
   initial: 350
   decay: 25
   minimum: 100
@@ -76,4 +78,3 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-pickle-rce:latest so
 # `make push-images` finds it.
-image: ctf-pickle-rce:latest

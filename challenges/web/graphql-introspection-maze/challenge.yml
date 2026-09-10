@@ -27,8 +27,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 500
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-graphql-introspection-maze:latest
+  internal_port: 8080
   initial: 500
   decay: 30
   minimum: 100
@@ -58,4 +60,3 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-graphql-introspection-maze:latest
 # so `make push-images` finds it.
-image: ctf-graphql-introspection-maze:latest

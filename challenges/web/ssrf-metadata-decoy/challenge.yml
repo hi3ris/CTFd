@@ -1,8 +1,7 @@
 name: ssrf-metadata-decoy
 author: ctf-2026
 category: web
-type: dynamic
-
+type: team_instance
 description: |
   **imgproxy** is a company image-fetch proxy: give it a URL and it fetches the
   bytes server-side so the CDN can cache and re-encode them.
@@ -29,6 +28,8 @@ description: |
 # Dynamic scoring (medium).
 value: 350
 extra:
+  docker_image: ctf-ssrf-metadata-decoy:latest
+  internal_port: 8080
   initial: 350
   decay: 30
   minimum: 100
@@ -65,4 +66,3 @@ version: "0.1"
 
 # Image built from the Dockerfile in this directory; must be named ctf-<name>
 # so `make push-images` picks it up.
-image: ctf-ssrf-metadata-decoy:latest

@@ -30,8 +30,10 @@ description: |
 
 # Dynamic scoring (medium).
 value: 350
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-ai2-output-filter:latest
+  internal_port: 8080
   initial: 350
   decay: 45
   minimum: 120
@@ -53,8 +55,6 @@ tags:
   - output-filter
   - encoding
   - served
-
-image: ctf-ai2-output-filter:latest
 state: visible
 
 # Served challenge. Image must be named ctf-ai2-output-filter:latest.

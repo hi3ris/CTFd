@@ -1,8 +1,7 @@
 name: race-the-coupon
 author: ctf-2026
 category: web
-type: dynamic
-
+type: team_instance
 description: |
   **NimbusPay store wallet** exposes a small JSON API. Every account starts
   with 100 store credits. There is a single-use cash-out coupon that moves
@@ -28,6 +27,8 @@ description: |
 # Dynamic scoring (medium).
 value: 400
 extra:
+  docker_image: ctf-race-the-coupon:latest
+  internal_port: 8080
   initial: 400
   decay: 25
   minimum: 100
@@ -58,4 +59,3 @@ connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' but
 
 # Image built from the Dockerfile in this directory; must be named ctf-<name>
 # so `make push-images` picks it up.
-image: ctf-race-the-coupon:latest

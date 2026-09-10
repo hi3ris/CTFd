@@ -212,16 +212,15 @@ link: ## Relie le front a l'arena et au noeud IA, et verifie que ca marche
 	  install -m 600 ~/.ssh/id_ed25519_arena deploy/front/ssh/id_ed25519; \
 	  ssh-keyscan -H $(ARENA_PRIV) > deploy/front/ssh/known_hosts 2>/dev/null; \
 	  test -s deploy/front/ssh/known_hosts || { echo "ERREUR : ssh-keyscan n'"'"'a rien renvoye"; exit 1; }'
-	@echo ">> Jeton frp injecte sur l'arena"
+	@echo ">> Jeton frp injecte sur l'arena et instancier configure sur le front"
 	@TOKEN=$$($(FRONT_SSH) 'sudo cat /etc/frp/token'); \
 	 test -n "$$TOKEN" || { echo "ERREUR : jeton frp vide cote front"; exit 1; }; \
 	 FRPADMIN=$$(openssl rand -hex 16); \
 	 $(ARENA_SSH) "sudo sed -i -e \"s|REMPLACE_TOKEN|$$TOKEN|\" -e \"s|REMPLACE_ADMIN_PASSWORD|$$FRPADMIN|\" /etc/frp/frpc.toml && sudo systemctl restart frpc"; \
 	 sleep 2; \
 	 $(ARENA_SSH) 'systemctl is-active --quiet frpc' \
-	   || { echo "ERREUR : frpc n'a pas demarre. 'make ssh-arena' puis 'journalctl -u frpc'"; exit 1; }
-	@echo ">> Configuration de CTFd pour cette phase"
-	@case "$(PHASE)" in \
+	   || { echo "ERREUR : frpc n'a pas demarre. 'make ssh-arena' puis 'journalctl -u frpc'"; exit 1; }; \
+	 case "$(PHASE)" in \
 	   preselection) W=4; POOL=1G ;; \
 	   *)            W=2; POOL=256M ;; \
 	 esac; \
@@ -233,6 +232,11 @@ link: ## Relie le front a l'arena et au noeud IA, et verifie que ca marche
 	   upsert DOCKER_HOST tcp://dockerproxy:2375; \
 	   upsert WORKERS $$W; \
 	   upsert INNODB_POOL $$POOL; \
+	   upsert FRONT_PUBLIC_IP $(FRONT_IP); \
+	   upsert FRPC_ADMIN_ADDR dockerproxy:7400; \
+	   upsert FRPC_ADMIN_PASSWORD $$FRPADMIN; \
+	   upsert WHALE_PORT_RANGE_START $(WHALE_PORT_START); \
+	   upsert WHALE_PORT_RANGE_END $(WHALE_PORT_END); \
 	   $(COMPOSE) --profile arena up -d --build"
 	@echo ">> Verification du canal Docker vers l'arena"
 	@$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ctfd python -c "\

@@ -1,8 +1,7 @@
 name: proto-fuzz
 author: ctf-2026
 category: misc
-type: dynamic
-
+type: team_instance
 description: |
   **proto-fuzz** -- a tiny home-grown line protocol, **FZLP/1**, served over
   TCP. It provisions "channels". It also has a maintenance command it does not
@@ -29,6 +28,8 @@ description: |
 # Dynamic scoring (medium).
 value: 350
 extra:
+  docker_image: ctf-proto-fuzz:latest
+  internal_port: 9109
   initial: 350
   decay: 35
   minimum: 100
@@ -67,6 +68,4 @@ files:
 
 # Image built from the Dockerfile in this directory; must be named ctf-<name>
 # so `make push-images` picks it up.
-image: ctf-proto-fuzz:latest
-
 state: visible

@@ -26,8 +26,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 150
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-jwt-cousin:latest
+  internal_port: 8080
   initial: 150
   decay: 25
   minimum: 50
@@ -57,4 +59,3 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-jwt-cousin:latest so
 # `make push-images` finds it.
-image: ctf-jwt-cousin:latest

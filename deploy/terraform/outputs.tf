@@ -82,3 +82,13 @@ output "dns_action_required" {
     "Aucune : plus de front en ligne."
   )
 }
+
+output "whale_port_range_start" {
+  description = "Premier port TCP des instances de challenge (lu par le Makefile)."
+  value       = var.whale_port_range_start
+}
+
+output "whale_port_range_end" {
+  description = "Dernier port TCP des instances de challenge (lu par le Makefile)."
+  value       = var.whale_port_range_end
+}

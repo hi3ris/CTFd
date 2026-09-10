@@ -30,8 +30,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 350
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-heap-note:latest
+  internal_port: 9022
   initial: 350
   decay: 25
   minimum: 100
@@ -68,4 +70,3 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-heap-note:latest so
 # `make push-images` finds it.
-image: ctf-heap-note:latest

@@ -40,7 +40,9 @@ resource "aws_instance" "front" {
   }
 
   user_data = templatefile("${path.module}/templates/front-userdata.sh.tftpl", {
-    frp_bind_port = 7000
+    frp_bind_port    = 7000
+    port_range_start = var.whale_port_range_start
+    port_range_end   = var.whale_port_range_end
   })
 
   # Un changement de user_data ne doit pas recreer le front (il porte la base).

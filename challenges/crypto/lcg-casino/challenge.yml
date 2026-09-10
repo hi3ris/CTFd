@@ -32,8 +32,10 @@ description: |
   Flag format: `CTF{...}`
 
 value: 500
-type: dynamic
+type: team_instance
 extra:
+  docker_image: ctf-lcg-casino:latest
+  internal_port: 9021
   initial: 500
   decay: 25
   minimum: 100
@@ -69,4 +71,3 @@ version: "0.1"
 
 # Served challenge -- image must be named ctf-lcg-casino:latest so
 # `make push-images` finds it.
-image: ctf-lcg-casino:latest

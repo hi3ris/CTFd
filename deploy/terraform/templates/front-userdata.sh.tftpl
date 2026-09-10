@@ -71,6 +71,11 @@ cat > /etc/frp/frps.toml <<EOF
 bindPort = ${frp_bind_port}
 auth.method = "token"
 auth.token = "$(cat /etc/frp/token)"
+# N'autoriser que la plage reservee aux instances de challenge : sans cela frps
+# accepterait n'importe quel remotePort demande par un frpc authentifie.
+allowPorts = [
+  { start = ${port_range_start}, end = ${port_range_end} },
+]
 log.to = "/var/log/frps.log"
 log.level = "info"
 EOF

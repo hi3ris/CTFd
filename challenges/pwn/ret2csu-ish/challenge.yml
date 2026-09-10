@@ -1,8 +1,7 @@
 name: ret2csu-ish
 author: ctf-2026
 category: pwn
-type: dynamic
-
+type: team_instance
 description: |
   **ret2csu-ish** -- a statically linked, no-PIE x86-64 binary with a stack
   overflow, no canary, and no win() function. Served as pwn-as-a-service.
@@ -46,6 +45,8 @@ description: |
 # Dynamic scoring (hard).
 value: 500
 extra:
+  docker_image: ctf-ret2csu-ish:latest
+  internal_port: 9111
   initial: 500
   decay: 30
   minimum: 100
@@ -81,4 +82,3 @@ connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)
 
 # Image built from the Dockerfile in this directory; must be named ctf-<name>
 # so `make push-images` picks it up.
-image: ctf-ret2csu-ish:latest

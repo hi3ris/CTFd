@@ -18,5 +18,5 @@ RUN apk add --no-cache openssh-client socat
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 
-EXPOSE 2375
+EXPOSE 2375 7400
 ENTRYPOINT ["/entrypoint.sh"]
