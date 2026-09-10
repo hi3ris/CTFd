@@ -1,18 +1,25 @@
 #!/usr/bin/env python3
 """
-Per-team flag derivation for challenge `ml-adversarial-gate`.
+Per-challenge flag derivation for challenge `ml-adversarial-gate`.
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
+The per-team instancer now injects PER-CHALLENGE values into the served
+container (it no longer injects the team MASTER secret TEAM_SECRET, so owning
+one container no longer leaks every flag for the team):
 
-The platform injects TEAM_SECRET into the served container at creation time;
-feeding the same value here reproduces the flag CTFd should accept for that
-team. The flag is emitted by the running instance only after /submit verifies
-(server side) that the submitted badge is within L-inf epsilon of the DENIED
-badge AND is classified GRANTED by the real model.
+    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24]
+                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
 
-Usage:
-    TEAM_SECRET=<team-secret> python3 flag.py
-    python3 flag.py <team-secret>
+The flag VALUE is unchanged: previously the flag was
+    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
+and the instancer computes CHALLENGE_SECRET = HMAC(team_secret, CHALLENGE_ID),
+so CHALLENGE_SECRET[:24] is exactly the old flag body. The scoreboard's
+team_hmac flag class validates the same value. This is a SOURCE change, not a
+value change.
+
+Usage (arena):    the container already has FLAG / CHALLENGE_SECRET in env
+Usage (local dev): TEAM_SECRET=<team-secret> python3 flag.py
+                   python3 flag.py <team-secret>
 """
 import hashlib
 import hmac
@@ -23,12 +30,39 @@ CHALLENGE_ID = "ml-adversarial-gate"
 
 
 def flag(team_secret: str) -> str:
+    """Legacy derivation kept for compatibility / local dev.
+
+    HMAC(team_secret, CHALLENGE_ID)[:24] is exactly CHALLENGE_SECRET[:24], so
+    this reproduces the same flag body off-arena where only a team secret is
+    available.
+    """
     dig = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
     return "CTF{" + dig[:24] + "}"
 
 
+def get_flag() -> str:
+    """Return the flag under the new per-challenge contract.
+
+    Order:
+      1. os.environ["FLAG"]                    -- exact flag, if injected
+      2. "CTF{" + CHALLENGE_SECRET[:24] + "}"  -- if CHALLENGE_SECRET injected
+      3. LOCAL DEV fallback derived from TEAM_SECRET (default "local-dev-secret")
+         so the service still runs off-arena.
+    """
+    env_flag = os.environ.get("FLAG")
+    if env_flag:
+        return env_flag
+    cs = os.environ.get("CHALLENGE_SECRET")
+    if cs:
+        return "CTF{" + cs[:24] + "}"
+    # LOCAL DEV fallback only -- never used in the arena.
+    return flag(os.environ.get("TEAM_SECRET", "local-dev-secret"))
+
+
 if __name__ == "__main__":
-    secret = sys.argv[1] if len(sys.argv) > 1 else os.environ.get("TEAM_SECRET")
-    if not secret:
-        sys.exit("provide TEAM_SECRET (env var or argv[1])")
-    print(flag(secret))
+    # Explicit team secret on argv reproduces the flag off-arena; otherwise go
+    # through the full get_flag() contract (FLAG / CHALLENGE_SECRET / dev).
+    if len(sys.argv) > 1:
+        print(flag(sys.argv[1]))
+    else:
+        print(get_flag())

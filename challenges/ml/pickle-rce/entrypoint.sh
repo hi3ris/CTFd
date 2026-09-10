@@ -1,9 +1,10 @@
 #!/bin/sh
 # ModelHub (ml-pickle-rce) service entrypoint.
 #
-# Derives THIS team's flag from TEAM_SECRET (see flag.py) and writes it to the
-# flag file on the service host. The flag never appears in any response unless a
-# solver executes code during unpickling and reads the file back out.
+# Resolves THIS instance's flag via flag.py (from the injected FLAG /
+# CHALLENGE_SECRET; see flag.py) and writes it to the flag file on the service
+# host. The flag never appears in any response unless a solver executes code
+# during unpickling and reads the file back out.
 set -eu
 
 PORT="${PORT:-9080}"

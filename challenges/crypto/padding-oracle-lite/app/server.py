@@ -28,8 +28,6 @@ Framing (POP1), see handout/SPEC.md for the partial spec players get:
 
 Every payload is an even number of bytes so the word count is exact.
 """
-import hashlib
-import hmac
 import os
 import socketserver
 import struct
@@ -37,13 +35,15 @@ import threading
 
 from Crypto.Cipher import AES
 
+from flag import get_flag
+
 # ---------------------------------------------------------------------------
-# Secrets. Both are injected by the platform at container-creation time and are
-# NEVER present in any file a player can download.
+# Flag source. The platform now injects PER-CHALLENGE values (FLAG /
+# CHALLENGE_SECRET) at container-creation time, NOT the team master secret.
+# The flag is resolved through flag.get_flag(); TEAM_SECRET is no longer read
+# on the arena (get_flag only falls back to it for off-arena local dev). None
+# of these values are present in any file a player can download.
 # ---------------------------------------------------------------------------
-# TEAM_SECRET derives the per-team flag; it never touches the crypto path.
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "demo-team-secret")
-CHALLENGE_ID = "crypto-padding-oracle-lite"
 
 # The AES-128-CBC key + IV are fresh per instance. The key never leaves the
 # process; brute forcing it is not the intended path and is not feasible.
@@ -52,8 +52,7 @@ IV = os.urandom(16)
 
 
 def compute_flag() -> str:
-    digest = hmac.new(TEAM_SECRET.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return get_flag()
 
 
 # ---------------------------------------------------------------------------

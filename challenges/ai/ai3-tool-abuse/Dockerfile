@@ -22,6 +22,8 @@ COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
 COPY app/app.py app/prompts.py app/tools.py app/model_backends.py ./
+# flag.py (challenge root) provides get_flag(); tools.py imports it at runtime.
+COPY flag.py ./
 
 # non-root
 RUN useradd --no-create-home --uid 10001 appuser

@@ -29,20 +29,37 @@ from flask import Flask, request, jsonify, Response
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
-# Secrets. Both are injected by the platform at container creation time and
-# are NEVER present in any file a player can download.
+# Secrets. Injected by the platform at container creation time and NEVER
+# present in any file a player can download.
 # ---------------------------------------------------------------------------
 # The key used to sign tokens. Random per instance; brute forcing it is not
 # the intended path (and is not feasible), and it never touches the flag.
 SIGNING_KEY = os.environ.get("SIGNING_KEY", "demo-instance-signing-key").encode()
 
-# Per-team secret used to derive this instance's flag.
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "demo-team-secret")
 CHALLENGE_ID = "web-jwt-cousin"
 
 
-def compute_flag() -> str:
-    digest = hmac.new(TEAM_SECRET.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+def get_flag() -> str:
+    """This instance's flag, under the per-challenge injection contract.
+
+    The instancier no longer injects the team master secret. It injects
+    per-challenge values instead:
+      1. FLAG              -- the exact flag string, used verbatim;
+      2. CHALLENGE_SECRET  -- per-challenge hex; flag == "CTF{"+hex[:24]+"}".
+    Off-arena (dev), where neither is set, fall back to deriving from
+    TEAM_SECRET so `docker compose up` still works. The flag VALUE is
+    unchanged: CHALLENGE_SECRET == HMAC_SHA256(team_secret, CHALLENGE_ID),
+    so CHALLENGE_SECRET[:24] is exactly the historical flag body.
+    """
+    env_flag = os.environ.get("FLAG")
+    if env_flag:
+        return env_flag
+    challenge_secret = os.environ.get("CHALLENGE_SECRET")
+    if challenge_secret:
+        return "CTF{" + challenge_secret[:24] + "}"
+    # LOCAL DEV ONLY -- no per-challenge secret present in the environment.
+    team_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
+    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
     return "CTF{" + digest[:24] + "}"
 
 
@@ -204,7 +221,7 @@ def rotate():
         ok=True,
         message="console rotated; maintenance mode cleared",
         rotations=n,
-        flag=compute_flag(),
+        flag=get_flag(),
     )
 
 

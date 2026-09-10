@@ -2,13 +2,16 @@
 #
 # Build:  docker build -t ctf-ai1-naive-guard:latest .
 # Run:    docker run --rm -p 8080:8080 \
-#             -e TEAM_SECRET="<per-team-secret>" \
+#             -e CHALLENGE_SECRET="<per-challenge-hex>" \
+#             -e FLAG="CTF{...}" \
 #             -e OLLAMA_URL="http://ollama:11434" \
 #             ctf-ai1-naive-guard:latest
 #
-# TEAM_SECRET (derives the guarded SIGMA secret AND the flag) and OLLAMA_URL
-# (the team's Ollama backend serving llama3.1:8b) are injected at
-# instance-creation time. No secret is baked into the image.
+# The platform injects per-CHALLENGE values -- CHALLENGE_SECRET (derives the
+# guarded SIGMA secret / persona; its [:24] is the flag body) and FLAG (the
+# exact flag) -- plus OLLAMA_URL (the team's Ollama backend serving
+# llama3.1:8b). TEAM_SECRET is NO LONGER injected; owning this container leaks
+# only this challenge's values. No secret is baked into the image.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \
@@ -20,7 +23,7 @@ WORKDIR /srv
 COPY app/requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app/app.py app/prompts.py ./
+COPY app/app.py app/prompts.py flag.py ./
 
 # non-root
 RUN useradd --no-create-home --uid 10001 appuser

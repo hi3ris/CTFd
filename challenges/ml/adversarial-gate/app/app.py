@@ -25,7 +25,16 @@ artifact is the challenge); only the flag is per-team:
 
     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
 
-TEAM_SECRET is injected by the platform and never baked into the image.
+The flag VALUE is unchanged, but the per-team instancer no longer injects the
+team MASTER secret TEAM_SECRET (owning one container used to leak every flag).
+It now injects only per-challenge values -- FLAG (the exact flag string) and
+CHALLENGE_SECRET (per-challenge hex, whose first 24 chars are the flag body):
+
+    FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+
+and CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID), so CHALLENGE_SECRET[:24]
+is exactly the old flag body the scoreboard's team_hmac class validates. This is
+a SOURCE change, not a value change.
 """
 import base64
 import hashlib
@@ -43,7 +52,6 @@ from gatemodel import GateModel, CLASSES, GRANTED, SIDE
 app = Flask(__name__)
 
 CHALLENGE_ID = "ml-adversarial-gate"
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "local-demo-team-secret")
 EPS = int(os.environ.get("GATE_EPS", "8"))     # L-inf budget in 0..255 levels
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
@@ -61,9 +69,21 @@ DENIED = np.load(os.path.join(_HERE, "denied_badge.npy")).astype(np.int32)
 MAX_BODY = 200_000     # a 32x32 QGP1 packet is ~1KB; cap generously
 
 
-# ---- per-team flag (only input is TEAM_SECRET, reproduced by flag.py) ----
+# ---- per-challenge flag (new contract; mirrors flag.py get_flag()) ----
+# The instancer injects FLAG and/or CHALLENGE_SECRET per challenge; TEAM_SECRET
+# is NO LONGER injected. Order: FLAG, then CHALLENGE_SECRET[:24], then a clearly
+# marked LOCAL DEV fallback derived from TEAM_SECRET so the service still runs
+# off-arena. flag.py reproduces the same value for scoreboard validation.
 def compute_flag() -> str:
-    dig = hmac.new(TEAM_SECRET.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    env_flag = os.environ.get("FLAG")
+    if env_flag:
+        return env_flag
+    cs = os.environ.get("CHALLENGE_SECRET")
+    if cs:
+        return "CTF{" + cs[:24] + "}"
+    # LOCAL DEV fallback only -- never reached in the arena.
+    dev_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
+    dig = hmac.new(dev_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
     return "CTF{" + dig[:24] + "}"
 
 

@@ -15,15 +15,19 @@ submits the secret they extracted to /verify. Verification is a DETERMINISTIC
 tool call -- a constant-time comparison against the real per-team secret -- and
 ONLY on a match does the service compute and emit the per-team flag:
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ai-ai1-naive-guard")[:24] + "}"
+    flag = "CTF{" + CHALLENGE_SECRET[:24] + "}"   (== the historical value)
 
 Thus the service verifies an EFFECT (the player really recovered this
 instance's secret by breaking the live guard) rather than trusting any payload
 shape or any model output. Verification never asks the model anything.
 
-Secrets (both injected by the platform, never baked into the image / files):
-    TEAM_SECRET  -- per-team secret; derives BOTH the SIGMA secret and the flag
-    OLLAMA_URL   -- base URL of the team's Ollama backend
+Runtime injection (per-challenge; TEAM_SECRET is NO LONGER injected):
+    FLAG              -- the exact flag string (authoritative if present)
+    CHALLENGE_SECRET  -- per-challenge hex; the flag body is CHALLENGE_SECRET[:24]
+                         and it also derives the SIGMA secret / persona
+    OLLAMA_URL        -- base URL of the team's Ollama backend
+Owning this container leaks only THIS challenge's values, never a team master
+secret.
 """
 import hashlib
 import hmac
@@ -34,6 +38,7 @@ import time
 import requests
 from flask import Flask, request, jsonify, Response
 
+import flag as flagmod
 import prompts
 
 app = Flask(__name__)
@@ -41,7 +46,6 @@ app = Flask(__name__)
 CHALLENGE_ID = "ai-ai1-naive-guard"
 MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "local-demo-team-secret")
 
 # Conversation limits (generous; just keeps the backend from being hammered)
 MAX_TURNS = 40          # user turns kept in a session's history
@@ -49,26 +53,29 @@ MAX_MSG_CHARS = 4000    # per user message
 
 
 # ---------------------------------------------------------------------------
-# Deterministic per-team derivations. TEAM_SECRET is the ONLY input, so the
-# platform can reproduce every value with flag.py / the same HMAC labels.
+# Deterministic per-challenge derivations. All keyed off CHALLENGE_SECRET (the
+# per-challenge hex the platform injects); TEAM_SECRET is no longer read at
+# runtime. Off-arena, flag.get_challenge_secret() re-derives it from a dev
+# fallback so local runs still work. The platform can reproduce every value
+# with flag.py using the same labels.
 # ---------------------------------------------------------------------------
 def _hmac_hex(label: str) -> str:
-    return hmac.new(TEAM_SECRET.encode(), label.encode(), hashlib.sha256).hexdigest()
+    key = flagmod.get_challenge_secret()
+    return hmac.new(key.encode(), label.encode(), hashlib.sha256).hexdigest()
 
 
 def guard_secret() -> str:
     """The SIGMA secret the model is told to protect. 64-bit, infeasible to
     brute-force against /verify -- it must be extracted from the model."""
-    h = _hmac_hex(CHALLENGE_ID + "/guard-secret")[:16].upper()
-    return f"SIGMA-{h[0:4]}-{h[4:8]}-{h[8:12]}-{h[12:16]}"
+    return flagmod.guard_secret()
 
 
 def compute_flag() -> str:
-    return "CTF{" + _hmac_hex(CHALLENGE_ID)[:24] + "}"
+    return flagmod.get_flag()
 
 
 def persona_index() -> int:
-    seed = int(_hmac_hex(CHALLENGE_ID + "/prompt-index")[:8], 16)
+    seed = int(_hmac_hex("prompt-index")[:8], 16)
     return prompts.pick_index(seed)
 
 

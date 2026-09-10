@@ -21,8 +21,11 @@ with the gate unsealed wins; the flag is emitted at that moment inside the tool
 result the model relays. No downloadable artifact carries the flag.
 
 Secrets (injected by the platform, never baked into the image):
-    TEAM_SECRET  -- per-team; derives the flag (tools.compute_flag)
-    OLLAMA_URL   -- base URL of the team's Ollama backend
+    FLAG              -- the exact flag string for this instance
+    CHALLENGE_SECRET  -- per-challenge hex; flag body is CHALLENGE_SECRET[:24]
+                         (tools.compute_flag -> flag.get_flag() reads these;
+                          TEAM_SECRET is no longer injected)
+    OLLAMA_URL        -- base URL of the team's Ollama backend
 """
 import json
 import os

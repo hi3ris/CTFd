@@ -1,8 +1,9 @@
 # Run notes for proto-fuzz.
 #
 # The platform instancier builds/starts one container PER TEAM and injects that
-# team's TEAM_SECRET. This compose file documents the runtime contract and is
-# handy for local playtesting.
+# team's per-challenge values (FLAG / CHALLENGE_SECRET), never the team master
+# secret. This compose file documents the runtime contract and is handy for
+# local playtesting.
 #
 #   Build the image (name matters -- `make push-images` matches ^ctf-):
 #     docker build -t ctf-proto-fuzz:latest .
@@ -26,7 +27,11 @@ services:
     build: .
     image: ctf-proto-fuzz:latest
     environment:
-      # Per-team secret. In production this is set by the instancier, never here.
+      # Per-challenge injection. In production these are set by the instancier,
+      # never here. Locally, pass FLAG or CHALLENGE_SECRET to exercise the arena
+      # contract; otherwise flag.py's dev fallback (TEAM_SECRET default) applies.
+      - FLAG=${FLAG:-}
+      - CHALLENGE_SECRET=${CHALLENGE_SECRET:-}
       - TEAM_SECRET=${TEAM_SECRET:-local-dev-secret}
     ports:
       - "9109:9109"

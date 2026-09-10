@@ -1,21 +1,29 @@
 #!/usr/bin/env python3
-"""Per-team dynamic flag derivation for ml-pickle-rce.
+"""Per-challenge dynamic flag resolution for ml-pickle-rce.
 
-The platform injects a per-team secret into the container via the TEAM_SECRET
-environment variable. The flag is derived deterministically from that secret and
-the fixed challenge id, so the scoreboard can recompute and validate a team's
-flag without the flag ever appearing in a downloadable artifact.
+The instancier injects per-challenge values into the container:
+
+    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
+                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+
+The flag VALUE is unchanged from the old TEAM_SECRET-based scheme: the old flag
+was
 
     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-pickle-rce")[:24] + "}"
 
-The [:24] slice takes the first 24 hex characters of the hex digest.
+and the instancier now sets CHALLENGE_SECRET == HMAC_SHA256(team_secret,
+"ml-pickle-rce"), so CHALLENGE_SECRET[:24] is exactly the old flag body. The
+scoreboard's team_hmac flag class validates the same value. Owning one container
+now leaks only this challenge's flag, not the team master secret.
 
-entrypoint.sh uses this module to write the per-team FLAG into a file on the
+entrypoint.sh uses this module to write THIS instance's FLAG into a file on the
 service host (default /flag). The registry service never returns that file; a
 solver only gets it by executing code during unpickling and reading it. This
 module is also runnable standalone for the platform's validation tooling:
 
-    TEAM_SECRET=deadbeef python3 flag.py
+    CHALLENGE_SECRET=deadbeef... python3 flag.py
+    FLAG='CTF{...}'              python3 flag.py
 """
 import hmac
 import hashlib
@@ -25,6 +33,11 @@ CHALLENGE_ID = "ml-pickle-rce"
 
 
 def derive_flag(team_secret: str) -> str:
+    """Compat: derive the flag from a raw team secret (old scheme).
+
+    Kept so the old derivation is still available to tooling. Runtime no longer
+    depends on this: real instances receive FLAG / CHALLENGE_SECRET directly.
+    """
     digest = hmac.new(
         team_secret.encode("utf-8"),
         CHALLENGE_ID.encode("utf-8"),
@@ -34,10 +47,27 @@ def derive_flag(team_secret: str) -> str:
 
 
 def get_flag() -> str:
-    # Local dev / playtest fallback. Real instances always receive a per-team
-    # TEAM_SECRET from the instancier.
-    secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
-    return derive_flag(secret)
+    # 1) Instancier injects the exact flag string.
+    flag = os.environ.get("FLAG")
+    if flag:
+        return flag
+
+    # 2) Instancier injects the per-challenge secret; the flag body is its
+    #    first 24 hex chars. CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID),
+    #    so this reproduces the old flag value exactly.
+    challenge_secret = os.environ.get("CHALLENGE_SECRET")
+    if challenge_secret:
+        return "CTF{" + challenge_secret[:24] + "}"
+
+    # 3) LOCAL DEV fallback (off-arena only). Derive a CHALLENGE_SECRET from the
+    #    TEAM_SECRET dev default the same way the instancier would, then take its
+    #    first 24 hex chars -- identical to the old dev flag value.
+    dev_challenge_secret = hmac.new(
+        os.environ.get("TEAM_SECRET", "local-dev-secret").encode("utf-8"),
+        CHALLENGE_ID.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return "CTF{" + dev_challenge_secret[:24] + "}"
 
 
 if __name__ == "__main__":

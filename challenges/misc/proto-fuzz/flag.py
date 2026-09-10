@@ -1,22 +1,26 @@
 #!/usr/bin/env python3
-"""Per-team dynamic flag derivation for misc-proto-fuzz.
+"""Per-challenge dynamic flag resolution for misc-proto-fuzz.
 
-The platform instancier starts one container PER TEAM and injects that team's
-secret via the TEAM_SECRET environment variable. The flag is derived
-deterministically from that secret and the fixed challenge id, so the scoreboard
-can recompute and validate a team's flag without the flag ever living in a
-downloadable artifact.
+The platform instancier starts one container PER TEAM and injects only
+PER-CHALLENGE values, never the team master secret:
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "misc-proto-fuzz")[:24] + "}"
+    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
+                      i.e.  FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
 
-The [:24] slice takes the first 24 hex characters of the hex digest.
+Historically the flag was  "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}",
+and the instancier now computes CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID)
+per challenge, so CHALLENGE_SECRET[:24] is exactly the old flag body. The value is
+unchanged; only its source is. TEAM_SECRET is NO LONGER injected at runtime.
 
-The FZLP service (server.py) imports this to compute the flag it will emit ONLY
+The FZLP service (server.py) imports get_flag() to compute the flag it emits ONLY
 after it observes the required effect (the hidden maintenance channel becoming
-armed via the CFG length off-by-one). It is also runnable standalone for the
-platform's validation tooling:
+armed via the CFG length off-by-one). get_flag() is also runnable standalone for
+the platform's validation tooling:
 
-    TEAM_SECRET=deadbeef python3 flag.py
+    CHALLENGE_SECRET=deadbeef... python3 flag.py     # arena contract
+    FLAG='CTF{...}' python3 flag.py                  # explicit flag
+    python3 flag.py                                  # LOCAL DEV fallback
 """
 import hmac
 import hashlib
@@ -24,8 +28,20 @@ import os
 
 CHALLENGE_ID = "misc-proto-fuzz"
 
+# Local-dev fallback ONLY. Never used in the arena: real instances always get
+# FLAG or CHALLENGE_SECRET from the instancier. Kept so the image still runs
+# off-arena (local dev / playtest) and reproduces the historical dev flag.
+_DEV_TEAM_SECRET = "local-dev-secret"
+
 
 def derive_flag(team_secret: str) -> str:
+    """Legacy helper, kept for compatibility.
+
+    Reproduces the historical derivation
+        flag = "CTF{" + HMAC_SHA256(team_secret, CHALLENGE_ID)[:24] + "}"
+    which is equivalent to "CTF{" + CHALLENGE_SECRET[:24] + "}" because
+    CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID).
+    """
     digest = hmac.new(
         team_secret.encode("utf-8"),
         CHALLENGE_ID.encode("utf-8"),
@@ -35,11 +51,32 @@ def derive_flag(team_secret: str) -> str:
 
 
 def get_flag() -> str:
-    # Fall back to a clearly-marked local value so the service still runs
-    # outside the arena (local dev / playtest). Real instances always get a
-    # per-team TEAM_SECRET from the instancier.
-    secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
-    return derive_flag(secret)
+    """Resolve the flag per the per-challenge injection contract.
+
+    Order:
+      1. os.environ["FLAG"] if set (the exact flag string).
+      2. else "CTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}".
+      3. else a clearly-marked LOCAL DEV fallback derived from the dev
+         TEAM_SECRET default, so the service still runs off-arena.
+    """
+    flag = os.environ.get("FLAG")
+    if flag:
+        return flag
+
+    challenge_secret = os.environ.get("CHALLENGE_SECRET")
+    if challenge_secret:
+        return "CTF{" + challenge_secret[:24] + "}"
+
+    # LOCAL DEV fallback -- not an arena code path. Derive the dev
+    # CHALLENGE_SECRET from the TEAM_SECRET dev default and slice it, which
+    # equals the historical dev flag.
+    dev_team_secret = os.environ.get("TEAM_SECRET", _DEV_TEAM_SECRET)
+    dev_challenge_secret = hmac.new(
+        dev_team_secret.encode("utf-8"),
+        CHALLENGE_ID.encode("utf-8"),
+        hashlib.sha256,
+    ).hexdigest()
+    return "CTF{" + dev_challenge_secret[:24] + "}"
 
 
 if __name__ == "__main__":

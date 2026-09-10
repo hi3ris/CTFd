@@ -32,21 +32,21 @@ are LCG-linked. Two or three reveals are enough to recover the full hidden state
 
 SECRETS
 -------
-  * TEAM_SECRET (env)  -> derives the per-team flag. Never on the crypto path.
+  * FLAG / CHALLENGE_SECRET (env)  -> the per-challenge flag, resolved via
+                          flag.get_flag(). Never on the crypto path.
   * SEED (os.urandom)  -> the initial LCG state. Fresh per connection. Committed
                           to via SHA-256 in the banner but NEVER revealed. You do
                           not need the seed; you recover the *state* from outputs.
 """
 import hashlib
-import hmac
 import json
 import os
 import socketserver
 import threading
 
 import casino_core as core
+import flag as flag_mod
 
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "demo-team-secret")
 CHALLENGE_ID = "crypto-lcg-casino"
 
 STREAK_TARGET = 10
@@ -60,9 +60,9 @@ MAX_HANDS = 100000
 
 
 def compute_flag() -> str:
-    digest = hmac.new(TEAM_SECRET.encode(), CHALLENGE_ID.encode(),
-                      hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    # Per-challenge contract: FLAG if injected, else CTF{CHALLENGE_SECRET[:24]},
+    # else a local-dev fallback. No runtime dependence on TEAM_SECRET.
+    return flag_mod.get_flag()
 
 
 class Handler(socketserver.BaseRequestHandler):

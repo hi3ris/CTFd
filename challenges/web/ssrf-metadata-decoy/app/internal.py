@@ -15,22 +15,13 @@ The registry root is reachable only after the player bypasses the proxy's
 loopback blocklist (127.0.0.1 is blocked; 127.0.0.2 / 127.1 / decimal / etc.
 are not). It advertises the admin ping path.
 """
-import hashlib
-import hmac
 import ipaddress
-import os
 
 from flask import Flask, Response, request, jsonify
 
+from flag import CHALLENGE_ID, get_flag
+
 app = Flask(__name__)
-
-CHALLENGE_ID = "web-ssrf-metadata-decoy"
-
-
-def compute_flag() -> str:
-    secret = os.environ.get("TEAM_SECRET", "")
-    digest = hmac.new(secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
 
 
 def _from_loopback() -> bool:
@@ -77,7 +68,7 @@ def admin_ping():
         {
             "service": "admin-api",
             "status": "alive",
-            "deploy_token": compute_flag(),
+            "deploy_token": get_flag(),
         }
     )
 

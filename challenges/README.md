@@ -29,3 +29,17 @@ Ne pas mettre en ligne sans cette étape.
 pip install ctfcli
 ctf challenge install challenges/<cat>/<nom>
 ```
+
+## Contrat d'environnement des challenges servis
+
+Les conteneurs par équipe (type `team_instance`) reçoivent de l'instancier :
+
+- `FLAG` — le flag exact à servir/attendre (`CTF{...}`).
+- `CHALLENGE_SECRET` — secret **par challenge** (hex) ; `FLAG == CTF{CHALLENGE_SECRET[:24]}`.
+  Toute valeur secrète auxiliaire (guard-secret, token admin) dérive de `CHALLENGE_SECRET`.
+
+`TEAM_SECRET` (le secret **maître** de l'équipe) n'est **jamais** injecté : un conteneur
+compromis ne doit livrer que son propre flag, pas ceux des autres challenges. Chaque
+`flag.py` expose `get_flag()` qui lit `FLAG`, sinon dérive de `CHALLENGE_SECRET`, sinon
+un repli local marqué pour le dev hors-arène. Le scoreboard valide via la classe de flag
+`team_hmac`, qui recalcule la même valeur.

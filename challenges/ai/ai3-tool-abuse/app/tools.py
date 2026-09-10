@@ -33,15 +33,13 @@ far more easily -- and returns a result that plainly says no gate is bound to
 it. It is refutable in one call, costs no attempt (deploys are unlimited), and
 the runbook + TCK-1002 point the careful reader at `release-oracle` instead.
 """
-import hashlib
-import hmac
 import json
-import os
 import threading
 import time
 
-CHALLENGE_ID = "ai-ai3-tool-abuse"
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "local-demo-team-secret")
+import flag as flagmod
+
+CHALLENGE_ID = flagmod.CHALLENGE_ID
 
 # The protected service (real target) and the decoy service.
 TARGET_SERVICE = "release-oracle"
@@ -50,12 +48,11 @@ PROD = "production"
 SAFE_ENVS = {"dev", "development", "staging", "stage", "qa", "sandbox"}
 
 
-def _hmac_hex(label: str) -> str:
-    return hmac.new(TEAM_SECRET.encode(), label.encode(), hashlib.sha256).hexdigest()
-
-
 def compute_flag() -> str:
-    return "CTF{" + _hmac_hex(CHALLENGE_ID)[:24] + "}"
+    """The flag emitted by the effect oracle. Reads the per-challenge contract
+    (FLAG, then CHALLENGE_SECRET) via flag.get_flag(); TEAM_SECRET is no longer
+    read at runtime (only flag.py's LOCAL DEV fallback still touches it)."""
+    return flagmod.get_flag()
 
 
 def _norm_service(s) -> str:

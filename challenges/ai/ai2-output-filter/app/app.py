@@ -8,14 +8,14 @@ its obvious encodings from every response. The player must pick a transform the
 filter does not catch, decode it, and submit the recovered secret to the
 server-side oracle /verify -- which then, and only then, emits the per-team flag.
 
-The flag never sits in any downloadable artifact: it is derived from TEAM_SECRET
-at request time and returned by /verify only after the EFFECT (the secret was
-recovered) is verified. Any transform method that survives the filter is a valid
-solution -- no payload shape is hard-coded.
+The flag never sits in any downloadable artifact: it is injected per challenge
+(FLAG / CHALLENGE_SECRET) and returned by /verify only after the EFFECT (the
+secret was recovered) is verified. Any transform method that survives the filter
+is a valid solution -- no payload shape is hard-coded.
 
 CHALLENGE_ID = ai-ai2-output-filter
-  guarded secret : SIGMA-<hmac(TEAM_SECRET, id+":guarded")[:16]>
-  flag           : CTF{<hmac(TEAM_SECRET, id)[:24]>}
+  guarded secret : SIGMA-<hmac(CHALLENGE_SECRET, "guarded")[:16]>   (aux secret)
+  flag           : FLAG, else CTF{CHALLENGE_SECRET[:24]}
 """
 
 import hashlib
@@ -28,23 +28,53 @@ import filter as flt
 import prompts
 
 CHALLENGE_ID = "ai-ai2-output-filter"
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "local-dev-team-secret")
+
+# Per-challenge contract (TEAM_SECRET is NO LONGER injected):
+#   FLAG              the exact flag string
+#   CHALLENGE_SECRET  per-challenge hex; flag body == CHALLENGE_SECRET[:24]
+# Aux secrets (the guarded SIGMA value, the persona pick) now derive from
+# CHALLENGE_SECRET, not the team master secret. A local-dev fallback keeps the
+# service runnable off-arena where nothing is injected.
+_DEV_TEAM_SECRET = "local-dev-secret"
 
 
-def _hmac_hex(msg: str) -> str:
-    return hmac.new(TEAM_SECRET.encode(), msg.encode(), hashlib.sha256).hexdigest()
+def get_challenge_secret() -> str:
+    """CHALLENGE_SECRET; off-arena, reconstruct from the dev TEAM_SECRET."""
+    cs = os.environ.get("CHALLENGE_SECRET")
+    if cs:
+        return cs
+    # LOCAL DEV fallback -- not used on the arena.
+    team = os.environ.get("TEAM_SECRET", _DEV_TEAM_SECRET)
+    return hmac.new(team.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+
+
+CHALLENGE_SECRET = get_challenge_secret()
+
+
+def _aux_hmac_hex(label: str) -> str:
+    """Auxiliary per-challenge derivation, keyed on CHALLENGE_SECRET."""
+    return hmac.new(CHALLENGE_SECRET.encode(), label.encode(),
+                    hashlib.sha256).hexdigest()
 
 
 def guarded_secret() -> str:
-    return "SIGMA-" + _hmac_hex(CHALLENGE_ID + ":guarded")[:16]
+    return "SIGMA-" + _aux_hmac_hex("guarded")[:16]
 
 
 def flag() -> str:
-    return "CTF{" + _hmac_hex(CHALLENGE_ID)[:24] + "}"
+    """The flag, per the per-challenge contract."""
+    f = os.environ.get("FLAG")
+    if f:
+        return f
+    cs = os.environ.get("CHALLENGE_SECRET")
+    if cs:
+        return "CTF{" + cs[:24] + "}"
+    # LOCAL DEV fallback -- not used on the arena.
+    return "CTF{" + CHALLENGE_SECRET[:24] + "}"
 
 
 SECRET = guarded_secret()
-PERSONA_INDEX = prompts.pick_index(int(_hmac_hex(CHALLENGE_ID + ":persona")[:8], 16))
+PERSONA_INDEX = prompts.pick_index(int(_aux_hmac_hex("persona")[:8], 16))
 PERSONA_TEXT = prompts.render(PERSONA_INDEX, SECRET)
 ALIASES = prompts.PERSONA_ALIAS[PERSONA_INDEX]
 

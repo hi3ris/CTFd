@@ -1,13 +1,17 @@
 # ctf-adversarial-gate:latest
 #
 # Build:  docker build -t ctf-adversarial-gate:latest .
-# Run:    docker run --rm -p 8080:8080 -e TEAM_SECRET="<per-team-secret>" \
+# Run:    docker run --rm -p 8080:8080 -e CHALLENGE_SECRET="<per-challenge-hex>" \
 #             ctf-adversarial-gate:latest
+#         # (or -e FLAG="CTF{...}" -- the instancer injects one or both)
 #
-# TEAM_SECRET (derives the per-team flag) is injected at instance-creation
-# time. No secret is baked into the image. The classifier weights and the
-# DENIED badge are common to all teams -- the artifact IS the challenge; only
-# the emitted flag is per-team.
+# The per-team instancer injects PER-CHALLENGE values at instance-creation time:
+# FLAG (the exact flag string) and/or CHALLENGE_SECRET (per-challenge hex, whose
+# first 24 chars are the flag body). The team MASTER secret TEAM_SECRET is NO
+# LONGER injected, so owning one container no longer leaks every team flag. No
+# secret is baked into the image. The classifier weights and the DENIED badge
+# are common to all teams -- the artifact IS the challenge; only the flag is
+# per-team.
 FROM python:3.12-slim
 
 ENV PYTHONUNBUFFERED=1 \

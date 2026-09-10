@@ -1,7 +1,9 @@
 #!/bin/sh
 # Container entrypoint for ret2csu-ish.
 #
-# 1. Derive this team's flag from the injected TEAM_SECRET (see flag.py). The
+# 1. Resolve this instance's flag via flag.py, which reads the per-challenge
+#    values injected by the instancier (FLAG, or CHALLENGE_SECRET[:24]); see
+#    flag.py. The team MASTER secret TEAM_SECRET is no longer injected. The
 #    flag is NEVER baked into the binary; it exists only in the live service:
 #      - exported as FLAG in the served process's environment, and
 #      - written to /tmp/flag.txt (tmpfs, runtime-only, NOT a downloadable

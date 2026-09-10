@@ -1,10 +1,11 @@
 #!/bin/sh
 # heap-note service entrypoint.
 #
-# Computes THIS team's flag from TEAM_SECRET (see flag.py), exports it as FLAG,
-# and serves one fresh process of ./chall per TCP connection via socat. The flag
-# is never written to disk and is only reachable by hijacking control flow into
-# win(), which reads getenv("FLAG").
+# Resolves THIS instance's flag via flag.py (which reads the injected FLAG /
+# CHALLENGE_SECRET -- see flag.py), exports it as FLAG, and serves one fresh
+# process of ./chall per TCP connection via socat. The flag is never written to
+# disk and is only reachable by hijacking control flow into win(), which reads
+# getenv("FLAG").
 set -eu
 
 PORT="${PORT:-9022}"

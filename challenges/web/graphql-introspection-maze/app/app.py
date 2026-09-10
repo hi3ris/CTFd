@@ -53,15 +53,28 @@ from graphql.validation import specified_rules, NoSchemaIntrospectionCustomRule
 app = Flask(__name__)
 
 # ---------------------------------------------------------------------------
-# Per-team flag. TEAM_SECRET is injected by the platform at container creation;
-# it never appears in any file the player can download.
+# Per-challenge flag. The platform injects FLAG (and CHALLENGE_SECRET) into the
+# container at creation time; TEAM_SECRET is NO LONGER injected. The flag value
+# is unchanged: CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID), so
+# CHALLENGE_SECRET[:24] is exactly the old flag body. Neither value appears in
+# any file the player can download.
 # ---------------------------------------------------------------------------
-TEAM_SECRET = os.environ.get("TEAM_SECRET", "demo-team-secret")
 CHALLENGE_ID = "web-graphql-introspection-maze"
 
 
 def compute_flag() -> str:
-    digest = hmac.new(TEAM_SECRET.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    # New per-challenge contract, in order of precedence.
+    env_flag = os.environ.get("FLAG")
+    if env_flag:
+        return env_flag
+    challenge_secret = os.environ.get("CHALLENGE_SECRET")
+    if challenge_secret:
+        return "CTF{" + challenge_secret[:24] + "}"
+    # LOCAL DEV fallback ONLY -- never reached on the arena, where FLAG /
+    # CHALLENGE_SECRET are always injected. Reproduces the old per-team value so
+    # off-arena runs still work.
+    team_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
+    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
     return "CTF{" + digest[:24] + "}"
 
 

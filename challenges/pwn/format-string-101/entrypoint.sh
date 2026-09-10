@@ -1,7 +1,8 @@
 #!/bin/sh
 # Container entrypoint for format-string-101.
 #
-# 1. Derive this team's flag from the injected TEAM_SECRET (see flag.py). The
+# 1. Resolve this instance's flag via flag.py, which reads the per-challenge
+#    contract: FLAG if injected, else CHALLENGE_SECRET[:24] (see flag.py). The
 #    flag is NEVER baked into the binary; it only exists in the environment of
 #    the per-connection child process that socat spawns, and the binary reveals
 #    it only after it has verified the effect (auth == this connection's nonce).
