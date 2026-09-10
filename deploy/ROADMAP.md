@@ -100,7 +100,13 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 ---
 
-## Lot 2 — Instancier par équipe (`team_instancer`) 🟡 CONSTRUIT (validation live au Lot 5)
+## Lot 2 — Instancier par équipe (`team_instancer`) 🟢 CODE COMPLET (validation live au Lot 5)
+
+> Revue adverse (12 agents) → 8 défauts corrigés, dont **2 blockers** : injection du secret
+> **maître** dans les conteneurs (un pwn compromis livrait tous les flags) → n'injecte plus
+> qu'un `CHALLENGE_SECRET` par challenge + le `FLAG` concret ; et `start_time` NULL en prod
+> (jamais reap) → défaut Python-side. Les **15 challenges servis** adaptés au contrat
+> `FLAG`/`CHALLENGE_SECRET` (valeur de flag inchangée, vérifiée 15/15).
 
 **Décision : build-maison** (`CTFd/plugins/team_instancer/`), pas `ctfd-whale` — celui-ci
 casse chez nous sur 5 points (clé sur `user_id`, flag en boucle fermée conflictuel avec
