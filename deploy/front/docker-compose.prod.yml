@@ -16,6 +16,8 @@ services:
       - DATABASE_URL=mysql+pymysql://ctfd:${DB_PASSWORD}@db/ctfd
       - REDIS_URL=redis://cache:6379
       - SECRET_KEY=${SECRET_KEY}
+      # Secret global des flags par equipe, lu par la classe de flag team_hmac.
+      - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-}
       - WORKERS=${WORKERS:-2}
       - LOG_FOLDER=/var/log/CTFd
       - ACCESS_LOG=-

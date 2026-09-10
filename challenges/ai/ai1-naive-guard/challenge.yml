@@ -45,9 +45,8 @@ extra:
 # CTFd validates the real per-team flag via the custom HMAC flag class, so no
 # usable static flag is shipped to production.
 flags:
-  - type: static
-    content: CTF{PLACEHOLDER_replaced_by_per_team_HMAC}
-
+  - type: team_hmac
+    content: ai-ai1-naive-guard
 tags:
   - ai
   - prompt-injection

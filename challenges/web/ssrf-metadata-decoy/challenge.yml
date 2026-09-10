@@ -40,8 +40,9 @@ extra:
 # (see flag.py). The internal admin service computes and returns exactly this
 # value when its /admin/ping effect fires. The platform's custom per-account
 # flag class recomputes and validates each team's flag on submission.
-flags: []
-
+flags:
+  - type: team_hmac
+    content: web-ssrf-metadata-decoy
 tags:
   - web
   - ssrf

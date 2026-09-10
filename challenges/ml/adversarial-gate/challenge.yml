@@ -1,0 +1,75 @@
+name: adversarial-gate
+author: dagbanjaphet
+category: ml
+description: |
+  **SENTRY-6 badge gate.** An access gate runs a small convolutional
+  classifier over a 32x32 grayscale "badge scan" and sorts it into one of six
+  clearance classes: `DENIED, STAFF, VISITOR, CONTRACTOR, AUDITOR, GRANTED`.
+  The gate opens **only** for `GRANTED`.
+
+  You are given the classifier weights (white-box) and a badge that scans as
+  `DENIED`. Craft a badge that the gate reads as **GRANTED** while staying
+  within **L-inf epsilon = 8** (raw 0..255 pixel levels) of the DENIED badge --
+  a bounded adversarial example -- then submit it to the live instance.
+
+  The service is the oracle. `POST /submit` **verifies the effect, not a
+  payload shape**: it decodes your packet, checks `max|badge - DENIED| <= 8`,
+  runs the real classifier, and emits the flag **only** when the decoded badge
+  is classified GRANTED. Unlimited attempts, never penalised. The flag is never
+  present in any downloadable artifact.
+
+  Submissions are wrapped in an invented container, **QGP1** (not PNG/NPY/DER).
+  The instance serves a small corpus of `.gatepkt` samples plus two decoded
+  `.npy` files under `/assets/` and the codec/model source in the handout;
+  infer the exact wire rules from that evidence.
+
+  Notes:
+  - Target GRANTED **specifically**. A single untargeted step tends to flip the
+    badge to the nearest wrong class (STAFF), which the gate still refuses.
+  - The epsilon bound is checked on the decoded **integer** pixel plane, so an
+    attack that only works in float space before rounding will be rejected.
+
+  Flag format: `CTF{...}`
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# Served per-team. The flag is dynamic:
+#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
+# emitted by the running instance ONLY after /submit confirms (server side)
+# that the submitted badge is within L-inf epsilon of the DENIED badge AND is
+# classified GRANTED by the real model (effect verification, authoring rule #1).
+# The classifier weights and DENIED badge are common to all teams (the artifact
+# IS the challenge); only the flag is per-team. flag.py reproduces the flag from
+# TEAM_SECRET so CTFd's custom HMAC flag class can validate per team.
+#
+# The static flag below is a placeholder for the local-demo TEAM_SECRET only;
+# production validates the real per-team flag, so no usable static flag ships.
+flags:
+  - type: team_hmac
+    content: ml-adversarial-gate
+tags:
+  - ml
+  - adversarial-examples
+  - pgd
+  - evasion
+  - hard
+
+connection_info: http://{host}:8080/
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-adversarial-gate:latest so
+# `make push-images` finds it. CPU-only; no GPU or model download required.
+image: ctf-adversarial-gate:latest
+
+# --- Prerequisite chain ----------------------------------------------------
+# Standalone (no prerequisite). If wired into an ML track later, prerequisites
+# are attached by challenge ID at import time, e.g.:
+#     requirements:
+#       - ml-<earlier-challenge-id>

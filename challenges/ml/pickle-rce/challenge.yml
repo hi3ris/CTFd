@@ -52,9 +52,8 @@ extra:
 # static entry below is only the placeholder for the demo TEAM_SECRET used in
 # local builds.
 flags:
-  - type: static
-    content: CTF{PLACEHOLDER_replaced_by_per_team_HMAC}
-
+  - type: team_hmac
+    content: ml-pickle-rce
 tags:
   - ml
   - pickle

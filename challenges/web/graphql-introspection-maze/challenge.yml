@@ -40,9 +40,8 @@ extra:
 # the custom HMAC flag class; the static entry below is only the placeholder
 # for the local demo TEAM_SECRET and is NOT shipped to production.
 flags:
-  - type: static
-    content: CTF{PLACEHOLDER_replaced_by_per_team_HMAC}
-
+  - type: team_hmac
+    content: web-graphql-introspection-maze
 tags:
   - web
   - graphql

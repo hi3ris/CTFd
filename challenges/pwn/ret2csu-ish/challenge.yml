@@ -57,8 +57,9 @@ extra:
 #     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-ret2csu-ish")[:24] + "}"
 # (see flag.py). The platform's custom per-account flag class recomputes and
 # validates each team's flag on submission. flags is intentionally left empty.
-flags: []
-
+flags:
+  - type: team_hmac
+    content: pwn-ret2csu-ish
 tags:
   - pwn
   - rop

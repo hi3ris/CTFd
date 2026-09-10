@@ -54,6 +54,9 @@ tags:
   - encoding
   - served
 
+image: ctf-ai2-output-filter:latest
+state: visible
+
 # Served challenge. Image must be named ctf-ai2-output-filter:latest.
 connection_info: "http://{host}:{port}  (see GET / for endpoints; flag via POST /verify)"
 
