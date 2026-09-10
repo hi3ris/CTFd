@@ -1,0 +1,62 @@
+name: graphql-introspection-maze
+author: ctf-2026
+category: web
+description: |
+  **Atlas Ops** exposes a single GraphQL endpoint at `POST /graphql`
+  (JSON body `{"query": "...", "variables": {...}}`). Introspection is
+  **disabled** on this deployment: `__schema` / `__type` are rejected, there
+  is no GraphiQL, and a schema dump gets you nothing. Don't waste attempts on
+  introspection tooling.
+
+  The schema is still *there* -- you just can't read it directly. The server's
+  validation errors are talkative: unknown fields come back with
+  "Did you mean ...?" suggestions, and missing required arguments name their
+  type. Walk that oracle to map the graph.
+
+  Somewhere in the `Mutation` type is an operation that was never meant to be
+  reachable, and it is not access-controlled -- only hidden. Ids in this API
+  are an opaque custom scalar (`NodeRef`); the reference you need to call that
+  mutation is **never returned by any field**, so you will have to understand
+  the scalar's encoding well enough to construct it yourself from the
+  references you *can* read.
+
+  Nothing here is a downloadable flag. The running service is the oracle: it
+  verifies a privileged **effect** (your session actually gaining ROOT
+  clearance) and only then will `controlPlane { flag }` return anything.
+
+  Flag format: `CTF{...}`
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 30
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "web-graphql-introspection-maze")[:24] + "}"
+# and is emitted by the running instance only after the privileged effect
+# (caller session clearance -> ROOT). CTFd validates the real per-team flag via
+# the custom HMAC flag class; the static entry below is only the placeholder
+# for the local demo TEAM_SECRET and is NOT shipped to production.
+flags:
+  - type: static
+    content: CTF{PLACEHOLDER_replaced_by_per_team_HMAC}
+
+tags:
+  - web
+  - graphql
+  - introspection
+  - api
+
+# challenge-id (for HMAC / requirements wiring): web-graphql-introspection-maze
+# No prerequisites; standalone.
+
+connection_info: http://{host}:8080/
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-graphql-introspection-maze:latest
+# so `make push-images` finds it.
+image: ctf-graphql-introspection-maze:latest

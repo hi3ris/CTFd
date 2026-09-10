@@ -1,0 +1,67 @@
+name: ssrf-metadata-decoy
+author: ctf-2026
+category: web
+type: dynamic
+
+description: |
+  **imgproxy** is a company image-fetch proxy: give it a URL and it fetches the
+  bytes server-side so the CDN can cache and re-encode them.
+
+      GET /fetch?url=https://example.com/logo.png
+
+  It refuses to fetch obvious internal/loopback targets... for some definition
+  of "obvious". The proxy runs on the app tier, which can reach an internal
+  loopback service mesh that you cannot reach directly.
+
+  Somewhere on that mesh an internal admin endpoint mints a **deploy token**.
+  The server only hands that token to callers that reach the endpoint from
+  inside the app tier -- i.e. *through the proxy*. Read what the app tier
+  exposes about itself, get the proxy to hit the right internal endpoint, and
+  the response comes back to you.
+
+  Note: the link-local cloud-metadata address answers, but it is a legacy
+  **mirror** -- its credentials are stale and authenticate nothing. The flag is
+  never emitted by metadata creds; it is emitted only when the internal admin
+  ping is actually reached server-side.
+
+  Flag format: `CTF{...}`
+
+# Dynamic scoring (medium).
+value: 350
+extra:
+  initial: 350
+  decay: 30
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED challenge; the flag is derived per team, so no static flag ships here.
+# The container derives it at runtime from the injected TEAM_SECRET as:
+#     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] + "}"
+# (see flag.py). The internal admin service computes and returns exactly this
+# value when its /admin/ping effect fires. The platform's custom per-account
+# flag class recomputes and validates each team's flag on submission.
+flags: []
+
+tags:
+  - web
+  - ssrf
+  - metadata
+  - cloud
+
+# challenge-id (for HMAC / requirements wiring): web-ssrf-metadata-decoy
+# Prerequisite chain: none. Standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id.)
+
+# Served challenge: the platform instancier starts one container per team and
+# injects TEAM_SECRET. Only port 8080 (the public proxy) is published; the
+# decoy metadata (:80) and internal registry/admin (:9137) are reachable only
+# via SSRF. connection_info is templated with the team's host:port.
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.
+image: ctf-ssrf-metadata-decoy:latest
