@@ -46,8 +46,16 @@ resource "aws_instance" "front" {
   # Un changement de user_data ne doit pas recreer le front (il porte la base).
   user_data_replace_on_change = false
 
+  # Un t4g accumule des credits CPU. 300 joueurs pendant 48 h les epuisent, et
+  # l'instance est alors bridee au pire moment. Le surcout sur une fenetre de
+  # deux jours est de quelques dollars.
+  credit_specification {
+    cpu_credits = "unlimited"
+  }
+
   metadata_options {
-    http_tokens = "required" # IMDSv2 obligatoire
+    http_tokens                 = "required" # IMDSv2 obligatoire
+    http_put_response_hop_limit = 1
   }
 
   tags = { Name = "${var.project_name}-front" }

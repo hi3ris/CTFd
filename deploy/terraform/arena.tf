@@ -22,6 +22,7 @@ resource "aws_instance" "arena" {
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.arena.id]
   key_name               = aws_key_pair.admin.key_name
+  iam_instance_profile   = aws_iam_instance_profile.arena.name
 
   dynamic "instance_market_options" {
     for_each = var.arena_use_spot ? [1] : []
@@ -29,12 +30,11 @@ resource "aws_instance" "arena" {
     content {
       market_type = "spot"
 
-      spot_options {
-        # "stop" plutot que "terminate" : si AWS reprend l'instance, le disque
-        # (images des challenges, modeles Ollama) n'est pas perdu.
-        instance_interruption_behavior = "stop"
-        spot_instance_type             = "persistent"
-      }
+      # Requete one-time volontairement : une requete "persistent" survit au
+      # `terraform destroy` et AWS relance alors une instance que Terraform ne
+      # connait plus. On paierait une c6a hors de tout suivi jusqu'a s'en
+      # apercevoir sur la facture.
+      spot_options {}
     }
   }
 
@@ -47,13 +47,23 @@ resource "aws_instance" "arena" {
 
   user_data = templatefile("${path.module}/templates/arena-userdata.sh.tftpl", {
     front_private_ip = aws_instance.front[0].private_ip
+    archive_bucket   = aws_s3_bucket.archive.id
     frp_bind_port    = 7000
     port_range_start = var.whale_port_range_start
     port_range_end   = var.whale_port_range_end
   })
 
+  # L'arena est sans etat et recreee a chaque phase : une modification du
+  # script de provisionnement doit reellement repartir sur une machine neuve,
+  # sinon Terraform enregistre le changement sans jamais l'appliquer.
+  user_data_replace_on_change = true
+
   metadata_options {
     http_tokens = "required"
+    # Un challenge pwn donne par construction l'execution de code dans un
+    # conteneur. Avec un hop-limit de 2, ce conteneur atteint IMDS et recupere
+    # le role IAM du noeud.
+    http_put_response_hop_limit = 1
   }
 
   tags = { Name = "${var.project_name}-arena" }

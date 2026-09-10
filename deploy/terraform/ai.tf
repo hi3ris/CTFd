@@ -34,8 +34,11 @@ resource "aws_instance" "ai" {
     ollama_model = var.ollama_model
   })
 
+  user_data_replace_on_change = true
+
   metadata_options {
-    http_tokens = "required"
+    http_tokens                 = "required"
+    http_put_response_hop_limit = 1
   }
 
   tags = { Name = "${var.project_name}-ai" }

@@ -24,17 +24,35 @@ services:
       # Adresse d'Ollama sur l'arena, consommee par le plugin de challenges IA.
       # Vide hors evenement : les challenges IA sont alors simplement indisponibles.
       - OLLAMA_URL=${OLLAMA_URL:-}
-      # API Docker de l'arena, pilotee par ctfd-whale via SSH.
+      # API Docker de l'arena, republiee sur le reseau interne par le service
+      # dockerproxy. Vide hors evenement : l'instancier est alors inactif.
       - DOCKER_HOST=${DOCKER_HOST:-}
     volumes:
       - ctfd_uploads:/var/uploads
       - ctfd_logs:/var/log/CTFd
-      - ./ssh:/root/.ssh:ro
     depends_on:
       db:
         condition: service_healthy
       cache:
         condition: service_started
+    networks:
+      - internal
+      - web
+
+  # Tunnel ssh vers le demon Docker de l'arena. Ne demarre que si ARENA_HOST
+  # est renseigne, donc uniquement pendant une phase avec arena.
+  dockerproxy:
+    build:
+      context: ./dockerproxy
+    image: ctfd-dockerproxy:latest
+    restart: always
+    environment:
+      - ARENA_HOST=${ARENA_HOST:-}
+      - ARENA_USER=ubuntu
+    volumes:
+      - ./ssh:/keys:ro
+    profiles:
+      - arena
     networks:
       - internal
       - web
@@ -46,7 +64,10 @@ services:
       - "80:80"
       - "443:443"
     volumes:
-      - ./nginx/ctfd.conf:/etc/nginx/conf.d/default.conf:ro
+      # Le fichier actif est choisi par `make tls-init` : bootstrap.conf avant
+      # l'emission du certificat, tls.conf ensuite.
+      - ./nginx/active.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/proxy-headers.inc:/etc/nginx/conf.d/proxy-headers.inc:ro
       - certbot_conf:/etc/letsencrypt:ro
       - certbot_www:/var/www/certbot:ro
     depends_on:
@@ -86,9 +107,10 @@ services:
       - --collation-server=utf8mb4_unicode_ci
       - --wait_timeout=28800
       - --log-warnings=0
-      # 2 Go de RAM au total sur t4g.small : on bride MariaDB pour laisser de
-      # la place a CTFd. A relever si vous passez sur une instance plus grosse.
-      - --innodb-buffer-pool-size=256M
+      # Dimensionne par phase : 256M sur le petit front de setup/finale, 1G en
+      # preselection ou 300 joueurs martelent le scoreboard. `make link` ecrit
+      # la valeur dans .env selon la phase.
+      - --innodb-buffer-pool-size=${INNODB_POOL:-256M}
     healthcheck:
       test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
       interval: 10s

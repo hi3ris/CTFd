@@ -34,8 +34,13 @@ Environment="OLLAMA_NUM_PARALLEL=8"
 Environment="OLLAMA_MAX_QUEUE=256"
 EOF
 
+# `enable --now` ne fait rien si le service tourne deja - et l'installateur
+# Ollama vient precisement de le demarrer. Sans restart, le drop-in ci-dessus
+# n'est jamais lu et Ollama reste sur 127.0.0.1 : le front ne peut pas
+# l'atteindre, et toute la categorie IA est morte le jour J.
 systemctl daemon-reload
-systemctl enable --now ollama
+systemctl enable ollama
+systemctl restart ollama
 
 # --- Pre-chargement du modele ------------------------------------------------
 # Plusieurs Go a telecharger : autant le faire au boot, pas pendant l'epreuve.
@@ -52,6 +57,36 @@ curl -sf http://127.0.0.1:11434/api/generate \
   -d "{\"model\":\"${ollama_model}\",\"prompt\":\"ok\",\"stream\":false}" \
   >/dev/null || true
 
-nvidia-smi > /var/log/nvidia-smi-boot.log 2>&1 || true
+# --- Verifications avant de signaler le noeud comme pret ----------------------
+# Le marqueur declenche la suite du deploiement : il ne doit etre ecrit que si
+# le noeud est reellement utilisable. Un `|| true` ici rendrait le controle
+# decoratif.
+
+PRIVATE_IP=$(hostname -I | awk '{print $1}')
+
+# 1. Ollama ecoute-t-il bien sur le reseau prive, et pas seulement en local ?
+if ! curl -sf "http://$${PRIVATE_IP}:11434/api/tags" >/dev/null; then
+  echo "ECHEC: Ollama n'ecoute pas sur $${PRIVATE_IP}:11434" >&2
+  exit 1
+fi
+
+# 2. Le modele est-il reellement charge ?
+if ! ollama list | grep -q "${ollama_model}"; then
+  echo "ECHEC: modele ${ollama_model} absent" >&2
+  exit 1
+fi
+
+# 3. Le GPU est-il vu, et le modele tourne-t-il dessus plutot que sur le CPU ?
+# Un fallback CPU silencieux passerait le reste des controles tout en rendant
+# la piste IA inutilisable sous charge.
+if ! nvidia-smi > /var/log/nvidia-smi-boot.log 2>&1; then
+  echo "ECHEC: nvidia-smi indisponible, pas de GPU exploitable" >&2
+  exit 1
+fi
+
+if ! ollama ps | grep -qi 'gpu'; then
+  echo "AVERTISSEMENT: le modele ne semble pas reside sur le GPU" >&2
+  ollama ps >&2
+fi
 
 touch /var/lib/cloud/ctfd-ai-provisioned

@@ -63,3 +63,22 @@ output "cost_note" {
     " USD par jour. Lancez `make season-down` des la fin de la phase.",
   ])
 }
+
+output "aws_region" {
+  description = "Region effectivement utilisee. Lue par le Makefile plutot que devinee."
+  value       = var.aws_region
+}
+
+output "dns_managed" {
+  description = "true si Terraform gere l'enregistrement DNS du CTF."
+  value       = local.manage_dns
+}
+
+output "dns_action_required" {
+  description = "Ce que l'operateur doit faire cote DNS apres cette phase."
+  value = local.manage_dns ? "Aucune : l'enregistrement A est gere par Terraform." : (
+    local.front_enabled ?
+    "MANUEL : pointez ${var.domain_name != "" ? var.domain_name : "votre domaine"} sur ${local.front_enabled ? aws_eip.front[0].public_ip : ""} (TTL court)." :
+    "Aucune : plus de front en ligne."
+  )
+}

@@ -1,157 +1,207 @@
 # Deploiement du CTF sur AWS
 
-CTF annuel a deux phases rapprochees. Rien ne tourne en dehors de ces
-fenetres : les comptes joueurs sont supprimes entre deux editions (nouveaux
-participants, nouvelles equipes), donc rien ne justifie de payer un serveur
-toute l'annee.
+Infrastructure d'un CTF annuel a deux phases, concue pour que la facture suive
+strictement l'usage.
 
-## Calendrier 2026
+**Calendrier 2026** — presélection vendredi 23 et samedi 24 octobre (~300
+participants) ; finale jeudi 29 et vendredi 30 octobre (10 equipes, ~50
+joueurs). Entre deux editions, les comptes sont supprimes et les equipes
+changent : rien ne justifie de laisser une machine allumee.
 
-| Phase | Dates | Joueurs | Ce qui tourne |
-|---|---|---|---|
-| `setup` | avant le 23 octobre | equipe d'organisation | front seul |
-| `preselection` | **23-24 octobre** | ~300 | front + arena + noeud IA |
-| `final` | **29-30 octobre** | ~50 (10 equipes de 4-5) | front + arena + noeud IA |
-| `off` | le reste de l'annee | — | rien, sauf les archives S3 |
-
-Entre le 24 et le 29 octobre, repassez en `setup` : l'arena et le noeud IA,
-qui sont les postes chers, disparaissent pendant que le front continue
-d'afficher les resultats de la preselection.
-
-## Architecture
+## Le modele : une seule variable decide de tout
 
 ```
                           Internet
                               |
-    phase off  ->  archives statiques S3/CloudFront (~0.50 USD/mois)
-    phase live ->  [ front : nginx/TLS + CTFd + MariaDB + Redis + frps ]
+                      [ domaine du CTF ]
                               |
-              +---------------+----------------+
-              |                                |
-   [ arena : Docker Swarm ]          [ noeud IA : Ollama sur GPU ]
-   instances par equipe              challenges prompt injection
-   aucun port public                 aucun port public
+   +--------------------------v---------------------------+
+   |  FRONT (ARM)  nginx+TLS | CTFd | MariaDB | Redis      |
+   |               frps | dockerproxy                      |
+   +---------+--------------------------------+-----------+
+             | tunnel frp + Docker over ssh    | HTTP prive
+   +---------v-----------+        +------------v----------+
+   |  ARENA (x86)        |        |  NOEUD IA (GPU T4)    |
+   |  Docker Swarm       |        |  Ollama               |
+   |  1 instance/equipe  |        |  challenges IA        |
+   +---------------------+        +-----------------------+
 ```
 
-Trois machines, trois roles, chacune allumee uniquement quand elle sert :
+| `phase` | Front | Arena | Noeud IA | Cout |
+|---|---|---|---|---|
+| `off` | — | — | — | **0 USD d'EC2** |
+| `setup` | `t4g.small` | — | — | ~0,02 USD/h |
+| `preselection` | `t4g.medium` | `c6a.4xlarge` | `g4dn.xlarge` | ~1,30 USD/h |
+| `final` | `t4g.small` | `c6a.2xlarge` | `g4dn.xlarge` | ~0,96 USD/h |
 
-- **Front** — ARM (Graviton), le moins cher. Porte CTFd et la base. C'est le
-  seul point d'entree public.
-- **Arena** — x86 obligatoire : les challenges pwn et reverse sont compiles
-  pour cette architecture. Heberge un conteneur par equipe et par challenge.
-- **Noeud IA** — GPU T4 (`g4dn.xlarge`). Sur CPU, un modele 8B sert quelques
-  tokens par seconde et s'effondre des la dizaine de requetes paralleles. Le
-  GPU absorbe la pointe pour ~0.60 USD/h. Les challenges IA sont organises en
-  chaine (chaque niveau debloque le suivant, le premier ne consomme aucune
-  inference), ce qui limite naturellement le nombre de joueurs qui atteignent
-  les niveaux gourmands : voir `ai-challenges-design.md`.
+Hors evenement, aucune instance EC2 n'existe. Seul subsiste le bucket S3 des
+archives, pour environ 0,50 USD par mois.
 
-## Cout estime pour l'edition 2026
+**Estimation pour l'edition** : ~63 USD pour la preselection (48 h) + ~46 USD
+pour la finale (48 h) + quelques jours de `setup`, soit environ **120 USD**.
+Ce sont des estimations a partir des tarifs a la demande d'eu-west-3, pas des
+montants factures. Si les epreuves ne tournent pas la nuit, un `season-down`
+entre les deux journees divise ces montants par deux.
 
-| Poste | Duree | Estimation |
-|---|---|---|
-| `setup` (front `t4g.small`) | 10 jours avant | ~5 USD |
-| `preselection` 23-24 oct (front + `c6a.4xlarge` + `g4dn.xlarge`) | 48 h | ~62 USD |
-| Entre-deux en `setup` | 5 jours | ~2 USD |
-| `final` 29-30 oct (front + `c6a.2xlarge` + `g4dn.xlarge`) | 48 h | ~46 USD |
-| Archives S3 + CloudFront | 12 mois | ~6 USD |
-| **Total edition 2026** | | **~120 USD** |
+## A faire des maintenant : le quota GPU
 
-Ce sont des estimations a partir des tarifs a la demande d'`eu-west-3` ;
-verifiez avec le calculateur AWS avant de vous engager. Les 100 USD de credits
-offerts aux nouveaux comptes (jusqu'a 200 USD apres les taches d'onboarding)
-couvrent donc l'essentiel de la premiere edition.
-
-Deux leviers si besoin :
-
-- `arena_use_spot = true` pendant les repetitions : ~-70 % sur l'arena. A
-  laisser sur `false` les 23-24 et 29-30 octobre, une interruption AWS tuerait
-  les instances des equipes en pleine resolution.
-- Eteindre l'arena et le noeud IA la nuit si l'epreuve ferme : `make
-  phase-setup` le soir, `make phase-preselection` le matin. Environ -40 % sur
-  les deux jours, au prix d'une manipulation quotidienne.
-
-## A FAIRE DES MAINTENANT : le quota GPU
-
-Sur un compte AWS neuf, le quota **« Running On-Demand G and VT instances »**
-est frequemment a 0, et son augmentation prend souvent plusieurs jours ouvres.
-Sans ce quota, aucune `g4dn.xlarge` ne demarrera le 23 octobre.
+Sur un compte AWS neuf, le quota *Running On-Demand G and VT instances* est
+souvent a zero, et une `g4dn.xlarge` en consomme 4 vCPU. La demande
+d'augmentation prend plusieurs jours ouvres.
 
 ```bash
 cd deploy
-make check-gpu-quota
+make check-gpu-quota      # echoue si le quota est insuffisant
 ```
 
-Une `g4dn.xlarge` consomme 4 vCPU de ce quota. Demandez au moins 8 pour avoir
-de la marge.
+Sans GPU, toute la categorie IA tombe.
 
-## Mise en place
+## Installation, une fois
 
 ```bash
 cd deploy
 cp terraform/terraform.tfvars.example terraform/terraform.tfvars
-# renseigner ssh_public_key, admin_cidrs, domain_name
-
-make init
-make check-gpu-quota      # a faire en premier
-make phase-setup          # cree le front
 ```
 
-Puis, sur le front, creer `deploy/front/.env` a partir de `.env.example`
-(trois secrets a generer avec `openssl rand -hex 32`), et relancer
-`make deploy`.
+Renseigner dans `terraform.tfvars` :
 
-## Deroule d'une edition
+| Variable | Role |
+|---|---|
+| `ssh_public_key` | votre cle publique SSH |
+| `admin_cidrs` | **obligatoire**, l'IP publique de votre bureau ou VPN. Jamais `0.0.0.0/0` : c'est ce qui protege SSH |
+| `domain_name` | le domaine du CTF |
+| `route53_zone_id` | zone Route53, si vous voulez que le DNS soit automatique |
 
 ```bash
-# avant                          front seul, preparation des challenges
-make phase-setup
-
-# 23 octobre au matin            ~300 joueurs
-make phase-preselection
-make gpu                         # verifie que le modele est charge en VRAM
-
-# 24 octobre au soir             on garde les resultats affiches
-make backup
-make phase-setup                 # arena + GPU detruits, front conserve
-
-# 29 octobre au matin            10 equipes finalistes
-make phase-final
-
-# 30 octobre au soir             fin de l'edition
-make season-down                 # sauvegarde, archive, puis detruit tout
-
-make cost                        # doit afficher "phase off"
+make init
+make phase-setup          # cree le VPC, le front, et deploie CTFd
 ```
 
-`make season-down` fait trois choses dans l'ordre : dump de la base vers S3,
-export statique du scoreboard vers `s3://<bucket>/site/<annee>/`, puis
-destruction de toutes les instances EC2. Le domaine peut ensuite pointer sur
-le site statique jusqu'a l'edition suivante.
+`phase-setup` attend la fin du provisionnement avant de deployer, puis affiche
+ce qu'il reste a faire cote DNS.
+
+### Le fichier `.env` du front
+
+`make deploy` echoue tant qu'il n'existe pas. Sur le front :
+
+```bash
+make ssh-front
+cd /opt/ctfd/CTFd/deploy/front
+cp .env.example .env
+openssl rand -hex 32      # -> SECRET_KEY
+openssl rand -hex 24      # -> DB_PASSWORD
+openssl rand -hex 24      # -> DB_ROOT_PASSWORD
+# renseigner aussi CTF_DOMAIN et CERTBOT_EMAIL
+```
+
+Les autres champs (`WORKERS`, `INNODB_POOL`, `ARENA_HOST`, `DOCKER_HOST`,
+`OLLAMA_URL`) sont ecrits par `make link` selon la phase. Ne les remplissez pas
+a la main.
+
+### TLS
+
+Le front demarre en HTTP seul, le temps que le domaine pointe vers lui. Une
+fois le DNS propage :
+
+```bash
+make tls-init
+```
+
+La commande verifie d'abord que le domaine resout bien vers ce front — sinon
+Let's Encrypt echouerait et consommerait un essai du quota horaire —, emet le
+certificat, bascule nginx en HTTPS, et revient au HTTP si la configuration est
+invalide. **Ne laissez pas l'evenement tourner en HTTP** : 300 joueurs y
+enverraient leur mot de passe en clair.
+
+Le renouvellement est automatique (service `certbot` du compose).
+
+### Les images de challenge
+
+L'arena est detruite et recreee a chaque changement de phase : son disque ne
+conserve rien. Les images sont donc archivees dans le bucket S3, qui survit
+aux editions, et rechargees au demarrage de l'arena.
+
+```bash
+make push-images          # depuis la machine ou vous construisez les images
+make check-arena          # apres une phase : liste ce qui est reellement present
+```
+
+`push-images` prend les images locales nommees `ctf-*`.
+
+## Rythme de l'edition
+
+```bash
+make phase-preselection   # 23 octobre au matin
+make logs                 # pendant l'epreuve
+make backup               # regulierement, pas seulement a la fin
+make season-down          # 24 au soir : archive + sauvegarde verifiee + destruction
+
+make phase-final          # 29 octobre au matin
+make season-down          # 30 au soir
+```
+
+Entre le 24 et le 29, l'infrastructure est detruite : cinq jours d'instances
+inutiles coutent plus cher que la reconstruction. Les resultats de la
+preselection sont dans la sauvegarde et dans l'archive statique.
+
+### Sauvegarde et restauration
+
+`make backup` refuse de reussir sur un dump vide ou tronque : il verifie
+l'integrite de l'archive, sa taille, et la presence de la table `users`. C'est
+ce qui protege `season-down`, qui detruit le front juste apres.
+
+```bash
+make restore FILE=backups/ctfd-preselection-20261024-190000.sql.gz
+```
+
+Sans argument, `make restore` liste les sauvegardes disponibles dans S3.
+
+### DNS
+
+L'IP publique du front change a chaque cycle. Avec `route53_zone_id`
+renseigne, Terraform gere l'enregistrement A avec un TTL de 60 s. Sinon, la
+sortie `dns_action_required` affiche l'adresse a pointer manuellement apres
+chaque `make phase-*` — a faire avant `make tls-init`.
 
 ## Securite
 
-- `admin_cidrs` n'a pas de valeur par defaut : Terraform refuse de tourner
-  tant que vous n'avez pas designe les IPs autorisees en SSH.
 - Ni l'arena ni le noeud IA n'ont de port ouvert sur Internet. Les instances
-  des equipes passent par un tunnel frp qui aboutit sur le front.
-- Ollama n'est joignable que depuis le front. Un joueur qui l'atteindrait
-  directement contournerait les garde-fous et le rate-limit du plugin.
-- CTFd pilote le Docker de l'arena en `ssh://` plutot que par un socket
-  2375/2376 expose : une API Docker joignable vaut un shell root.
-- IMDSv2 impose partout : un SSRF dans un challenge ne donne pas acces aux
-  credentials d'instance.
-- Le bucket d'archives porte `prevent_destroy` : `terraform destroy` ne peut
-  pas effacer l'historique des editions par accident. Seul le prefixe `site/`
-  y est public, les sauvegardes de base restent privees.
+  des equipes passent par un tunnel frp aboutissant sur le front ; Ollama n'est
+  joignable que depuis le front.
+- L'API d'administration de frpc ecoute sur `127.0.0.1`. Exposee, un conteneur
+  de challenge compromis — ce qui est l'objectif d'un challenge pwn — pourrait
+  reecrire les tunnels de toutes les equipes.
+- IMDSv2 obligatoire avec `hop_limit = 1` : une execution de code dans un
+  conteneur n'atteint pas les credentials IAM du noeud.
+- Le role IAM de l'arena ne peut que **lire** le prefixe `images/`. Il ne peut
+  ni ecrire dans le bucket, ni lire `backups/`.
+- nginx positionne explicitement tous les en-tetes `X-Forwarded-*`, y compris
+  `X-Forwarded-Host`. CTFd tourne avec `REVERSE_PROXY=true` et leur fait
+  confiance : sans cela, un joueur pourrait empoisonner un lien de
+  reinitialisation de mot de passe envoye a l'administrateur.
+- Tout `Host` inconnu recoit un `444` une fois le TLS actif.
+- Le bucket d'archives porte `prevent_destroy`, n'expose publiquement que le
+  prefixe `site/`, et chiffre son contenu.
+- Les sauvegardes contiennent les comptes et les hash de mots de passe des
+  joueurs : `deploy/backups/` est dans le `.gitignore`.
 
-## Ce qui reste a faire
+### Limite connue, assumee
 
-- **Lot 2** — plugin `ctfd-whale` + challenge Docker par equipe de demo, avec
-  flag dynamique par equipe.
-- **Lot 3** — plugin `ai_challenges` : backend Ollama, chat, controle
-  d'admission par niveau, journalisation des tentatives, gestion du 503 quand
-  la file est pleine. Conception detaillee dans `ai-challenges-design.md`.
-- **Lot 4** — challenges d'exemple : la chaine IA a quatre niveaux (dont un
-  sans inference) et deux challenges ML security (pickle RCE, adversarial
-  example).
+Le front pilote le demon Docker de l'arena. **Compromettre CTFd, qui est
+expose sur Internet, donne donc root sur l'arena et sur les conteneurs de
+toutes les equipes.** C'est inherent a un instancier : le service qui cree les
+conteneurs doit pouvoir les creer. La mitigation realiste est de tenir CTFd a
+jour, de garder le port du tunnel sur le reseau interne du compose, et de
+considerer l'arena comme sacrifiable — elle est detruite apres chaque phase.
+
+## Etat des lieux
+
+Ce depot contient l'infrastructure et le front. Ne sont **pas** encore
+implementes, et sont necessaires a l'evenement :
+
+- l'instancier par equipe (`ctfd-whale` ou equivalent) ;
+- le plugin `ai_challenges` (voir `ai-challenges-design.md`) ;
+- les challenges eux-memes.
+
+Les garde-fous contre la resolution par IA, et les regles d'ecriture des
+challenges qui en decoulent, sont dans `anti-llm-guardrails.md`.

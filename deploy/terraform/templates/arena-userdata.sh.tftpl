@@ -60,8 +60,12 @@ auth.method = "token"
 auth.token = "REMPLACE_TOKEN"
 
 # ctfd-whale reecrit ce fichier via l'API admin de frpc pour chaque instance
-# d'equipe creee ou detruite.
-webServer.addr = "0.0.0.0"
+# d'equipe creee ou detruite. Cette API est pilotee depuis le front par le
+# canal Docker, jamais depuis le reseau des challenges : elle reste donc sur la
+# boucle locale. Exposee sur 0.0.0.0, tout conteneur de challenge - donc tout
+# joueur ayant obtenu du code, ce qui est le but d'un challenge pwn - pourrait
+# reecrire les tunnels de toutes les equipes.
+webServer.addr = "127.0.0.1"
 webServer.port = 7400
 webServer.user = "admin"
 webServer.password = "REMPLACE_ADMIN_PASSWORD"
@@ -69,6 +73,9 @@ webServer.password = "REMPLACE_ADMIN_PASSWORD"
 log.to = "/var/log/frpc.log"
 log.level = "info"
 EOF
+
+# Le fichier contient le jeton frp et le mot de passe d'administration.
+chmod 600 /etc/frp/frpc.toml
 
 cat > /etc/systemd/system/frpc.service <<'EOF'
 [Unit]
@@ -89,7 +96,39 @@ systemctl daemon-reload
 systemctl enable frpc
 # Pas de `start` ici : le jeton n'est pas encore injecte.
 
+# --- Images des challenges ---------------------------------------------------
+# L'arena est detruite et recreee a chaque changement de phase : son disque ne
+# conserve rien. Sans cette etape, l'arena demarre le 23 octobre sans une seule
+# image de challenge et l'instancier ne peut rien lancer.
+#
+# Les images sont archivees en tarballs dans le bucket S3 qui, lui, survit aux
+# editions. Elles y sont poussees par `make push-images` depuis la machine de
+# l'auteur des challenges.
+
+apt-get install -y --no-install-recommends awscli
+
+mkdir -p /opt/challenge-images
+
+if aws s3 ls "s3://${archive_bucket}/images/" >/dev/null 2>&1; then
+  aws s3 sync "s3://${archive_bucket}/images/" /opt/challenge-images/ --only-show-errors
+
+  loaded=0
+  for tarball in /opt/challenge-images/*.tar; do
+    [ -e "$tarball" ] || continue
+    if docker load -i "$tarball"; then
+      loaded=$((loaded + 1))
+    else
+      echo "ECHEC du chargement de $tarball" >&2
+    fi
+  done
+  echo "$loaded image(s) de challenge chargee(s)" > /var/log/challenge-images.log
+else
+  echo "AUCUNE image trouvee dans s3://${archive_bucket}/images/" > /var/log/challenge-images.log
+fi
+
 # Plage de ports reservee aux instances de challenge, pour memoire.
 echo "WHALE_PORT_RANGE=${port_range_start}-${port_range_end}" > /etc/ctf-arena.env
 
+# Le marqueur ne dit pas "les images attendues sont la" - `make check-arena`
+# s'en charge, parce que la liste attendue vit avec les challenges, pas ici.
 touch /var/lib/cloud/ctfd-arena-provisioned

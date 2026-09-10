@@ -80,3 +80,7 @@ node_modules/
 
 # Flask Profiler files
 flask_profiler.sql
+
+# Sauvegardes de base produites par deploy/Makefile : elles contiennent les
+# comptes et les hash de mots de passe des joueurs.
+deploy/backups/
