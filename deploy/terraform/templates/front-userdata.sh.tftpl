@@ -1,0 +1,100 @@
+#!/usr/bin/env bash
+# Provisionnement du front CTFd. Idempotent : peut etre rejoue sans casse.
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y --no-install-recommends \
+  ca-certificates curl git make jq unzip
+
+# --- Docker ------------------------------------------------------------------
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  > /etc/apt/sources.list.d/docker.list
+
+apt-get update
+apt-get install -y \
+  docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+
+usermod -aG docker ubuntu
+systemctl enable --now docker
+
+# --- Swap --------------------------------------------------------------------
+# 2 Go de RAM sur t4g.small : le build de l'image CTFd et MariaDB tiennent
+# beaucoup mieux avec du swap. Sans, le build se fait tuer par l'OOM killer.
+if [ ! -f /swapfile ]; then
+  fallocate -l 2G /swapfile
+  chmod 600 /swapfile
+  mkswap /swapfile
+  swapon /swapfile
+  echo '/swapfile none swap sw 0 0' >> /etc/fstab
+fi
+sysctl -w vm.swappiness=10
+echo 'vm.swappiness=10' > /etc/sysctl.d/99-swappiness.conf
+
+# --- Cle SSH de service : le front pilote le Docker de l'arena ---------------
+# La cle est generee une seule fois et sa partie publique est deposee sur
+# l'arena a chaque `make event-up`.
+if [ ! -f /home/ubuntu/.ssh/id_ed25519_arena ]; then
+  sudo -u ubuntu ssh-keygen -t ed25519 -N '' -C 'ctfd-front-to-arena' \
+    -f /home/ubuntu/.ssh/id_ed25519_arena
+fi
+
+# --- frps : expose les instances de challenge de l'arena ---------------------
+# L'arena n'a aucun port public ; tout passe par ce tunnel.
+FRP_VERSION=0.61.1
+ARCH=$(dpkg --print-architecture) # arm64 sur t4g
+
+if [ ! -x /usr/local/bin/frps ]; then
+  curl -fsSL -o /tmp/frp.tar.gz \
+    "https://github.com/fatedier/frp/releases/download/v$${FRP_VERSION}/frp_$${FRP_VERSION}_linux_$${ARCH}.tar.gz"
+  tar -xzf /tmp/frp.tar.gz -C /tmp
+  install -m 0755 "/tmp/frp_$${FRP_VERSION}_linux_$${ARCH}/frps" /usr/local/bin/frps
+  rm -rf /tmp/frp.tar.gz "/tmp/frp_$${FRP_VERSION}_linux_$${ARCH}"
+fi
+
+mkdir -p /etc/frp
+
+# Le jeton est genere ici et lu par `make event-up` pour configurer frpc.
+if [ ! -f /etc/frp/token ]; then
+  openssl rand -hex 32 > /etc/frp/token
+  chmod 600 /etc/frp/token
+fi
+
+cat > /etc/frp/frps.toml <<EOF
+bindPort = ${frp_bind_port}
+auth.method = "token"
+auth.token = "$(cat /etc/frp/token)"
+log.to = "/var/log/frps.log"
+log.level = "info"
+EOF
+
+cat > /etc/systemd/system/frps.service <<'EOF'
+[Unit]
+Description=frp server
+After=network.target
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/frps -c /etc/frp/frps.toml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable --now frps
+
+# --- Emplacement du deploiement ---------------------------------------------
+mkdir -p /opt/ctfd
+chown ubuntu:ubuntu /opt/ctfd
+
+touch /var/lib/cloud/ctfd-front-provisioned

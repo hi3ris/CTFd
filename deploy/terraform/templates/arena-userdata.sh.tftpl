@@ -1,0 +1,117 @@
+#!/usr/bin/env bash
+# Provisionnement de l'arena : Docker Swarm des challenges + Ollama.
+# Rejoue a chaque `make event-up` puisque l'instance est recreee.
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates curl git jq
+
+# --- Docker ------------------------------------------------------------------
+install -m 0755 -d /etc/apt/keyrings
+curl -fsSL https://download.docker.com/linux/ubuntu/gpg \
+  -o /etc/apt/keyrings/docker.asc
+chmod a+r /etc/apt/keyrings/docker.asc
+
+echo "deb [arch=$(dpkg --print-architecture) signed-by=/etc/apt/keyrings/docker.asc] https://download.docker.com/linux/ubuntu $(. /etc/os-release && echo "$VERSION_CODENAME") stable" \
+  > /etc/apt/sources.list.d/docker.list
+
+apt-get update
+apt-get install -y \
+  docker-ce docker-ce-cli containerd.io \
+  docker-buildx-plugin docker-compose-plugin
+
+usermod -aG docker ubuntu
+systemctl enable --now docker
+
+# --- Swarm -------------------------------------------------------------------
+# Mono-noeud : suffisant pour isoler les instances par equipe dans des reseaux
+# overlay distincts, sans la complexite d'un cluster multi-noeuds.
+if ! docker info --format '{{.Swarm.LocalNodeState}}' | grep -q active; then
+  docker swarm init --advertise-addr "$(hostname -I | awk '{print $1}')"
+fi
+
+# Reseau overlay partage par les services frpc <-> instances de challenge.
+docker network create \
+  --driver overlay \
+  --attachable \
+  --subnet 172.30.0.0/16 \
+  ctfd_challenges 2>/dev/null || true
+
+# --- frpc : publie les instances de challenge via le front -------------------
+FRP_VERSION=0.61.1
+ARCH=$(dpkg --print-architecture) # amd64 sur l'arena
+
+curl -fsSL -o /tmp/frp.tar.gz \
+  "https://github.com/fatedier/frp/releases/download/v$${FRP_VERSION}/frp_$${FRP_VERSION}_linux_$${ARCH}.tar.gz"
+tar -xzf /tmp/frp.tar.gz -C /tmp
+install -m 0755 "/tmp/frp_$${FRP_VERSION}_linux_$${ARCH}/frpc" /usr/local/bin/frpc
+rm -rf /tmp/frp.tar.gz "/tmp/frp_$${FRP_VERSION}_linux_$${ARCH}"
+
+mkdir -p /etc/frp
+
+# Le fichier de conf est complete par `make event-up`, qui y injecte le jeton
+# lu sur le front. frpc redemarre tout seul une fois le jeton en place.
+cat > /etc/frp/frpc.toml <<EOF
+serverAddr = "${front_private_ip}"
+serverPort = ${frp_bind_port}
+auth.method = "token"
+auth.token = "REMPLACE_TOKEN"
+
+# ctfd-whale reecrit ce fichier via l'API admin de frpc pour chaque instance
+# d'equipe creee ou detruite.
+webServer.addr = "0.0.0.0"
+webServer.port = 7400
+webServer.user = "admin"
+webServer.password = "REMPLACE_ADMIN_PASSWORD"
+
+log.to = "/var/log/frpc.log"
+log.level = "info"
+EOF
+
+cat > /etc/systemd/system/frpc.service <<'EOF'
+[Unit]
+Description=frp client
+After=network.target docker.service
+
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/frpc -c /etc/frp/frpc.toml
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl daemon-reload
+systemctl enable frpc
+# Pas de `start` ici : le jeton n'est pas encore injecte.
+
+# --- Ollama : backend des challenges IA de type prompt injection -------------
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Par defaut Ollama n'ecoute que sur 127.0.0.1. Le plugin CTFd tourne sur le
+# front, donc il faut ecouter sur le reseau prive. Le groupe de securite
+# n'autorise que le front sur le port 11434.
+mkdir -p /etc/systemd/system/ollama.service.d
+cat > /etc/systemd/system/ollama.service.d/override.conf <<'EOF'
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+Environment="OLLAMA_KEEP_ALIVE=30m"
+Environment="OLLAMA_NUM_PARALLEL=4"
+EOF
+
+systemctl daemon-reload
+systemctl enable --now ollama
+
+# Pre-telechargement du modele : ~5 Go, autant le faire au boot plutot que
+# pendant l'evenement.
+sleep 10
+ollama pull llama3.1:8b || true
+
+# Plage de ports reservee aux instances de challenge, pour memoire.
+echo "WHALE_PORT_RANGE=${port_range_start}-${port_range_end}" > /etc/ctf-arena.env
+
+touch /var/lib/cloud/ctfd-arena-provisioned

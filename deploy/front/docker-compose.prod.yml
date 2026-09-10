@@ -1,0 +1,121 @@
+# Front CTFd de production. Tourne toute l'annee sur la petite instance ARM.
+#
+#   cd /opt/ctfd/CTFd && docker compose -f deploy/front/docker-compose.prod.yml up -d
+#
+# Les secrets viennent de deploy/front/.env (jamais commite).
+
+services:
+  ctfd:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: ctfd-local:latest
+    restart: always
+    environment:
+      - UPLOAD_FOLDER=/var/uploads
+      - DATABASE_URL=mysql+pymysql://ctfd:${DB_PASSWORD}@db/ctfd
+      - REDIS_URL=redis://cache:6379
+      - SECRET_KEY=${SECRET_KEY}
+      - WORKERS=${WORKERS:-2}
+      - LOG_FOLDER=/var/log/CTFd
+      - ACCESS_LOG=-
+      - ERROR_LOG=-
+      - REVERSE_PROXY=true
+      # Adresse d'Ollama sur l'arena, consommee par le plugin de challenges IA.
+      # Vide hors evenement : les challenges IA sont alors simplement indisponibles.
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      # API Docker de l'arena, pilotee par ctfd-whale via SSH.
+      - DOCKER_HOST=${DOCKER_HOST:-}
+    volumes:
+      - ctfd_uploads:/var/uploads
+      - ctfd_logs:/var/log/CTFd
+      - ./ssh:/root/.ssh:ro
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    networks:
+      - internal
+      - web
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/ctfd.conf:/etc/nginx/conf.d/default.conf:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - ctfd
+    networks:
+      - web
+
+  # Renouvellement automatique du certificat. La premiere emission se fait avec
+  # `make tls-init`, qui lance certbot en mode one-shot.
+  certbot:
+    image: certbot/certbot:latest
+    restart: always
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do
+               certbot renew --webroot -w /var/www/certbot --quiet;
+               sleep 12h & wait $${!};
+             done"
+
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_USER=ctfd
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_DATABASE=ctfd
+      - MARIADB_AUTO_UPGRADE=1
+    volumes:
+      - db_data:/var/lib/mysql
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --wait_timeout=28800
+      - --log-warnings=0
+      # 2 Go de RAM au total sur t4g.small : on bride MariaDB pour laisser de
+      # la place a CTFd. A relever si vous passez sur une instance plus grosse.
+      - --innodb-buffer-pool-size=256M
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - internal
+
+  cache:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--save", "60", "1", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+volumes:
+  db_data:
+  redis_data:
+  ctfd_uploads:
+  ctfd_logs:
+  certbot_conf:
+  certbot_www:
+
+networks:
+  web:
+  internal:
+    internal: true
