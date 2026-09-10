@@ -84,3 +84,8 @@ flask_profiler.sql
 # Sauvegardes de base produites par deploy/Makefile : elles contiennent les
 # comptes et les hash de mots de passe des joueurs.
 deploy/backups/
+
+# Scratch artifacts left by challenge asset generators. Real challenge assets
+# are committed under their public/ dirs, not as _tmp_ files.
+challenges/**/_tmp_*
+challenges/**/__pycache__/
