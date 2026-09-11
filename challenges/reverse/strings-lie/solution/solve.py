@@ -12,16 +12,20 @@ We never run the binary. We recover the answer purely from its bytes:
   2. The real flag is stored XORed with P repeated (flag_enc[i] = flag[i] ^ P[i % len]).
 
 So: find the 23-byte window in the binary whose inverse-transform is a clean
-ASCII passphrase, then find the 30-byte window that decrypts under it to a NCTF{...}
+ASCII passphrase, then find the window that decrypts under it to a NCTF{...}
 string. Both arrays live in .rodata; we just brute-force the two window positions.
 No answer is hardcoded -- this survives a rebuild with a different key/flag.
+
+The flag length is discovered, not assumed: we anchor on a window that decrypts
+to "NCTF{" and extend to the closing "}". (A previous version hardcoded a
+30-byte flag and silently failed on the real 31-byte flag.)
 
 Usage: python3 solve.py [path-to-chall]
 """
 import sys, string
 
-PLEN = 23      # length of the passphrase / target[]
-FLEN = 30      # length of flag_enc[] (len("NCTF{...}"))
+PLEN = 23        # length of the passphrase / target[]
+FLAG_MAX = 64    # upper bound while scanning for the closing brace
 PRINTABLE = set(bytes(string.ascii_letters + string.digits + "_{}!?-", "ascii"))
 
 def invert(window):
@@ -38,16 +42,25 @@ def main():
         if all(c in PRINTABLE for c in p):
             candidates.append(p)
 
-    # 2) for each candidate key, look for a flag_enc window decrypting to NCTF{...}
+    # 2) for each candidate key, find a window that decrypts to NCTF{...} of ANY
+    #    length: anchor on the "NCTF{" prefix, then extend to the closing "}".
     for p in candidates:
-        for off in range(len(data) - FLEN):
-            w = data[off:off + FLEN]
-            flag = bytes(w[i] ^ p[i % PLEN] for i in range(FLEN))
-            if flag.startswith(b"NCTF{") and flag.endswith(b"}") and \
-               all(32 <= c < 127 for c in flag):
-                print("passphrase :", p.decode())
-                print("flag       :", flag.decode())
-                return
+        for off in range(len(data) - 5):
+            head = bytes(data[off + i] ^ p[i % PLEN] for i in range(5))
+            if head != b"NCTF{":
+                continue
+            out = bytearray(head)
+            for i in range(5, FLAG_MAX):
+                if off + i >= len(data):
+                    break
+                c = data[off + i] ^ p[i % PLEN]
+                if not (32 <= c < 127):
+                    break
+                out.append(c)
+                if c == ord("}"):
+                    print("passphrase :", p.decode())
+                    print("flag       :", out.decode())
+                    return
     print("no solution found", file=sys.stderr)
     sys.exit(1)
 

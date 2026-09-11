@@ -100,10 +100,22 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       Décision porteur : **la piste IA tourne aussi en présélection** — la phase `preselection`
       provisionne déjà le nœud GPU (`ai = g4dn.xlarge`, `ai_enabled = true`) et la gateway
       d'admission sur le front, donc les challenges IA sont jouables dès la présélection.
-- [ ] 🧑🤖 **Playtest adverse OBLIGATOIRE** (cf. §4.9 & §8 garde-fous) : 2 modèles frontier
-      + 1 harness agentique, budget 30-60 min/challenge, transcript conservé. Résolu seul
-      en < 15 min → **on coupe**. À faire sur le front `setup` avant la présélection.
-- [ ] 🧑🤖 **Recherche de prior art** publique ET interne (éditions passées, dépôts, images).
+- [~] 🧑🤖 **Playtest adverse** : pré-passe STATIQUE faite (52 agents, chaque verdict vérifié
+      en contradictoire) → `deploy/challenge-audit.md`. Règle stricte < 15 min : 22/26 jugés
+      LLM-trivial. **À arbitrer par l'organisateur** (présélection filtre / finale décide ;
+      l'anti-LLM est le risque le plus faible par doctrine). Le **vrai playtest live** (2 modèles
+      frontier + 1 harness agentique sur le front `setup`) reste 🧑 obligatoire avant la présél.
+- [x] 🤖 **2 défauts techniques trouvés + traités** : `heap-note` **BLOCKER** (binaire livré
+      exige GLIBC_2.34 vs libc 2.31 épinglée → injouable ; **garde de build** ajouté au Dockerfile,
+      **rebuild sur Ubuntu 20.04 requis** 🧑) ; `strings-lie` solveur officiel cassé (FLEN codé en
+      dur) → corrigé et vérifié.
+- [x] 🤖 **Recherche de prior art (publique)** : intégrée à l'audit par challenge (web search).
+      Beaucoup relèvent de motifs très présents dans les données d'entraînement (Gandalf, padding
+      oracle, tcache UAF…) — voir la colonne du rapport. **Prior art interne** (éditions passées,
+      dépôts privés) reste 🧑 (hors de ma portée).
+- [ ] 🧑 **Décision de mix/durcissement** à partir de `challenge-audit.md` : quels challenges
+      réserver à la finale, lesquels durcir (retirer la sur-divulgation des descriptions + décoys
+      inertes — édition à coût quasi nul, mécanique inchangée), lesquels laisser filtrer en présél.
 - [ ] 🧑 Relecture à froid par un second auteur des challenges à format inventé (tlv-vault…).
 - [x] 🤖 **`pwn/*` buildent** (gcc x86-64) : les 3 compilent, protections conformes au Makefile
       (format-string : no-PIE/no-canary/no-RELRO, `auth` en .bss à adresse fixe ; ret2csu :
