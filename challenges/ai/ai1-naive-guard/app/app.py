@@ -144,7 +144,8 @@ def call_ollama(messages):
         "stream": False,
         "options": {"temperature": 0.7, "num_ctx": 4096},
     }
-    r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=120)
+    r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload,
+        headers={"Authorization": "Bearer " + os.environ.get("AI_PROXY_TOKEN", "")}, timeout=120)
     r.raise_for_status()
     data = r.json()
     return data.get("message", {}).get("content", "")

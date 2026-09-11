@@ -65,6 +65,32 @@ services:
       - internal
       - web
 
+  # AI admission gateway: single admission point for all AI-challenge model
+  # traffic. Only needed during an event (profile arena). Published on the front
+  # host's 8600 so arena containers reach it (SG front_ai_gw_from_arena); it
+  # reaches Ollama on the GPU node via the front's own SG allowance.
+  ai-gateway:
+    build:
+      context: ./ai-gateway
+    image: ctfd-ai-gateway:latest
+    restart: always
+    ports:
+      - "8600:8600"
+    environment:
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-}
+      - AI_RATE_MAX=${AI_RATE_MAX:-10}
+      - AI_TOKEN_BUDGET=${AI_TOKEN_BUDGET:-60000}
+      - AI_GLOBAL_INFLIGHT=${AI_GLOBAL_INFLIGHT:-6}
+      - AI_LEVEL_MAX=${AI_LEVEL_MAX:-4}
+      - AI_LOG_CONTENT=${AI_LOG_CONTENT:-0}
+    volumes:
+      - ai_gateway_logs:/var/log/ai-gateway
+    profiles:
+      - arena
+    networks:
+      - web
+
   nginx:
     image: nginx:1.27-alpine
     restart: always
@@ -144,6 +170,7 @@ volumes:
   ctfd_logs:
   certbot_conf:
   certbot_www:
+  ai_gateway_logs:
 
 networks:
   web:

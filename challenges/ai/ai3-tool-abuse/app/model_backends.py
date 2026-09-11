@@ -49,7 +49,8 @@ def _ollama_chat(messages, tools):
         "options": {"temperature": 0.6, "num_ctx": 8192},
     }
     try:
-        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=180)
+        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload,
+        headers={"Authorization": "Bearer " + os.environ.get("AI_PROXY_TOKEN", "")}, timeout=180)
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise ModelError(f"model backend unavailable: {e.__class__.__name__}")

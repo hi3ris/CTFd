@@ -283,6 +283,13 @@ backup: ## Sauvegarde la base, VERIFIE le dump, puis l'envoie dans S3
 	 aws s3 cp $$OUT s3://$(BUCKET)/backups/ --only-show-errors \
 	   || { echo "ECHEC : envoi S3 impossible. La sauvegarde locale est dans $$OUT."; exit 1; }; \
 	 echo "  s3://$(BUCKET)/backups/$$(basename $$OUT)"
+	@echo ">> Export du journal de la passerelle IA (si present)"
+	@$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ai-gateway sh -c "cat /var/log/ai-gateway/attempts.jsonl 2>/dev/null" | gzip' \
+	  > backups/ai-attempts-$(PHASE)-$$(date +%Y%m%d-%H%M%S).jsonl.gz 2>/dev/null; \
+	 f=$$(ls -t backups/ai-attempts-*.jsonl.gz 2>/dev/null | head -1); \
+	 if [ -n "$$f" ] && [ $$(stat -c%s "$$f") -gt 30 ]; then \
+	   aws s3 cp "$$f" s3://$(BUCKET)/backups/ --only-show-errors && echo "  journal IA -> S3"; \
+	 else echo "  (pas de journal IA a exporter)"; rm -f "$$f" 2>/dev/null; fi
 
 .PHONY: restore
 restore: ## Restaure une sauvegarde sur le front (FILE=backups/...sql.gz)
