@@ -86,8 +86,12 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 - [x] 🤖 **Ajouter les clés `files:` manquantes** là où un handout doit être livré au joueur
       (adversarial-gate : handout white-box ; format-string-101 & ret2csu-ish : binaire + source).
       Audit vérifié : les 30+ `challenge.yml` parsent, les 55 fichiers déclarés existent sur disque.
-- [ ] 🤖 **Câbler la chaîne de prérequis IA** dans CTFd à l'import : ai0 → ai1 → ai2 → ai3
-      (via `requirements` par challenge ID). Idem toute autre dépendance voulue.
+- [x] 🤖 **Chaîne de prérequis IA câblée** (confirmée par le porteur) : ai0 → ai1 → ai2 → ai3.
+      ai0 = racine (flag statique, sans prérequis) ; chaque niveau suivant déclare
+      `requirements: [<nom-nu-du-niveau-precedent>]`, que ctfcli résout en IDs à l'import.
+      Décision porteur : **la piste IA tourne aussi en présélection** — la phase `preselection`
+      provisionne déjà le nœud GPU (`ai = g4dn.xlarge`, `ai_enabled = true`) et la gateway
+      d'admission sur le front, donc les challenges IA sont jouables dès la présélection.
 - [ ] 🧑🤖 **Playtest adverse OBLIGATOIRE** (cf. §4.9 & §8 garde-fous) : 2 modèles frontier
       + 1 harness agentique, budget 30-60 min/challenge, transcript conservé. Résolu seul
       en < 15 min → **on coupe**. À faire sur le front `setup` avant la présélection.
