@@ -19,7 +19,7 @@ variable "phase" {
     Etat courant du CTF. Determine quelles machines existent et leur taille.
 
       off           Hors evenement. Aucune instance EC2. Seules subsistent
-                    les archives statiques sur S3/CloudFront (~0.50 USD/mois).
+                    les archives statiques sur S3 (site statique, ~0.50 USD/mois).
       setup         Front seul, petite taille. Pour preparer les challenges,
                     tester, ouvrir les inscriptions.
       preselection  Front + arena + noeud IA, dimensionnes pour ~300 joueurs.

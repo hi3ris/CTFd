@@ -28,16 +28,24 @@ systemctl enable --now docker
 # --- Swarm -------------------------------------------------------------------
 # Mono-noeud : suffisant pour isoler les instances par equipe dans des reseaux
 # overlay distincts, sans la complexite d'un cluster multi-noeuds.
-if ! docker info --format '{{.Swarm.LocalNodeState}}' | grep -q active; then
+# NB : comparaison EXACTE. Un `grep -q active` matcherait "inactive" (sous-chaine),
+# donc swarm init serait saute au premier boot -> overlay jamais cree -> instancier
+# HS. On teste l'egalite stricte de l'etat du noeud.
+if [ "$(docker info --format '{{.Swarm.LocalNodeState}}')" != "active" ]; then
   docker swarm init --advertise-addr "$(hostname -I | awk '{print $1}')"
 fi
 
 # Reseau overlay partage par les services frpc <-> instances de challenge.
-docker network create \
-  --driver overlay \
-  --attachable \
-  --subnet 172.30.0.0/16 \
-  ctfd_challenges 2>/dev/null || true
+# On ne cree que s'il manque, et on NE MASQUE PAS l'echec de creation : sous
+# `set -euo pipefail`, un vrai echec (swarm absent, sous-reseau en conflit)
+# doit faire echouer le provisionnement plutot que laisser un noeud a moitie pret.
+if ! docker network inspect ctfd_challenges >/dev/null 2>&1; then
+  docker network create \
+    --driver overlay \
+    --attachable \
+    --subnet 172.30.0.0/16 \
+    ctfd_challenges
+fi
 
 # --- frpc : publie les instances de challenge via le front -------------------
 FRP_VERSION=0.61.1

@@ -36,8 +36,25 @@ from flask import Flask, Response, jsonify, request
 app = Flask(__name__)
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
-SECRET = os.environ.get("CTF_TEAM_FLAG_SECRET", "")
-_TOKEN_KEY = hmac.new(SECRET.encode(), b"ai-proxy-token-key", hashlib.sha256).digest()
+
+# Least privilege: this service only needs the DERIVED token-signing key, never
+# the CTF-wide master flag secret (which computes every team's every flag). The
+# gateway is the most attacker-adjacent service (arena containers can reach its
+# port), so we avoid holding the master here.
+#   - Preferred: the operator injects AI_PROXY_TOKEN_KEY (hex of the derived key)
+#     and the master never enters this container at all.
+#   - Fallback: if only CTF_TEAM_FLAG_SECRET is present, derive the key ONCE at
+#     startup, then immediately drop the master from the process environment so a
+#     later info-leak in this app cannot read it.
+# The derivation matches the instancier's token minter (team_instancer._mint_proxy_token):
+#   key = HMAC_SHA256(master, "ai-proxy-token-key")
+_TOKEN_KEY_HEX = os.environ.get("AI_PROXY_TOKEN_KEY", "")
+if _TOKEN_KEY_HEX:
+    _TOKEN_KEY = bytes.fromhex(_TOKEN_KEY_HEX)
+else:
+    _master = os.environ.pop("CTF_TEAM_FLAG_SECRET", "")
+    _TOKEN_KEY = hmac.new(_master.encode(), b"ai-proxy-token-key", hashlib.sha256).digest()
+    del _master
 
 
 def _int(env, d):

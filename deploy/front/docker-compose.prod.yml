@@ -64,8 +64,10 @@ services:
     profiles:
       - arena
     networks:
+      # UNIQUEMENT internal : republier le socket Docker de l'arena (= root)
+      # ne doit jamais etre joignable depuis le segment `web` expose par nginx.
+      # ctfd joint dockerproxy via `internal`, donc `web` est inutile ici.
       - internal
-      - web
 
   # AI admission gateway: single admission point for all AI-challenge model
   # traffic. Only needed during an event (profile arena). Published on the front
@@ -80,6 +82,10 @@ services:
       - "8600:8600"
     environment:
       - OLLAMA_URL=${OLLAMA_URL:-}
+      # Prefere la cle DERIVEE (le maitre n'entre alors jamais dans ce conteneur).
+      # A defaut, le maitre sert a la deriver au demarrage puis est retire de
+      # l'environnement du process (cf. app.py).
+      - AI_PROXY_TOKEN_KEY=${AI_PROXY_TOKEN_KEY:-}
       - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-}
       - AI_RATE_MAX=${AI_RATE_MAX:-10}
       - AI_TOKEN_BUDGET=${AI_TOKEN_BUDGET:-60000}

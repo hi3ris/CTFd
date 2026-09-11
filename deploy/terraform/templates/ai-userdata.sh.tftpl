@@ -13,6 +13,11 @@ apt-get install -y --no-install-recommends ca-certificates curl jq
 apt-get install -y ubuntu-drivers-common
 ubuntu-drivers install --gpgpu || apt-get install -y nvidia-driver-535-server
 
+# Charger le module maintenant, avant tout usage GPU (nvidia-smi, warm-up Ollama).
+# Echec explicite plutot que de laisser le modele tomber en CPU ou nvidia-smi
+# planter plus bas sous `set -euo pipefail`. Cas nouveau-conflit -> reboot requis.
+modprobe nvidia || { echo "ECHEC : module noyau nvidia non chargeable (reboot probablement requis)" >&2; exit 1; }
+
 # --- Ollama ------------------------------------------------------------------
 curl -fsSL https://ollama.com/install.sh | sh
 

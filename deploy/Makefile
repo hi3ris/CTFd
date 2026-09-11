@@ -50,18 +50,30 @@ help:
 
 .PHONY: init
 init: ## Initialise Terraform (une fois). Utilise l'etat distant si backend.hcl existe.
-	@if [ -f terraform/backend.hcl ] && [ -f terraform/backend.tf ]; then \
-	   echo "Etat distant detecte (backend.hcl) -> init S3 verrouille."; \
+	@if [ -f terraform/backend.tf ]; then \
+	   if [ ! -f terraform/backend.hcl ]; then \
+	     echo "ERREUR : backend.tf present mais backend.hcl manquant -> l'init S3 serait interactif."; \
+	     echo "  Genere-le : terraform -chdir=terraform/bootstrap output -raw backend_hcl > terraform/backend.hcl"; \
+	     exit 1; \
+	   fi; \
+	   echo "Etat distant (backend.hcl) -> init S3 verrouille."; \
 	   $(TF) init -backend-config=backend.hcl; \
 	 else \
-	   echo "Etat LOCAL (pas de backend.hcl). Pour l'etat distant : make state-bootstrap."; \
+	   echo "Etat LOCAL (pas de backend.tf). Pour l'etat distant : make state-bootstrap."; \
 	   $(TF) init; \
 	 fi
 
 .PHONY: state-bootstrap
+# Le bootstrap a ses propres variables : si tu surcharges project_name / aws_region
+# dans terraform/terraform.tfvars, passe les MEMES valeurs ici, sinon le bucket
+# d'etat portera un nom different des ressources deployees.
+#   make state-bootstrap PROJECT_NAME=monctf AWS_REGION=eu-west-1
+PROJECT_NAME ?= ctf
+AWS_REGION   ?= eu-west-3
 state-bootstrap: ## (une fois) Cree le bucket S3 d'etat + la table de verrou DynamoDB
 	terraform -chdir=terraform/bootstrap init
-	terraform -chdir=terraform/bootstrap apply
+	terraform -chdir=terraform/bootstrap apply \
+	  -var 'project_name=$(PROJECT_NAME)' -var 'aws_region=$(AWS_REGION)'
 	@echo; echo "=== Etat distant provisionne. Pour l'activer : ==="; \
 	 echo "  1. cp terraform/backend.tf.example terraform/backend.tf"; \
 	 echo "  2. terraform -chdir=terraform/bootstrap output -raw backend_hcl > terraform/backend.hcl"; \
@@ -162,9 +174,9 @@ wait-nodes: ## Attend l'arena et le noeud IA (avec delai maximal)
 check-arena: ## Liste les images de challenge reellement presentes sur l'arena
 	@$(ARENA_SSH) 'docker image ls --format "{{.Repository}}:{{.Tag}}" | sort'
 	@echo
-	@n=$$($(ARENA_SSH) 'docker image ls -q | wc -l'); \
-	 if [ "$$n" -lt 2 ]; then \
-	   echo "AUCUNE image de challenge sur l'arena. L'instancier ne pourra rien lancer."; \
+	@n=$$($(ARENA_SSH) 'docker image ls --format "{{.Repository}}" | grep -c "^ctf-" || true'); \
+	 if [ "$$n" -lt 1 ]; then \
+	   echo "AUCUNE image de challenge (ctf-*) sur l'arena. L'instancier ne pourra rien lancer."; \
 	   echo "Poussez-les avec 'make push-images' puis relancez la phase."; \
 	   exit 1; \
 	 fi
@@ -289,7 +301,7 @@ backup: ## Sauvegarde la base, VERIFIE le dump, puis l'envoie dans S3
 	 SIZE=$$(stat -c%s $$TMP); \
 	 test "$$SIZE" -gt 10000 \
 	   || { echo "ECHEC : dump de $$SIZE octets, manifestement vide ou tronque"; rm -f $$TMP; exit 1; }; \
-	 zcat $$TMP | grep -q 'CREATE TABLE `users`' \
+	 zcat $$TMP | grep -c 'CREATE TABLE `users`' >/dev/null \
 	   || { echo "ECHEC : la table users est absente du dump"; rm -f $$TMP; exit 1; }; \
 	 ROWS=$$(zcat $$TMP | grep -c 'INSERT INTO' || true); \
 	 mv $$TMP $$OUT; \

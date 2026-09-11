@@ -59,8 +59,13 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 - [x] Audit adverse (5 dimensions, 15 agents) → 6 blockers/majeurs confirmés et corrigés
 
 ### Reliquat Lot 1 (à traiter avant mise en prod, non bloquant maintenant)
-- [ ] 🤖 Passer en revue les **45 findings mineurs non vérifiés** de l'audit (rapport
-      dans le transcript workflow) et trancher un par un.
+- [x] 🤖 **Nouvel audit infra vérifié** (8 dimensions, 20 agents, chaque finding re-vérifié
+      en contradictoire) sur l'état COURANT du `deploy/` — remplace les 45 findings périmés.
+      Résultat : `deploy/infra-audit.md`. **9 confirmés corrigés** dont **1 BLOCKER** (garde
+      swarm `grep -q active` matchait `inactive` → instancier HS) et **2 MAJEURS** (dockerproxy
+      exposé sur `web` ; check backup SIGPIPE supprimant un dump valide). 1 minor (secrets frp
+      sur argv sudo) **différé** à la répétition Lot 5 (correctif dans une recette critique non
+      testable hors infra live), documenté.
 - [x] 🤖 **Backend d'état distant S3 + verrou DynamoDB** écrit (opt-in) : `terraform/bootstrap/`
       crée le bucket versionné/chiffré + la table de verrou (état local, une fois) ; `backend.tf.example`
       + `backend.hcl.example` + `make state-bootstrap` + `make init` auto-détecte l'état distant.

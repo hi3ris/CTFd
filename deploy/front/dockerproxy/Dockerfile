@@ -9,8 +9,9 @@
 # distant en TCP sur le reseau interne du compose. CTFd s'y connecte avec
 # DOCKER_HOST=tcp://dockerproxy:2375, sans avoir besoin de ssh.
 #
-# Ce port n'est jamais publie vers l'exterieur : il n'existe que sur le reseau
-# interne, dont l'acces vaut deja root sur l'arena.
+# Ce port n'est jamais publie vers l'exterieur et le service n'est attache
+# QU'au reseau `internal` du compose (jamais `web`) : y acceder vaut root sur
+# l'arena, donc seul ctfd (sur `internal`) doit pouvoir le joindre.
 FROM alpine:3.20
 
 RUN apk add --no-cache openssh-client socat

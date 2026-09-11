@@ -80,6 +80,20 @@ resource "aws_s3_bucket_lifecycle_configuration" "archive" {
       noncurrent_days = 90
     }
   }
+
+  # Un upload de dump interrompu laisse des morceaux multipart orphelins, factures
+  # au tarif standard indefiniment (ni les transitions ni l'expiration de versions
+  # ne les touchent). On les purge au bout d'une semaine.
+  rule {
+    id     = "abort-incomplete-multipart"
+    status = "Enabled"
+
+    filter {}
+
+    abort_incomplete_multipart_upload {
+      days_after_initiation = 7
+    }
+  }
 }
 
 resource "aws_s3_bucket_website_configuration" "archive" {
