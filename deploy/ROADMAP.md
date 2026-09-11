@@ -154,7 +154,7 @@ concurrentes** max. TTL 1 h + reaping le tiennent, mais élargir la plage si bes
 
 ---
 
-## Lot 3 — Piste IA : passerelle d'admission + correctifs 🟡 EN COURS
+## Lot 3 — Piste IA : passerelle d'admission + correctifs 🟢 CODE COMPLET (validation live au Lot 5)
 
 **Déviation actée du ROADMAP** (conception dans `deploy/ai-track-design.md`) : la route
 `/message`, l'UI de chat et l'oracle de flag **existent déjà dans les conteneurs** (chaque
@@ -169,13 +169,15 @@ Lot 3 = **une passerelle d'admission Ollama** sur le front + petits correctifs.
       l'instancier injecte `OLLAMA_URL`=passerelle + `AI_PROXY_TOKEN` signé pour les challenges
       `category: ai` ; `make link` écrit `AI_PROXY_URL`. Ollama reste fermé à l'arène.
 
-### Passerelle d'admission (à construire)
-- [ ] 🤖 Service front `ai-gateway` : `POST /api/chat` (vérif jeton signé → équipe/niveau),
-      concurrence globale + par-niveau, budget tokens + rate-limit par équipe (fenêtre glissante),
-      file bornée, **normalisation du 503** Ollama en « modèle occupé, réessayez ».
-- [ ] 🤖 Les apps ai1/ai2/ai3 envoient `AI_PROXY_TOKEN` en en-tête à `OLLAMA_URL`.
-- [ ] 🤖 **Journalisation** des tentatives (équipe, niveau, tokens, verdict ; contenu
-      **finale-seulement**) exportée par `make backup` avant `season-down`.
+### Passerelle d'admission (faite, validation live au Lot 5)
+- [x] 🤖 Service front `ai-gateway` : `POST /api/chat` (vérif jeton signé → équipe/niveau),
+      concurrence globale + par-niveau + **par équipe**, budget tokens **réservé à l'admission**
+      + rate-limit par équipe (fenêtres glissantes), file bornée (deadline unique),
+      **normalisation du 503**. Revue adverse (14 agents) → 9 défauts corrigés (1 blocker,
+      1 majeur, 7 mineurs).
+- [x] 🤖 ai1/ai3 envoient `AI_PROXY_TOKEN` en en-tête ; ai2 est déterministe (0 GPU).
+- [x] 🤖 **Journalisation** rotative des tentatives (succès + refus ; contenu finale-seulement),
+      exportée par `make backup` avant `season-down`.
 - [ ] 🧑 **Décision** : piste IA en présélection ou **réservée à la finale** ? Un T4 ne tient
       pas 300 équipes simultanées ; la passerelle borne, elle n'ajoute pas de capacité.
 - [ ] 🧑 Quotas exacts par phase — fixés à la répétition (Lot 5), pas à l'intuition.
