@@ -1,7 +1,7 @@
 # USB Keystrokes — writeup
 
 **Category:** forensics · **Difficulty:** easy
-**Flag:** `CTF{Bl4ck_H4t_USB_2026}`
+**Flag:** `NCTF{Bl4ck_H4t_USB_2026}`
 
 ## What you get
 
@@ -65,7 +65,7 @@ prints:
 
 ```
 passphrase: Bl4ck_H4t_USB_2026
-flag:       CTF{Bl4ck_H4t_USB_2026}
+flag:       NCTF{Bl4ck_H4t_USB_2026}
 ```
 
 ## Regenerating the artifact

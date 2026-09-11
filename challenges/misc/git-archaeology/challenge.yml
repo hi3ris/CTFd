@@ -25,7 +25,7 @@ description: |-
   There is one obviously-fake placeholder token in the repo to ignore; the real
   one is the upload_token that was scrubbed from the analytics config.
 
-  Flag format: CTF{...}
+  Flag format: NCTF{...}
 
 value: 100
 extra:
@@ -39,7 +39,7 @@ files:
   - logparse-cli.tar.gz
 
 flags:
-  - "CTF{d4ngling_c0mmit_lives_in_ref10g}"
+  - "NCTF{d4ngling_c0mmit_lives_in_ref10g}"
 
 tags:
   - misc

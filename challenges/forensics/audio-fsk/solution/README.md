@@ -1,6 +1,6 @@
 # Audio FSK — writeup
 
-**Flag:** `CTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}`
+**Flag:** `NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}`
 
 ## TL;DR
 
@@ -50,7 +50,7 @@ contiguous bitstream framed by a preamble and a custom sync word, with a CRC-8
 
 7. **Read the payload:**
    ```
-   SIGINT downlink 0x2217 :: frame recovered :: flag=CTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a} :: end of transmission
+   SIGINT downlink 0x2217 :: frame recovered :: flag=NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a} :: end of transmission
    ```
 
 Run the reference solver:
@@ -71,7 +71,7 @@ solver who runs `minimodem` (or any default-settings FSK decoder) against the
 file can lock onto it and recover:
 
 ```
-CTF{b3ll202_1200_8n1_is_the_decoy}
+NCTF{b3ll202_1200_8n1_is_the_decoy}
 ```
 
 It is refutable in minutes: it uses *exactly* the standard parameters the brief

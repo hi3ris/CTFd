@@ -15,7 +15,7 @@ it is actually recovered from the artifact by disassembly + inversion.
 """
 
 CHALLENGE_ID = "reverse-synthvm"
-FLAG = "CTF{synthvm_d1sp4tch_rem4pped_at_runtime}"
+FLAG = "NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}"
 
 
 def get_flag(team_secret: str | None = None) -> str:

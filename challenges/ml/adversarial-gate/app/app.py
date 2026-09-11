@@ -23,14 +23,14 @@ payload shape:
 The classifier weights and the DENIED badge are common to all teams (the
 artifact is the challenge); only the flag is per-team:
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
+    flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
 
 The flag VALUE is unchanged, but the per-team instancer no longer injects the
 team MASTER secret TEAM_SECRET (owning one container used to leak every flag).
 It now injects only per-challenge values -- FLAG (the exact flag string) and
 CHALLENGE_SECRET (per-challenge hex, whose first 24 chars are the flag body):
 
-    FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+    FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 and CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID), so CHALLENGE_SECRET[:24]
 is exactly the old flag body the scoreboard's team_hmac class validates. This is
@@ -80,11 +80,11 @@ def compute_flag() -> str:
         return env_flag
     cs = os.environ.get("CHALLENGE_SECRET")
     if cs:
-        return "CTF{" + cs[:24] + "}"
+        return "NCTF{" + cs[:24] + "}"
     # LOCAL DEV fallback only -- never reached in the arena.
     dev_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
     dig = hmac.new(dev_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + dig[:24] + "}"
+    return "NCTF{" + dig[:24] + "}"
 
 
 # ---- light per-IP rate limit (generous) ----
@@ -141,7 +141,7 @@ Content-Type: application/octet-stream
 <p class=muted>The service decodes your packet, checks the epsilon bound, runs
 the real classifier, and returns the flag ONLY when the decoded badge is
 classified GRANTED. Unlimited attempts, never penalised. Flag format:
-<code>CTF{{...}}</code>.</p>
+<code>NCTF{{...}}</code>.</p>
 <p class=muted>Note: a single untargeted step tends to flip the badge to a
 different clearance class, not GRANTED — target GRANTED specifically.</p>
 """

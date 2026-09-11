@@ -4,9 +4,9 @@ Per-challenge flag derivation for challenge `ai-ai1-naive-guard`.
 
 Runtime contract (per-challenge injection; TEAM_SECRET is NO LONGER injected):
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 CHALLENGE_SECRET == HMAC_SHA256(team_secret, "ai-ai1-naive-guard"), so
 CHALLENGE_SECRET[:24] is exactly the old flag body -- the flag VALUE is
@@ -14,7 +14,7 @@ unchanged, this is a SOURCE change only.
 
 get_flag() returns, in order of preference:
     1. os.environ["FLAG"]                                   (arena: exact flag)
-    2. "CTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}"   (arena: per-challenge)
+    2. "NCTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}"   (arena: per-challenge)
     3. a clearly-marked LOCAL DEV fallback derived from
        os.environ.get("TEAM_SECRET", "local-dev-secret")    (off-arena only)
 
@@ -47,7 +47,7 @@ def _hmac_hex(key: str, label: str) -> str:
 def flag(team_secret: str) -> str:
     """Compatibility: reproduce the flag from a raw TEAM_SECRET (local dev /
     platform reproduction). Unchanged historical derivation."""
-    return "CTF{" + _hmac_hex(team_secret, CHALLENGE_ID)[:24] + "}"
+    return "NCTF{" + _hmac_hex(team_secret, CHALLENGE_ID)[:24] + "}"
 
 
 def get_challenge_secret() -> str:
@@ -68,10 +68,10 @@ def get_flag() -> str:
         return f
     cs = os.environ.get("CHALLENGE_SECRET")
     if cs:
-        return "CTF{" + cs[:24] + "}"
+        return "NCTF{" + cs[:24] + "}"
     # LOCAL DEV fallback (off-arena only).
     team_secret = os.environ.get("TEAM_SECRET", _DEV_TEAM_SECRET)
-    return "CTF{" + _hmac_hex(team_secret, CHALLENGE_ID)[:24] + "}"
+    return "NCTF{" + _hmac_hex(team_secret, CHALLENGE_ID)[:24] + "}"
 
 
 def guard_secret(challenge_secret: str = None) -> str:

@@ -32,7 +32,7 @@ description: |
   The flag is **NOT** in the binary. It exists only in the running service
   (per-team, in the process environment and a runtime-only file) and is
   reachable solely by executing code in the process. Reading the downloadable
-  binary alone will never yield a flag. There is exactly one decoy `CTF{...}`
+  binary alone will never yield a flag. There is exactly one decoy `NCTF{...}`
   string in the binary; it is in an unreachable function and is refutable in
   under a minute (nothing calls it, and the real flag is per-team/server-issued).
 
@@ -40,7 +40,7 @@ description: |
 
   Connect:  `nc <host> <port>`
 
-  Flag format: `CTF{...}`  (exactly `CTF{` + 24 lowercase hex characters + `}`)
+  Flag format: `NCTF{...}`  (exactly `NCTF{` + 24 lowercase hex characters + `}`)
 
 # Dynamic scoring (hard).
 value: 500
@@ -55,7 +55,7 @@ extra:
 # This challenge is SERVED and the flag is derived per team, so no static flag
 # ships in this file. The container derives it at runtime from the injected
 # TEAM_SECRET as:
-#     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-ret2csu-ish")[:24] + "}"
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-ret2csu-ish")[:24] + "}"
 # (see flag.py). The platform's custom per-account flag class recomputes and
 # validates each team's flag on submission. flags is intentionally left empty.
 flags:

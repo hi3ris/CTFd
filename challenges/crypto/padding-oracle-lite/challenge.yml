@@ -27,7 +27,7 @@ description: |
   One thing in the banner is a rabbit hole; a single `SUBMIT` refutes it and
   costs you nothing (submissions to the service are unlimited).
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 350
 type: team_instance
@@ -39,7 +39,7 @@ extra:
   minimum: 100
 
 # This challenge is served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-padding-oracle-lite")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-padding-oracle-lite")[:24] + "}"
 # and is emitted by the running instance after the SUBMIT effect succeeds. The
 # static flag below is a placeholder for the demo TEAM_SECRET used in local
 # builds; CTFd validates the real per-team flag via the custom HMAC flag class,

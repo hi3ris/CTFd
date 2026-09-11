@@ -15,7 +15,7 @@ is a valid solution -- no payload shape is hard-coded.
 
 CHALLENGE_ID = ai-ai2-output-filter
   guarded secret : SIGMA-<hmac(CHALLENGE_SECRET, "guarded")[:16]>   (aux secret)
-  flag           : FLAG, else CTF{CHALLENGE_SECRET[:24]}
+  flag           : FLAG, else NCTF{CHALLENGE_SECRET[:24]}
 """
 
 import hashlib
@@ -68,9 +68,9 @@ def flag() -> str:
         return f
     cs = os.environ.get("CHALLENGE_SECRET")
     if cs:
-        return "CTF{" + cs[:24] + "}"
+        return "NCTF{" + cs[:24] + "}"
     # LOCAL DEV fallback -- not used on the arena.
-    return "CTF{" + CHALLENGE_SECRET[:24] + "}"
+    return "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 
 SECRET = guarded_secret()
@@ -157,7 +157,7 @@ def index():
             "GET /filter-policy": "partial spec of the output filter",
         },
         "transform_methods": flt.ALLOWED_METHODS,
-        "flag_format": "CTF{...}",
+        "flag_format": "NCTF{...}",
         "note": ("An OUTPUT FILTER redacts the guarded value and its obvious "
                  "encodings from my replies. Recovering it is your problem."),
     })

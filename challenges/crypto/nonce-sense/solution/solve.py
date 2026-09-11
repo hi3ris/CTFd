@@ -175,7 +175,7 @@ def solve(path):
                 except ValueError:
                     continue
                 if ec_mul(d, G) == Qpub:
-                    flag = "CTF{" + hashlib.sha256(("%064x" % d).encode()).hexdigest()[:32] + "}"
+                    flag = "NCTF{" + hashlib.sha256(("%064x" % d).encode()).hexdigest()[:32] + "}"
                     print("[+] private key d =", hex(d))
                     print("[+] FLAG =", flag)
                     return d, flag

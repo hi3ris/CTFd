@@ -4,7 +4,7 @@
 # Run:    docker run --rm -p 9021:9021 \
 #             -e CHALLENGE_SECRET="<per-challenge-hex>" \
 #             ctf-lcg-casino:latest
-#         (or -e FLAG="CTF{...}"; with neither set the service uses a local-dev
+#         (or -e FLAG="NCTF{...}"; with neither set the service uses a local-dev
 #          fallback derived from TEAM_SECRET for off-arena smoke tests.)
 #
 # FLAG / CHALLENGE_SECRET are injected at instance-creation time; the service

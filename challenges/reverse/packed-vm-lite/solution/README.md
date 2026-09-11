@@ -1,6 +1,6 @@
 # packed-vm-lite - writeup
 
-**Flag:** `CTF{vm_bytec0de_1s_n0t_h4rd!}`
+**Flag:** `NCTF{vm_bytec0de_1s_n0t_h4rd!}`
 
 ## TL;DR
 
@@ -8,7 +8,7 @@ The binary contains a hand-rolled bytecode interpreter (a small register+stack
 VM, ~30 opcodes) plus a 77-byte program and two 24-byte tables (`VMKEY`,
 `VMTARGET`). The program loops over the 24-char serial, transforms each byte,
 and compares to `VMTARGET`. Read the opcode `switch`, recover the per-byte
-transform, and invert it. The flag is printed as `CTF{<serial>}` on success and
+transform, and invert it. The flag is printed as `NCTF{<serial>}` on success and
 is **not** stored anywhere in the file.
 
 ## 1. Recon
@@ -17,14 +17,14 @@ is **not** stored anywhere in the file.
 $ file vmcheck
 vmcheck: ELF 64-bit LSB pie executable, x86-64, stripped
 $ strings vmcheck | grep -i CTF
-CTF{%s}                      # just the output format, not the flag
+NCTF{%s}                      # just the output format, not the flag
 $ strings vmcheck | grep -i DEAD
 vault_master_key=0xDEADBEEFCAFEBABE
 ```
 
 That `vault_master_key=...` string is the **decoy**. Cross-reference it: nothing
 in the code reads it. It is refuted in a minute and never used - ignore it. The
-`CTF{%s}` shows the flag is built from a runtime string, so we need the serial.
+`NCTF{%s}` shows the flag is built from a runtime string, so we need the serial.
 
 ## 2. Find the interpreter
 
@@ -97,10 +97,10 @@ prev = serial[i]
 ```
 $ python3 solve.py ../vmcheck
 serial: vm_bytec0de_1s_n0t_h4rd!
-flag:  CTF{vm_bytec0de_1s_n0t_h4rd!}
+flag:  NCTF{vm_bytec0de_1s_n0t_h4rd!}
 --- binary says ---
 Correct!
-CTF{vm_bytec0de_1s_n0t_h4rd!}
+NCTF{vm_bytec0de_1s_n0t_h4rd!}
 [+] verified against binary
 ```
 

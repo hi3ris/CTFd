@@ -3,8 +3,8 @@
 **Category:** ai (Level 2)
 **Difficulty:** medium
 **Requires:** ai1-naive-guard (which requires ai0-leaked-transcript)
-**Flag:** per-team, `CTF{HMAC_SHA256(TEAM_SECRET, "ai-ai2-output-filter")[:24]}`
-(local-dev value: `CTF{f4d7d2743edd33f25f52656b}`)
+**Flag:** per-team, `NCTF{HMAC_SHA256(TEAM_SECRET, "ai-ai2-output-filter")[:24]}`
+(local-dev value: `NCTF{f4d7d2743edd33f25f52656b}`)
 
 ## Premise
 

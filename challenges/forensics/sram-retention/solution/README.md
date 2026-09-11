@@ -1,6 +1,6 @@
 # SRAM Retention — writeup
 
-**Category:** forensics · **Difficulty:** medium · **Flag:** `CTF{sram_retention_bank_interleave}`
+**Category:** forensics · **Difficulty:** medium · **Flag:** `NCTF{sram_retention_bank_interleave}`
 
 ## TL;DR
 
@@ -53,7 +53,7 @@ Then at `0x08`, `NBANKS` × u16 LE bank base table. Each bank starts with tag
 
 ```bash
 python3 solve.py ../retention.dump
-# CTF{sram_retention_bank_interleave}
+# NCTF{sram_retention_bank_interleave}
 ```
 
 Validate the parser on the samples first:
@@ -79,7 +79,7 @@ key = bytes(
 
 ## The decoy
 
-`strings retention.dump` returns `CTF{cold_boot_dram_dump_not_the_key}`. It is a
+`strings retention.dump` returns `NCTF{cold_boot_dram_dump_not_the_key}`. It is a
 plain contiguous string sitting in the retention noise at `0x40`, **not** inside
 any tagged bank and never touched by the interleave rule — the datasheet says the
 vault only ever lives in tagged banks and is assembled by interleaving. It's

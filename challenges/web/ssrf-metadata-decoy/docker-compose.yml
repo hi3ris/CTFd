@@ -19,6 +19,6 @@ services:
     cap_add:
       - NET_ADMIN
     environment:
-      # Per team at deploy time. flag = CTF{ HMAC_SHA256(TEAM_SECRET, id)[:24] }
+      # Per team at deploy time. flag = NCTF{ HMAC_SHA256(TEAM_SECRET, id)[:24] }
       TEAM_SECRET: "devsecret"
     restart: unless-stopped

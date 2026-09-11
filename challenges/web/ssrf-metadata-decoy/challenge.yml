@@ -23,7 +23,7 @@ description: |
   never emitted by metadata creds; it is emitted only when the internal admin
   ping is actually reached server-side.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 # Dynamic scoring (medium).
 value: 350
@@ -37,7 +37,7 @@ extra:
 # --- Per-team dynamic flag -------------------------------------------------
 # SERVED challenge; the flag is derived per team, so no static flag ships here.
 # The container derives it at runtime from the injected TEAM_SECRET as:
-#     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] + "}"
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] + "}"
 # (see flag.py). The internal admin service computes and returns exactly this
 # value when its /admin/ping effect fires. The platform's custom per-account
 # flag class recomputes and validates each team's flag on submission.

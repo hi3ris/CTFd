@@ -1,6 +1,6 @@
 # ret2csu-ish — writeup
 
-**Category:** pwn · **Difficulty:** hard · **Flag:** `CTF{` + 24 lowercase hex + `}`
+**Category:** pwn · **Difficulty:** hard · **Flag:** `NCTF{` + 24 lowercase hex + `}`
 
 ## TL;DR
 

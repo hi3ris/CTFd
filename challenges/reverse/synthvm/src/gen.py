@@ -33,14 +33,14 @@ EOF_SENTINEL = 0x100        # IN returns this dword on end-of-input
 
 # The flag == the accepted input. It is NEVER emitted into the artifact in
 # plaintext; only its S-box/rotate/add image T[] is stored as CMPI immediates.
-FLAG = "CTF{synthvm_d1sp4tch_rem4pped_at_runtime}"
+FLAG = "NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}"
 FLAGB = FLAG.encode()
 L = len(FLAGB)
 
 # Decoy: a plausible alternate checker living in DEAD (unreachable) code. Someone
 # who lifts it and inverts gets FAKE, which the real program rejects. Refutable
 # in minutes from the control-flow graph (nothing jumps to it).
-FAKE = ("CTF{dead_c0de_is_a_trap_keep_tracing!!}" + "~" * L)[:L].encode()
+FAKE = ("NCTF{dead_c0de_is_a_trap_keep_tracing!!}" + "~" * L)[:L].encode()
 DECOY_XOR = 0x5A
 
 # ---------------------------------------------------------------------------

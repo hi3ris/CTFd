@@ -14,7 +14,7 @@ import base64
 import json
 import os
 
-FLAG = "CTF{sy5t3m_pr0mpt_r3v34l3d}"
+FLAG = "NCTF{sy5t3m_pr0mpt_r3v34l3d}"
 
 
 def obfuscate(flag: str) -> str:

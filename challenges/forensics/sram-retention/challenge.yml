@@ -26,7 +26,7 @@ description: |
       loose bytes sitting in the retention noise, not inside any tagged bank. The
       real vault is only ever assembled by the datasheet's interleave rule.
 
-  Flag format: CTF{...}  (lowercase letters and underscores inside).
+  Flag format: NCTF{...}  (lowercase letters and underscores inside).
 
 # STATIC, downloadable forensics artifact: the challenge IS the memory dump plus
 # its invented datasheet, so the flag is baked into the captured bytes. No served
@@ -43,7 +43,7 @@ extra:
   minimum: 120
 
 flags:
-  - "CTF{sram_retention_bank_interleave}"
+  - "NCTF{sram_retention_bank_interleave}"
 
 files:
   - retention.dump

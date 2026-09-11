@@ -4,11 +4,11 @@
 The platform instancier starts one container PER TEAM and injects only
 PER-CHALLENGE values, never the team master secret:
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e.  FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e.  FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
-Historically the flag was  "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}",
+Historically the flag was  "NCTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}",
 and the instancier now computes CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID)
 per challenge, so CHALLENGE_SECRET[:24] is exactly the old flag body. The value is
 unchanged; only its source is. TEAM_SECRET is NO LONGER injected at runtime.
@@ -19,7 +19,7 @@ armed via the CFG length off-by-one). get_flag() is also runnable standalone for
 the platform's validation tooling:
 
     CHALLENGE_SECRET=deadbeef... python3 flag.py     # arena contract
-    FLAG='CTF{...}' python3 flag.py                  # explicit flag
+    FLAG='NCTF{...}' python3 flag.py                  # explicit flag
     python3 flag.py                                  # LOCAL DEV fallback
 """
 import hmac
@@ -38,8 +38,8 @@ def derive_flag(team_secret: str) -> str:
     """Legacy helper, kept for compatibility.
 
     Reproduces the historical derivation
-        flag = "CTF{" + HMAC_SHA256(team_secret, CHALLENGE_ID)[:24] + "}"
-    which is equivalent to "CTF{" + CHALLENGE_SECRET[:24] + "}" because
+        flag = "NCTF{" + HMAC_SHA256(team_secret, CHALLENGE_ID)[:24] + "}"
+    which is equivalent to "NCTF{" + CHALLENGE_SECRET[:24] + "}" because
     CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID).
     """
     digest = hmac.new(
@@ -47,7 +47,7 @@ def derive_flag(team_secret: str) -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 def get_flag() -> str:
@@ -55,7 +55,7 @@ def get_flag() -> str:
 
     Order:
       1. os.environ["FLAG"] if set (the exact flag string).
-      2. else "CTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}".
+      2. else "NCTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}".
       3. else a clearly-marked LOCAL DEV fallback derived from the dev
          TEAM_SECRET default, so the service still runs off-arena.
     """
@@ -65,7 +65,7 @@ def get_flag() -> str:
 
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
 
     # LOCAL DEV fallback -- not an arena code path. Derive the dev
     # CHALLENGE_SECRET from the TEAM_SECRET dev default and slice it, which
@@ -76,7 +76,7 @@ def get_flag() -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + dev_challenge_secret[:24] + "}"
+    return "NCTF{" + dev_challenge_secret[:24] + "}"
 
 
 if __name__ == "__main__":

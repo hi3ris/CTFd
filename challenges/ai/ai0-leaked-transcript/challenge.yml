@@ -18,7 +18,7 @@ description: |
   This is Level 0 of the AI track: zero inference, no live model, no service.
   Everything you need is in the single handout `transcript.json`.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 # Dynamic scoring (easy).
 value: 100
@@ -33,7 +33,7 @@ extra:
 # per-team dynamic flag, no Dockerfile, no flag.py). The flag never depends on
 # a payload shape -- the artifact simply carries it, lightly obfuscated.
 flags:
-  - CTF{sy5t3m_pr0mpt_r3v34l3d}
+  - NCTF{sy5t3m_pr0mpt_r3v34l3d}
 
 tags:
   - ai

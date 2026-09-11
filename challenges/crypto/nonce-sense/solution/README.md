@@ -1,7 +1,7 @@
 # nonce-sense — writeup
 
 **Category:** crypto · **Difficulty:** easy · **id:** `crypto-nonce-sense`
-**Flag:** `CTF{1b147fde539c254a8e9bc83bb0b5516d}`
+**Flag:** `NCTF{1b147fde539c254a8e9bc83bb0b5516d}`
 
 ## What you get
 
@@ -13,7 +13,7 @@
   `z = int(sha256(msg)) mod n`.
 
 Goal: recover the private key `d`. The flag is
-`CTF{ sha256("%064x" % d)[:32] }`.
+`NCTF{ sha256("%064x" % d)[:32] }`.
 
 ## The bias (the actual vulnerability)
 
@@ -95,7 +95,7 @@ Expected output ends with:
 
 ```
 [+] private key d = 0x690ba66683c56d39767739a1d314a86adea774001ead3aaceb43fb0304a338cb
-[+] FLAG = CTF{1b147fde539c254a8e9bc83bb0b5516d}
+[+] FLAG = NCTF{1b147fde539c254a8e9bc83bb0b5516d}
 ```
 
 ## Honest note on LLM-assisted solving

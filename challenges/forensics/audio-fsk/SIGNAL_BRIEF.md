@@ -38,7 +38,7 @@ byte-aligned constant. The CRC then confirms you framed it correctly.
 
 ## Flag format
 
-`CTF{...}` — lowercase letters, digits and underscores inside the braces.
+`NCTF{...}` — lowercase letters, digits and underscores inside the braces.
 
 ## Note
 

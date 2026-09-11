@@ -4,13 +4,13 @@ Per-challenge dynamic flag (new per-challenge contract).
 
 The per-team instancer injects per-challenge values into the container:
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 The flag VALUE is unchanged from the previous per-team scheme
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "<challenge-id>")[:24] + "}"
+    flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "<challenge-id>")[:24] + "}"
 
 because the instancer sets CHALLENGE_SECRET == HMAC_SHA256(team_secret,
 CHALLENGE_ID), so CHALLENGE_SECRET[:24] is exactly the old flag body. This is a
@@ -18,7 +18,7 @@ SOURCE change, not a value change. TEAM_SECRET is no longer injected at runtime.
 
 Usage:
     FLAG=... python3 flag.py                 # echoes FLAG verbatim
-    CHALLENGE_SECRET=... python3 flag.py     # CTF{ CHALLENGE_SECRET[:24] }
+    CHALLENGE_SECRET=... python3 flag.py     # NCTF{ CHALLENGE_SECRET[:24] }
     TEAM_SECRET=... python3 flag.py          # LOCAL DEV fallback only
     python3 flag.py <team_secret>            # LOCAL DEV fallback only
 """
@@ -43,7 +43,7 @@ def flag(secret: str) -> str:
     digest = hmac.new(
         secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
     ).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 # Legacy alias (the previous name of the compatibility helper).
@@ -55,7 +55,7 @@ def get_flag() -> str:
 
     In order:
       1. os.environ["FLAG"] if set (injected verbatim by the instancer).
-      2. "CTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}" if CHALLENGE_SECRET
+      2. "NCTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}" if CHALLENGE_SECRET
          is set (per-challenge hex; body == old flag body).
       3. LOCAL DEV fallback: derived from os.environ.get("TEAM_SECRET",
          "local-dev-secret") so the challenge still runs off-arena.
@@ -65,7 +65,7 @@ def get_flag() -> str:
         return env_flag
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
     # LOCAL DEV fallback (off-arena only): derive from the dev team secret.
     return flag(os.environ.get("TEAM_SECRET", _DEV_TEAM_SECRET))
 

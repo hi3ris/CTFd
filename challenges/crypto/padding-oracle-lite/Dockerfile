@@ -2,7 +2,7 @@
 #
 # Build:  docker build -t ctf-padding-oracle-lite:latest .
 # Run:    docker run --rm -p 9007:9007 \
-#             -e FLAG="CTF{...}" \
+#             -e FLAG="NCTF{...}" \
 #             ctf-padding-oracle-lite:latest
 #   (or -e CHALLENGE_SECRET="<per-challenge-hex>" to derive the flag)
 #

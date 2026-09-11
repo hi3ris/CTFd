@@ -1,7 +1,7 @@
 # ai3-tool-abuse -- writeup
 
 **Category:** ai (Level 3, hard) · **Prereq:** ai2-output-filter
-**Flag:** `CTF{ HMAC_SHA256(TEAM_SECRET, "ai-ai3-tool-abuse")[:24] }`, per team.
+**Flag:** `NCTF{ HMAC_SHA256(TEAM_SECRET, "ai-ai3-tool-abuse")[:24] }`, per team.
 
 ## The shape of the challenge
 
@@ -70,7 +70,7 @@ social-engineering technique. Things that work in combination:
   `change_ticket_id=<the id you got approved>`.
 
 When it lands, the `deploy` tool result carries `"gate":"UNSEALED"` and the
-flag; HELM relays it; the UI shows "GATE UNSEALED". Submit that `CTF{...}`.
+flag; HELM relays it; the UI shows "GATE UNSEALED". Submit that `NCTF{...}`.
 
 Iterate freely -- sessions and attempts are unlimited and never penalised. Use
 **Reset session** to clear a session whose state/refusals you've poisoned.

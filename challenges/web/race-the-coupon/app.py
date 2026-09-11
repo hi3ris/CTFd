@@ -99,7 +99,7 @@ def index():
             "POST /api/promo/apply": "body {\"code\": \"...\"} -- legacy promo endpoint",
         },
         "goal": "Make the authoritative wallet balance go strictly negative.",
-        "flag_format": "CTF{...}",
+        "flag_format": "NCTF{...}",
     })
 
 

@@ -77,7 +77,7 @@ flag.
 $ python3 solve.py http://HOST:8080
 [*] denied badge classified as DENIED
 [+] adversarial badge: class=GRANTED margin=17.49 Linf=8 (<= 8)
-[*] server: {"flag":"CTF{...}", "ok":true, "predicted":"GRANTED", ...}
+[*] server: {"flag":"NCTF{...}", "ok":true, "predicted":"GRANTED", ...}
 ```
 
 ## Why the server-side oracle matters
@@ -87,7 +87,7 @@ The flag is not in any downloadable file. `/submit` verifies an **effect** —
 a payload shape. There is no expected-payload string to match; any valid
 adversarial example is accepted. The weights and DENIED badge are common to all
 teams (the artifact is the challenge); only the flag is per-team:
-`flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"`.
+`flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"`.
 
 ## The decoy
 

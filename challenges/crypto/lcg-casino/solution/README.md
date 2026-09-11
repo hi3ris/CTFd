@@ -80,7 +80,7 @@ Sample run against a local instance (`TEAM_SECRET=local-demo-team-secret`):
 ```
 [+] recovered: L=16 state=728973484044
 [*] hand 13: WIN streak=10
-[+] FLAG: CTF{47547aa24dc7b899f6f305c5}
+[+] FLAG: NCTF{47547aa24dc7b899f6f305c5}
 ```
 
 The flag equals `python3 flag.py local-demo-team-secret`; in production it is the

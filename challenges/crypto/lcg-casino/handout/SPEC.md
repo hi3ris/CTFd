@@ -16,10 +16,10 @@ An 11-card deck, cards labelled `0..10`. Each *hand*:
      "high_card":h,"your_call":c,"result":"WIN"|"MISS","streak":s'}`
 
 Land **10 correct calls in a row** and the service pays the jackpot:
-`{"msg":"jackpot","flag":"CTF{...}"}`. Any miss resets the streak to `0`.
+`{"msg":"jackpot","flag":"NCTF{...}"}`. Any miss resets the streak to `0`.
 Hands are unlimited and there is no penalty for a miss beyond the reset.
 
-**Flag format:** `CTF{...}`
+**Flag format:** `NCTF{...}`
 
 ## The "provably fair" RNG (public)
 

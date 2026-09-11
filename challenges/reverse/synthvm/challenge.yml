@@ -33,7 +33,7 @@ description: |-
   The binary is a stripped x86-64 ELF. No network access is required;
   everything you need is inside the file.
 
-  Flag format: CTF{...}
+  Flag format: NCTF{...}
 
 # Static downloadable reverse challenge: the artifact IS the challenge and it
 # carries the flag logic locally (explicitly allowed by the guardrails for RE).
@@ -63,7 +63,7 @@ extra:
   minimum: 150
 
 flags:
-  - CTF{synthvm_d1sp4tch_rem4pped_at_runtime}
+  - NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}
 
 tags:
   - reverse

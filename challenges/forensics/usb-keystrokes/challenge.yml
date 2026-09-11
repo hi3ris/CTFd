@@ -13,7 +13,7 @@ description: |
   Recover the exact passphrase that was typed and submit it wrapped in the flag
   format.
 
-  Flag format: CTF{<passphrase>}  (the passphrase is case-sensitive and
+  Flag format: NCTF{<passphrase>}  (the passphrase is case-sensitive and
   contains letters, digits and underscores).
 
 # This is a static, downloadable forensics artifact: the challenge IS the pcap,
@@ -28,7 +28,7 @@ extra:
   minimum: 50
 
 flags:
-  - "CTF{Bl4ck_H4t_USB_2026}"
+  - "NCTF{Bl4ck_H4t_USB_2026}"
 
 files:
   - capture.pcap

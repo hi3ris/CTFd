@@ -6,12 +6,12 @@ The per-team instancer now injects PER-CHALLENGE values into the served
 container (it no longer injects the team MASTER secret TEAM_SECRET, so owning
 one container no longer leaks every flag for the team):
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24]
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 The flag VALUE is unchanged: previously the flag was
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
+    flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
 and the instancer computes CHALLENGE_SECRET = HMAC(team_secret, CHALLENGE_ID),
 so CHALLENGE_SECRET[:24] is exactly the old flag body. The scoreboard's
 team_hmac flag class validates the same value. This is a SOURCE change, not a
@@ -37,7 +37,7 @@ def flag(team_secret: str) -> str:
     available.
     """
     dig = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + dig[:24] + "}"
+    return "NCTF{" + dig[:24] + "}"
 
 
 def get_flag() -> str:
@@ -45,7 +45,7 @@ def get_flag() -> str:
 
     Order:
       1. os.environ["FLAG"]                    -- exact flag, if injected
-      2. "CTF{" + CHALLENGE_SECRET[:24] + "}"  -- if CHALLENGE_SECRET injected
+      2. "NCTF{" + CHALLENGE_SECRET[:24] + "}"  -- if CHALLENGE_SECRET injected
       3. LOCAL DEV fallback derived from TEAM_SECRET (default "local-dev-secret")
          so the service still runs off-arena.
     """
@@ -54,7 +54,7 @@ def get_flag() -> str:
         return env_flag
     cs = os.environ.get("CHALLENGE_SECRET")
     if cs:
-        return "CTF{" + cs[:24] + "}"
+        return "NCTF{" + cs[:24] + "}"
     # LOCAL DEV fallback only -- never used in the arena.
     return flag(os.environ.get("TEAM_SECRET", "local-dev-secret"))
 

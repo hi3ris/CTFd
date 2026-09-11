@@ -3,9 +3,9 @@
 
 The platform instancier injects per-challenge values into each container:
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 The flag is a deterministic per-challenge value the scoreboard can recompute and
 validate without the container ever writing it to a downloadable artifact.
@@ -19,7 +19,7 @@ LOCAL DEV fallback so the app still runs off-arena (local dev / playtest).
 This module is imported by app.py; it is also runnable standalone for the
 platform's validation tooling:
 
-    FLAG=CTF{...} python3 flag.py
+    FLAG=NCTF{...} python3 flag.py
     CHALLENGE_SECRET=deadbeef... python3 flag.py
     TEAM_SECRET=deadbeef python3 flag.py   # local dev only
 """
@@ -41,7 +41,7 @@ def derive_flag(team_secret: str) -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 # Backwards-compatible alias for any caller expecting flag(secret).
@@ -57,7 +57,7 @@ def get_flag() -> str:
     # 2. Per-challenge secret injected by the instancier: flag body is [:24].
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
 
     # 3. LOCAL DEV fallback ONLY. Not used in the arena. Derives the same value
     #    the old contract would have produced from TEAM_SECRET, so local runs

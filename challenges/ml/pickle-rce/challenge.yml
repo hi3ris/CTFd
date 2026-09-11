@@ -35,7 +35,7 @@ description: |
   Decoy: the host has a stale `/flag.decoy` placeholder from an old fixture. It
   is not a flag -- read it once and you will see. Don't submit it.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 350
 type: team_instance
@@ -47,7 +47,7 @@ extra:
   minimum: 100
 
 # This challenge is served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-pickle-rce")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ml-pickle-rce")[:24] + "}"
 # It is written to /flag inside the running instance and only comes back through
 # the service if the player achieves code execution during unpickling.
 # CTFd validates the real per-team flag via the custom HMAC flag class; the

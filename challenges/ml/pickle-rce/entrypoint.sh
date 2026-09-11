@@ -19,7 +19,7 @@ chmod 0644 "$FLAG_PATH"
 
 # One decoy: a stale placeholder that is obviously not a flag. Refutable in
 # seconds by reading it. Never the real flag; costs no attempt to rule out.
-printf '%s\n' 'CTF{not_the_flag_this_is_an_old_test_fixture_ignore}' > /flag.decoy
+printf '%s\n' 'NCTF{not_the_flag_this_is_an_old_test_fixture_ignore}' > /flag.decoy
 chmod 0644 /flag.decoy
 
 echo "[entrypoint] ModelHub listening on 0.0.0.0:${PORT} (flag at ${FLAG_PATH})"

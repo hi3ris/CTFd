@@ -1,7 +1,7 @@
 # git-archaeology — solution writeup
 
 **Category:** misc (git forensics) · **Difficulty:** easy
-**Flag:** `CTF{d4ngling_c0mmit_lives_in_ref10g}`
+**Flag:** `NCTF{d4ngling_c0mmit_lives_in_ref10g}`
 
 ## Scenario
 
@@ -25,7 +25,7 @@ git log -p --all           # traverses refs only -> only shows the DECOY token
 
 `git log --all` walks refs, not the reflog, so it will **not** reach the dropped
 commit. It *will* surface the decoy in `NOTES.txt`
-(`CTF{example_token_not_the_real_flag}`), which is clearly labelled as a fake
+(`NCTF{example_token_not_the_real_flag}`), which is clearly labelled as a fake
 placeholder. Ignore it.
 
 Now do the actual archaeology. Any of these finds the dangling commit:
@@ -44,7 +44,7 @@ Read the scrubbed config out of that commit:
 
 ```bash
 git show 70c39b0:config.ini
-# upload_token = CTF{d4ngling_c0mmit_lives_in_ref10g}
+# upload_token = NCTF{d4ngling_c0mmit_lives_in_ref10g}
 ```
 
 Or `git cat-file -p 70c39b0` → tree → blob if you prefer plumbing. Done.
@@ -53,12 +53,12 @@ An automated version is in [`solve.sh`](solve.sh):
 
 ```bash
 ./solve.sh ../logparse-cli.tar.gz
-# CTF{d4ngling_c0mmit_lives_in_ref10g}
+# NCTF{d4ngling_c0mmit_lives_in_ref10g}
 ```
 
 ## The decoy
 
-`NOTES.txt` contains `CTF{example_token_not_the_real_flag}` in a bullet that
+`NOTES.txt` contains `NCTF{example_token_not_the_real_flag}` in a bullet that
 literally says "this is a fake sample value." It is reachable from normal
 history, so a player who only greps `git log -p` finds it first. It is refutable
 in seconds from the note's own text and from the fact that it is *not* the

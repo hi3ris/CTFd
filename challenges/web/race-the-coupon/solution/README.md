@@ -59,7 +59,7 @@ non-negative. Ignore it and race the coupon.
 [*] start balance: 100
 [*] 4/20 redemptions committed (single-use coupon!)
 [*] final balance: -140  withdrawals: 4
-[+] FLAG: CTF{<24 hex chars derived from your team secret>}
+[+] FLAG: NCTF{<24 hex chars derived from your team secret>}
 ```
 
 Number of committed redemptions varies run to run with scheduling; anything ≥ 2
@@ -86,6 +86,6 @@ flag) to retry from a clean 100.
 docker build -t ctf-race-the-coupon:latest .
 TEAM_SECRET=playtest docker compose up -d
 python3 solution/solve.py http://localhost:8080
-# expected flag: CTF{ + HMAC_SHA256("playtest","web-race-the-coupon")[:24] + }
+# expected flag: NCTF{ + HMAC_SHA256("playtest","web-race-the-coupon")[:24] + }
 TEAM_SECRET=playtest python3 flag.py   # prints the same value
 ```

@@ -24,7 +24,7 @@ description: |
   verifies a privileged **effect** (your session actually gaining ROOT
   clearance) and only then will `controlPlane { flag }` return anything.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 500
 type: team_instance
@@ -36,7 +36,7 @@ extra:
   minimum: 100
 
 # This challenge is served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "web-graphql-introspection-maze")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-graphql-introspection-maze")[:24] + "}"
 # and is emitted by the running instance only after the privileged effect
 # (caller session clearance -> ROOT). CTFd validates the real per-team flag via
 # the custom HMAC flag class; the static entry below is only the placeholder

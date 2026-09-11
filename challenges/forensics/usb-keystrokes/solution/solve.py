@@ -84,7 +84,7 @@ def main():
     passphrase = "".join(out)
     print("device addresses with 8-byte reports:", counts, "-> keyboard =", kbd)
     print("passphrase:", passphrase)
-    print("flag:      ", "CTF{" + passphrase + "}")
+    print("flag:      ", "NCTF{" + passphrase + "}")
 
 
 if __name__ == "__main__":

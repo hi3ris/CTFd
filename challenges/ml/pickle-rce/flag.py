@@ -3,14 +3,14 @@
 
 The instancier injects per-challenge values into the container:
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 The flag VALUE is unchanged from the old TEAM_SECRET-based scheme: the old flag
 was
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-pickle-rce")[:24] + "}"
+    flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ml-pickle-rce")[:24] + "}"
 
 and the instancier now sets CHALLENGE_SECRET == HMAC_SHA256(team_secret,
 "ml-pickle-rce"), so CHALLENGE_SECRET[:24] is exactly the old flag body. The
@@ -23,7 +23,7 @@ solver only gets it by executing code during unpickling and reading it. This
 module is also runnable standalone for the platform's validation tooling:
 
     CHALLENGE_SECRET=deadbeef... python3 flag.py
-    FLAG='CTF{...}'              python3 flag.py
+    FLAG='NCTF{...}'              python3 flag.py
 """
 import hmac
 import hashlib
@@ -43,7 +43,7 @@ def derive_flag(team_secret: str) -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 def get_flag() -> str:
@@ -57,7 +57,7 @@ def get_flag() -> str:
     #    so this reproduces the old flag value exactly.
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
 
     # 3) LOCAL DEV fallback (off-arena only). Derive a CHALLENGE_SECRET from the
     #    TEAM_SECRET dev default the same way the instancier would, then take its
@@ -67,7 +67,7 @@ def get_flag() -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + dev_challenge_secret[:24] + "}"
+    return "NCTF{" + dev_challenge_secret[:24] + "}"
 
 
 if __name__ == "__main__":

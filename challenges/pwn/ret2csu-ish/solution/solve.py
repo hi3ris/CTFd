@@ -86,7 +86,7 @@ def main():
         host, port = sys.argv[1], int(sys.argv[2])
         io = remote(host, port)
     else:
-        io = process(binpath, env={"FLAG": "CTF{local-playtest-flag}"})
+        io = process(binpath, env={"FLAG": "NCTF{local-playtest-flag}"})
 
     # Read the per-connection landing key from the banner.
     io.recvuntil(b"landing key: 0x")

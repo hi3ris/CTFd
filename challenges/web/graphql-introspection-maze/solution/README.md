@@ -133,7 +133,7 @@ warrant = "NR1_" + base64url([0x2A, ord_lo, ord_hi, 0x01, chk])
 mutation($w:NodeRef!){ redeemWarrant(warrant:$w){ status callerClearance flag } }
 -> { "status":"warrant accepted; clearance reassigned",
      "callerClearance":"ROOT",
-     "flag":"CTF{...}" }
+     "flag":"NCTF{...}" }
 ```
 
 The flag is gated on the **effect**, not on the payload: `redeemWarrant` sets
@@ -162,7 +162,7 @@ python3 solve.py http://HOST:8080
 
 ## Notes for graders
 
-- Per-team flag: `CTF{HMAC_SHA256(TEAM_SECRET,"web-graphql-introspection-maze")[:24]}`
+- Per-team flag: `NCTF{HMAC_SHA256(TEAM_SECRET,"web-graphql-introspection-maze")[:24]}`
   — reproduce with `flag.py`.
 - Run with a **single** gunicorn worker: session clearance is in-process.
 - The flag is emitted only after the ROOT effect; there is no static flag in

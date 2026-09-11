@@ -27,11 +27,11 @@ recovery strictly sequential (byte i needs byte i-1), and the variable rotate +
 per-index key mean you must read the opcode semantics correctly, not guess.
 
 The flag is NOT stored anywhere in the binary (not even XOR'd). On success the
-program simply prints  CTF{ + <the serial you typed> + }.  So the only way to
+program simply prints  NCTF{ + <the serial you typed> + }.  So the only way to
 learn the flag is to produce the serial that validates.
 """
 
-# ---- intended serial: flag = CTF{ + SERIAL + } ------------------------------
+# ---- intended serial: flag = NCTF{ + SERIAL + } ------------------------------
 SERIAL = b"vm_bytec0de_1s_n0t_h4rd!"          # exactly 24 bytes
 assert len(SERIAL) == 24, len(SERIAL)
 
@@ -204,7 +204,7 @@ def main():
         f.write(text)
     print("wrote program.h (PROG_LEN=%d)" % len(prog))
     print("serial:", SERIAL.decode())
-    print("flag:  CTF{%s}" % SERIAL.decode())
+    print("flag:  NCTF{%s}" % SERIAL.decode())
 
 if __name__ == "__main__":
     main()

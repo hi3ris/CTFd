@@ -4,9 +4,9 @@ Per-challenge flag / secret derivation for challenge `ai-ai2-output-filter`.
 
 NEW CONTRACT (per-challenge injection, not the team master secret):
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 The platform injects FLAG and CHALLENGE_SECRET into the container at creation
 time; TEAM_SECRET is NO LONGER injected. Because
@@ -48,7 +48,7 @@ def _hmac_hex(key: str, label: str) -> str:
 # ---- legacy per-team derivations (kept for compatibility) -----------------
 def flag(team_secret: str) -> str:
     """Legacy: reproduce the flag from a team master secret (local dev only)."""
-    return "CTF{" + _hmac_hex(team_secret, CHALLENGE_ID)[:24] + "}"
+    return "NCTF{" + _hmac_hex(team_secret, CHALLENGE_ID)[:24] + "}"
 
 
 def guarded_secret(team_secret: str) -> str:
@@ -82,7 +82,7 @@ def get_flag() -> str:
         return f
     cs = os.environ.get("CHALLENGE_SECRET")
     if cs:
-        return "CTF{" + cs[:24] + "}"
+        return "NCTF{" + cs[:24] + "}"
     # LOCAL DEV fallback -- not used on the arena.
     return flag(os.environ.get("TEAM_SECRET", _DEV_TEAM_SECRET))
 

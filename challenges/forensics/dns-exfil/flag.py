@@ -5,7 +5,7 @@ flag.py for forensics-dns-exfil.
 This challenge is a STATIC, downloadable artifact (the pcap carries the answer),
 so the authoritative flag lives in challenge.yml and inside the captured stream:
 
-    CTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}
+    NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}
 
 The helper below is provided so the platform's tooling stays uniform:
 
@@ -15,7 +15,7 @@ The helper below is provided so the platform's tooling stays uniform:
      used if this challenge were ever served per team, following the standard
      scheme:
 
-         flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
+         flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
 
      A served variant would need build/generate.py re-run with the note's
      recovery_token set to that HMAC digest; the static build here does not.
@@ -25,13 +25,13 @@ import hmac
 import sys
 
 CHALLENGE_ID = "forensics-dns-exfil"
-STATIC_FLAG = "CTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
+STATIC_FLAG = "NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
 
 
 def team_flag(team_secret: str) -> str:
     digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(),
                       hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 if __name__ == "__main__":

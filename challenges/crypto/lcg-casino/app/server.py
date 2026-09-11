@@ -23,7 +23,7 @@ HOW A HAND WORKS
         "your_call":c,"result":"WIN"|"MISS","streak":s'}
   4. A miss resets the streak to 0. Hands are unlimited.
   5. On reaching STREAK_TARGET straight wins:
-       {"msg":"jackpot","flag":"CTF{...}"}
+       {"msg":"jackpot","flag":"NCTF{...}"}
 
 The reveal of each completed hand is your only information channel: the shuffle
 encodes the top bits of that hand's internal state, and consecutive hands' states
@@ -60,7 +60,7 @@ MAX_HANDS = 100000
 
 
 def compute_flag() -> str:
-    # Per-challenge contract: FLAG if injected, else CTF{CHALLENGE_SECRET[:24]},
+    # Per-challenge contract: FLAG if injected, else NCTF{CHALLENGE_SECRET[:24]},
     # else a local-dev fallback. No runtime dependence on TEAM_SECRET.
     return flag_mod.get_flag()
 
@@ -104,7 +104,7 @@ class Handler(socketserver.BaseRequestHandler):
             "commitment_note": ("SHA-256 of the secret seed, published for "
                                 "auditability. The seed itself is never revealed."),
             "streak_target": STREAK_TARGET,
-            "flag_format": "CTF{...}",
+            "flag_format": "NCTF{...}",
             "rules": ("Each hand: send your call for the HIGH card, then the "
                       "hand is dealt and the full shuffle is published. Land "
                       f"{STREAK_TARGET} correct calls in a row to take the "

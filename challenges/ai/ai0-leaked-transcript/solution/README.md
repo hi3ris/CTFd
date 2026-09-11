@@ -2,7 +2,7 @@
 
 **Category:** ai (Level 0, root of the AI track)
 **Difficulty:** easy
-**Flag:** `CTF{sy5t3m_pr0mpt_r3v34l3d}` (static)
+**Flag:** `NCTF{sy5t3m_pr0mpt_r3v34l3d}` (static)
 
 ## Premise
 
@@ -30,7 +30,7 @@ field. The leaked system prompt lives at:
    That is clearly the flag written backwards.
 4. Reverse the string to get the flag:
 
-       CTF{sy5t3m_pr0mpt_r3v34l3d}
+       NCTF{sy5t3m_pr0mpt_r3v34l3d}
 
 One-liner:
 

@@ -67,14 +67,14 @@ sits in a zeroed region so the fixed-size `edit` write is harmless collateral.
 now calls `win()`:
 
 ```
-free(1)   # __free_hook(ptr) == win() -> prints CTF{...}
+free(1)   # __free_hook(ptr) == win() -> prints NCTF{...}
 ```
 
 ## Running the solver
 
 ```
 # Local (spawns handout/chall under the shipped ld + libc; no patchelf needed):
-FLAG='CTF{test}' python3 solve.py
+FLAG='NCTF{test}' python3 solve.py
 
 # Remote:
 python3 solve.py <host> 9022
@@ -124,6 +124,6 @@ and why this stays worth a medium:
   flag is to actually corrupt the allocator and land in `win()` on the live
   instance, so an offline agent cannot brute a flag out of the artifact.
 
-The decoy (`secret_backdoor` → `CTF{uaf_but_this_hardcoded_string_is_a_decoy}`)
+The decoy (`secret_backdoor` → `NCTF{uaf_but_this_hardcoded_string_is_a_decoy}`)
 is refuted in seconds: it is unreferenced and reads no environment, and event
 rules say a constant in a shipped file is never the real flag.

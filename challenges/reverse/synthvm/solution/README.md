@@ -1,6 +1,6 @@
 # synthvm - writeup
 
-**Flag:** `CTF{synthvm_d1sp4tch_rem4pped_at_runtime}`
+**Flag:** `NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}`
 
 ## TL;DR
 
@@ -164,7 +164,7 @@ verify against the binary.
 $ python3 solve.py ../synthvm
 [*] PROG @ file offset 0x2260
 [*] L=41 rounds=17
-[*] recovered flag: CTF{synthvm_d1sp4tch_rem4pped_at_runtime}
+[*] recovered flag: NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}
 [*] binary says: Access granted => OK
 ```
 
@@ -172,7 +172,7 @@ $ python3 solve.py ../synthvm
 
 After the real check and its `HALT`s there is an unreferenced block that XORs the
 buffer with `0x5A` and compares to a different table which inverts to
-`CTF{dead_c0de_is_a_trap_keep_tracing!!}`. Nothing branches to it - it is dead
+`NCTF{dead_c0de_is_a_trap_keep_tracing!!}`. Nothing branches to it - it is dead
 code. Build the control-flow graph (or just notice the two `HALT`s and that no
 `J*`/`CALL` targets its address) and it is refuted in a minute. It costs no
 attempt if you check reachability before submitting.

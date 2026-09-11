@@ -12,7 +12,7 @@ description: |-
   The binary is a static x86-64 ELF; you do not need network access. Everything
   you need is inside the file.
 
-  Flag format: CTF{...}
+  Flag format: NCTF{...}
 
 # Static downloadable reverse challenge: the artifact IS the challenge and it
 # carries the flag logic locally (explicitly allowed by the guardrails for RE).
@@ -27,7 +27,7 @@ extra:
   minimum: 50
 
 flags:
-  - CTF{str1ngs_l1e_read_the_c0de}
+  - NCTF{str1ngs_l1e_read_the_c0de}
 
 tags:
   - reverse

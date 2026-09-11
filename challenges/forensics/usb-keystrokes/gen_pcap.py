@@ -27,7 +27,7 @@ import random
 
 # ---------------------------------------------------------------------------
 # The passphrase that is "typed" on the keyboard. The flag is this string
-# wrapped in CTF{...}.  Keep it in sync with challenge.yml / flag.py.
+# wrapped in NCTF{...}.  Keep it in sync with challenge.yml / flag.py.
 # ---------------------------------------------------------------------------
 PASSPHRASE = "Bl4ck_H4t_USB_2026"
 
@@ -154,7 +154,7 @@ def main():
 
     print(f"wrote capture.pcap  ({len(records)} URBs)")
     print(f"passphrase = {PASSPHRASE}")
-    print(f"flag       = CTF{{{PASSPHRASE}}}")
+    print(f"flag       = NCTF{{{PASSPHRASE}}}")
 
 
 if __name__ == "__main__":

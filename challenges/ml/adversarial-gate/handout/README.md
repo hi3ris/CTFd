@@ -66,7 +66,7 @@ POST /submit   Content-Type: application/octet-stream
 
 The server decodes your packet, verifies `max|badge - DENIED| <= 8` on the
 integer pixel plane, runs the real classifier, and returns the flag only if the
-result is `GRANTED`. Unlimited attempts. Flag format: `CTF{...}`.
+result is `GRANTED`. Unlimited attempts. Flag format: `NCTF{...}`.
 
 Hint: target GRANTED **specifically**. An untargeted step usually lands on the
 nearest wrong class, not GRANTED — and the epsilon check is on integers, so

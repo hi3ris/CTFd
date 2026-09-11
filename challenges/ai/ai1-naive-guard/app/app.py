@@ -15,7 +15,7 @@ submits the secret they extracted to /verify. Verification is a DETERMINISTIC
 tool call -- a constant-time comparison against the real per-team secret -- and
 ONLY on a match does the service compute and emit the per-team flag:
 
-    flag = "CTF{" + CHALLENGE_SECRET[:24] + "}"   (== the historical value)
+    flag = "NCTF{" + CHALLENGE_SECRET[:24] + "}"   (== the historical value)
 
 Thus the service verifies an EFFECT (the player really recovered this
 instance's secret by breaking the live guard) rather than trusting any payload
@@ -170,7 +170,7 @@ INDEX_HTML = """<!doctype html>
 </style>
 <h1>Nimbus Guard Console</h1>
 <p class=muted>A support assistant is guarding an internal <code>SIGMA-...</code> access code.
-Talk it out of the assistant, then submit it below. Flag format: <code>CTF{...}</code>.</p>
+Talk it out of the assistant, then submit it below. Flag format: <code>NCTF{...}</code>.</p>
 <div id=log></div>
 <div class=row>
  <textarea id=msg rows=2 placeholder="message the assistant..."></textarea>

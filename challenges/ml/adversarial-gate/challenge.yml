@@ -29,7 +29,7 @@ description: |
   - The epsilon bound is checked on the decoded **integer** pixel plane, so an
     attack that only works in float space before rounding will be rejected.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 500
 type: team_instance
@@ -41,7 +41,7 @@ extra:
   minimum: 100
 
 # Served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ml-adversarial-gate")[:24] + "}"
 # emitted by the running instance ONLY after /submit confirms (server side)
 # that the submitted badge is within L-inf epsilon of the DENIED badge AND is
 # classified GRANTED by the real model (effect verification, authoring rule #1).

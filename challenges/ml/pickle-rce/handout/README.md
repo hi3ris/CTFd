@@ -66,4 +66,4 @@ print(pickle.load(open("example_model.pkl", "rb")))
   response, and the registry will not read it for you.
 - There is a stale `/flag.decoy` placeholder. It is not a flag.
 
-Flag format: `CTF{...}`
+Flag format: `NCTF{...}`

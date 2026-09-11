@@ -54,7 +54,7 @@ def solve():
 def main():
     serial = solve()
     print("serial:", serial.decode())
-    print("flag:  CTF{%s}" % serial.decode())
+    print("flag:  NCTF{%s}" % serial.decode())
     if len(sys.argv) > 1:
         bin_path = sys.argv[1]
         r = subprocess.run([bin_path], input=serial + b"\n",

@@ -22,12 +22,12 @@ description: |
   The handout ships the exact `libc.so.6` and `ld-2.31.so` the service uses, so
   your offsets offline match the offsets online.
 
-  Decoy warning: there is one hard-coded `CTF{...}` string inside the binary.
+  Decoy warning: there is one hard-coded `NCTF{...}` string inside the binary.
   By this event's rules a constant baked into a shipped artifact is never a real
   flag -- it is unreachable and reads no environment. Don't submit it; don't
   waste time on it.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 350
 type: team_instance
@@ -39,7 +39,7 @@ extra:
   minimum: 100
 
 # This challenge is served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-heap-note")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-heap-note")[:24] + "}"
 # and is emitted by the running instance only after control flow reaches win().
 # The static entry below is a placeholder for the demo TEAM_SECRET used in local
 # builds; CTFd validates the real per-team flag via the custom HMAC flag class,

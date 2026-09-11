@@ -16,7 +16,7 @@ import os
 CHALLENGE_ID = "forensics-sram-retention"
 
 # The static flag actually used by this challenge (see challenge.yml).
-STATIC_FLAG = "CTF{sram_retention_bank_interleave}"
+STATIC_FLAG = "NCTF{sram_retention_bank_interleave}"
 
 
 def derive_flag(team_secret: str, challenge_id: str = CHALLENGE_ID) -> str:
@@ -24,7 +24,7 @@ def derive_flag(team_secret: str, challenge_id: str = CHALLENGE_ID) -> str:
     digest = hmac.new(
         team_secret.encode(), challenge_id.encode(), hashlib.sha256
     ).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 if __name__ == "__main__":

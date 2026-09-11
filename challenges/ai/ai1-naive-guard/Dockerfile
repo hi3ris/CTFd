@@ -3,7 +3,7 @@
 # Build:  docker build -t ctf-ai1-naive-guard:latest .
 # Run:    docker run --rm -p 8080:8080 \
 #             -e CHALLENGE_SECRET="<per-challenge-hex>" \
-#             -e FLAG="CTF{...}" \
+#             -e FLAG="NCTF{...}" \
 #             -e OLLAMA_URL="http://ollama:11434" \
 #             ctf-ai1-naive-guard:latest
 #

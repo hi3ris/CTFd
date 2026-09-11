@@ -5,9 +5,9 @@ The platform instancier injects PER-CHALLENGE values into the container (it no
 longer injects the team MASTER secret, so owning one container cannot leak every
 flag for the team):
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 CHALLENGE_SECRET is exactly HMAC_SHA256(team_secret, CHALLENGE_ID), so its first
 24 hex characters are the same flag body the challenge produced before -- this
@@ -23,7 +23,7 @@ binary can never yield a team's flag.
 Runnable standalone for the platform's validation tooling:
 
     CHALLENGE_SECRET=deadbeef... python3 flag.py
-    FLAG='CTF{...}' python3 flag.py
+    FLAG='NCTF{...}' python3 flag.py
     TEAM_SECRET=deadbeef python3 flag.py      # local dev fallback only
 """
 import hmac
@@ -44,7 +44,7 @@ def derive_flag(secret: str) -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 # Back-compat alias: some tooling expects a function literally named flag().
@@ -56,7 +56,7 @@ def get_flag() -> str:
 
     Resolution order:
       1. FLAG              -- exact flag injected by the instancier; use as-is.
-      2. CHALLENGE_SECRET  -- per-challenge hex; flag = "CTF{" + [:24] + "}".
+      2. CHALLENGE_SECRET  -- per-challenge hex; flag = "NCTF{" + [:24] + "}".
       3. LOCAL DEV fallback -- derive CHALLENGE_SECRET from a dev TEAM_SECRET so
          the service still runs off-arena (local dev / playtest). Real instances
          always get FLAG or CHALLENGE_SECRET from the instancier.
@@ -67,7 +67,7 @@ def get_flag() -> str:
 
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
 
     # LOCAL DEV FALLBACK ONLY -- not used in the arena. Reconstruct
     # CHALLENGE_SECRET == HMAC_SHA256(team_secret, CHALLENGE_ID) from the dev
@@ -78,7 +78,7 @@ def get_flag() -> str:
         CHALLENGE_ID.encode("utf-8"),
         hashlib.sha256,
     ).hexdigest()
-    return "CTF{" + dev_challenge_secret[:24] + "}"
+    return "NCTF{" + dev_challenge_secret[:24] + "}"
 
 
 if __name__ == "__main__":

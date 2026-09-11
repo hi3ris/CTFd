@@ -73,9 +73,9 @@ $ python3 solve.py $URL
 [+] guest token: eyJ...guest....b15d...
 [+] claims: {'sub': 'guest', 'role': 'guest', 'exp': ..., 'v': 1, 'alg': 'HS256'}
 [+] forged admin token: eyJ...admin....b15d...
-[+] rotate response: {'ok': True, 'rotations': 1, 'message': 'console rotated...', 'flag': 'CTF{...}'}
+[+] rotate response: {'ok': True, 'rotations': 1, 'message': 'console rotated...', 'flag': 'NCTF{...}'}
 
-FLAG: CTF{...}
+FLAG: NCTF{...}
 ```
 
 The endpoint only returns the flag after it actually flips server state
@@ -84,7 +84,7 @@ the flag is emitted for the *effect*, not for any particular payload shape.
 
 ## Flag
 
-Per-team: `flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "web-jwt-cousin")[:24] + "}"`.
+Per-team: `flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-jwt-cousin")[:24] + "}"`.
 The running instance derives and returns it; `flag.py` reproduces it for
 validation.
 

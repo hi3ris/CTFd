@@ -53,7 +53,7 @@ T_KEY = 0x4B
 T_META = 0x4D
 T_SALT = 0x53
 
-FLAG = b"CTF{r3c0rds_n0t_byt3s_x0r_v4ult}"
+FLAG = b"NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}"
 
 # 7 decoy plaintexts + 1 flag. The flag lives in exactly one sample.
 DECOYS = [

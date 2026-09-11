@@ -5,7 +5,7 @@ flag.py for forensics-usb-keystrokes.
 This challenge is a STATIC, downloadable artifact (the pcap carries the answer),
 so the authoritative flag lives in challenge.yml:
 
-    CTF{Bl4ck_H4t_USB_2026}
+    NCTF{Bl4ck_H4t_USB_2026}
 
 The helper below is provided for two reasons:
 
@@ -15,7 +15,7 @@ The helper below is provided for two reasons:
      used if this challenge were ever served per team. It follows the standard
      scheme so the platform's tooling stays uniform:
 
-         flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
+         flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
 
      Note: a served variant would need a regenerated pcap whose typed passphrase
      equals that HMAC digest; the static build here does not use it.
@@ -25,13 +25,13 @@ import hmac
 import sys
 
 CHALLENGE_ID = "forensics-usb-keystrokes"
-STATIC_FLAG = "CTF{Bl4ck_H4t_USB_2026}"
+STATIC_FLAG = "NCTF{Bl4ck_H4t_USB_2026}"
 
 
 def team_flag(team_secret: str) -> str:
     digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(),
                       hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 if __name__ == "__main__":

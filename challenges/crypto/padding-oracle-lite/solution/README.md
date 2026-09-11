@@ -14,7 +14,7 @@ produced the true plaintext) and emits the per-team flag.
 Per team:
 
 ```
-flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-padding-oracle-lite")[:24] + "}"
+flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-padding-oracle-lite")[:24] + "}"
 ```
 
 emitted by the running instance after a correct `SUBMIT`. `flag.py` reproduces

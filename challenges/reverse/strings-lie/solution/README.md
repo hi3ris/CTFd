@@ -1,8 +1,8 @@
 # strings-lie — writeup
 
 **Category:** reverse · **Difficulty:** easy
-**Flag:** `CTF{str1ngs_l1e_read_the_c0de}`
-**Decoy:** `CTF{y0u_grepp3d_th3_f4ke_0ne}`
+**Flag:** `NCTF{str1ngs_l1e_read_the_c0de}`
+**Decoy:** `NCTF{y0u_grepp3d_th3_f4ke_0ne}`
 
 ## The trap
 
@@ -11,11 +11,11 @@ Run the binary and it prints a flag straight away:
 ```
 $ ./chall
 === super-secret vault v0.3 ===
-hint: the flag is CTF{y0u_grepp3d_th3_f4ke_0ne} ... or is it?
+hint: the flag is NCTF{y0u_grepp3d_th3_f4ke_0ne} ... or is it?
 [-] nope.
 ```
 
-`strings chall | grep CTF{` returns exactly one hit — that same string. It is a
+`strings chall | grep NCTF{` returns exactly one hit — that same string. It is a
 **decoy**. The real flag is not stored anywhere in the file as plaintext:
 
 ```
@@ -62,19 +62,19 @@ solver does the latter so it needs no hardcoded values:
 1. For every 23-byte window, apply the inverse transform; keep windows that
    invert to clean ASCII. One of them is the passphrase `unw1nd_th3_math_by_h4nd`.
 2. For that key, scan every 30-byte window and XOR-decrypt; the one that yields
-   `CTF{...}` is the flag.
+   `NCTF{...}` is the flag.
 
 ```
 $ python3 solve.py ../chall
 passphrase : unw1nd_th3_math_by_h4nd
-flag       : CTF{str1ngs_l1e_read_the_c0de}
+flag       : NCTF{str1ngs_l1e_read_the_c0de}
 ```
 
 Or interactively, once you have the key:
 
 ```
 $ ./chall unw1nd_th3_math_by_h4nd
-[+] correct. flag: CTF{str1ngs_l1e_read_the_c0de}
+[+] correct. flag: NCTF{str1ngs_l1e_read_the_c0de}
 ```
 
 ## Honest note on LLM difficulty

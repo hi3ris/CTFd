@@ -3,7 +3,7 @@
 Solver for tlv-vault.
 
 Parses every VLT1 sample with the CORRECT (invented) semantics and prints the
-decrypted plaintext of each. The one that starts with CTF{ is the flag.
+decrypted plaintext of each. The one that starts with NCTF{ is the flag.
 
 Key inference points (the traps):
   * record `count` bytes and the header `rec_count` count ENTRIES, not bytes,
@@ -79,7 +79,7 @@ def main():
         except UnicodeDecodeError:
             text = repr(pt)
         print(f"{os.path.basename(path)}: {text}")
-        if text.startswith("CTF{"):
+        if text.startswith("NCTF{"):
             flag = text
     print("\nFLAG:", flag)
     return 0 if flag else 1

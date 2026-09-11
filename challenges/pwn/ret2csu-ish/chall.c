@@ -57,7 +57,7 @@ char scratch[256];
  * below is a STATIC, hard-coded value baked into the downloadable binary. The
  * real flag is per-team and is emitted by the LIVE service only after you
  * execute code in the process (the flag is in the environment). By this
- * event's rules a hard-coded CTF{...} sitting in a downloadable artifact is
+ * event's rules a hard-coded NCTF{...} sitting in a downloadable artifact is
  * never the real flag. You can refute it in under a minute: (a) nothing calls
  * admin_panel(), and (b) the flag is per-team/server-issued, not shipped.
  * ---------------------------------------------------------------------------
@@ -65,7 +65,7 @@ char scratch[256];
 __attribute__((used))
 static void admin_panel(void)
 {
-    puts("CTF{static_r0p_is_not_this_string_decoy}");
+    puts("NCTF{static_r0p_is_not_this_string_decoy}");
 }
 
 /*

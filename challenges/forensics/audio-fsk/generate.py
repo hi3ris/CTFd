@@ -48,7 +48,7 @@ PREAMBLE  = bytes([0xAA]) * 12
 LEAD_SIL  = 0.35        # seconds of near-silence before the burst
 TRAIL_SIL = 0.40        # seconds of near-silence after the burst
 
-FLAG    = "CTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
+FLAG    = "NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
 PAYLOAD = ("SIGINT downlink 0x2217 :: frame recovered :: flag=" + FLAG +
            " :: end of transmission").encode("ascii")
 
@@ -112,7 +112,7 @@ DECOY_MARK  = 1200.0
 DECOY_SPACE = 2200.0
 DECOY_BAUD  = 1200
 DECOY_AMPL  = 0.045
-DECOY_TEXT  = "CTF{b3ll202_1200_8n1_is_the_decoy}".encode("ascii")
+DECOY_TEXT  = "NCTF{b3ll202_1200_8n1_is_the_decoy}".encode("ascii")
 
 
 def synth_bell202_uart(data: bytes) -> np.ndarray:

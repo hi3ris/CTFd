@@ -4,7 +4,7 @@ Served challenges never ship their flag in a downloadable artifact. Each team's
 instance derives its own flag from a per-team secret injected by the instancier:
 
     TEAM_SECRET = HMAC_SHA256(GLOBAL_SECRET, str(account_id)).hexdigest()
-    flag        = "CTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
+    flag        = "NCTF{" + HMAC_SHA256(TEAM_SECRET, CHALLENGE_ID)[:24] + "}"
 
 This flag class lets the scoreboard validate that flag without storing it: on
 submission it recomputes the expected flag for the submitting team and compares
@@ -28,7 +28,7 @@ from CTFd.plugins import register_plugin_assets_directory
 from CTFd.utils.user import get_current_user
 
 
-FLAG_PREFIX = "CTF{"
+FLAG_PREFIX = "NCTF{"
 FLAG_SUFFIX = "}"
 DIGEST_LEN = 24
 

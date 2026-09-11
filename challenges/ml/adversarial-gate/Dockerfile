@@ -3,7 +3,7 @@
 # Build:  docker build -t ctf-adversarial-gate:latest .
 # Run:    docker run --rm -p 8080:8080 -e CHALLENGE_SECRET="<per-challenge-hex>" \
 #             ctf-adversarial-gate:latest
-#         # (or -e FLAG="CTF{...}" -- the instancer injects one or both)
+#         # (or -e FLAG="NCTF{...}" -- the instancer injects one or both)
 #
 # The per-team instancer injects PER-CHALLENGE values at instance-creation time:
 # FLAG (the exact flag string) and/or CHALLENGE_SECRET (per-challenge hex, whose

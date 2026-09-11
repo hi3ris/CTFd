@@ -33,7 +33,7 @@ MAGIC = b"AE32"
 VAULT_BASE = 4          # bytes: vault registers start after the 4-byte bank tag
 BANK_STRIDE_LEN = 64    # physical span reserved per bank region
 
-FLAG = "CTF{sram_retention_bank_interleave}"
+FLAG = "NCTF{sram_retention_bank_interleave}"
 
 
 def retention_noise(rng, n):
@@ -119,7 +119,7 @@ def main():
         phys_offsets=[0x300, 0x100, 0x280, 0x1A0, 0x080],
         filesize=0x400,
         seed=0xAE32,
-        decoy=(0x040, b"CTF{cold_boot_dram_dump_not_the_key}"),
+        decoy=(0x040, b"NCTF{cold_boot_dram_dump_not_the_key}"),
     )
     write(os.path.join(HERE, "retention.dump"), real)
 

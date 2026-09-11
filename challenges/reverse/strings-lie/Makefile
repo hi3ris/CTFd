@@ -21,8 +21,8 @@ chall: src/chall.c
 	$(CC) $(CFLAGS) -o chall src/chall.c
 
 verify: chall
-	@echo "strings hits for CTF{ (should be the decoy only):"
-	@strings -n 6 chall | grep -a 'CTF{' || true
+	@echo "strings hits for NCTF{ (should be the decoy only):"
+	@strings -n 6 chall | grep -a 'NCTF{' || true
 	@echo "real flag present as plaintext? (want: 0)"
 	@grep -a -c 'str1ngs_l1e_read' chall || true
 	@echo "solve:"

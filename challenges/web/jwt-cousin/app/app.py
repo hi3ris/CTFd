@@ -45,7 +45,7 @@ def get_flag() -> str:
     The instancier no longer injects the team master secret. It injects
     per-challenge values instead:
       1. FLAG              -- the exact flag string, used verbatim;
-      2. CHALLENGE_SECRET  -- per-challenge hex; flag == "CTF{"+hex[:24]+"}".
+      2. CHALLENGE_SECRET  -- per-challenge hex; flag == "NCTF{"+hex[:24]+"}".
     Off-arena (dev), where neither is set, fall back to deriving from
     TEAM_SECRET so `docker compose up` still works. The flag VALUE is
     unchanged: CHALLENGE_SECRET == HMAC_SHA256(team_secret, CHALLENGE_ID),
@@ -56,11 +56,11 @@ def get_flag() -> str:
         return env_flag
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
     # LOCAL DEV ONLY -- no per-challenge secret present in the environment.
     team_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
     digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 # ---------------------------------------------------------------------------
@@ -171,7 +171,7 @@ GET  /api/whoami     Authorization: Bearer &lt;token&gt;         -&gt; your clai
 POST /api/admin/rotate  Authorization: Bearer &lt;token&gt;      -&gt; admin only</pre>
 
 <p>Only an <code>admin</code> may rotate the console. Do that and the console
-hands back the operations flag. Flag format: <code>CTF{...}</code>.</p>
+hands back the operations flag. Flag format: <code>NCTF{...}</code>.</p>
 """
 
 

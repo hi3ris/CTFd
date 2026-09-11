@@ -29,7 +29,7 @@ D2="2024-02-09T15:03:00 +0000"   # the accidental secret commit
 D3="2024-02-09T15:07:00 +0000"   # the "fix"
 D4="2024-02-12T10:20:00 +0000"
 
-FLAG='CTF{d4ngling_c0mmit_lives_in_ref10g}'
+FLAG='NCTF{d4ngling_c0mmit_lives_in_ref10g}'
 
 commit() {  # commit <date> <message>
   GIT_AUTHOR_DATE="$1" GIT_COMMITTER_DATE="$1" git commit -q -m "$2"
@@ -156,7 +156,7 @@ cat > NOTES.txt <<'EOF'
 TODO / scratch notes
 --------------------
 - staging token was rotated last week
-- old placeholder we used in the demo video: CTF{example_token_not_the_real_flag}
+- old placeholder we used in the demo video: NCTF{example_token_not_the_real_flag}
   (this is a fake sample value, safe to keep in the repo)
 - remember to add rate-limiting to the uploader
 EOF

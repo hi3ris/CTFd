@@ -20,7 +20,7 @@ normal code path. The only way it comes back is if *your* deserialized object
 loaded value read that file. The service returns `repr(loaded_object)`; it does
 not inspect or expect any particular payload shape. It verifies the effect.
 
-Flag format: CTF{...}
+Flag format: NCTF{...}
 """
 import io
 import os

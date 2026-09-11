@@ -2,7 +2,7 @@
 
 **Category:** web · **Difficulty:** medium
 **Challenge id:** `web-ssrf-metadata-decoy`
-**Flag:** `CTF{ HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] }` (per team)
+**Flag:** `NCTF{ HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] }` (per team)
 
 ## TL;DR
 
@@ -84,7 +84,7 @@ SSRF through the proxy satisfies) and responds:
 
 ```json
 { "service": "admin-api", "status": "alive",
-  "deploy_token": "CTF{....................}" }
+  "deploy_token": "NCTF{....................}" }
 ```
 
 That `deploy_token` is the flag.
@@ -92,7 +92,7 @@ That `deploy_token` is the flag.
 ## Why this is a server-side oracle (not a downloadable flag)
 
 The flag is computed on demand as
-`"CTF{" + HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] + "}"` and is
+`"NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-ssrf-metadata-decoy")[:24] + "}"` and is
 returned **only** when `/admin/ping` is hit from a loopback source. It is not in
 any file, page, or artifact you can download, and reading the source alone does
 not reveal it (you don't have `TEAM_SECRET`). You must produce the effect —

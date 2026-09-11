@@ -25,7 +25,7 @@ description: |
     a sample. That is not the guarded code; `/verify` will tell you so. Don't
     waste a submission being fooled by it.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 300
 type: team_instance
@@ -37,7 +37,7 @@ extra:
   minimum: 100
 
 # This challenge is served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "ai-ai1-naive-guard")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ai-ai1-naive-guard")[:24] + "}"
 # and is emitted by the running instance only after /verify confirms (server
 # side, deterministically) that the player recovered this instance's SIGMA
 # secret. The SIGMA secret is a SEPARATE derivation from the same TEAM_SECRET

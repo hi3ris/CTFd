@@ -15,7 +15,7 @@ description: |
   Everything you need is in the handout: `SPEC.md` and `vault_01.vlt` ...
   `vault_08.vlt`. No network service - this is a pure parsing/crypto puzzle.
 
-  Flag format: CTF{...}
+  Flag format: NCTF{...}
 
 value: 350
 type: dynamic
@@ -25,7 +25,7 @@ extra:
   minimum: 100
 
 flags:
-  - CTF{r3c0rds_n0t_byt3s_x0r_v4ult}
+  - NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}
 
 tags:
   - crypto

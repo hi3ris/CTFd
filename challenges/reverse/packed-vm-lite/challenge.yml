@@ -8,7 +8,7 @@ description: |-
   is what actually validates the serial.
 
   There is no flag string in the binary. When you enter the serial the VM
-  accepts, the program prints the flag as CTF{ + <your serial> + }, rebuilt from
+  accepts, the program prints the flag as NCTF{ + <your serial> + }, rebuilt from
   your input - so you must recover the exact 24-character serial the interpreter
   accepts. grep/strings will not hand it to you.
 
@@ -16,7 +16,7 @@ description: |-
   serial byte (hint: a variable rotate, a per-index key, and feedback from the
   previous byte), then invert it.
 
-  The serial is exactly 24 characters. Flag format: CTF{...}
+  The serial is exactly 24 characters. Flag format: NCTF{...}
 
   The binary is a stripped x86-64 ELF; everything you need is inside the file.
   No network access required.
@@ -41,7 +41,7 @@ extra:
   minimum: 120
 
 flags:
-  - CTF{vm_bytec0de_1s_n0t_h4rd!}
+  - NCTF{vm_bytec0de_1s_n0t_h4rd!}
 
 tags:
   - reverse

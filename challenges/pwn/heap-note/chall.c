@@ -47,7 +47,7 @@ void win(void)
     const char *flag = getenv("FLAG");
     puts("");
     puts("[+] win() reached -- control-flow hijack verified by the service.");
-    printf("[+] flag: %s\n", flag ? flag : "CTF{missing_FLAG_env_ask_organisers}");
+    printf("[+] flag: %s\n", flag ? flag : "NCTF{missing_FLAG_env_ask_organisers}");
     fflush(stdout);
     _exit(0);
 }
@@ -56,7 +56,7 @@ void win(void)
  * -----------------------------------------------------------------------
  * DECOY.  secret_backdoor() is never referenced by any reachable path, and
  * the string below is a STATIC value baked into the downloadable binary. By
- * this event's rules a hard-coded CTF{...} in a shipped artifact is never the
+ * this event's rules a hard-coded NCTF{...} in a shipped artifact is never the
  * real flag: the real flag is per-team and is printed only by win() on the
  * live service. You can refute this decoy in under a minute -- (a) nothing
  * jumps to secret_backdoor(), and (b) it reads no environment, it just puts()
@@ -66,7 +66,7 @@ void win(void)
 __attribute__((used))
 static void secret_backdoor(void)
 {
-    puts("CTF{uaf_but_this_hardcoded_string_is_a_decoy}");
+    puts("NCTF{uaf_but_this_hardcoded_string_is_a_decoy}");
 }
 
 static void flush_line(void)

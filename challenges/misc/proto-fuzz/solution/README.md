@@ -100,7 +100,7 @@ lists `DUMP`. Run it:
 ```
 DUMP
 -> MAINT ok; flag follows
--> CTF{...}
+-> NCTF{...}
 ```
 
 `solve.py` automates this:
@@ -115,7 +115,7 @@ The flag is **never** in any downloadable file. The service derives it at
 runtime from the injected `TEAM_SECRET`:
 
 ```
-flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "misc-proto-fuzz")[:24] + "}"
+flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "misc-proto-fuzz")[:24] + "}"
 ```
 
 `DUMP` emits it only after checking the **effect** (`channels[3] != 0`), not any

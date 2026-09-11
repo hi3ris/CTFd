@@ -4,26 +4,26 @@ Per-challenge flag resolution for challenge `crypto-lcg-casino`.
 
 The platform instancier injects PER-CHALLENGE values into the container:
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 TEAM_SECRET is NO LONGER injected. The flag VALUE is unchanged: historically
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-lcg-casino")[:24] + "}"
+    flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-lcg-casino")[:24] + "}"
 and CHALLENGE_SECRET == HMAC_SHA256(team_secret, "crypto-lcg-casino"), so
 CHALLENGE_SECRET[:24] is exactly the old flag body. This is a SOURCE change,
 not a value change.
 
 get_flag() resolves, in order:
     1. os.environ["FLAG"] if set (arena: instancier injects the exact string);
-    2. else "CTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}" if set (arena);
+    2. else "NCTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}" if set (arena);
     3. else a clearly-marked LOCAL DEV fallback derived from
        os.environ.get("TEAM_SECRET", "local-dev-secret"), so this still runs
        off-arena during local build + smoke tests.
 
 Usage:
-    FLAG=CTF{...} python3 flag.py           # echoes FLAG
-    CHALLENGE_SECRET=<hex> python3 flag.py   # echoes CTF{<hex[:24]>}
+    FLAG=NCTF{...} python3 flag.py           # echoes FLAG
+    CHALLENGE_SECRET=<hex> python3 flag.py   # echoes NCTF{<hex[:24]>}
     python3 flag.py                          # LOCAL DEV fallback
 """
 import hashlib
@@ -37,13 +37,13 @@ CHALLENGE_ID = "crypto-lcg-casino"
 def flag(secret: str) -> str:
     """Legacy per-team derivation, kept for compatibility.
 
-    Equivalent to "CTF{" + HMAC_SHA256(secret, CHALLENGE_ID)[:24] + "}".
+    Equivalent to "NCTF{" + HMAC_SHA256(secret, CHALLENGE_ID)[:24] + "}".
     In the new contract this is used only to reproduce the LOCAL DEV flag from
     a dev TEAM_SECRET; on the arena the flag comes from FLAG / CHALLENGE_SECRET.
     """
     digest = hmac.new(secret.encode(), CHALLENGE_ID.encode(),
                       hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 def get_flag() -> str:
@@ -54,7 +54,7 @@ def get_flag() -> str:
 
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
 
     # LOCAL DEV fallback ONLY -- never hit on the arena, where FLAG /
     # CHALLENGE_SECRET are always injected. Derives the same value the old

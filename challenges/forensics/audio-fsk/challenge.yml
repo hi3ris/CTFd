@@ -23,7 +23,7 @@ description: |
       standard Bell-202 8N1 link that decodes "too easily" — it is a decoy and
       does not carry the real flag. The real downlink is CRC-verified.
 
-  Flag format: CTF{...}  (lowercase letters, digits and underscores inside).
+  Flag format: NCTF{...}  (lowercase letters, digits and underscores inside).
 
 # This is a STATIC, downloadable forensics artifact: the challenge IS the WAV
 # recording, so the flag is baked into the modulated bitstream. No served
@@ -40,7 +40,7 @@ extra:
   minimum: 150
 
 flags:
-  - "CTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
+  - "NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
 
 files:
   - transmission.wav

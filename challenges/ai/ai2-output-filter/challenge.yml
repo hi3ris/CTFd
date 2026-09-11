@@ -26,7 +26,7 @@ description: |
   There is one public **demo token** the guard shares freely; it is a decoy and
   `/verify` refutes it explicitly. Only the real guarded value yields the flag.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 # Dynamic scoring (medium).
 value: 350
@@ -41,7 +41,7 @@ extra:
 # Per-team dynamic flag. The container receives TEAM_SECRET at creation and
 # derives, at runtime:
 #   guarded value = "SIGMA-" + HMAC_SHA256(TEAM_SECRET, "ai-ai2-output-filter:guarded")[:16]
-#   flag          = "CTF{"   + HMAC_SHA256(TEAM_SECRET, "ai-ai2-output-filter")[:24] + "}"
+#   flag          = "NCTF{"   + HMAC_SHA256(TEAM_SECRET, "ai-ai2-output-filter")[:24] + "}"
 # The flag is emitted only by /verify after the guarded value is recovered past
 # the filter (server-side effect check). flag.py reproduces both for platform
 # validation. The value below is the LOCAL-DEV flag (TEAM_SECRET=local-dev-team-secret)

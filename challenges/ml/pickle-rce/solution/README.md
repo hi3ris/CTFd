@@ -76,12 +76,12 @@ R                            REDUCE  -> mc(f) == f.read()
 $ python3 solve.py http://HOST:PORT
 service response: {
   "loaded_type": "str",
-  "model_summary": "'CTF{....}\\n'",
+  "model_summary": "'NCTF{....}\\n'",
   "status": "ok",
   "truncated": false
 }
 
-FLAG: CTF{....}
+FLAG: NCTF{....}
 ```
 
 `operator.attrgetter("read")` + an extra call, or `io.open` in place of
@@ -89,7 +89,7 @@ FLAG: CTF{....}
 
 ## Decoy
 
-`/flag.decoy` holds `CTF{not_the_flag_this_is_an_old_test_fixture_ignore}`. Point
+`/flag.decoy` holds `NCTF{not_the_flag_this_is_an_old_test_fixture_ignore}`. Point
 the same chain at `/flag.decoy` once and you can read that it is a labelled
 placeholder. It is not the flag; do not submit it. Ruling it out costs nothing.
 

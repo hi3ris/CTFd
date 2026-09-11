@@ -4,13 +4,13 @@ Per-challenge flag derivation for challenge `web-graphql-introspection-maze`.
 
 The per-team instancer now injects PER-CHALLENGE values into the container:
 
-    FLAG              the exact flag string, e.g. "CTF{<24 hex>}"
+    FLAG              the exact flag string, e.g. "NCTF{<24 hex>}"
     CHALLENGE_SECRET  per-challenge hex; the flag body is CHALLENGE_SECRET[:24],
-                      i.e. FLAG == "CTF{" + CHALLENGE_SECRET[:24] + "}"
+                      i.e. FLAG == "NCTF{" + CHALLENGE_SECRET[:24] + "}"
 
 TEAM_SECRET is NO LONGER injected. The flag VALUE is unchanged: previously
 
-    flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "web-graphql-introspection-maze")[:24] + "}"
+    flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-graphql-introspection-maze")[:24] + "}"
 
 and CHALLENGE_SECRET == HMAC(team_secret, CHALLENGE_ID), so CHALLENGE_SECRET[:24]
 is exactly the old flag body. This is a SOURCE change, not a value change.
@@ -34,7 +34,7 @@ CHALLENGE_ID = "web-graphql-introspection-maze"
 def flag(team_secret: str) -> str:
     """Legacy per-team derivation. Kept for compatibility / local dev only."""
     digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 def get_flag() -> str:
@@ -42,7 +42,7 @@ def get_flag() -> str:
 
     Order:
       1. os.environ["FLAG"] if set (injected by the platform);
-      2. else "CTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}" if set;
+      2. else "NCTF{" + os.environ["CHALLENGE_SECRET"][:24] + "}" if set;
       3. else a clearly-marked LOCAL DEV fallback derived from the
          TEAM_SECRET dev value, so this still runs off-arena.
     """
@@ -51,7 +51,7 @@ def get_flag() -> str:
         return env_flag
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
     # LOCAL DEV fallback ONLY -- never reached on the arena, where FLAG /
     # CHALLENGE_SECRET are always injected.
     return flag(os.environ.get("TEAM_SECRET", "local-dev-secret"))

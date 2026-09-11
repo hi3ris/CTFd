@@ -21,7 +21,7 @@ description: |
     * A separate beacon channel is also present. Read the brief: the real data
       channel is DNS TXT. Anything that decodes "too easily" is not it.
 
-  Flag format: CTF{...}  (lowercase letters, digits and underscores inside).
+  Flag format: NCTF{...}  (lowercase letters, digits and underscores inside).
 
 # This is a STATIC, downloadable forensics artifact: the challenge IS the pcap,
 # so the flag is baked into the captured data. No served component and no
@@ -37,7 +37,7 @@ extra:
   minimum: 100
 
 flags:
-  - "CTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
+  - "NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
 
 files:
   - capture.pcap

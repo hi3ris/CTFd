@@ -113,7 +113,7 @@ def main():
     with open(out, "w") as f:
         json.dump(artifact, f, indent=2)
 
-    flag = "CTF{" + hashlib.sha256(("%064x" % d).encode()).hexdigest()[:32] + "}"
+    flag = "NCTF{" + hashlib.sha256(("%064x" % d).encode()).hexdigest()[:32] + "}"
     print("private key d =", hex(d))
     print("num signatures =", len(sigs), "(60 biased + 2 decoy)")
     print("FLAG =", flag)

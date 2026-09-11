@@ -39,7 +39,7 @@ volatile unsigned int nonce = 0;
  * DECOY.  This function is never called from any reachable path, and the
  * string below is a STATIC, hard-coded value baked into the downloadable
  * binary. The real flag is per-team and is emitted by the live service only
- * after the auth check passes (see win condition). A hard-coded CTF{...} in
+ * after the auth check passes (see win condition). A hard-coded NCTF{...} in
  * a downloadable artifact is, by this event's rules, never the real flag --
  * you can refute it in seconds by noticing (a) nothing calls debug_dump(),
  * and (b) the flag format is per-team/server-issued, not shipped in a file.
@@ -48,7 +48,7 @@ volatile unsigned int nonce = 0;
 __attribute__((used))
 static void debug_dump(void)
 {
-    puts("CTF{fmt_str0_practice_r00m_decoy}");
+    puts("NCTF{fmt_str0_practice_r00m_decoy}");
 }
 
 static void seed_random(void)
@@ -101,7 +101,7 @@ int main(void)
             const char *flag = getenv("FLAG");
             puts("");
             puts("[+] auth overwritten -- effect verified by the service.");
-            printf("[+] flag: %s\n", flag ? flag : "CTF{missing_FLAG_env_ask_organisers}");
+            printf("[+] flag: %s\n", flag ? flag : "NCTF{missing_FLAG_env_ask_organisers}");
             fflush(stdout);
             return 0;
         }

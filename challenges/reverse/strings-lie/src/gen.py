@@ -23,8 +23,8 @@ the decoy.
 """
 
 PASS  = b"unw1nd_th3_math_by_h4nd"          # the real key (23 bytes)
-FLAG  = b"CTF{str1ngs_l1e_read_the_c0de}"    # the real flag (static)
-DECOY = b"CTF{y0u_grepp3d_th3_f4ke_0ne}"     # obvious strings(1) hit
+FLAG  = b"NCTF{str1ngs_l1e_read_the_c0de}"    # the real flag (static)
+DECOY = b"NCTF{y0u_grepp3d_th3_f4ke_0ne}"     # obvious strings(1) hit
 
 def transform(P):
     return [ (((P[i] ^ 0x5A) + (i * 7 + 3)) & 0xFF) for i in range(len(P)) ]

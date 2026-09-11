@@ -21,9 +21,9 @@ description: |
   **Flag:** compute the private key `d`, format it as a 64-character lowercase
   hex string with `"%064x" % d`, and the flag is
 
-      CTF{ sha256( that 64-char hex string ).hexdigest()[:32] }
+      NCTF{ sha256( that 64-char hex string ).hexdigest()[:32] }
 
-  Flag format: `CTF{<32 lowercase hex chars>}`
+  Flag format: `NCTF{<32 lowercase hex chars>}`
 
 # Dynamic scoring (easy).
 value: 150
@@ -39,7 +39,7 @@ extra:
 # flag is correct here (there is no served oracle). flag.py reproduces the
 # derivation from the private key.
 flags:
-  - CTF{1b147fde539c254a8e9bc83bb0b5516d}
+  - NCTF{1b147fde539c254a8e9bc83bb0b5516d}
 
 tags:
   - crypto

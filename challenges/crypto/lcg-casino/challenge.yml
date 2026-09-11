@@ -29,7 +29,7 @@ description: |
   infeasible and unnecessary -- recover the running *state* from a couple of
   reveals instead.
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 value: 500
 type: team_instance
@@ -41,7 +41,7 @@ extra:
   minimum: 100
 
 # This challenge is served per-team. The flag is dynamic:
-#   flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-lcg-casino")[:24] + "}"
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-lcg-casino")[:24] + "}"
 # and is emitted by the running instance only after the win-streak effect
 # succeeds. The static entry below is a placeholder for the demo TEAM_SECRET used
 # in local builds; CTFd validates the real per-team flag via the custom HMAC flag

@@ -69,13 +69,13 @@ def compute_flag() -> str:
         return env_flag
     challenge_secret = os.environ.get("CHALLENGE_SECRET")
     if challenge_secret:
-        return "CTF{" + challenge_secret[:24] + "}"
+        return "NCTF{" + challenge_secret[:24] + "}"
     # LOCAL DEV fallback ONLY -- never reached on the arena, where FLAG /
     # CHALLENGE_SECRET are always injected. Reproduces the old per-team value so
     # off-arena runs still work.
     team_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
     digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
-    return "CTF{" + digest[:24] + "}"
+    return "NCTF{" + digest[:24] + "}"
 
 
 # ---------------------------------------------------------------------------
@@ -324,7 +324,7 @@ LANDING = """<!doctype html><meta charset=utf-8>
 <code>{"query": "...", "variables": {...}}</code>).</p>
 <p>Introspection is disabled on this deployment. There is no schema dump,
 no GraphiQL, no <code>__schema</code>.</p>
-<p>Flag format: <code>CTF{...}</code></p>
+<p>Flag format: <code>NCTF{...}</code></p>
 """
 
 

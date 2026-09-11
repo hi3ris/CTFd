@@ -2,7 +2,7 @@
 
 **Category:** forensics · **Difficulty:** medium
 **Challenge ID:** `forensics-dns-exfil`
-**Flag:** `CTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}` (static)
+**Flag:** `NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}` (static)
 
 ## Artifact
 
@@ -36,7 +36,7 @@ exfiltration channel, and one decoy beacon.
    groups, and read off whole bytes.
 
 5. **Read the note.** The decoded bytes are a plaintext "FIELD NOTES" memo. The
-   line `recovery_token: CTF{...}` is the flag.
+   line `recovery_token: NCTF{...}` is the flag.
 
 Run the reference solver:
 
@@ -49,7 +49,7 @@ python3 solve.py ../capture.pcap
 
 There is also an **A-record** beacon to `*.sync.telemetry-cdn.net` whose labels
 are *standard* base32. Decoding it yields
-`CTF{dns_txt_exfiltration_signature_not_flag}`. It is refutable from the brief
+`NCTF{dns_txt_exfiltration_signature_not_flag}`. It is refutable from the brief
 alone in under a minute:
 
 * The brief and this writeup state the real channel is **DNS TXT** — the decoy is

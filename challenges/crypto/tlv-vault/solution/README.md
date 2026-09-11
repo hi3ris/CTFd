@@ -1,6 +1,6 @@
 # tlv-vault - writeup
 
-**Category:** crypto - **Difficulty:** medium - **Flag:** `CTF{r3c0rds_n0t_byt3s_x0r_v4ult}`
+**Category:** crypto - **Difficulty:** medium - **Flag:** `NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}`
 
 ## TL;DR
 
@@ -50,7 +50,7 @@ the spec refutes it in one line. It never costs an attempt.
   `ciphertext_start = 68 - 36 = 32 (0x20)`. The last 4 bytes (`00 45 4e 44`)
   are the footer, not ciphertext - which is exactly why the offset is
   EOF-relative.
-- XOR-decrypt the 32 ciphertext bytes with the 8-byte key -> `CTF{...}`.
+- XOR-decrypt the 32 ciphertext bytes with the 8-byte key -> `NCTF{...}`.
 
 ## Solve
 
@@ -60,9 +60,9 @@ the spec refutes it in one line. It never costs an attempt.
 $ python3 solution/solve.py
 vault_01.vlt: vault services log rotation completed ...
 ...
-vault_05.vlt: CTF{r3c0rds_n0t_byt3s_x0r_v4ult}
+vault_05.vlt: NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}
 ...
-FLAG: CTF{r3c0rds_n0t_byt3s_x0r_v4ult}
+FLAG: NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}
 ```
 
 The samples deliberately vary version byte, key length (5-9), record order, and

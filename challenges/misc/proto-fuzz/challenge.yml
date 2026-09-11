@@ -23,7 +23,7 @@ description: |
 
   Connect:  `nc <host> <port>`
 
-  Flag format: `CTF{...}`
+  Flag format: `NCTF{...}`
 
 # Dynamic scoring (medium).
 value: 350
@@ -38,7 +38,7 @@ extra:
 # This challenge is SERVED and the flag is derived per team, so no static flag
 # ships in this file. The container derives it at runtime from the injected
 # TEAM_SECRET as:
-#     flag = "CTF{" + HMAC_SHA256(TEAM_SECRET, "misc-proto-fuzz")[:24] + "}"
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "misc-proto-fuzz")[:24] + "}"
 # (see flag.py). The platform's custom per-account flag class recomputes and
 # validates each team's flag on submission. flags is intentionally left empty.
 flags:

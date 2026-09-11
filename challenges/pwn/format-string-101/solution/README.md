@@ -80,7 +80,7 @@ Send it, and the service confirms the effect and hands over the flag:
 
 ```
 [+] auth overwritten -- effect verified by the service.
-[+] flag: CTF{...}
+[+] flag: NCTF{...}
 ```
 
 ## Running the solver
@@ -91,7 +91,7 @@ python3 solution/solve.py <host> <port>
 
 # local playtest (compile first, provide a FLAG so it prints one)
 make
-FLAG='CTF{local_test}' python3 solution/solve.py
+FLAG='NCTF{local_test}' python3 solution/solve.py
 ```
 
 The solver was verified end-to-end (3/3 runs) locally and over a TCP
@@ -101,13 +101,13 @@ recovers the flag emitted from the container's `FLAG` env.
 ## The decoy
 
 `chall.c` contains `debug_dump()`, which holds a hard-coded
-`CTF{fmt_str0_practice_r00m_decoy}`. It is **not** the flag and is refutable in
+`NCTF{fmt_str0_practice_r00m_decoy}`. It is **not** the flag and is refutable in
 seconds:
 
 1. Nothing calls `debug_dump()` -- it is dead code (kept only via
    `__attribute__((used))`).
 2. The rules and the description state the flag is **per-team and
-   server-issued** after the effect is verified. A static `CTF{...}` sitting in
+   server-issued** after the effect is verified. A static `NCTF{...}` sitting in
    a downloadable binary can never be a team's real flag.
 
 Chasing it (e.g. trying to redirect control flow to it) is a dead end: even

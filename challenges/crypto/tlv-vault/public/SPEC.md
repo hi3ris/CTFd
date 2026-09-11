@@ -55,4 +55,4 @@ record, decrypt with the KEY schedule, and read the plaintext.
 
 ## Flag
 
-Exactly one of the eight vaults decrypts to the flag. Flag format: `CTF{...}`.
+Exactly one of the eight vaults decrypts to the flag. Flag format: `NCTF{...}`.

@@ -19,7 +19,7 @@ with different HMAC labels (see `flag.py` / `app/app.py`):
 
 - **SIGMA secret** = `HMAC(TEAM_SECRET, "ai-ai1-naive-guard/guard-secret")` ->
   the string the *model* is told. This is what injection extracts.
-- **flag** = `CTF{ HMAC(TEAM_SECRET, "ai-ai1-naive-guard")[:24] }` -> never
+- **flag** = `NCTF{ HMAC(TEAM_SECRET, "ai-ai1-naive-guard")[:24] }` -> never
   placed in the model's context and never emitted by the model.
 
 The model literally cannot say the flag -- it has never seen it. The only way
@@ -79,7 +79,7 @@ What an assistant **cannot** shortcut:
   so no amount of reasoning produces it offline. You must run payloads against
   *your team's live instance* and recover *your team's* SIGMA secret.
 - Success is verified by a server-side deterministic effect, not by any text
-  the model emits, so "the model said CTF{...}" (a hallucination or a re-emit
+  the model emits, so "the model said NCTF{...}" (a hallucination or a re-emit
   of the prompt) proves nothing -- only submitting the real SIGMA secret does.
 - The per-team persona and per-team secret mean a copy-pasted transcript or a
   shared payload from another team does not hand you the answer; at most it
