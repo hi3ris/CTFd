@@ -61,6 +61,13 @@ extra:
 flags:
   - type: team_hmac
     content: pwn-ret2csu-ish
+
+# Handout: the static, not-stripped binary for offline analysis plus its source.
+# The real flag is per-team and server-issued; the binary carries only a single
+# unreachable decoy NCTF{...} string (refutable in under a minute).
+files:
+  - chall
+  - chall.c
 tags:
   - pwn
   - rop

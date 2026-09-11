@@ -54,6 +54,25 @@ extra:
 flags:
   - type: team_hmac
     content: ml-adversarial-gate
+
+# Handout artifacts delivered to players (white-box: weights + DENIED badge in
+# both the invented QGP1 .gatepkt container and decoded .npy, plus the codec and
+# model source and a small labelled sample corpus). No flag is present in any of
+# these; the flag is emitted only by the live instance after effect verification.
+files:
+  - handout/README.md
+  - handout/gatemodel.py
+  - handout/weights.npz
+  - handout/denied_badge.gatepkt
+  - handout/denied_badge.npy
+  - handout/samples/badge_00.gatepkt
+  - handout/samples/badge_00.npy
+  - handout/samples/badge_01.gatepkt
+  - handout/samples/badge_01.npy
+  - handout/samples/badge_02.gatepkt
+  - handout/samples/badge_03.gatepkt
+  - handout/samples/badge_04.gatepkt
+  - handout/samples/badge_05.gatepkt
 tags:
   - ml
   - adversarial-examples

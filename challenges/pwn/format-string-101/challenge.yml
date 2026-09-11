@@ -50,6 +50,12 @@ extra:
 flags:
   - type: team_hmac
     content: pwn-format-string-101
+
+# Handout: the binary for offline analysis plus its source. Neither contains a
+# flag -- the per-team flag lives only in the running service's environment.
+files:
+  - chall
+  - chall.c
 tags:
   - pwn
   - format-string
