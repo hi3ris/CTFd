@@ -61,8 +61,11 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 ### Reliquat Lot 1 (à traiter avant mise en prod, non bloquant maintenant)
 - [ ] 🤖 Passer en revue les **45 findings mineurs non vérifiés** de l'audit (rapport
       dans le transcript workflow) et trancher un par un.
-- [ ] 🤖 État Terraform : aujourd'hui **local**. Mettre un backend S3 + DynamoDB lock
-      pour qu'un apply à moitié raté le matin du 23 soit reprenable.
+- [x] 🤖 **Backend d'état distant S3 + verrou DynamoDB** écrit (opt-in) : `terraform/bootstrap/`
+      crée le bucket versionné/chiffré + la table de verrou (état local, une fois) ; `backend.tf.example`
+      + `backend.hcl.example` + `make state-bootstrap` + `make init` auto-détecte l'état distant.
+      Un apply interrompu devient reprenable et les applies concurrents sont verrouillés.
+      (`terraform validate` non exécuté : binaire absent de la session — vérif par inspection.)
 - [ ] 🧑 Décider Savings Plan / taille du front après le test de charge (Lot 5).
 
 ---
@@ -97,8 +100,13 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       en < 15 min → **on coupe**. À faire sur le front `setup` avant la présélection.
 - [ ] 🧑🤖 **Recherche de prior art** publique ET interne (éditions passées, dépôts, images).
 - [ ] 🧑 Relecture à froid par un second auteur des challenges à format inventé (tlv-vault…).
-- [ ] 🤖 Vérifier que `pwn/*` (heap libc-pinné, ROP) buildent et que les solveurs passent
-      dans un vrai environnement (non vérifiable dans la session actuelle — signalé).
+- [x] 🤖 **`pwn/*` buildent** (gcc x86-64) : les 3 compilent, protections conformes au Makefile
+      (format-string : no-PIE/no-canary/no-RELRO, `auth` en .bss à adresse fixe ; ret2csu :
+      static/no-PIE, gadgets `csu_pop`/`marshal_regs` exportés, pas de `win`, décoy identifié ;
+      heap-note : artefact autoritatif `handout/chall` glibc 2.31, symbole `win` présent). Les
+      avertissements compilateur (format-security, stringop-overflow) confirment la présence des bugs.
+- [ ] 🧑🤖 Faire **tourner les solveurs de bout en bout** dans un vrai conteneur (nécessite le démon
+      Docker + le service socat — non dispo dans la session ; à faire à la répétition, Lot 5).
 
 > Détail des 26 : voir `challenges/README.md`. Chaîne IA à 4 niveaux (ai0 sans inférence
 > gate le reste). ML : pickle-rce, adversarial-gate.
@@ -194,6 +202,9 @@ passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentati
 ---
 
 ## Lot 5 — Intégration & répétition générale 🔴 (semaine du 12 octobre)
+
+> 🤖 **Runbook rédigé** : `deploy/RUNBOOK.md` (préparation J-30→J-7, import ctfcli, bascules de
+> phase, cadence jours J, playbooks d'incident, clôture). Tout ci-dessous exige l'infra live.
 
 - [ ] 🤖 Import de **tous** les challenges via ctfcli sur le front `setup`.
 - [ ] 🤖 Vérifier la chaîne de prérequis IA de bout en bout, et les scores dynamiques.

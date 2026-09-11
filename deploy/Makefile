@@ -49,8 +49,23 @@ help:
 # --- Preparatifs ------------------------------------------------------------
 
 .PHONY: init
-init: ## Initialise Terraform (une fois)
-	$(TF) init
+init: ## Initialise Terraform (une fois). Utilise l'etat distant si backend.hcl existe.
+	@if [ -f terraform/backend.hcl ] && [ -f terraform/backend.tf ]; then \
+	   echo "Etat distant detecte (backend.hcl) -> init S3 verrouille."; \
+	   $(TF) init -backend-config=backend.hcl; \
+	 else \
+	   echo "Etat LOCAL (pas de backend.hcl). Pour l'etat distant : make state-bootstrap."; \
+	   $(TF) init; \
+	 fi
+
+.PHONY: state-bootstrap
+state-bootstrap: ## (une fois) Cree le bucket S3 d'etat + la table de verrou DynamoDB
+	terraform -chdir=terraform/bootstrap init
+	terraform -chdir=terraform/bootstrap apply
+	@echo; echo "=== Etat distant provisionne. Pour l'activer : ==="; \
+	 echo "  1. cp terraform/backend.tf.example terraform/backend.tf"; \
+	 echo "  2. terraform -chdir=terraform/bootstrap output -raw backend_hcl > terraform/backend.hcl"; \
+	 echo "  3. make init   (repondre 'yes' pour migrer l'etat local vers S3)"
 
 .PHONY: check-gpu-quota
 check-gpu-quota: ## Verifie le quota GPU AWS dans LA BONNE region. A LANCER MAINTENANT.
