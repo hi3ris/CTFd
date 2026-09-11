@@ -32,6 +32,8 @@ services:
       # Adresse d'Ollama sur l'arena, consommee par le plugin de challenges IA.
       # Vide hors evenement : les challenges IA sont alors simplement indisponibles.
       - OLLAMA_URL=${OLLAMA_URL:-}
+      # Passerelle d'admission IA, lue par le plugin team_instancer.
+      - AI_PROXY_URL=${AI_PROXY_URL:-}
       # API Docker de l'arena, republiee sur le reseau interne par le service
       # dockerproxy. Vide hors evenement : l'instancier est alors inactif.
       - DOCKER_HOST=${DOCKER_HOST:-}

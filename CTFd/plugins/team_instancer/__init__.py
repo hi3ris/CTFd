@@ -151,7 +151,10 @@ def _mint_proxy_token(account_id, label, instance_id):
 
     secret = os.environ.get("CTF_TEAM_FLAG_SECRET", "")
     key = hmac.new(secret.encode(), b"ai-proxy-token-key", hashlib.sha256).digest()
-    exp = int(time.time()) + settings.INSTANCE_TTL + 3600
+    # Cover the maximum RENEWED lifetime, not one TTL: renew() extends the
+    # instance up to MAX_RENEW_COUNT times but the container env (and thus
+    # this token) is fixed at spawn, so the token must outlast every renew.
+    exp = int(time.time()) + settings.INSTANCE_TTL * (settings.MAX_RENEW_COUNT + 2)
     payload = f"{account_id}:{label}:{instance_id}:{exp}"
     sig = hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()[:32]
     return base64.urlsafe_b64encode(f"{payload}:{sig}".encode()).decode()

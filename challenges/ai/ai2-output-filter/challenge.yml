@@ -66,5 +66,5 @@ connection_info: "http://{host}:{port}  (see GET / for endpoints; flag via POST 
 # --- Prerequisite chain ----------------------------------------------------
 # Requires Level 1. Prerequisites are wired by challenge ID at import time:
 #     requirements:
-#       - ai-ai1-naive-guard
-# (ai1 in turn requires ai-ai0-leaked-transcript, the root of the AI track.)
+# (chaine cablee via le bloc requirements ci-dessus, par nom nu)
+# (la chaine complete : ai0-leaked-transcript -> ai1-naive-guard -> ai2 -> ai3, par nom nu.)

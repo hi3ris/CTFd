@@ -83,4 +83,4 @@ version: "0.1"
 # Requires Level 2 of the AI track. Prerequisites are wired by challenge ID at
 # import time; this challenge declares:
 #     requirements:
-#       - ai-ai2-output-filter
+# (chaine cablee via le bloc requirements ci-dessus, par nom nu)

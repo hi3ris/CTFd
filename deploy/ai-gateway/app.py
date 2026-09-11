@@ -54,21 +54,48 @@ TOKEN_BUDGET = _int("AI_TOKEN_BUDGET", 60000)      # tokens per window per team
 TOKEN_WINDOW = _int("AI_TOKEN_WINDOW", 3600)       # seconds
 GLOBAL_MAX_INFLIGHT = _int("AI_GLOBAL_INFLIGHT", 6)
 LEVEL_MAX_DEFAULT = _int("AI_LEVEL_MAX", 4)        # per-level global concurrency
-QUEUE_WAIT = _int("AI_QUEUE_WAIT", 20)             # seconds a request may wait for a slot
+MAX_PER_TEAM_INFLIGHT = _int("AI_TEAM_INFLIGHT", 2)  # a team's share of the global pool
+EST_TOKENS = _int("AI_EST_TOKENS", 1200)           # provisional budget reservation per call
+QUEUE_WAIT = _int("AI_QUEUE_WAIT", 20)             # total seconds a request may wait for a slot
 UPSTREAM_TIMEOUT = _int("AI_UPSTREAM_TIMEOUT", 180)
 LOG_DIR = os.environ.get("AI_LOG_DIR", "/var/log/ai-gateway")
 LOG_CONTENT = os.environ.get("AI_LOG_CONTENT", "0") == "1"
+LOG_MAX_BYTES = _int("AI_LOG_MAX_BYTES", 50 * 1024 * 1024)
+LOG_BACKUPS = _int("AI_LOG_BACKUPS", 3)
 
-os.makedirs(LOG_DIR, exist_ok=True)
+try:
+    os.makedirs(LOG_DIR, exist_ok=True)
+except OSError:
+    pass
 
 # --- shared state (guarded by _lock) --------------------------------------
 _lock = threading.Lock()
 _rate = {}           # team -> [ts, ...]
 _tokens = {}         # team -> [(ts, count), ...]
+_reserved = {}       # team -> provisional tokens reserved for in-flight calls
+_inflight = {}       # team -> count of in-flight calls (per-team share of pool)
 _team_level = set()  # (team, level) currently in flight
 _global_inflight = threading.BoundedSemaphore(GLOBAL_MAX_INFLIGHT)
 _level_sems = {}     # level -> BoundedSemaphore
 _log_lock = threading.Lock()
+
+# Set up a size-bounded rotating log so attempts.jsonl cannot fill the disk it
+# shares with the CTFd database.
+import logging
+import logging.handlers
+
+_attempt_log = logging.getLogger("ai_attempts")
+_attempt_log.setLevel(logging.INFO)
+_attempt_log.propagate = False
+try:
+    _h = logging.handlers.RotatingFileHandler(
+        os.path.join(LOG_DIR, "attempts.jsonl"), maxBytes=LOG_MAX_BYTES,
+        backupCount=LOG_BACKUPS, encoding="utf-8",
+    )
+    _h.setFormatter(logging.Formatter("%(message)s"))
+    _attempt_log.addHandler(_h)
+except OSError:
+    _attempt_log.addHandler(logging.StreamHandler())
 
 
 def _level_sem(level):
@@ -103,20 +130,21 @@ def _verify_token(tok):
 
 
 def _log_attempt(team, level, payload, data, verdict=None):
+    """Append one JSONL record. Never on the critical path: a logging failure
+    must not turn an already-generated model response into a 500."""
     rec = {
-        "ts": int(time.time()), "team": team, "level": level,
+        "ts": int(time.time()), "team": team, "level": level, "verdict": verdict,
         "model": (data or {}).get("model"),
         "prompt_tokens": (data or {}).get("prompt_eval_count"),
         "completion_tokens": (data or {}).get("eval_count"),
-        "verdict": verdict,
     }
     if LOG_CONTENT:
-        rec["prompt"] = payload.get("messages")
+        rec["prompt"] = (payload or {}).get("messages")
         rec["response"] = (data or {}).get("message", {}).get("content")
-    line = json.dumps(rec, ensure_ascii=False)
-    with _log_lock:
-        with open(os.path.join(LOG_DIR, "attempts.jsonl"), "a") as fh:
-            fh.write(line + "\n")
+    try:
+        _attempt_log.info(json.dumps(rec, ensure_ascii=False))
+    except Exception:
+        pass
 
 
 def _busy(msg="Modele occupe, reessayez dans un instant.", retry=5):
@@ -151,28 +179,47 @@ def chat():
     payload = request.get_json(silent=True) or {}
     now = time.time()
 
-    # Rate + budget precheck (fast, under lock).
+    # Admission precheck (fast, under lock). We RESERVE a provisional token cost
+    # and count the request as in-flight here, so concurrent requests from one
+    # team cannot each pass a stale budget/pool check before any of them debits.
     with _lock:
         _rate[team] = _prune(_rate.get(team, []), RATE_WINDOW, now)
         if len(_rate[team]) >= RATE_MAX:
+            _log_attempt(team, level, payload, None, verdict="denied:rate")
             return _busy("Trop de messages, ralentissez.", RATE_WINDOW)
         _tokens[team] = _prune(_tokens.get(team, []), TOKEN_WINDOW, now)
-        spent = sum(c for _, c in _tokens[team])
+        spent = sum(c for _, c in _tokens[team]) + _reserved.get(team, 0)
         if spent >= TOKEN_BUDGET:
+            _log_attempt(team, level, payload, None, verdict="denied:budget")
             return _busy("Budget de tokens de l'equipe atteint pour l'instant.", TOKEN_WINDOW)
+        # A team may hold at most its share of the global pool, so a couple of
+        # teams cannot monopolise the GPU across the levels they can drive.
+        if _inflight.get(team, 0) >= MAX_PER_TEAM_INFLIGHT:
+            _log_attempt(team, level, payload, None, verdict="denied:team_inflight")
+            return _busy("Trop de requetes simultanees pour l'equipe.", 5)
         # One in-flight per (team, level).
         if (team, level) in _team_level:
+            _log_attempt(team, level, payload, None, verdict="denied:level_inflight")
             return _busy("Une requete de ce niveau est deja en cours pour l'equipe.", 3)
         _team_level.add((team, level))
         _rate[team].append(now)
+        _reserved[team] = _reserved.get(team, 0) + EST_TOKENS
+        _inflight[team] = _inflight.get(team, 0) + 1
+
+    def _release_admission():
+        with _lock:
+            _team_level.discard((team, level))
+            _reserved[team] = max(0, _reserved.get(team, 0) - EST_TOKENS)
+            _inflight[team] = max(0, _inflight.get(team, 0) - 1)
 
     level_sem = _level_sem(level)
     got_level = got_global = False
+    deadline = now + QUEUE_WAIT  # single wall-clock budget for BOTH acquires
     try:
-        got_level = level_sem.acquire(timeout=QUEUE_WAIT)
+        got_level = level_sem.acquire(timeout=max(0, deadline - time.time()))
         if not got_level:
             return _busy()
-        got_global = _global_inflight.acquire(timeout=QUEUE_WAIT)
+        got_global = _global_inflight.acquire(timeout=max(0, deadline - time.time()))
         if not got_global:
             return _busy()
 
@@ -188,7 +235,7 @@ def chat():
             return jsonify({"error": f"backend {r.status_code}"}), 502
         data = r.json()
 
-        # Debit the team's token budget from the model's own counts.
+        # Reconcile: replace the reservation with the model's actual token count.
         used = (data.get("prompt_eval_count") or 0) + (data.get("eval_count") or 0)
         with _lock:
             _tokens.setdefault(team, []).append((now, used))
@@ -199,5 +246,4 @@ def chat():
             _global_inflight.release()
         if got_level:
             level_sem.release()
-        with _lock:
-            _team_level.discard((team, level))
+        _release_admission()

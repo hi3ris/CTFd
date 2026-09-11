@@ -51,6 +51,6 @@ files:
 # Prerequisites are wired by challenge ID at import time. Downstream AI
 # challenges should carry (in ctfcli/CTFd import metadata):
 #     requirements:
-#       - ai-ai0-leaked-transcript
+#       - ai0-leaked-transcript   (par NOM nu, pas le label HMAC)
 #
 # This root challenge itself has no prerequisites.
