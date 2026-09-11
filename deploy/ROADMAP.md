@@ -83,8 +83,9 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 - [x] 🤖 Plugin `team_hmac` (`CTFd/plugins/team_hmac_flag/`) — validation flag par équipe
 - [x] 🤖 Les 15 challenges servis convertis en `type: team_hmac` (contenu = leur CHALLENGE_ID)
 - [x] 🤖 Correctifs : dns-exfil (pcap régénéré), ai2 (image/state + flag), adversarial-gate
-- [ ] 🤖 **Ajouter les clés `files:` manquantes** là où un handout doit être livré au joueur
-      (plusieurs verdicts l'ont noté ; sinon les aides de recon ne parviennent pas aux équipes).
+- [x] 🤖 **Ajouter les clés `files:` manquantes** là où un handout doit être livré au joueur
+      (adversarial-gate : handout white-box ; format-string-101 & ret2csu-ish : binaire + source).
+      Audit vérifié : les 30+ `challenge.yml` parsent, les 55 fichiers déclarés existent sur disque.
 - [ ] 🤖 **Câbler la chaîne de prérequis IA** dans CTFd à l'import : ai0 → ai1 → ai2 → ai3
       (via `requirements` par challenge ID). Idem toute autre dépendance voulue.
 - [ ] 🧑🤖 **Playtest adverse OBLIGATOIRE** (cf. §4.9 & §8 garde-fous) : 2 modèles frontier
