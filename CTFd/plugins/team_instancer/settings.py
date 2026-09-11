@@ -24,6 +24,11 @@ DOCKER_HOST = os.environ.get("DOCKER_HOST", "").strip()
 # falls back to a placeholder the admin can spot.
 FRONT_PUBLIC_IP = os.environ.get("FRONT_PUBLIC_IP", "").strip()
 
+# AI admission gateway on the front. AI challenge containers are pointed at this
+# (as their OLLAMA_URL) instead of the GPU node directly, so all model traffic
+# goes through one admission point. Empty -> AI challenges cannot spawn.
+AI_PROXY_URL = os.environ.get("AI_PROXY_URL", "").strip()
+
 # frpc admin API on the arena (reached through an ephemeral --network host
 # container over the Docker channel; see backend.FrpAdmin).
 FRPC_ADMIN_ADDR = os.environ.get("FRPC_ADMIN_ADDR", "127.0.0.1:7400")

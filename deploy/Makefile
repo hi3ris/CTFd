@@ -22,6 +22,7 @@ FRONT_IP    = $(call tfout,front_public_ip)
 ARENA_IP    = $(call tfout,arena_public_ip)
 AI_IP       = $(call tfout,ai_public_ip)
 ARENA_PRIV  = $(call tfout,arena_private_ip)
+FRONT_PRIV  = $(call tfout,front_private_ip)
 AI_PRIV     = $(call tfout,ai_private_ip)
 BUCKET      = $(call tfout,archive_bucket)
 REGION      = $(call tfout,aws_region)
@@ -230,6 +231,7 @@ link: ## Relie le front a l'arena et au noeud IA, et verifie que ca marche
 	   set -e; \
 	   upsert() { grep -q \"^\$$1=\" deploy/front/.env && sed -i \"s|^\$$1=.*|\$$1=\$$2|\" deploy/front/.env || echo \"\$$1=\$$2\" >> deploy/front/.env; }; \
 	   upsert OLLAMA_URL http://$(AI_PRIV):11434; \
+	   upsert AI_PROXY_URL http://$(FRONT_PRIV):8600; \
 	   upsert ARENA_HOST $(ARENA_PRIV); \
 	   upsert DOCKER_HOST tcp://dockerproxy:2375; \
 	   upsert WORKERS $$W; \

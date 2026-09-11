@@ -154,25 +154,35 @@ concurrentes** max. TTL 1 h + reaping le tiennent, mais élargir la plage si bes
 
 ---
 
-## Lot 3 — Plugin `ai_challenges` 🔴 À FAIRE (après Lot 2)
+## Lot 3 — Piste IA : passerelle d'admission + correctifs 🟡 EN COURS
 
-Les 4 services IA existent ; il manque l'expérience joueur et le contrôle de charge.
+**Déviation actée du ROADMAP** (conception dans `deploy/ai-track-design.md`) : la route
+`/message`, l'UI de chat et l'oracle de flag **existent déjà dans les conteneurs** (chaque
+app IA sert sa console + un `/verify` déterministe). On **ne les reconstruit pas**. Le vrai
+Lot 3 = **une passerelle d'admission Ollama** sur le front + petits correctifs.
 
-- [ ] 🤖 Route de chat CTFd `POST /api/v1/ai/<challenge_id>/message` qui **rejoue le contrôle
-      de prérequis** que CTFd fait sur `/attempt` (sinon un joueur tape le niveau 3 sans avoir
-      résolu le 1 — l'hypothèse de capacité s'effondre). Vérif sur `account_id`.
-- [ ] 🤖 UI de chat dans le thème (historique par équipe, streaming des réponses).
-- [ ] 🤖 **Contrôle d'admission par niveau** : plafond de sessions simultanées (bas au niv. 3),
-      budget de tokens par équipe/niveau (fenêtre glissante), rate-limit messages/min.
-- [ ] 🤖 Traduire le `503` d'Ollama (file pleine, `OLLAMA_MAX_QUEUE`) en « modèle occupé,
-      réessayez » lisible, jamais une erreur brute.
-- [ ] 🤖 **Journalisation** de chaque tentative : équipe, niveau, prompt, réponse, tokens,
-      verdict. Exporté avant `season-down`.
-- [ ] 🤖 Validation du flag par **appel d'outil déterministe**, jamais par le texte du modèle.
-- [ ] 🧑 Décider quota exact (ex. 10 req/min/équipe, 500/jour) selon décision Phase 0.
+### Correctifs (faits)
+- [x] 🤖 **Chaîne de prérequis câblée** (elle n'était qu'en commentaire) : ai0→ai1→ai2→ai3
+      via `requirements` (noms nus) dans les YAML.
+- [x] 🤖 **Accessibilité** : les conteneurs IA (sur l'arène) ne pouvaient pas joindre Ollama
+      (SG ouvert au seul front) et n'avaient pas `OLLAMA_URL`. Corrigé : règle SG arène→front:8600,
+      l'instancier injecte `OLLAMA_URL`=passerelle + `AI_PROXY_TOKEN` signé pour les challenges
+      `category: ai` ; `make link` écrit `AI_PROXY_URL`. Ollama reste fermé à l'arène.
 
-**Définition de « fait » Lot 3** : une équipe résout ai0 (statique) → débloque ai1 → discute
-avec le modèle → le flag est validé, la charge GPU reste bornée, tout est loggé.
+### Passerelle d'admission (à construire)
+- [ ] 🤖 Service front `ai-gateway` : `POST /api/chat` (vérif jeton signé → équipe/niveau),
+      concurrence globale + par-niveau, budget tokens + rate-limit par équipe (fenêtre glissante),
+      file bornée, **normalisation du 503** Ollama en « modèle occupé, réessayez ».
+- [ ] 🤖 Les apps ai1/ai2/ai3 envoient `AI_PROXY_TOKEN` en en-tête à `OLLAMA_URL`.
+- [ ] 🤖 **Journalisation** des tentatives (équipe, niveau, tokens, verdict ; contenu
+      **finale-seulement**) exportée par `make backup` avant `season-down`.
+- [ ] 🧑 **Décision** : piste IA en présélection ou **réservée à la finale** ? Un T4 ne tient
+      pas 300 équipes simultanées ; la passerelle borne, elle n'ajoute pas de capacité.
+- [ ] 🧑 Quotas exacts par phase — fixés à la répétition (Lot 5), pas à l'intuition.
+- [ ] ⚠🧑🤖 **Répétition** : joignabilité arène→8600→Ollama, latence, comportement 503/429 réels.
+
+**Définition de « fait » Lot 3** : une équipe résout ai0 → débloque ai1 → discute via la
+passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentatives loggées.
 
 ---
 

@@ -151,3 +151,16 @@ resource "aws_vpc_security_group_egress_rule" "ai_all" {
   cidr_ipv4         = "0.0.0.0/0"
   ip_protocol       = "-1"
 }
+
+# La passerelle d'admission IA tourne sur le front (seul hote autorise a joindre
+# Ollama sur le noeud IA). Les conteneurs de challenge IA, sur l'arena, la
+# joignent sur ce port dedie -- jamais Ollama en direct, pour que le controle
+# d'admission ne puisse pas etre contourne par un conteneur compromis.
+resource "aws_vpc_security_group_ingress_rule" "front_ai_gw_from_arena" {
+  security_group_id            = aws_security_group.front.id
+  description                  = "Passerelle admission IA, depuis l'arena"
+  referenced_security_group_id = aws_security_group.arena.id
+  from_port                    = 8600
+  to_port                      = 8600
+  ip_protocol                  = "tcp"
+}

@@ -132,6 +132,31 @@ def _connection_info(port):
     return {"host": host, "port": port}
 
 
+def _is_ai_challenge(challenge):
+    """AI-track challenges route their model traffic through the admission
+    gateway. Detected by category to avoid a schema change."""
+    return (getattr(challenge, "category", "") or "").lower() == "ai"
+
+
+def _mint_proxy_token(account_id, label, instance_id):
+    """A signed capability the AI container presents to the admission gateway.
+    The gateway trusts this, not the container, for (team, level) identity. The
+    key is derived from the shared flag secret with a domain separator, so no
+    new secret needs distributing (the gateway derives the same key)."""
+    import base64
+    import hashlib
+    import hmac
+    import os
+    import time
+
+    secret = os.environ.get("CTF_TEAM_FLAG_SECRET", "")
+    key = hmac.new(secret.encode(), b"ai-proxy-token-key", hashlib.sha256).digest()
+    exp = int(time.time()) + settings.INSTANCE_TTL + 3600
+    payload = f"{account_id}:{label}:{instance_id}:{exp}"
+    sig = hmac.new(key, payload.encode(), hashlib.sha256).hexdigest()[:32]
+    return base64.urlsafe_b64encode(f"{payload}:{sig}".encode()).decode()
+
+
 def _remaining_seconds(instance):
     if instance.start_time is None:
         return 0
@@ -226,6 +251,18 @@ def spawn():
         db.session.commit()
         return _json({"success": False, "error": "Aucun port disponible, reessayez bientot."}, 503)
     instance.port = port
+
+    # AI challenges reach the model only through the admission gateway, never
+    # Ollama directly. Point the container's OLLAMA_URL at the gateway and give
+    # it a signed capability carrying (team, level).
+    if _is_ai_challenge(challenge):
+        if not settings.AI_PROXY_URL:
+            frp.release_port(instance.id)
+            db.session.delete(instance)
+            db.session.commit()
+            return _json({"success": False, "error": "Passerelle IA non configuree (AI_PROXY_URL)."}, 503)
+        container_env["OLLAMA_URL"] = settings.AI_PROXY_URL
+        container_env["AI_PROXY_TOKEN"] = _mint_proxy_token(account_id, label, instance.id)
 
     try:
         cid, net = backend.spawn_container(account_id, challenge, container_env, port)

@@ -71,6 +71,9 @@ tags:
 connection_info: http://{host}:8080/
 
 state: visible
+requirements:
+  - ai2-output-filter
+
 version: "0.1"
 
 # Served challenge -- image must be named ctf-ai3-tool-abuse:latest so

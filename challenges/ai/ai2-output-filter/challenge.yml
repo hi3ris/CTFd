@@ -56,6 +56,9 @@ tags:
   - encoding
   - served
 state: visible
+requirements:
+  - ai1-naive-guard
+
 
 # Served challenge. Image must be named ctf-ai2-output-filter:latest.
 connection_info: "http://{host}:{port}  (see GET / for endpoints; flag via POST /verify)"

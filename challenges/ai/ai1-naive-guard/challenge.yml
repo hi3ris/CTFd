@@ -59,6 +59,9 @@ connection_info: http://{host}:8080/
 
 state: visible
 version: "0.1"
+requirements:
+  - ai0-leaked-transcript
+
 
 # Served challenge -- image must be named ctf-ai1-naive-guard:latest so
 # `make push-images` finds it. Requires a per-team Ollama backend serving
