@@ -1,0 +1,61 @@
+name: nonce-sense
+author: ctf-2026
+category: crypto
+type: dynamic
+
+description: |
+  A hardware signing device produced a batch of **ECDSA signatures over
+  secp256k1**, and we captured them in `capture.json` along with the device's
+  public key `Q`.
+
+  The device's random number generator is broken. That is all the hint you
+  get about *how* it is broken -- the rest is in the numbers.
+
+  Each entry is a signature `(r, s)` over a message `msg`, with the hash taken
+  as `z = int(sha256(msg)) mod n` (secp256k1 group order `n`). Recover the
+  device's **private key `d`**.
+
+  There is one obvious-looking shortcut in the capture. Be sure it actually
+  holds before you trust it.
+
+  **Flag:** compute the private key `d`, format it as a 64-character lowercase
+  hex string with `"%064x" % d`, and the flag is
+
+      NCTF{ sha256( that 64-char hex string ).hexdigest()[:32] }
+
+  Flag format: `NCTF{<32 lowercase hex chars>}`
+
+# Dynamic scoring (easy).
+value: 150
+extra:
+  initial: 150
+  decay: 30
+  minimum: 50
+
+# --- Static flag ------------------------------------------------------------
+# This is a pure downloadable crypto challenge: the artifact (capture.json) IS
+# the challenge and the flag is fixed, derived from the private key that the
+# capture leaks through the biased nonces. Per the authoring rules a static
+# flag is correct here (there is no served oracle). flag.py reproduces the
+# derivation from the private key.
+flags:
+  - NCTF{1b147fde539c254a8e9bc83bb0b5516d}
+
+tags:
+  - crypto
+  - ecdsa
+  - lattice
+  - hnp
+  - nonce
+
+# Files handed to players. Only capture.json is distributed; the solution/
+# directory (writeup, solver, generator) is NOT shipped.
+files:
+  - capture.json
+
+# Prerequisite chain: none. Standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id, e.g.
+#  requirements: [crypto-nonce-sense].)
+
+# Not a served challenge: no container, no connection_info, no per-team flag.

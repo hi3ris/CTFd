@@ -1,0 +1,51 @@
+name: tlv-vault
+author: dagbanjaphet
+category: crypto
+description: |
+  We recovered eight `.vlt` archives from a decommissioned "vault" service,
+  plus a partial spec for its home-grown `VLT1` container format. The full
+  reader was lost, and the surviving notes are incomplete on purpose.
+
+  The framing is deliberately unfriendly: length prefixes count *records*, not
+  bytes; the header checksum covers the header alone; the ciphertext offset is
+  measured from the end of the file; and the `version` byte is folded into the
+  key schedule. Reconstruct the parser, pull the XOR key out of each vault, and
+  decrypt the payloads. Exactly one vault decrypts to the flag.
+
+  Everything you need is in the handout: `SPEC.md` and `vault_01.vlt` ...
+  `vault_08.vlt`. No network service - this is a pure parsing/crypto puzzle.
+
+  Flag format: NCTF{...}
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 30
+  minimum: 100
+
+flags:
+  - NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}
+
+tags:
+  - crypto
+  - parsing
+  - xor
+  - file-format
+
+files:
+  - public/SPEC.md
+  - public/vault_01.vlt
+  - public/vault_02.vlt
+  - public/vault_03.vlt
+  - public/vault_04.vlt
+  - public/vault_05.vlt
+  - public/vault_06.vlt
+  - public/vault_07.vlt
+  - public/vault_08.vlt
+
+# This is a pure downloadable crypto challenge (static artifact, static flag):
+# no server, no per-team dynamic flag, no Dockerfile. Per the authoring rules,
+# static flags are allowed for crypto/reverse/forensics download challenges.
+#
+# requirements: none (standalone; not part of a prerequisite chain).

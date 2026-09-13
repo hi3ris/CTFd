@@ -1,0 +1,186 @@
+# Front CTFd de production. Tourne toute l'annee sur la petite instance ARM.
+#
+#   cd /opt/ctfd/CTFd && docker compose -f deploy/front/docker-compose.prod.yml up -d
+#
+# Les secrets viennent de deploy/front/.env (jamais commite).
+
+services:
+  ctfd:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: ctfd-local:latest
+    restart: always
+    environment:
+      - UPLOAD_FOLDER=/var/uploads
+      - DATABASE_URL=mysql+pymysql://ctfd:${DB_PASSWORD}@db/ctfd
+      - REDIS_URL=redis://cache:6379
+      - SECRET_KEY=${SECRET_KEY}
+      # Secret global des flags par equipe, lu par la classe de flag team_hmac.
+      - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-}
+      # Instancier par equipe (plugin team_instancer).
+      - FRONT_PUBLIC_IP=${FRONT_PUBLIC_IP:-}
+      - FRPC_ADMIN_ADDR=${FRPC_ADMIN_ADDR:-dockerproxy:7400}
+      - FRPC_ADMIN_PASSWORD=${FRPC_ADMIN_PASSWORD:-}
+      - WHALE_PORT_RANGE_START=${WHALE_PORT_RANGE_START:-28000}
+      - WHALE_PORT_RANGE_END=${WHALE_PORT_RANGE_END:-28500}
+      - WORKERS=${WORKERS:-2}
+      - LOG_FOLDER=/var/log/CTFd
+      - ACCESS_LOG=-
+      - ERROR_LOG=-
+      - REVERSE_PROXY=true
+      # Adresse d'Ollama sur l'arena, consommee par le plugin de challenges IA.
+      # Vide hors evenement : les challenges IA sont alors simplement indisponibles.
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      # Passerelle d'admission IA, lue par le plugin team_instancer.
+      - AI_PROXY_URL=${AI_PROXY_URL:-}
+      # API Docker de l'arena, republiee sur le reseau interne par le service
+      # dockerproxy. Vide hors evenement : l'instancier est alors inactif.
+      - DOCKER_HOST=${DOCKER_HOST:-}
+    volumes:
+      - ctfd_uploads:/var/uploads
+      - ctfd_logs:/var/log/CTFd
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+    networks:
+      - internal
+      - web
+
+  # Tunnel ssh vers le demon Docker de l'arena. Ne demarre que si ARENA_HOST
+  # est renseigne, donc uniquement pendant une phase avec arena.
+  dockerproxy:
+    build:
+      context: ./dockerproxy
+    image: ctfd-dockerproxy:latest
+    restart: always
+    environment:
+      - ARENA_HOST=${ARENA_HOST:-}
+      - ARENA_USER=ubuntu
+    volumes:
+      - ./ssh:/keys:ro
+    profiles:
+      - arena
+    networks:
+      # UNIQUEMENT internal : republier le socket Docker de l'arena (= root)
+      # ne doit jamais etre joignable depuis le segment `web` expose par nginx.
+      # ctfd joint dockerproxy via `internal`, donc `web` est inutile ici.
+      - internal
+
+  # AI admission gateway: single admission point for all AI-challenge model
+  # traffic. Only needed during an event (profile arena). Published on the front
+  # host's 8600 so arena containers reach it (SG front_ai_gw_from_arena); it
+  # reaches Ollama on the GPU node via the front's own SG allowance.
+  ai-gateway:
+    build:
+      context: ./ai-gateway
+    image: ctfd-ai-gateway:latest
+    restart: always
+    ports:
+      - "8600:8600"
+    environment:
+      - OLLAMA_URL=${OLLAMA_URL:-}
+      # Prefere la cle DERIVEE (le maitre n'entre alors jamais dans ce conteneur).
+      # A defaut, le maitre sert a la deriver au demarrage puis est retire de
+      # l'environnement du process (cf. app.py).
+      - AI_PROXY_TOKEN_KEY=${AI_PROXY_TOKEN_KEY:-}
+      - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-}
+      - AI_RATE_MAX=${AI_RATE_MAX:-10}
+      - AI_TOKEN_BUDGET=${AI_TOKEN_BUDGET:-60000}
+      - AI_GLOBAL_INFLIGHT=${AI_GLOBAL_INFLIGHT:-6}
+      - AI_LEVEL_MAX=${AI_LEVEL_MAX:-4}
+      - AI_LOG_CONTENT=${AI_LOG_CONTENT:-0}
+    volumes:
+      - ai_gateway_logs:/var/log/ai-gateway
+    profiles:
+      - arena
+    networks:
+      - web
+
+  nginx:
+    image: nginx:1.27-alpine
+    restart: always
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Le fichier actif est choisi par `make tls-init` : bootstrap.conf avant
+      # l'emission du certificat, tls.conf ensuite.
+      - ./nginx/active.conf:/etc/nginx/conf.d/default.conf:ro
+      - ./nginx/proxy-headers.inc:/etc/nginx/conf.d/proxy-headers.inc:ro
+      - certbot_conf:/etc/letsencrypt:ro
+      - certbot_www:/var/www/certbot:ro
+    depends_on:
+      - ctfd
+    networks:
+      - web
+
+  # Renouvellement automatique du certificat. La premiere emission se fait avec
+  # `make tls-init`, qui lance certbot en mode one-shot.
+  certbot:
+    image: certbot/certbot:latest
+    restart: always
+    volumes:
+      - certbot_conf:/etc/letsencrypt
+      - certbot_www:/var/www/certbot
+    entrypoint: >
+      sh -c "trap exit TERM;
+             while :; do
+               certbot renew --webroot -w /var/www/certbot --quiet;
+               sleep 12h & wait $${!};
+             done"
+
+  db:
+    image: mariadb:10.11
+    restart: always
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD}
+      - MARIADB_USER=ctfd
+      - MARIADB_PASSWORD=${DB_PASSWORD}
+      - MARIADB_DATABASE=ctfd
+      - MARIADB_AUTO_UPGRADE=1
+    volumes:
+      - db_data:/var/lib/mysql
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --wait_timeout=28800
+      - --log-warnings=0
+      # Dimensionne par phase : 256M sur le petit front de setup/finale, 1G en
+      # preselection ou 300 joueurs martelent le scoreboard. `make link` ecrit
+      # la valeur dans .env selon la phase.
+      - --innodb-buffer-pool-size=${INNODB_POOL:-256M}
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 10s
+      timeout: 5s
+      retries: 12
+      start_period: 30s
+    networks:
+      - internal
+
+  cache:
+    image: redis:7-alpine
+    restart: always
+    command: ["redis-server", "--save", "60", "1", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+    networks:
+      - internal
+
+volumes:
+  db_data:
+  redis_data:
+  ctfd_uploads:
+  ctfd_logs:
+  certbot_conf:
+  certbot_www:
+  ai_gateway_logs:
+
+networks:
+  web:
+  internal:
+    internal: true

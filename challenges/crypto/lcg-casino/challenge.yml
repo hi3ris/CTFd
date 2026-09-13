@@ -1,0 +1,73 @@
+name: lcg-casino
+author: dagbanjaphet
+category: crypto
+description: |
+  A **"provably fair"** casino deals from a home-grown verifiable shuffle. It
+  publishes its RNG (a **truncated linear congruential generator**), its deck
+  encoding, and a SHA-256 **commitment** to the secret seed -- everything except
+  the seed itself, which is fresh per connection and never revealed.
+
+  You play over a small **line-delimited JSON** protocol on a raw TCP socket
+  (not HTTP -- you speak the framing yourself). Each hand you **call the high
+  card before the deal**; then the full shuffle is published. The service pays
+  the **jackpot only after you land 10 correct calls in a row**. A miss resets
+  the streak to 0; hands are unlimited.
+
+  There is **no downloadable flag**. The running service is the oracle: it
+  verifies the *effect* -- that you actually predicted the hidden future -- not
+  any payload shape. A blind guesser reaches a 10-streak with probability
+  `(1/11)^10`.
+
+  Each published shuffle leaks the **top bits** of that hand's internal state;
+  consecutive hands are LCG-linked. The handout `SPEC.md` gives the public RNG
+  constants and the factorial-base shuffle decode, and `samples.json` is a full
+  transcript from a throwaway seed. Two things are left for you to infer from
+  that evidence: **how many low bits are withheld** from each published rank, and
+  **which card of a dealt order is the "high card."**
+
+  The commitment is a rabbit hole: chasing a SHA-256 preimage of the seed is
+  infeasible and unnecessary -- recover the running *state* from a couple of
+  reveals instead.
+
+  Flag format: `NCTF{...}`
+
+value: 500
+type: team_instance
+extra:
+  docker_image: ctf-lcg-casino:latest
+  internal_port: 9021
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-lcg-casino")[:24] + "}"
+# and is emitted by the running instance only after the win-streak effect
+# succeeds. The static entry below is a placeholder for the demo TEAM_SECRET used
+# in local builds; CTFd validates the real per-team flag via the custom HMAC flag
+# class, so no static flag is shipped to production.
+flags:
+  - type: team_hmac
+    content: crypto-lcg-casino
+tags:
+  - crypto
+  - prng
+  - lcg
+  - truncated-lcg
+  - state-recovery
+  - custom-protocol
+
+files:
+  - handout/SPEC.md
+  - handout/samples.json
+
+# challenge-id (for HMAC / requirements wiring): crypto-lcg-casino
+# No prerequisites; standalone.
+
+connection_info: nc {host} 9021
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-lcg-casino:latest so
+# `make push-images` finds it.

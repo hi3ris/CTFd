@@ -1,0 +1,56 @@
+name: ai0-leaked-transcript
+author: dagbanjaphet
+category: ai
+description: |
+  **HelixDesk** is Nimbus Robotics' internal support assistant. Someone
+  exported one of its chat transcripts to JSON and shared it in the wrong
+  channel.
+
+  In the chat itself the assistant politely refuses to reveal its own system
+  prompt. But the export tool was less discreet: it serialized the *entire*
+  runtime configuration -- system prompt included -- into a metadata field of
+  the file. That leaked prompt contains an internal "audit-handoff token" the
+  assistant was told never to disclose.
+
+  The token is only lightly protected: it is the flag, reversed and then
+  base64-encoded. Recover it.
+
+  This is Level 0 of the AI track: zero inference, no live model, no service.
+  Everything you need is in the single handout `transcript.json`.
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (easy).
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 30
+  minimum: 50
+
+# Pure downloadable challenge with a STATIC artifact and STATIC flag. Per the
+# authoring rules, a static flag in challenge.yml is fine here (no server, no
+# per-team dynamic flag, no Dockerfile, no flag.py). The flag never depends on
+# a payload shape -- the artifact simply carries it, lightly obfuscated.
+flags:
+  - NCTF{sy5t3m_pr0mpt_r3v34l3d}
+
+tags:
+  - ai
+  - prompt-leak
+  - encoding
+  - beginner
+
+files:
+  - public/transcript.json
+
+# --- Prerequisite chain ----------------------------------------------------
+# This is the ROOT of the AI category. It gates the rest of the AI track: the
+# other AI challenges declare a requirement on this challenge's ID.
+#
+# Prerequisites are wired by challenge ID at import time. Downstream AI
+# challenges should carry (in ctfcli/CTFd import metadata):
+#     requirements:
+#       - ai0-leaked-transcript   (par NOM nu, pas le label HMAC)
+#
+# This root challenge itself has no prerequisites.

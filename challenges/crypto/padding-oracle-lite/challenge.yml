@@ -1,0 +1,69 @@
+name: padding-oracle-lite
+author: dagbanjaphet
+category: crypto
+description: |
+  A decommissioned session service still answers on its own home-grown binary
+  protocol, **POP1**. It is deliberately **not HTTP** -- padbuster, Burp, and
+  `curl` have nothing to talk to. You have to speak the framing yourself.
+
+  The service will:
+    * hand you an encrypted session **token** on request (opcode `GETCT`);
+    * expose a `VERIFY` opcode: you send it an `IV||ciphertext` blob, it
+      decrypts with the instance key and returns a **1-word status code**. It
+      does **not** tell you what the code means -- working that out is the point;
+    * emit the flag **only** after you `SUBMIT` the exact recovered token
+      plaintext. Nothing here is a downloadable flag: the running service is the
+      oracle, and it verifies the *effect* (you produced the real plaintext),
+      not any particular payload shape.
+
+  The AES-128-CBC key is random per instance and never leaves the process, so
+  the token cannot be read out of the ciphertext directly. You are expected to
+  recover it through the service.
+
+  The handout `SPEC.md` gives the POP1 framing (mind the length field: it counts
+  2-byte **words**, not bytes, and there is a per-frame XOR checksum). It does
+  **not** tell you what `VERIFY` computes -- infer that from how the codes move.
+
+  One thing in the banner is a rabbit hole; a single `SUBMIT` refutes it and
+  costs you nothing (submissions to the service are unlimited).
+
+  Flag format: `NCTF{...}`
+
+value: 350
+type: team_instance
+extra:
+  docker_image: ctf-padding-oracle-lite:latest
+  internal_port: 9007
+  initial: 350
+  decay: 30
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-padding-oracle-lite")[:24] + "}"
+# and is emitted by the running instance after the SUBMIT effect succeeds. The
+# static flag below is a placeholder for the demo TEAM_SECRET used in local
+# builds; CTFd validates the real per-team flag via the custom HMAC flag class,
+# so no static flag is shipped to production.
+flags:
+  - type: team_hmac
+    content: crypto-padding-oracle-lite
+tags:
+  - crypto
+  - padding-oracle
+  - cbc
+  - aes
+  - custom-protocol
+
+files:
+  - handout/SPEC.md
+
+# challenge-id (for HMAC / requirements wiring): crypto-padding-oracle-lite
+# No prerequisites; standalone.
+
+connection_info: nc {host} 9007
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-padding-oracle-lite:latest so
+# `make push-images` finds it.

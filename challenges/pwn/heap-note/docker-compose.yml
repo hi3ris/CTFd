@@ -1,0 +1,24 @@
+# Local run notes for heap-note.
+#
+#   docker compose build
+#   TEAM_SECRET=deadbeef docker compose up
+#   # then, from the solution dir:
+#   python3 solution/solve.py 127.0.0.1 9022
+#
+# In production the instancier sets TEAM_SECRET per team and publishes the
+# mapped port as the challenge's connection_info (nc <host> 9022).
+services:
+  heap-note:
+    build: .
+    image: ctf-heap-note:latest
+    environment:
+      # Per-team secret; overridden by the instancier in production.
+      TEAM_SECRET: "${TEAM_SECRET:-local-dev-secret}"
+    ports:
+      - "9022:9022"
+    # Hardening knobs the platform applies; sane local defaults here.
+    pids_limit: 128
+    mem_limit: 256m
+    read_only: true
+    security_opt:
+      - no-new-privileges:true

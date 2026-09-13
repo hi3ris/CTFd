@@ -1,0 +1,40 @@
+# Run notes for esolang-jail.
+#
+# The platform instancier builds/starts one container PER TEAM and injects that
+# team's per-challenge secret. This compose file documents the runtime contract
+# and is handy for local playtesting.
+#
+#   Build the image (name matters -- `make push-images` matches ^ctf-):
+#     docker build -t ctf-esolang-jail:latest .
+#
+#   Run one instance locally:
+#     TEAM_SECRET=playtest-team-01 docker compose up
+#
+#   Then, in another shell:
+#     nc localhost 9301
+#     python3 solution/solve.py localhost 9301
+#
+# In the arena the flag is derived from the real per-team secret; locally it
+# falls back to a dev value (see flag.py). Nothing sensitive is baked in.
+services:
+  esolang-jail:
+    build: .
+    image: ctf-esolang-jail:latest
+    environment:
+      # Per-team secret. In production this is set by the instancier, never here.
+      - TEAM_SECRET=${TEAM_SECRET:-local-dev-secret}
+    ports:
+      - "9301:9301"
+    read_only: true
+    tmpfs:
+      # Writable location for the runtime flag file on an otherwise read-only fs.
+      - /flag
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+          pids: 128
+    restart: unless-stopped

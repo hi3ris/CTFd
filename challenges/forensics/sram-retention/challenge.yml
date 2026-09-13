@@ -1,0 +1,67 @@
+name: "SRAM Retention"
+author: "ctf-team"
+category: forensics
+description: |
+  We yanked a memory dump off a dead **Aetheris AE-32** microcontroller after a
+  brown-out. Firmware stashed a key in the chip's SRAM "vault", but the AE-32
+  register file is **banked**: the banks are physically scattered across the die,
+  so in the dump they show up out of order and non-contiguous, buried in decayed
+  retention noise. Worse, the key isn't stored in one place — the controller
+  smears it across the banks.
+
+  We recovered a partial datasheet (`AE32_SRAM_datasheet.md`). It tells you how to
+  find the header, walk the bank base table, locate each bank, and de-interleave
+  the vault. Read it carefully — a couple of the fields do not mean what you'd
+  first assume (where the bank offsets are measured from, and what the header
+  checksum actually covers).
+
+  `samples/` holds several dumps in the same format with their decoded contents in
+  `samples/KNOWN.txt`, so you can validate your parser before you point it at the
+  real image.
+
+  Recover the key from `retention.dump`. It is already in flag format.
+
+  Notes:
+    * `strings` will hand you something that looks like a flag. It isn't — it's
+      loose bytes sitting in the retention noise, not inside any tagged bank. The
+      real vault is only ever assembled by the datasheet's interleave rule.
+
+  Flag format: NCTF{...}  (lowercase letters and underscores inside).
+
+# STATIC, downloadable forensics artifact: the challenge IS the memory dump plus
+# its invented datasheet, so the flag is baked into the captured bytes. No served
+# component and no per-team HMAC flag. flag.py documents the per-team scheme for
+# platform uniformity only.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 40
+  minimum: 120
+
+flags:
+  - "NCTF{sram_retention_bank_interleave}"
+
+files:
+  - retention.dump
+  - AE32_SRAM_datasheet.md
+  - samples/sample_01.dump
+  - samples/sample_02.dump
+  - samples/sample_03.dump
+  - samples/sample_04.dump
+  - samples/sample_05.dump
+  - samples/sample_06.dump
+  - samples/KNOWN.txt
+
+tags:
+  - forensics
+  - memory
+  - sram
+  - embedded
+  - reverse-engineering
+  - medium
+
+connection_info: null

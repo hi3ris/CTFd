@@ -1,0 +1,156 @@
+# Plateforme complete sur UNE machine, pour valider avant AWS.
+#
+#   cd deploy && make local-up            # CTFd + MariaDB + Redis (+ IA en option)
+#   cd deploy && make local-build-images  # images ctf-* des challenges servis
+#   cd deploy && make local-seed          # setup, theme hibris, accueil, 36 challenges
+#   cd deploy && make local-smoke         # pages, theme, assets, API
+#   cd deploy && make local-playtest      # spawn -> solveur -> soumission, par challenge
+#
+# Differences ASSUMEES avec deploy/front/docker-compose.prod.yml :
+#   - pas de nginx/TLS : CTFd ecoute directement sur http://localhost:8000 ;
+#   - l'instancier pilote le Docker DE LA MACHINE (socket monte) au lieu de
+#     l'arena via ssh, et publie les ports en direct (INSTANCER_PUBLISH=direct)
+#     au lieu de passer par frp -> pas de Swarm, pas de dockerproxy ;
+#   - ctfd tourne en root pour pouvoir ecrire sur le socket Docker (le compose
+#     officiel de CTFd fait pareil en dev) ;
+#   - secrets de dev en clair ci-dessous : ils ne servent QUE localement.
+#
+# Le noeud IA est optionnel (profil `ai`) : Ollama sur CPU + la meme passerelle
+# d'admission qu'en prod. Sans le profil, la categorie IA reste visible mais ne
+# spawne pas (503 "Passerelle IA non configuree"), comme en prod hors evenement.
+
+services:
+  ctfd:
+    build:
+      context: ../..
+      dockerfile: Dockerfile
+    image: ctfd-local:latest
+    user: root
+    restart: unless-stopped
+    ports:
+      - "8000:8000"
+    environment:
+      - UPLOAD_FOLDER=/var/uploads
+      - DATABASE_URL=mysql+pymysql://ctfd:${DB_PASSWORD:-ctfd}@db/ctfd
+      - REDIS_URL=redis://cache:6379
+      - SECRET_KEY=${SECRET_KEY:-local-dev-secret-key-not-for-prod}
+      - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-local-dev-team-flag-secret}
+      - WORKERS=${WORKERS:-2}
+      - LOG_FOLDER=/var/log/CTFd
+      - ACCESS_LOG=-
+      - ERROR_LOG=-
+      # --- instancier : Docker local, publication directe ---------------
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      - INSTANCER_PUBLISH=direct
+      - FRONT_PUBLIC_IP=${FRONT_PUBLIC_IP:-127.0.0.1}
+      - WHALE_PORT_RANGE_START=${WHALE_PORT_RANGE_START:-28000}
+      - WHALE_PORT_RANGE_END=${WHALE_PORT_RANGE_END:-28100}
+      - INSTANCER_MAX_PER_TEAM=${INSTANCER_MAX_PER_TEAM:-10}
+      - INSTANCER_TTL=${INSTANCER_TTL:-3600}
+      # --- IA : la passerelle est publiee sur l'hote (8600), comme en prod.
+      # Les conteneurs IA la joignent via host.docker.internal (injecte par
+      # l'instancier en mode direct).
+      - AI_PROXY_URL=${AI_PROXY_URL:-http://host.docker.internal:8600}
+      - INSTANCER_OLLAMA_MODEL=${OLLAMA_MODEL:-}
+      - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+    volumes:
+      - ctfd_uploads:/var/uploads
+      - ctfd_logs:/var/log/CTFd
+      - /var/run/docker.sock:/var/run/docker.sock
+    depends_on:
+      db:
+        condition: service_healthy
+      cache:
+        condition: service_started
+
+  db:
+    image: mariadb:10.11
+    restart: unless-stopped
+    environment:
+      - MARIADB_ROOT_PASSWORD=${DB_ROOT_PASSWORD:-ctfd-root}
+      - MARIADB_USER=ctfd
+      - MARIADB_PASSWORD=${DB_PASSWORD:-ctfd}
+      - MARIADB_DATABASE=ctfd
+      - MARIADB_AUTO_UPGRADE=1
+    volumes:
+      - db_data:/var/lib/mysql
+    command:
+      - mysqld
+      - --character-set-server=utf8mb4
+      - --collation-server=utf8mb4_unicode_ci
+      - --wait_timeout=28800
+      - --log-warnings=0
+    healthcheck:
+      test: ["CMD", "healthcheck.sh", "--connect", "--innodb_initialized"]
+      interval: 5s
+      timeout: 5s
+      retries: 20
+      start_period: 20s
+
+  cache:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: ["redis-server", "--save", "60", "1", "--maxmemory", "128mb", "--maxmemory-policy", "allkeys-lru"]
+    volumes:
+      - redis_data:/data
+
+  # --- Noeud IA (optionnel) : `make local-up-ai` -------------------------------
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - ollama:/root/.ollama
+    ports:
+      - "127.0.0.1:11434:11434"
+    profiles: ["ai"]
+    # deploy:                     # decommenter sur une machine avec GPU NVIDIA
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - capabilities: ["gpu"]
+
+  # Tire le modele une fois (volume persistant), puis s'arrete.
+  ollama-pull:
+    image: ollama/ollama:latest
+    depends_on:
+      - ollama
+    environment:
+      - OLLAMA_HOST=http://ollama:11434
+    entrypoint: ["/bin/sh", "-c"]
+    command:
+      - |
+        until ollama list >/dev/null 2>&1; do sleep 1; done
+        ollama pull "${OLLAMA_MODEL:-llama3.1:8b}"
+    volumes:
+      - ollama:/root/.ollama
+    profiles: ["ai"]
+    restart: "no"
+
+  ai-gateway:
+    build:
+      context: ../ai-gateway
+    image: ctfd-ai-gateway:latest
+    restart: unless-stopped
+    ports:
+      - "8600:8600"
+    environment:
+      - OLLAMA_URL=http://ollama:11434
+      - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-local-dev-team-flag-secret}
+      - AI_RATE_MAX=${AI_RATE_MAX:-30}
+      - AI_TOKEN_BUDGET=${AI_TOKEN_BUDGET:-200000}
+      - AI_GLOBAL_INFLIGHT=${AI_GLOBAL_INFLIGHT:-2}
+      - AI_LEVEL_MAX=${AI_LEVEL_MAX:-2}
+      - AI_LOG_CONTENT=1
+    volumes:
+      - ai_gateway_logs:/var/log/ai-gateway
+    depends_on:
+      - ollama
+    profiles: ["ai"]
+
+volumes:
+  db_data:
+  redis_data:
+  ctfd_uploads:
+  ctfd_logs:
+  ollama:
+  ai_gateway_logs:

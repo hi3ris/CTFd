@@ -1,0 +1,21 @@
+# ---------------------------------------------------------------------------
+# Backend d'etat distant (OPT-IN).
+#
+# Par defaut, l'etat Terraform est LOCAL (fichier terraform.tfstate sur la
+# machine de l'operateur). Pour un evenement pilote a plusieurs, ou pour qu'un
+# apply a moitie rate soit reprenable ailleurs, on bascule sur un backend S3
+# verrouille par DynamoDB.
+#
+# Activation (une seule fois) :
+#   1. make state-bootstrap          # cree le bucket + la table (etat local)
+#   2. cp backend.tf.example backend.tf
+#   3. renseigner backend.hcl        # cf. la sortie `backend_hcl` du bootstrap
+#   4. make init                     # Terraform propose de migrer l'etat -> oui
+#
+# Configuration PARTIELLE a dessein : bucket / region / table restent dans
+# backend.hcl (non commite) pour ne pas coder en dur le numero de compte AWS.
+# ---------------------------------------------------------------------------
+
+terraform {
+  backend "s3" {}
+}

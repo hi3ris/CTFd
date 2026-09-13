@@ -1,0 +1,14 @@
+# Configuration partielle du backend S3. Copier en `backend.hcl` et renseigner
+# depuis la sortie `backend_hcl` de `make state-bootstrap`.
+#
+#     cp backend.hcl.example backend.hcl
+#     # puis coller les valeurs, ou :
+#     cd bootstrap && terraform output -raw backend_hcl > ../backend.hcl
+#
+# backend.hcl contient le numero de compte AWS -> NE PAS COMMITER (voir .gitignore).
+
+bucket         = "ctf-tfstate-CHANGEME-ACCOUNTID"
+key            = "ctf/terraform.tfstate"
+region         = "eu-west-3"
+dynamodb_table = "ctf-tflock"
+encrypt        = true

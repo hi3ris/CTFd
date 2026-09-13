@@ -1,0 +1,40 @@
+# Run notes for ret2csu-ish.
+#
+# The platform instancier builds/starts one container PER TEAM and injects that
+# team's TEAM_SECRET. This compose file documents the runtime contract and is
+# handy for local playtesting.
+#
+#   Build the image (name matters -- `make push-images` matches ^ctf-):
+#     docker build -t ctf-ret2csu-ish:latest .
+#
+#   Run one instance locally:
+#     TEAM_SECRET=playtest-team-01 docker compose up
+#
+#   Then solve it:
+#     python3 solution/solve.py localhost 9111
+#
+# In the arena the flag is derived from the real per-team TEAM_SECRET; locally
+# it falls back to a dev value (see flag.py). Nothing sensitive is baked in.
+services:
+  ret2csu-ish:
+    build: .
+    image: ctf-ret2csu-ish:latest
+    environment:
+      # Per-team secret. In production this is set by the instancier, never here.
+      - TEAM_SECRET=${TEAM_SECRET:-local-dev-secret}
+    ports:
+      - "9111:9111"
+    read_only: true
+    # /tmp must be writable (tmpfs) so entrypoint can drop the runtime-only
+    # flag file; it is never persisted or shipped.
+    tmpfs:
+      - /tmp:size=1m,mode=1777
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+          pids: 64
+    restart: unless-stopped

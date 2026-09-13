@@ -1,0 +1,43 @@
+name: "USB Keystrokes"
+author: "ctf-team"
+category: forensics
+description: |
+  We tapped the USB bus while a colleague logged into the vault terminal and
+  captured the traffic below. Somewhere in that stream is the passphrase they
+  typed on their keyboard.
+
+  The capture is a raw Linux usbmon dump (open it in Wireshark, or parse it
+  yourself). More than one device was plugged in at the time, so not every
+  packet is the keyboard.
+
+  Recover the exact passphrase that was typed and submit it wrapped in the flag
+  format.
+
+  Flag format: NCTF{<passphrase>}  (the passphrase is case-sensitive and
+  contains letters, digits and underscores).
+
+# This is a static, downloadable forensics artifact: the challenge IS the pcap,
+# so the flag is baked in. No served component, no per-team HMAC flag.
+# (See flag.py for how a per-team variant would be derived if this were served.)
+
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 30
+  minimum: 50
+
+flags:
+  - "NCTF{Bl4ck_H4t_USB_2026}"
+
+files:
+  - capture.pcap
+
+tags:
+  - forensics
+  - usb
+  - hid
+  - pcap
+  - easy
+
+# No requirements / prerequisite chain for this standalone challenge.

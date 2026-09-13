@@ -1,0 +1,61 @@
+name: jwt-cousin
+author: ctf-2026
+category: web
+description: |
+  "It's basically a JWT," said no one who read the code.
+
+  **Cousin SSO** issues its own bearer tokens for the operations console.
+  They *look* JWT-ish but they are a homemade format: a token is two parts,
+  `<payload>.<signature>`, there is no header segment, and the signature is
+  **not** an HMAC over `base64(header).base64(payload)`. Stock JWT tooling
+  (and jwt.io) will not parse or verify these -- don't waste time on
+  `alg:none`, key-confusion, or classic JWT tricks.
+
+  You get read-only `guest` access. The console will only hand back the
+  operations flag once an **admin** actually rotates it. Log in, work out how
+  the token is really signed, forge an `admin` token, and perform the admin
+  action.
+
+  Public demo accounts: `guest`/`guest` and `staff`/`staff`. The `admin`
+  password is not public -- you are not meant to log in as admin, you are
+  meant to forge.
+
+  The service is the oracle: nothing here is a downloadable flag. The flag is
+  emitted by the server only after the admin-only rotation succeeds.
+
+  Flag format: `NCTF{...}`
+
+value: 150
+type: team_instance
+extra:
+  docker_image: ctf-jwt-cousin:latest
+  internal_port: 8080
+  initial: 150
+  decay: 25
+  minimum: 50
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-jwt-cousin")[:24] + "}"
+# and is emitted by the running instance after the admin effect. The static
+# flag below is a placeholder for the demo TEAM_SECRET used in local builds;
+# CTFd validates the real per-team flag via the custom HMAC flag class, so no
+# static flag is shipped to production.
+flags:
+  - type: team_hmac
+    content: web-jwt-cousin
+tags:
+  - web
+  - auth
+  - jwt
+  - forgery
+
+# challenge-id (for HMAC / requirements wiring): web-jwt-cousin
+# No prerequisites; standalone.
+
+connection_info: http://{host}:8080/
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-jwt-cousin:latest so
+# `make push-images` finds it.

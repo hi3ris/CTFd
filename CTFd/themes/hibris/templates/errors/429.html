@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container term-error">
+	<div class="term-window" role="alert">
+		<div class="term-bar">
+			<i class="d1"></i><i class="d2"></i><i class="d3"></i>
+			<span class="path">nctf@arena:~$ rate-limit</span>
+		</div>
+		<div class="term-body">
+			<p class="term-code">429</p>
+			<p class="l"><span class="p">$</span> <span class="cmd">flood {{ request.path }}</span></p>
+			<p class="l"><span class="code warn">[warn]</span> <span class="warn">trop de requêtes</span></p>
+			<p class="msg">Ralentis un peu — la cadence est limitée. Réessaie dans quelques instants.</p>
+			<p class="l"><span class="p">$</span> <a class="back" href="{{ request.script_root }}/">retry</a> <span class="caret">_</span></p>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

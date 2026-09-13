@@ -1,0 +1,47 @@
+name: "Heartbeat"
+author: "ctf-team"
+category: misc
+description: |
+  A status agent on an isolated segment "phones home" to a collector with a
+  steady stream of heartbeat datagrams. Every heartbeat looks the same: a fixed
+  banner and a plain counter. The blue team read them all and found nothing
+  worth reporting.
+
+  We still think this box was leaking. We pulled a capture of the beacon off the
+  wire. The messages are boring; the secret isn't in what was said.
+
+  Recover it and submit it.
+
+  Notes:
+    * Every heartbeat's payload is identical apart from a plain counter.
+    * The capture is one-directional and lossless: every heartbeat the agent
+      sent is present, in order.
+
+  Flag format: NCTF{...}  (lowercase letters and underscores inside).
+
+# STATIC, downloadable artifact: the challenge IS the capture, and the answer is
+# carried by the capture itself (no served component, no per-team HMAC flag).
+# gen.py rebuilds capture.pcap deterministically and is NOT a handout.
+# flag.py documents the per-team scheme for platform uniformity only.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 40
+  minimum: 100
+
+flags:
+  - "NCTF{silence_between_beats_speaks}"
+
+files:
+  - capture.pcap
+
+tags:
+  - misc
+  - network
+  - medium
+
+connection_info: null

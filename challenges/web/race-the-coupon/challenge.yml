@@ -1,0 +1,61 @@
+name: race-the-coupon
+author: ctf-2026
+category: web
+type: team_instance
+description: |
+  **NimbusPay store wallet** exposes a small JSON API. Every account starts
+  with 100 store credits. There is a single-use cash-out coupon that moves
+  60 credits from your wallet back to your bank card:
+
+      POST /api/coupon/redeem   body: {"code": "CASHOUT60"}
+
+  It is supposed to be redeemable exactly once, and only while your wallet can
+  cover the withdrawal. A single honest client can never take your balance
+  below 40.
+
+  Your goal: make the authoritative wallet balance go **strictly negative**.
+  When the server observes an overdrawn wallet it returns the flag (in the
+  redeem response and from `GET /api/wallet`). Reset is instant and
+  self-service: `POST /api/reset`.
+
+  This is a live, per-team instance. The flag is issued by the server after it
+  verifies the effect -- it is not in any file you can download, and it cannot
+  be recovered by reading the code alone. You need real concurrent requests.
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (medium).
+value: 400
+extra:
+  docker_image: ctf-race-the-coupon:latest
+  internal_port: 8080
+  initial: 400
+  decay: 25
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container derives it at runtime from the injected
+# TEAM_SECRET as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-race-the-coupon")[:24] + "}"
+# (see flag.py). The platform's custom per-account flag class recomputes and
+# validates each team's flag on submission. flags is intentionally left empty.
+flags:
+  - type: team_hmac
+    content: web-race-the-coupon
+tags:
+  - web
+  - race-condition
+  - toctou
+  - concurrency
+
+# Prerequisite chain: none. This is a standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id.)
+
+# Served challenge: the platform instancier starts one container per team and
+# injects TEAM_SECRET. connection_info is templated with the team's host:port.
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.

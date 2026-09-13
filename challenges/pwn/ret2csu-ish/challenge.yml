@@ -1,0 +1,91 @@
+name: ret2csu-ish
+author: ctf-2026
+category: pwn
+type: team_instance
+description: |
+  **ret2csu-ish** -- a statically linked, no-PIE x86-64 binary with a stack
+  overflow, no canary, and no win() function. Served as pwn-as-a-service.
+
+  Connect over TCP. Each connection prints a fresh 8-bit **landing key** and
+  then reads your payload into a 64-byte stack buffer with a `read()` of
+  `0x200` bytes -- a clean linear overflow. There is no `system()` call you can
+  reach and no gift function: you must build a ROP chain that performs the
+  `execve` syscall and pops a shell in the live service.
+
+  Two things make it more than a copy-paste static ROP:
+
+    1. **No "/bin/sh".** The fully static image contains no such string, so you
+       must stage one yourself (e.g. ROP a `read` into a fixed .bss buffer,
+       then `execve` that buffer).
+
+    2. **Per-connection transform.** Before your bytes land on the stack the
+       program adds the printed landing key K to every byte, modulo 256:
+       `stack[i] = (input[i] + K) mod 256`. K is regenerated every connection,
+       so a hard-coded chain is worthless -- read K from the banner and
+       pre-image your chain live. This is why replay does nothing.
+
+  The name is a hint: modern glibc (>= 2.34) dropped the classic
+  `__libc_csu_init` "universal gadget", so this binary ships an equivalent
+  argument-marshalling gadget. Using it is the intended, clean way to set the
+  three syscall argument registers.
+
+  The flag is **NOT** in the binary. It exists only in the running service
+  (per-team, in the process environment and a runtime-only file) and is
+  reachable solely by executing code in the process. Reading the downloadable
+  binary alone will never yield a flag. There is exactly one decoy `NCTF{...}`
+  string in the binary; it is in an unreachable function and is refutable in
+  under a minute (nothing calls it, and the real flag is per-team/server-issued).
+
+  Provided files: `chall` (x86-64 ELF, static, not stripped), `chall.c` (source).
+
+  Connect:  `nc <host> <port>`
+
+  Flag format: `NCTF{...}`  (exactly `NCTF{` + 24 lowercase hex characters + `}`)
+
+# Dynamic scoring (hard).
+value: 500
+extra:
+  docker_image: ctf-ret2csu-ish:latest
+  internal_port: 9111
+  initial: 500
+  decay: 30
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container derives it at runtime from the injected
+# TEAM_SECRET as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-ret2csu-ish")[:24] + "}"
+# (see flag.py). The platform's custom per-account flag class recomputes and
+# validates each team's flag on submission. flags is intentionally left empty.
+flags:
+  - type: team_hmac
+    content: pwn-ret2csu-ish
+
+# Handout: the static, not-stripped binary for offline analysis plus its source.
+# The real flag is per-team and server-issued; the binary carries only a single
+# unreachable decoy NCTF{...} string (refutable in under a minute).
+files:
+  - chall
+  - chall.c
+tags:
+  - pwn
+  - rop
+  - ret2csu
+  - static
+  - no-pie
+  - execve
+  - hard
+
+# Prerequisite chain: none. This is a standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id, e.g.:
+#     requirements:
+#       - pwn-format-string-101   )
+
+# Served challenge: the platform instancier starts one container per team and
+# injects TEAM_SECRET. connection_info is templated with the team's host:port.
+connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.

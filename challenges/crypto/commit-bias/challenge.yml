@@ -1,0 +1,62 @@
+name: commit-bias
+author: dagbanjaphet
+category: crypto
+description: |
+  The **CoinVault** table runs a "provably fair" coin-flip game. Every round the
+  dealer first **seals** its draw -- publishing a 16-byte commitment
+  `C = SHA256(draw || round)` -- and only later **opens** the round, revealing
+  the full draw so anyone can recheck the seal. The published coin of a round is
+  just the parity of that round's draw.
+
+  We captured one table's session in `ledger.coinvault`: 48 fully opened rounds,
+  followed by a final **vault** round that the dealer **sealed and funded but
+  never opened**. The vault's payout blob is XOR-sealed under a key derived from
+  that un-opened draw -- so if the game is truly fair, the vault is unrecoverable
+  and the sealed value is anyone's guess.
+
+  Is it, though? A commitment only binds the dealer to a draw it has already
+  chosen; it says nothing about how those draws are chosen in the first place.
+  The opened rounds are all in the ledger.
+
+  Recover the sealed vault draw, unseal the payout blob, and read the flag.
+  `SPEC.md` documents the file format (and the exact commitment / sealing
+  construction) -- everything you need to parse the ledger and to *check* a
+  candidate vault draw against its published commitment. The rest is in the
+  numbers.
+
+  Flag format: `NCTF{...}`
+
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 30
+  minimum: 100
+
+# --- Static flag ------------------------------------------------------------
+# Pure downloadable crypto challenge: the artifact (ledger.coinvault) IS the
+# challenge and the flag is fixed. The ledger's opened rounds leak the dealer's
+# internal draw stream; recovering it unseals the vault blob to the flag below.
+# gen.py rebuilds the ledger and this flag deterministically. Per the authoring
+# rules a static flag is correct here (there is no served oracle).
+flags:
+  - NCTF{c0mmit_r3v34l_but_th3_dr4ws_w3re_l1n34rly_l1nk3d}
+
+tags:
+  - crypto
+  - custom-format
+  - medium
+
+# Files handed to players. Only the ledger export and its parse spec are
+# distributed; gen.py and the solution/ directory are NOT shipped.
+files:
+  - handout/ledger.coinvault
+  - handout/SPEC.md
+
+# challenge-id (for requirements wiring): crypto-commit-bias
+# No prerequisites; standalone.
+
+state: visible
+version: "0.1"
+
+# Not a served challenge: no container, no connection_info, no per-team flag.

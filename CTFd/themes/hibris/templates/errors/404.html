@@ -1,0 +1,22 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="container term-error">
+	<div class="term-window" role="alert">
+		<div class="term-bar">
+			<i class="d1"></i><i class="d2"></i><i class="d3"></i>
+			<span class="path">nctf@arena:~$ résolution</span>
+		</div>
+		<div class="term-body">
+			<p class="term-code">404</p>
+			<p class="l"><span class="p">$</span> <span class="cmd">GET {{ request.path }}</span></p>
+			<p class="l"><span class="code fail">[fail]</span> <span class="fail">ressource introuvable</span></p>
+			<p class="msg">Cette page n'existe pas, ou l'épreuve n'est pas encore ouverte.</p>
+			<p class="l"><span class="p">$</span> <a class="back" href="{{ request.script_root }}/">cd /</a> <span class="caret">_</span></p>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}

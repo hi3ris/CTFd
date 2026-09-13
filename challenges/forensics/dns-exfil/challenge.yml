@@ -1,0 +1,53 @@
+name: "DNS Exfil"
+author: "ctf-team"
+category: forensics
+description: |
+  Our EDR flagged a "sync agent" on a developer workstation for talking to a lot
+  of odd subdomains right before a file went missing. We pulled a packet capture
+  off the wire.
+
+  The agent tunnels data out over **DNS TXT queries** to `*.x.acme-updates.net`.
+  It does NOT use standard base32: it rolls its own alphabet, and it splits one
+  continuous encoded stream across many query labels (so decoding a single packet
+  gets you nothing). The good news: the agent is chatty and announces how it
+  encodes before it starts.
+
+  Reassemble the tunnelled stream in the right order, decode it, and read the
+  stolen note. The recovery token in that note is your flag.
+
+  Notes:
+    * There is benign DNS noise in the capture, and some exfil queries are
+      retransmitted (duplicated). Focus on TXT queries to the exfil domain.
+    * A separate beacon channel is also present. Read the brief: the real data
+      channel is DNS TXT. Anything that decodes "too easily" is not it.
+
+  Flag format: NCTF{...}  (lowercase letters, digits and underscores inside).
+
+# This is a STATIC, downloadable forensics artifact: the challenge IS the pcap,
+# so the flag is baked into the captured data. No served component and no
+# per-team HMAC flag. flag.py documents the per-team scheme for uniformity only.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 40
+  minimum: 100
+
+flags:
+  - "NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
+
+files:
+  - capture.pcap
+
+tags:
+  - forensics
+  - dns
+  - exfiltration
+  - pcap
+  - base32
+  - medium
+
+connection_info: null
