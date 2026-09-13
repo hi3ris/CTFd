@@ -1,3 +1,7 @@
+# heap-note (pwn)
+
+Tcache poisoning → `__free_hook` overwrite → `win()` (glibc 2.31, no safe-linking).
+Flag servi par instance via `FLAG` (dérivé de `TEAM_SECRET`). Détails d'exploitation : `solution/`.
 
 ## Rebuild du binaire (glibc 2.31)
 
