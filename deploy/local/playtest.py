@@ -210,7 +210,7 @@ def main():
                 except Exception:
                     j = {"success": False, "error": f"http {r.status_code}"}
                 if not j.get("success"):
-                    err = j.get("error", "")
+                    err = j.get("error", "") or j.get("message", "") or f"http {r.status_code}: {r.text[:200]}"
                     verdict = "GATED" if r.status_code == 403 and "requis" in err.lower() else "FAIL"
                     results.append((d, verdict, f"spawn: {err}")); continue
                 host, port = j["connection"]["host"], j["connection"]["port"]
@@ -233,13 +233,18 @@ def main():
                 if not ok: print(tail)
             else:
                 flags = FLAG_RE.findall(out)
-                if rc != 0 or not flags:
-                    results.append((d, "FAIL", f"solveur rc={rc}, flag {'absent' if not flags else flags[-1]} ({dt:.0f}s)")); print(tail)
+                if not flags:
+                    results.append((d, "FAIL", f"solveur rc={rc}, aucun flag ({dt:.0f}s)")); print(tail)
                 else:
+                    # Beaucoup de solveurs impriment le flag puis sortent rc!=0 sur
+                    # une etape de verification optionnelle : la vraie question est
+                    # "la plateforme accepte-t-elle le flag ?". On soumet donc des
+                    # qu'un flag valide est imprime, en notant le rc.
                     flag = flags[-1]
                     status, msg = player.attempt(cid, flag)
                     ok = status in ("correct", "already_solved")
-                    results.append((d, "PASS" if ok else "FAIL", f"{flag} -> {status} ({dt:.0f}s)" + ("" if ok else f" {msg}")))
+                    note = f"{flag} -> {status} ({dt:.0f}s)" + (f" [solveur rc={rc}]" if rc != 0 else "")
+                    results.append((d, "PASS" if ok else "FAIL", note + ("" if ok else f" {msg}")))
                     if not ok: print(tail)
             if host and not a.keep:
                 player.destroy(cid)
