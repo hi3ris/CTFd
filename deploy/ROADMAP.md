@@ -84,6 +84,10 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 ## Lot 4 — Challenges (écrits, à câbler + playtester) 🟡 PARTIEL
 
+> 🤖 **Vague 2 ajoutée (10 challenges, +36 au total)** — misc/forensics/ml/agentic/boot2root-Linux/web/crypto/rev,
+> conçus anti-LLM, chacun avec solveur de référence **vérifié** (offline exécuté ; servis validés statiquement, run live = Lot 5).
+> Détail : `deploy/challenge-wave-2.md`. Décision porteur : pas de VM Windows/AD/drone ; boot2root = Linux conteneur.
+
 26 challenges sous `challenges/`. **15 servis** (flag `team_hmac`, dépendent du Lot 2),
 **11 statiques** (jouables tels quels une fois importés).
 

@@ -44,3 +44,22 @@ Chaque challenge : dossier complet (challenge.yml + source + Dockerfile/entrypoi
 handout + solution). Offline : solveur **exécuté et confirmé** ici. Servi : solveur + dérivation
 de flag **relus**, run de bout en bout marqué pour la répétition (Lot 5). Puis **audit adverse**
 du lot (résolubilité LLM + soundness) et correctifs, comme pour la vague 1.
+
+---
+
+## Résultats — 10/10 écrits, vérifiés, poussés (2026-09-13)
+
+| Challenge | Cat | Type | Vérification |
+|---|---|---|---|
+| polyglot-onion | misc | statique | solveur exécuté → flag ; aucune fuite dans le handout |
+| timing-channel | misc | statique | solveur exécuté (gaps bimodaux décodés) |
+| commit-bias | crypto | statique | solveur exécuté (Berlekamp-Massey) ; pas de flag littéral |
+| maze-vm | reverse | statique | build gcc + solveur → le binaire imprime le flag |
+| evasion-timeline | forensics | statique | solveur exécuté (PPID-spoof T1134.004) ; leurre non trivial |
+| boot2root-linux | pwn | servi | contrat OK, flag.py, compile, pas de fuite ; run live = Lot 5 |
+| model-inversion | ml | servi | offline : L-inf=0 pour 3 équipes, leurre échoue ; run live = Lot 5 |
+| smuggle-gap | web | servi | e2e localhost : direct=403, smuggle→flag ; run live = Lot 5 |
+| esolang-jail | misc | servi | escape SYS -1 → flag ; naïf 8 SYS rejeté ; run live = Lot 5 |
+| agent-tool-abuse | ai | servi | self-test stub 5/5, gate d'effet SOUND ; run live = Lot 5 |
+
+Total dépôt : **36 challenges**. Audit adverse du lot en cours (résolubilité LLM + soundness).
