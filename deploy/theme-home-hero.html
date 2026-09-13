@@ -1,0 +1,121 @@
+<!--
+  ============================================================================
+  NCTF25 — bloc d'accueil « waou » à coller dans le CMS
+  ============================================================================
+  OÙ :  Admin  ->  Pages  ->  page « / » (route vide, index)  ->  éditeur,
+        bouton </> (HTML)  ->  coller TOUT ce bloc  ->  Save.
+  Ce bloc est autonome : styles inclus, préfixés .nctf-* pour ne rien casser.
+  Il reprend les couleurs et polices du thème hibris (drapeau Togo, Tourney,
+  JetBrains Mono, glitch léger). Aucune dépendance externe hors Google Fonts,
+  déjà chargées par le thème. Modifiez librement dates, chiffres et liens.
+  ============================================================================
+-->
+<style>
+  .nctf-hero * { box-sizing: border-box; }
+  .nctf-hero {
+    --red:#d21034; --yellow:#ffce00; --green:#006a4e; --green-b:#17b06b;
+    --link:#f9d77e; --muted:#9aa4b2; --line:#1c2431;
+    position: relative; margin: -1rem 0 2.5rem; padding: 3.4rem 1.25rem 3rem;
+    text-align: center; overflow: hidden; border-radius: 12px;
+    background:
+      radial-gradient(760px 340px at 50% -18%, rgba(210,16,52,0.16), transparent 68%),
+      radial-gradient(620px 320px at 100% 120%, rgba(0,106,78,0.14), transparent 64%),
+      #05070d;
+    border: 1px solid var(--line);
+    border-top: 4px solid transparent;
+    border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+  }
+  .nctf-hero .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    text-transform: uppercase; letter-spacing: 5px; font-size: .74rem;
+    color: var(--yellow); margin: 0 0 1rem;
+  }
+  .nctf-hero h1 {
+    font-family: 'Tourney', system-ui, sans-serif; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 3px; line-height: .98;
+    font-size: clamp(2.6rem, 8vw, 5.2rem); margin: 0; color: #fff;
+    position: relative; display: inline-block;
+  }
+  .nctf-hero h1 .dot { color: var(--red); }
+  /* glitch léger sur le titre (désactivé si mouvement réduit) */
+  .nctf-hero h1 { animation: nctfGlitch 8s steps(1) infinite; }
+  @keyframes nctfGlitch {
+    0%, 96%, 100% { text-shadow: none; transform: none; }
+    96.5% { text-shadow: -2px 0 var(--red), 2px 0 var(--green-b); transform: translate3d(1px,0,0); }
+    97.2% { text-shadow: 2px 0 var(--yellow), -2px 0 var(--red); transform: translate3d(-1px,0,0); }
+    97.9% { text-shadow: none; transform: none; }
+  }
+  @media (prefers-reduced-motion: reduce) { .nctf-hero h1 { animation: none; } }
+  .nctf-hero .lead {
+    font-family: 'Lato', system-ui, sans-serif; color: #d6dde6;
+    font-size: clamp(1rem, 2.4vw, 1.22rem); line-height: 1.6;
+    max-width: 40rem; margin: 1.2rem auto 0;
+  }
+  .nctf-hero .lead b { color: #fff; }
+  .nctf-hero .cta {
+    display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap;
+    margin-top: 2rem;
+  }
+  .nctf-hero .btn {
+    font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: .4px;
+    padding: .72rem 1.4rem; border-radius: 8px; text-decoration: none;
+    display: inline-block; transition: transform .12s ease, filter .12s, box-shadow .12s;
+  }
+  .nctf-hero .btn-red { background: var(--red); color: #fff; box-shadow: 0 8px 22px rgba(210,16,52,.3); }
+  .nctf-hero .btn-red:hover { transform: translateY(-2px); filter: brightness(1.08); color:#fff; }
+  .nctf-hero .btn-ghost { background: transparent; color: #fff; border: 1px solid var(--line); }
+  .nctf-hero .btn-ghost:hover { transform: translateY(-2px); border-color: var(--yellow); color: var(--yellow); }
+  .nctf-hero .cats {
+    display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap;
+    margin-top: 2.4rem;
+  }
+  .nctf-hero .cat {
+    font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+    color: #c7cfda; background: #0b0f18; border: 1px solid var(--line);
+    border-radius: 6px; padding: .28rem .6rem; letter-spacing: .5px;
+  }
+  .nctf-hero .meta {
+    display: flex; gap: 2.6rem; justify-content: center; flex-wrap: wrap;
+    margin-top: 2.6rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
+  }
+  .nctf-hero .meta .n {
+    font-family: 'Tourney', system-ui, sans-serif; font-weight: 800;
+    font-size: 1.8rem; line-height: 1; color: #fff;
+  }
+  .nctf-hero .meta .l {
+    font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+    letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: .35rem;
+  }
+</style>
+
+<div class="nctf-hero">
+  <p class="eyebrow">// national ctf &middot; édition 2025</p>
+  <h1>NCTF<span class="dot">25</span></h1>
+  <p class="lead">
+    La compétition nationale de cybersécurité, pensée à Lomé.
+    <b>Présélection les 23–24 octobre</b>, finale les <b>29–30 octobre</b>.
+    Plusieurs pistes, un seul réseau à défendre. Format des flags&nbsp;: <code>NCTF{...}</code>.
+  </p>
+
+  <div class="cta">
+    <a class="btn btn-red" href="/challenges">Entrer dans l'arène</a>
+    <a class="btn btn-ghost" href="/scoreboard">Classement</a>
+    <a class="btn btn-ghost" href="/register">Inscription</a>
+  </div>
+
+  <div class="cats">
+    <span class="cat">web</span>
+    <span class="cat">pwn</span>
+    <span class="cat">reverse</span>
+    <span class="cat">crypto</span>
+    <span class="cat">forensics</span>
+    <span class="cat">ai / ml</span>
+    <span class="cat">misc</span>
+  </div>
+
+  <div class="meta">
+    <div><div class="n">300+</div><div class="l">participants</div></div>
+    <div><div class="n">10</div><div class="l">équipes en finale</div></div>
+    <div><div class="n">2</div><div class="l">journées</div></div>
+  </div>
+</div>

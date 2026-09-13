@@ -4,6 +4,7 @@
     <title>{{ Configs.ctf_name }}</title>
     <meta charset="utf-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00040d">
 
     <link rel="shortcut icon" href="{{ Configs.ctf_small_icon }}" type="image/x-icon">
 
@@ -173,6 +174,39 @@
         .org-credit { display: inline-flex; align-items: center; gap: .5rem; opacity: .85; }
         .org-credit img { height: 22px; width: auto; filter: brightness(1.05); }
         .org-credit:hover { opacity: 1; }
+
+        /* --- Error pages: fake terminal window, on-brand, no "CTFd" tells --- */
+        .term-error { min-height: 64vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+        .term-window {
+            width: 100%; max-width: 620px;
+            background: #05070d; border: 1px solid var(--line); border-radius: 10px;
+            box-shadow: 0 26px 60px rgba(0,0,0,0.6); overflow: hidden;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        .term-bar {
+            display: flex; align-items: center; gap: .45rem;
+            padding: .6rem .85rem; background: #0b0f18;
+            border-bottom: 1px solid var(--line);
+        }
+        .term-bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+        .term-bar .d1 { background: var(--red); } .term-bar .d2 { background: var(--yellow); } .term-bar .d3 { background: var(--green-b); }
+        .term-bar .path { margin-left: .6rem; color: var(--muted); font-size: .76rem; letter-spacing: .3px; }
+        .term-body { padding: 1.4rem 1.3rem 1.6rem; font-size: .92rem; line-height: 1.7; }
+        .term-body .l { margin: 0; white-space: pre-wrap; word-break: break-word; }
+        .term-body .p { color: var(--green-b); } /* $ prompt */
+        .term-body .cmd { color: #c7cfda; }
+        .term-body .code { display: inline-block; padding: .05rem .5rem; border-radius: 5px; font-weight: 500; }
+        .term-body .fail { color: var(--red); }
+        .term-body .warn { color: var(--yellow); }
+        .term-body .ok   { color: var(--green-b); }
+        .term-body .msg  { color: var(--fg); margin: .35rem 0 .9rem; font-family: 'Lato', sans-serif; }
+        .term-body .muted { color: var(--muted); }
+        .term-body a.back { color: var(--link); }
+        .term-body a.back:hover { color: #fff; text-decoration: underline; }
+        .term-body .caret { color: var(--yellow); animation: caretBlink 1.1s steps(1) infinite; }
+        @media (prefers-reduced-motion: reduce) { .term-body .caret { animation: none; } }
+        .term-code { font-size: 2.6rem; font-weight: 800; font-family: 'Tourney', system-ui, sans-serif;
+            letter-spacing: 2px; margin: 0 0 .2rem; color: var(--fg); }
     </style>
 
     <script type="text/javascript">

@@ -1,19 +1,21 @@
 {% extends "base.html" %}
 
 {% block content %}
-
-<div class="container">
-	<div class="row">
-		<div class="col-md-12">
-			<div class="pt-5 mt-5 text-center">
-				<h1>Forbidden</h1>
-				<hr class="w-50">
-				<h2>{{ error }}</h2>
-			</div>
+<div class="container term-error">
+	<div class="term-window" role="alert">
+		<div class="term-bar">
+			<i class="d1"></i><i class="d2"></i><i class="d3"></i>
+			<span class="path">nctf@arena:~$ contrôle d'accès</span>
+		</div>
+		<div class="term-body">
+			<p class="term-code">403</p>
+			<p class="l"><span class="p">$</span> <span class="cmd">access {{ request.path }}</span></p>
+			<p class="l"><span class="code fail">[deny]</span> <span class="fail">accès refusé</span></p>
+			<p class="msg">{% if error %}{{ error }}{% else %}Vous n'avez pas les droits requis, ou l'épreuve n'est pas encore débloquée.{% endif %}</p>
+			<p class="l"><span class="p">$</span> <a class="back" href="{{ request.script_root }}/">cd /</a> <span class="caret">_</span></p>
 		</div>
 	</div>
 </div>
-
 {% endblock %}
 
 {% block scripts %}

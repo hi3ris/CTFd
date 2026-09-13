@@ -106,15 +106,23 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 ### Config CTFd + règlement 🧑
 
 - [ ] Mode équipes ; taille max d'équipe ; scoring dynamique ; compteurs de solves masqués ; scoreboard gelable ; fenêtre synchrone ; ToS obligatoire.
-- [ ] **Thème** : activer le thème custom **`hibris`** (rock & roll togolais, sans marque CTFd,
-      pied de page « Powered by Zangbéto · ramses.dagban.tg »). Il est présent dans
-      `CTFd/themes/hibris/`. L'activer une fois, au choix :
+- [ ] **Thème** : activer le thème custom **`hibris`** (aligné vitrine CERT.tg, drapeau Togo,
+      glitch léger, sans marque CTFd ; pied de page « Organisé par CERT.tg » + « Powered by
+      Hibris · ramses.dagban.tg »). Il est présent dans `CTFd/themes/hibris/`. L'activer une
+      fois, au choix :
         - UI : *Admin → Config → Theme* → sélectionner `hibris` ;
         - ou API : `curl -H "Authorization: Token <admin>" -H 'Content-Type: application/json' \`
           `-X PATCH https://$CTF_DOMAIN/api/v1/configs -d '{"ctf_theme":"hibris"}'`.
       CTFd 3.7 avertit sur les thèmes custom (SSTI via éditeur admin) : on l'installe par le
       système de fichiers (voie sûre), pas via l'éditeur. Vérifier le rendu (accueil, board,
-      scoreboard, login) à la phase `setup` — cf. la note de compatibilité templates 3.7.7.
+      scoreboard, login, **pages d'erreur 404/403/429/500/502**) à la phase `setup` — cf. la
+      note de compatibilité templates 3.7.7.
+- [ ] **Accueil « waou »** : l'accueil de CTFd est une *page CMS*, pas un template du thème —
+      par défaut elle trahit CTFd. Coller le bloc `deploy/theme-home-hero.html` dans
+      *Admin → Pages → page « / » (route vide/index) → éditeur → bouton `</>` (HTML)*, puis
+      *Save*. Bloc autonome (styles préfixés `.nctf-*`, mêmes couleurs/polices que le thème,
+      titre `NCTF25` + glitch). Ajuster dates, chiffres et liens si besoin. Objectif : un
+      participant ne doit pas deviner que c'est du CTFd.
 - [ ] **Règlement** publié AVANT l'ouverture des inscriptions (§6 garde-fous).
 
 ---
