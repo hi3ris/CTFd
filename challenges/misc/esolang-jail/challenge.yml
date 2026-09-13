@@ -1,0 +1,82 @@
+name: esolang-jail
+author: ctf-2026
+category: misc
+type: team_instance
+description: |
+  **Marble jail** -- a tiny stack esoteric language, served over TCP as an
+  interactive REPL. You connect, you get a `marble>` prompt, and you run Marble
+  programs one line at a time. The stack (and a 256-cell integer memory) persist
+  across lines within your connection. Type `HELP` for the full reference.
+
+  Marble is Forth-flavoured. Bare literals push themselves; everything else is a
+  word:
+
+      <int>                 push a non-negative integer  (e.g. 42)
+      "text"                push a string  (escapes: \n \t \\ \")
+      POP DUP SWAP OVER     stack shuffles
+      ADD SUB MUL DIV MOD NEG   integer arithmetic
+      EQ NE LT GT NOT AND OR    comparisons / logic  -> 1 or 0
+      LOAD STORE            256-cell integer memory (address checked 0..255)
+      PRINT                 pop and print a value
+      EMIT                  pop an int and print it as one character
+      STACK RESET HELP      debug / housekeeping
+      SYS                   pop an index i, invoke standard-library service i
+
+  The `SYS` gate exposes the Marble standard library -- pure string/number
+  helpers, slots **0..7**: `0 strlen  1 concat  2 substr  3 itoa  4 atoi
+  5 upper  6 ord  7 chr`. By design the jail keeps the host out of reach: there
+  is no file word, no import, no eval, and `SYS` refuses anything above the
+  exposed range. A well-behaved Marble program is fully contained.
+
+  Your goal: **escape the sandbox and read this instance's flag.** The flag is
+  not in any downloadable file and cannot be recovered by reading a program's
+  output alone -- it lives only in the running instance (its environment and a
+  file on its filesystem), reachable only once you break out of the interpreter.
+  It's a live, per-team instance; probe the language and find the gap.
+
+  Connect:  `nc {host} {port}`
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (medium-hard).
+value: 400
+extra:
+  docker_image: ctf-esolang-jail:latest
+  internal_port: 9301
+  initial: 400
+  decay: 30
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container derives it at runtime from the injected
+# per-challenge secret as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "misc-esolang-jail")[:24] + "}"
+# (see flag.py). The platform's custom per-account flag class recomputes and
+# validates each team's flag on submission.
+flags:
+  - type: team_hmac
+    content: misc-esolang-jail
+
+# No handout: the interpreter source is NOT shipped. Players discover the
+# language -- and its gap -- by probing the live REPL. This keeps the escape a
+# genuine interactive/stateful puzzle rather than a static read.
+tags:
+  - misc
+  - jail
+  - escape
+  - esolang
+  - interpreter
+  - sandbox
+
+# Prerequisite chain: none. This is a standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id.)
+
+# Served challenge: the platform instancier starts one container per team and
+# injects the per-challenge secret. connection_info is templated with the team's
+# host:port.
+connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.

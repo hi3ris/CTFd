@@ -1,0 +1,70 @@
+name: smuggle-gap
+author: ctf-2026
+category: web
+type: team_instance
+description: |
+  **Nimbus** runs a tiny job service behind an edge proxy. The edge is the only
+  thing you can reach: it forwards ordinary traffic to an internal application
+  and answers everything else itself.
+
+  Public endpoints (through the edge):
+
+      GET  /            service banner
+      GET  /status      health/status
+      POST /submit      queue a job
+
+  The internal application also carries a **management route** that hands out
+  the operations flag to whoever reaches it. The edge is configured to keep that
+  route off-limits: ask for it directly and the edge stops you at the door with
+  a `403`. Poking at capitalisation, encoding or path tricks in the address does
+  not change the edge's mind -- it has seen those before.
+
+  Your goal: **reach what the edge forbids.** Get the internal management route
+  to actually run, on the other side of the edge, and read what it returns.
+
+  This is a live, per-team instance. The flag is emitted by the internal route
+  only when that route is genuinely reached -- it is not in any file you can
+  download, and reading the source alone will not give it to you. Nothing here
+  requires winning a timing race; the setup is deterministic.
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (hard).
+value: 500
+extra:
+  docker_image: ctf-smuggle-gap:latest
+  internal_port: 8080
+  initial: 500
+  decay: 20
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container receives FLAG / CHALLENGE_SECRET from the
+# instancier and the internal route emits it only when actually reached:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-smuggle-gap")[:24] + "}"
+# (see flag.py). CTFd's custom per-team flag class recomputes and validates each
+# team's flag on submission. flags carries only the HMAC binding, no secret.
+flags:
+  - type: team_hmac
+    content: web-smuggle-gap
+tags:
+  - web
+  - http
+  - proxy
+  - parsing
+  - desync
+
+# challenge-id (for HMAC / requirements wiring): web-smuggle-gap
+# No prerequisites; standalone.
+
+# Served challenge: the platform instancier starts one container per team and
+# injects the per-challenge flag material. connection_info is templated with the
+# team's host:port.
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile in this directory; must be named
+# ctf-smuggle-gap:latest so `make push-images` picks it up.
