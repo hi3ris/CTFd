@@ -37,11 +37,11 @@ function profileUpdate(event) {
     }
   }
 
-  CTFd.api.patch_user_private({}, params).then(response => {
+  CTFd.api.patch_user_private({}, params).then((response) => {
     if (response.success) {
       $("#results").html(success_template);
     } else if ("errors" in response) {
-      Object.keys(response.errors).map(function(error) {
+      Object.keys(response.errors).map(function (error) {
         const i = $form.find("input[name={0}]".format(error));
         const input = $(i);
         input.addClass("input-filled-invalid");
@@ -60,19 +60,17 @@ function tokenGenerate(event) {
 
   CTFd.fetch("/api/v1/tokens", {
     method: "POST",
-    body: JSON.stringify(params)
+    body: JSON.stringify(params),
   })
-    .then(function(response) {
+    .then(function (response) {
       return response.json();
     })
-    .then(function(response) {
+    .then(function (response) {
       if (response.success) {
         let body = $(`
         <p>Please copy your API Key, it won't be shown again!</p>
         <div class="input-group mb-3">
-          <input type="text" id="user-token-result" class="form-control" value="${
-            response.data.value
-          }" readonly>
+          <input type="text" id="user-token-result" class="form-control" value="${response.data.value}" readonly>
           <div class="input-group-append">
             <button class="btn btn-outline-secondary" type="button">
               <i class="fas fa-clipboard"></i>
@@ -80,14 +78,14 @@ function tokenGenerate(event) {
           </div>
         </div>
         `);
-        body.find("button").click(function(event) {
+        body.find("button").click(function (event) {
           copyToClipboard(event, "#user-token-result");
         });
         ezAlert({
           title: "API Key Generated",
           body: body,
           button: "Got it!",
-          large: true
+          large: true,
         });
       }
     });
@@ -101,22 +99,19 @@ function deleteToken(event) {
   ezQuery({
     title: "Delete Token",
     body: "Are you sure you want to delete this token?",
-    success: function() {
+    success: function () {
       CTFd.fetch("/api/v1/tokens/" + id, {
-        method: "DELETE"
+        method: "DELETE",
       })
-        .then(function(response) {
+        .then(function (response) {
           return response.json();
         })
-        .then(function(response) {
+        .then(function (response) {
           if (response.success) {
-            $elem
-              .parent()
-              .parent()
-              .remove();
+            $elem.parent().parent().remove();
           }
         });
-    }
+    },
   });
 }
 
@@ -124,7 +119,7 @@ $(() => {
   $("#user-profile-form").submit(profileUpdate);
   $("#user-token-form").submit(tokenGenerate);
   $(".delete-token").click(deleteToken);
-  $(".nav-pills a").click(function(_event) {
+  $(".nav-pills a").click(function (_event) {
     window.location.hash = this.hash;
   });
 

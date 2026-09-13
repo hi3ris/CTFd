@@ -30,8 +30,9 @@ STATIC_FLAG = "NCTF{silence_between_beats_speaks}"
 
 
 def team_flag(team_secret: str) -> str:
-    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(),
-                      hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 

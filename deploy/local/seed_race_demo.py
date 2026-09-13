@@ -25,24 +25,46 @@ import time
 
 import requests
 
-PREFIX = "GP·"   # "GP·" — repère les équipes de démo
+PREFIX = "GP·"  # "GP·" — repère les équipes de démo
 NAMES = [
-    "Zébu Turbo", "Baobab Racing", "Kékéli Motors", "Akwaba Speed", "Mono Velocity",
-    "Kara Drift", "Lomé Lightning", "Sokodé Sprint", "Atakpamé RX", "Kpalimé Boost",
-    "Fazao Flash", "Togoville GT", "Aného Arrow", "Dapaong Dash", "Bassar Bolt",
-    "Vogan Vortex", "Tsévié Torque", "Notsé Nitro", "Badou Blaze", "Kpémé Comet",
+    "Zébu Turbo",
+    "Baobab Racing",
+    "Kékéli Motors",
+    "Akwaba Speed",
+    "Mono Velocity",
+    "Kara Drift",
+    "Lomé Lightning",
+    "Sokodé Sprint",
+    "Atakpamé RX",
+    "Kpalimé Boost",
+    "Fazao Flash",
+    "Togoville GT",
+    "Aného Arrow",
+    "Dapaong Dash",
+    "Bassar Bolt",
+    "Vogan Vortex",
+    "Tsévié Torque",
+    "Notsé Nitro",
+    "Badou Blaze",
+    "Kpémé Comet",
 ]
 
 
 def nonce_of(html):
-    m = re.search(r"'csrfNonce':\s*\"([0-9a-f]+)\"", html) or re.search(r'name="nonce" value="([0-9a-f]+)"', html)
+    m = re.search(r"'csrfNonce':\s*\"([0-9a-f]+)\"", html) or re.search(
+        r'name="nonce" value="([0-9a-f]+)"', html
+    )
     return m.group(1) if m else ""
 
 
 def admin(url):
     s = requests.Session()
     r = s.get(url + "/login")
-    r = s.post(url + "/login", data={"name": "admin", "password": "admin", "nonce": nonce_of(r.text)}, allow_redirects=False)
+    r = s.post(
+        url + "/login",
+        data={"name": "admin", "password": "admin", "nonce": nonce_of(r.text)},
+        allow_redirects=False,
+    )
     if r.status_code != 302:
         sys.exit("login admin impossible (make local-seed d'abord ?)")
     s.headers["CSRF-Token"] = nonce_of(s.get(url + "/").text)
@@ -50,11 +72,15 @@ def admin(url):
 
 
 def teams_index(s, url):
-    return {t["name"]: t for t in s.get(url + "/api/v1/teams?view=admin").json()["data"]}
+    return {
+        t["name"]: t for t in s.get(url + "/api/v1/teams?view=admin").json()["data"]
+    }
 
 
 def users_index(s, url):
-    return {u["name"]: u for u in s.get(url + "/api/v1/users?view=admin").json()["data"]}
+    return {
+        u["name"]: u for u in s.get(url + "/api/v1/users?view=admin").json()["data"]
+    }
 
 
 def ensure_fleet(s, url, n):
@@ -63,32 +89,58 @@ def ensure_fleet(s, url, n):
     users = users_index(s, url)
     fleet = []
     for i in range(n):
-        label = NAMES[i % len(NAMES)] + (f" {i//len(NAMES)+1}" if i >= len(NAMES) else "")
+        label = NAMES[i % len(NAMES)] + (
+            f" {i//len(NAMES)+1}" if i >= len(NAMES) else ""
+        )
         tname = PREFIX + label
         uname = "gp_racer_%02d" % (i + 1)
         team = teams.get(tname)
         if not team:
             r = s.post(url + "/api/v1/teams", json={"name": tname, "password": "demo"})
             if not r.ok:
-                print("  team KO", tname, r.status_code, r.text[:120]); continue
-            team = r.json()["data"]; teams[tname] = team
+                print("  team KO", tname, r.status_code, r.text[:120])
+                continue
+            team = r.json()["data"]
+            teams[tname] = team
         user = users.get(uname)
         if not user:
-            r = s.post(url + "/api/v1/users", json={"name": uname, "email": uname + "@gp.local",
-                                                    "password": "demo", "type": "user", "verified": True})
+            r = s.post(
+                url + "/api/v1/users",
+                json={
+                    "name": uname,
+                    "email": uname + "@gp.local",
+                    "password": "demo",
+                    "type": "user",
+                    "verified": True,
+                },
+            )
             if not r.ok:
-                print("  user KO", uname, r.status_code, r.text[:120]); continue
-            user = r.json()["data"]; users[uname] = user
-        members = s.get(url + f"/api/v1/teams/{team['id']}/members").json().get("data", [])
+                print("  user KO", uname, r.status_code, r.text[:120])
+                continue
+            user = r.json()["data"]
+            users[uname] = user
+        members = (
+            s.get(url + f"/api/v1/teams/{team['id']}/members").json().get("data", [])
+        )
         if user["id"] not in members:
-            s.post(url + f"/api/v1/teams/{team['id']}/members", json={"user_id": user["id"]})
+            s.post(
+                url + f"/api/v1/teams/{team['id']}/members",
+                json={"user_id": user["id"]},
+            )
         fleet.append((team["id"], user["id"], tname))
     return fleet
 
 
 def award(s, url, user_id, value):
-    return s.post(url + "/api/v1/awards", json={"user_id": user_id, "value": int(value),
-                                                "name": "Grand Prix", "category": "demo"})
+    return s.post(
+        url + "/api/v1/awards",
+        json={
+            "user_id": user_id,
+            "value": int(value),
+            "name": "Grand Prix",
+            "category": "demo",
+        },
+    )
 
 
 def clear(s, url):
@@ -96,7 +148,8 @@ def clear(s, url):
     n = 0
     for name, t in teams_index(s, url).items():
         if name.startswith(PREFIX):
-            s.delete(url + f"/api/v1/teams/{t['id']}"); n += 1
+            s.delete(url + f"/api/v1/teams/{t['id']}")
+            n += 1
     for name, u in users_index(s, url).items():
         if name.startswith("gp_racer_"):
             s.delete(url + f"/api/v1/users/{u['id']}")
@@ -105,23 +158,51 @@ def clear(s, url):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", default=os.environ.get("CTFD_URL", "http://localhost:" + os.environ.get("CTFD_PORT", "8000")))
+    ap.add_argument(
+        "--url",
+        default=os.environ.get(
+            "CTFD_URL", "http://localhost:" + os.environ.get("CTFD_PORT", "8000")
+        ),
+    )
     ap.add_argument("--teams", type=int, default=12)
-    ap.add_argument("--live", action="store_true", help="rebump les scores en boucle (Ctrl-C pour arrêter)")
-    ap.add_argument("--interval", type=float, default=6.0, help="secondes entre deux rebumps (--live)")
-    ap.add_argument("--countdown", type=int, default=0, help="règle start = maintenant + N secondes (teste le départ)")
+    ap.add_argument(
+        "--live",
+        action="store_true",
+        help="rebump les scores en boucle (Ctrl-C pour arrêter)",
+    )
+    ap.add_argument(
+        "--interval",
+        type=float,
+        default=6.0,
+        help="secondes entre deux rebumps (--live)",
+    )
+    ap.add_argument(
+        "--countdown",
+        type=int,
+        default=0,
+        help="règle start = maintenant + N secondes (teste le départ)",
+    )
     ap.add_argument("--clear", action="store_true")
     a = ap.parse_args()
     url = a.url.rstrip("/")
     s = admin(url)
 
     if a.clear:
-        clear(s, url); return
+        clear(s, url)
+        return
 
     if a.countdown:
         now = int(time.time())
-        s.patch(url + "/api/v1/configs", json={"start": str(now + a.countdown), "end": str(now + a.countdown + 3600)})
-        print(f"  départ dans {a.countdown}s, fin +1h (compte à rebours visible sur /scoreboard).")
+        s.patch(
+            url + "/api/v1/configs",
+            json={
+                "start": str(now + a.countdown),
+                "end": str(now + a.countdown + 3600),
+            },
+        )
+        print(
+            f"  départ dans {a.countdown}s, fin +1h (compte à rebours visible sur /scoreboard)."
+        )
 
     fleet = ensure_fleet(s, url, a.teams)
     print(f"  {len(fleet)} écuries prêtes.")

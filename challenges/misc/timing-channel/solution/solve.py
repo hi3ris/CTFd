@@ -52,13 +52,15 @@ def main(path):
     lo = [g for g in gaps if g < thr]
     hi = [g for g in gaps if g >= thr]
     print(f"[*] gaps            : {len(gaps)}")
-    print(f"[*] inferred split  : {thr*1000:.1f} ms "
-          f"(short~{sum(lo)/len(lo)*1000:.0f}ms x{len(lo)}, "
-          f"long~{sum(hi)/len(hi)*1000:.0f}ms x{len(hi)})")
+    print(
+        f"[*] inferred split  : {thr*1000:.1f} ms "
+        f"(short~{sum(lo)/len(lo)*1000:.0f}ms x{len(lo)}, "
+        f"long~{sum(hi)/len(hi)*1000:.0f}ms x{len(hi)})"
+    )
 
     bitstr = "".join("1" if g >= thr else "0" for g in gaps)
     n = len(bitstr) // 8
-    out = bytes(int(bitstr[i * 8:i * 8 + 8], 2) for i in range(n))
+    out = bytes(int(bitstr[i * 8 : i * 8 + 8], 2) for i in range(n))
     text = out.decode(errors="replace")
     print("[*] decoded (MSB-first, 8 bits/char):")
     print("   ", text)
@@ -69,7 +71,9 @@ def main(path):
         # Fallback: if bit polarity were reversed, try the complement.
         alt = "".join("0" if c == "1" else "1" for c in bitstr)
         m = len(alt) // 8
-        alt_txt = bytes(int(alt[i*8:i*8+8], 2) for i in range(m)).decode(errors="replace")
+        alt_txt = bytes(int(alt[i * 8 : i * 8 + 8], 2) for i in range(m)).decode(
+            errors="replace"
+        )
         print("[?] complement    :", alt_txt)
 
 

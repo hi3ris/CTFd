@@ -75,10 +75,12 @@ def main():
     def make_packet(ts: float, n: int):
         # Boring, information-free payload: fixed banner + monotonic counter.
         payload = BANNER + b" seq=%d\n" % n
-        pkt = (Ether(src=SRC_MAC, dst=DST_MAC) /
-               IP(src=SRC_IP, dst=DST_IP) /
-               UDP(sport=SRC_PORT, dport=DST_PORT) /
-               Raw(load=payload))
+        pkt = (
+            Ether(src=SRC_MAC, dst=DST_MAC)
+            / IP(src=SRC_IP, dst=DST_IP)
+            / UDP(sport=SRC_PORT, dport=DST_PORT)
+            / Raw(load=payload)
+        )
         pkt.time = ts
         return pkt
 
@@ -98,7 +100,9 @@ def main():
     print("[*] flag encoded          :", FLAG)
     print("[*] bits (gaps)           :", len(bits))
     print("[*] datagrams written     :", len(packets))
-    print("[*] capture.pcap duration :", round(packets[-1].time - packets[0].time, 3), "s")
+    print(
+        "[*] capture.pcap duration :", round(packets[-1].time - packets[0].time, 3), "s"
+    )
 
 
 if __name__ == "__main__":

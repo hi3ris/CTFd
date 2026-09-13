@@ -14,7 +14,9 @@ import sys
 def editions(bucket: str) -> list[str]:
     out = subprocess.run(
         ["aws", "s3", "ls", f"s3://{bucket}/site/"],
-        capture_output=True, text=True, check=True,
+        capture_output=True,
+        text=True,
+        check=True,
     ).stdout
     names = []
     for line in out.splitlines():
@@ -26,10 +28,13 @@ def editions(bucket: str) -> list[str]:
 
 def main(bucket: str) -> None:
     names = editions(bucket)
-    items = "\n".join(
-        f'    <li><a href="{html.escape(n)}/">{html.escape(n)}</a></li>'
-        for n in names
-    ) or "    <li>Aucune edition archivee.</li>"
+    items = (
+        "\n".join(
+            f'    <li><a href="{html.escape(n)}/">{html.escape(n)}</a></li>'
+            for n in names
+        )
+        or "    <li>Aucune edition archivee.</li>"
+    )
 
     page = f"""<!doctype html>
 <html lang="fr">

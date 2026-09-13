@@ -109,7 +109,7 @@ def decode(blob):
             raise GatePktError("record length must equal ncols")
         if off + rlen > len(blob):
             raise GatePktError("truncated record")
-        rows.append(list(blob[off:off + rlen]))
+        rows.append(list(blob[off : off + rlen]))
         off += rlen
     if off != len(blob):
         raise GatePktError("trailing bytes after body")

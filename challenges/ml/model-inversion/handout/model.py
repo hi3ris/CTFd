@@ -16,10 +16,10 @@ import os
 import numpy as np
 
 # ---- fixed, team-common architecture constants -----------------------------
-D = 24            # length of the sealed record (attribute bytes, 0..255)
-DEMB = 40         # embedding dimension
-S = 255.0         # attribute scale
-C0 = -1.5         # fixed bias on the SEALED logit (team-common)
+D = 24  # length of the sealed record (attribute bytes, 0..255)
+DEMB = 40  # embedding dimension
+S = 255.0  # attribute scale
+C0 = -1.5  # fixed bias on the SEALED logit (team-common)
 
 CLASSES = ["OTHER", "SEALED"]
 SEALED = 1
@@ -36,7 +36,7 @@ class Vault:
             weights_path = os.path.join(_HERE, "weights.npz")
         with np.load(weights_path) as z:
             self.E = z["E"].astype(np.float64)
-        self.M = self.E.T @ self.E            # (D, D) symmetric positive definite
+        self.M = self.E.T @ self.E  # (D, D) symmetric positive definite
 
     def score(self, probe, record) -> float:
         """SEALED logit s(p) = (p/S)^T M (r/S) + C0."""
@@ -47,7 +47,7 @@ class Vault:
     def confidence(self, probe, record) -> dict:
         """Two-class softmax {OTHER: logit 0, SEALED: s(p)} -> probabilities."""
         s = self.score(probe, record)
-        z = np.array([0.0, s], dtype=np.float64)     # [OTHER, SEALED]
+        z = np.array([0.0, s], dtype=np.float64)  # [OTHER, SEALED]
         z = z - z.max()
         e = np.exp(z)
         prob = e / e.sum()

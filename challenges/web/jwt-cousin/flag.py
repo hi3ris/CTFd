@@ -37,7 +37,9 @@ def flag(team_secret: str) -> str:
     Reproduces the historical value from a team secret. Only used off-arena:
     in production the flag comes from FLAG / CHALLENGE_SECRET (see get_flag).
     """
-    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 

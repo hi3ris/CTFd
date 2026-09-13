@@ -8,14 +8,14 @@ live instance's `/submit`.
 
 ## Files
 
-| file | what |
-|---|---|
-| `weights.npz` | model weights: `Wc1,bc1,Wc2,bc2,Wf,bf` |
-| `gatemodel.py` | the **exact** model: `GateModel.logits`, `.predict`, and `logits_and_input_grad(img, target)` returning `d(logit_target)/d(pixel)`. Pure NumPy — the same code the server runs, so a white-box attack transfers with no framework mismatch. No autograd needed. |
-| `denied_badge.npy` | the `DENIED` badge as a decoded 32x32 uint8 array |
-| `denied_badge.gatepkt` | the same badge in the QGP1 container |
-| `samples/badge_*.gatepkt` | six more badges in QGP1 |
-| `samples/badge_00.npy`, `badge_01.npy` | two of them decoded, so you can check your codec against ground truth |
+| file                                   | what                                                                                                                                                                                                                                                            |
+| -------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `weights.npz`                          | model weights: `Wc1,bc1,Wc2,bc2,Wf,bf`                                                                                                                                                                                                                          |
+| `gatemodel.py`                         | the **exact** model: `GateModel.logits`, `.predict`, and `logits_and_input_grad(img, target)` returning `d(logit_target)/d(pixel)`. Pure NumPy — the same code the server runs, so a white-box attack transfers with no framework mismatch. No autograd needed. |
+| `denied_badge.npy`                     | the `DENIED` badge as a decoded 32x32 uint8 array                                                                                                                                                                                                               |
+| `denied_badge.gatepkt`                 | the same badge in the QGP1 container                                                                                                                                                                                                                            |
+| `samples/badge_*.gatepkt`              | six more badges in QGP1                                                                                                                                                                                                                                         |
+| `samples/badge_00.npy`, `badge_01.npy` | two of them decoded, so you can check your codec against ground truth                                                                                                                                                                                           |
 
 The model:
 

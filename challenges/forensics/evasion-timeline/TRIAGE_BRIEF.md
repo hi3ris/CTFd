@@ -7,7 +7,7 @@ line, exported from the endpoint's event channel.
 
 ## Background
 
-The SOC opened this ticket after the EDR *quarantine* action failed to fire on
+The SOC opened this ticket after the EDR _quarantine_ action failed to fire on
 this host during an alert storm, yet a follow-up threat hunt found a stray
 autorun and an outbound connection to a low-reputation address. The analyst who
 triaged it wrote:
@@ -27,11 +27,11 @@ true, pull the indicator it is hiding, and report it.
 
 ## Field reference (Sysmon)
 
-* `EventID` 1 = Process create, 5 = Process terminate, 3 = Network connect,
+- `EventID` 1 = Process create, 5 = Process terminate, 3 = Network connect,
   7 = Image load, 11 = File create, 13 = Registry set, 22 = DNS query.
-* Process-create events carry `ProcessGuid`/`ProcessId` and the
+- Process-create events carry `ProcessGuid`/`ProcessId` and the
   `ParentProcessGuid`/`ParentProcessId`/`ParentImage` they were launched with.
-* `UtcTime` is the event time; process-terminate events share the terminated
+- `UtcTime` is the event time; process-terminate events share the terminated
   process's `ProcessGuid`.
 
 ## Deliverable

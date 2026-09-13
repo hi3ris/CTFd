@@ -8,7 +8,7 @@
 fully-unrolled ~6164-instruction program. The program reads your input, runs it
 through 17 mixing rounds (add-carry, an invented S-box, a byte rotate, a
 per-position XOR), and compares the result to an embedded target `T[]`. The
-accepted input *is* the flag. To solve you must (a) recover the runtime opcode
+accepted input _is_ the flag. To solve you must (a) recover the runtime opcode
 remap, (b) work out the custom varint, (c) disassemble the program, (d)
 understand the round function, and (e) invert it. `solve.py` does all of this
 from the ELF and verifies against the binary.
@@ -41,11 +41,12 @@ Two twists you must nail before anything else:
 Fisher-Yates shuffle driven by a xorshift32 PRNG seeded with a constant
 (`OP_SEED = 0x1F3D5B79`). Every fetched program byte is routed through this
 table: `internal_op = opmap[raw_byte]`. So the `case` labels in the `switch` are
-the *internal* opcode numbers, but the bytes in the program are the *permuted*
+the _internal_ opcode numbers, but the bytes in the program are the _permuted_
 values. Reading the switch statically without applying the permutation gives you
 nonsense.
 
 Recover it two ways:
+
 - **Reimplement:** read the seed and the shuffle out of the init routine and
   rebuild the permutation (what `solve.py` does), or
 - **Trace:** set a breakpoint after `init` and dump the 256-byte table.
@@ -75,19 +76,19 @@ assume LEB128 your operands are wrong.
 
 80 opcodes; the ones the program actually uses:
 
-| op   | format        | effect                                             |
-|------|---------------|----------------------------------------------------|
-| MOVI | reg, imm      | reg = imm                                          |
-| IN   | reg           | reg = next input byte, or 0x100 at EOF             |
-| CMPI | reg, imm      | set compare operands (reg, imm)                    |
-| JZ/JNZ | addr        | branch to ABSOLUTE program offset on ==/!=         |
-| ANDI/XORI | reg, imm | reg &= / ^= imm                                    |
-| ADD/MOV | reg, reg   | reg op= reg                                        |
-| LDB/STB | reg,[base+off] | byte load/store into data RAM                 |
-| SBOX | reg, reg      | reg = sbox[reg & 0xff]  (built-in bijection)        |
-| ROL8 | reg, imm      | rotate the low byte of reg left by (imm & 7)        |
-| OUT  | reg           | putchar                                            |
-| HALT | -             | stop                                               |
+| op        | format         | effect                                       |
+| --------- | -------------- | -------------------------------------------- |
+| MOVI      | reg, imm       | reg = imm                                    |
+| IN        | reg            | reg = next input byte, or 0x100 at EOF       |
+| CMPI      | reg, imm       | set compare operands (reg, imm)              |
+| JZ/JNZ    | addr           | branch to ABSOLUTE program offset on ==/!=   |
+| ANDI/XORI | reg, imm       | reg &= / ^= imm                              |
+| ADD/MOV   | reg, reg       | reg op= reg                                  |
+| LDB/STB   | reg,[base+off] | byte load/store into data RAM                |
+| SBOX      | reg, reg       | reg = sbox[reg & 0xff] (built-in bijection)  |
+| ROL8      | reg, imm       | rotate the low byte of reg left by (imm & 7) |
+| OUT       | reg            | putchar                                      |
+| HALT      | -              | stop                                         |
 
 Operand packing: register operands are nibbles (`dst = b>>4`, `src = b&0xf`);
 memory ops pack `dst`/`base` in the two nibbles then a varint offset; branch
@@ -124,10 +125,10 @@ MOVI r14, 0x100              ; r14 = input buffer base in data RAM
 So `L = 41` (count the `IN`s) and `R = 17` (count the `MOVI r6`s). The
 parameters are all sitting in the disassembly:
 
-- `IV_r`   = the `MOVI r6, imm` immediate at the top of each round,
-- `rot_r`  = the `ROL8 r1, imm` immediate (constant within a round),
+- `IV_r` = the `MOVI r6, imm` immediate at the top of each round,
+- `rot_r` = the `ROL8 r1, imm` immediate (constant within a round),
 - `c_{r,i}`= the `XORI r1, imm` immediates in order,
-- `T[i]`   = the `CMPI r1, imm` immediates in the compare loop.
+- `T[i]` = the `CMPI r1, imm` immediates in the compare loop.
 
 ## 4. The round function and its inverse
 
@@ -139,7 +140,7 @@ carry = out            # feedback uses the OUTPUT byte
 ```
 
 This is invertible left-to-right because the carry at position `i` is the
-*previous output*, which we know (it is this round's output array, i.e. the next
+_previous output_, which we know (it is this round's output array, i.e. the next
 round's input):
 
 ```
@@ -179,7 +180,7 @@ attempt if you check reachability before submitting.
 
 ## 7. Honest note on what an LLM does here
 
-An LLM is genuinely useful for the *mechanical* sub-tasks: recognising the
+An LLM is genuinely useful for the _mechanical_ sub-tasks: recognising the
 fetch/dispatch loop, reimplementing xorshift32 + Fisher-Yates once the seed is
 pointed out, spotting that the varint continuation bit is the LSB, and writing
 the inversion once the round function is stated. Where it struggles, and why this

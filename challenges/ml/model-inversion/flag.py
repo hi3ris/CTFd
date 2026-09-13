@@ -32,7 +32,9 @@ CHALLENGE_ID = "ml-model-inversion"
 
 
 def flag(team_secret: str) -> str:
-    dig = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    dig = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + dig[:24] + "}"
 
 

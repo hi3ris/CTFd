@@ -39,11 +39,11 @@ from model_backends import chat as model_chat, ModelError, BACKEND, OLLAMA_MODEL
 
 app = Flask(__name__)
 
-MAX_TURNS = 24          # user turns kept per session
-MAX_MSG_CHARS = 6000    # per user message
-MAX_TOOL_STEPS = 5      # tool-call rounds per agent per user turn
+MAX_TURNS = 24  # user turns kept per session
+MAX_MSG_CHARS = 6000  # per user message
+MAX_TOOL_STEPS = 5  # tool-call rounds per agent per user turn
 
-_sessions = {}          # sid -> {"history": [...], "exec": ToolExecutor}
+_sessions = {}  # sid -> {"history": [...], "exec": ToolExecutor}
 _lock = threading.Lock()
 
 # Light per-IP rate limit (protects the shared Ollama backend). Generous.
@@ -76,7 +76,7 @@ def _session(sid: str):
 def _trim(history):
     if len(history) <= MAX_TURNS * 4:
         return history
-    return history[-(MAX_TURNS * 4):]
+    return history[-(MAX_TURNS * 4) :]
 
 
 # ---------------------------------------------------------------------------
@@ -91,11 +91,13 @@ def _agent_loop(agent, system_prompt, base_messages, schemas, executor, events):
         messages = [{"role": "system", "content": system_prompt}] + history
         msg = model_chat(messages, schemas)
         tool_calls = msg.get("tool_calls") or []
-        history.append({
-            "role": "assistant",
-            "content": msg.get("content", "") or "",
-            **({"tool_calls": tool_calls} if tool_calls else {}),
-        })
+        history.append(
+            {
+                "role": "assistant",
+                "content": msg.get("content", "") or "",
+                **({"tool_calls": tool_calls} if tool_calls else {}),
+            }
+        )
         if not tool_calls:
             reply_text = msg.get("content", "") or ""
             break
@@ -104,11 +106,23 @@ def _agent_loop(agent, system_prompt, base_messages, schemas, executor, events):
             name = fn.get("name", "")
             args = fn.get("arguments", {})
             result, privileged = executor.call(agent, name, args)
-            events.append({"agent": agent, "tool": name,
-                           "arguments": args if isinstance(args, dict) else str(args),
-                           "result": result, "privileged": privileged})
-            history.append({"role": "tool", "tool_name": name, "name": name,
-                            "content": json.dumps(result)})
+            events.append(
+                {
+                    "agent": agent,
+                    "tool": name,
+                    "arguments": args if isinstance(args, dict) else str(args),
+                    "result": result,
+                    "privileged": privileged,
+                }
+            )
+            history.append(
+                {
+                    "role": "tool",
+                    "tool_name": name,
+                    "name": name,
+                    "content": json.dumps(result),
+                }
+            )
     else:
         reply_text = msg.get("content", "") or "(agent kept calling tools)"
     return reply_text, history
@@ -118,7 +132,7 @@ def _agent_loop(agent, system_prompt, base_messages, schemas, executor, events):
 # A full turn: RELAY responds to the player, then CUSTODIAN drains the queue.
 # ---------------------------------------------------------------------------
 def run_turn(sess, user_msg):
-    history = sess["history"]           # RELAY's conversation with the player
+    history = sess["history"]  # RELAY's conversation with the player
     executor = sess["exec"]
     history.append({"role": "user", "content": user_msg})
 
@@ -126,8 +140,13 @@ def run_turn(sess, user_msg):
 
     # 1. RELAY turn (player-facing).
     relay_reply, relay_hist = _agent_loop(
-        "relay", prompts.RELAY_SYSTEM_PROMPT, history,
-        toolmod.RELAY_TOOL_SCHEMAS, executor, events)
+        "relay",
+        prompts.RELAY_SYSTEM_PROMPT,
+        history,
+        toolmod.RELAY_TOOL_SCHEMAS,
+        executor,
+        events,
+    )
     sess["history"] = _trim(relay_hist)
 
     # 2. CUSTODIAN turn (back office): fresh context each time, handed the
@@ -135,8 +154,13 @@ def run_turn(sess, user_msg):
     #    conversation -- only the (poisonable) queue.
     queue_msg = [{"role": "user", "content": executor.render_work_queue()}]
     custodian_reply, _ = _agent_loop(
-        "custodian", prompts.CUSTODIAN_SYSTEM_PROMPT, queue_msg,
-        toolmod.CUSTODIAN_TOOL_SCHEMAS, executor, events)
+        "custodian",
+        prompts.CUSTODIAN_SYSTEM_PROMPT,
+        queue_msg,
+        toolmod.CUSTODIAN_TOOL_SCHEMAS,
+        executor,
+        events,
+    )
     # Worknotes handed to CUSTODIAN this turn are now drained: they will not be
     # re-fed next turn (prevents unlimited free re-rolls off one planted note).
     executor.mark_drained()
@@ -218,7 +242,11 @@ def health():
 
 @app.post("/chat")
 def chat():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip()
+    ip = (
+        request.headers.get("X-Forwarded-For", request.remote_addr or "?")
+        .split(",")[0]
+        .strip()
+    )
     if _rate_limited(ip):
         return jsonify(error="rate limited, slow down a little"), 429
 
@@ -236,7 +264,9 @@ def chat():
     except ModelError as e:
         return jsonify(error=str(e)), 502
 
-    return jsonify(reply=relay_reply, custodian=custodian_reply, tools=events, solved=solved)
+    return jsonify(
+        reply=relay_reply, custodian=custodian_reply, tools=events, solved=solved
+    )
 
 
 @app.post("/reset")

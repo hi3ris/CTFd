@@ -37,20 +37,23 @@ import struct
 import numpy as np
 
 # ---- parameters (the "secret" PHY) ----------------------------------------
-SR        = 48000       # sample rate (Hz)
-BAUD      = 96          # symbols per second  -> 500 samples/symbol
-F_MARK    = 1855.0      # tone for bit '1' (Hz)
-F_SPACE   = 3145.0      # tone for bit '0' (Hz)
-AMPL      = 0.6         # peak amplitude of the tone
-NOISE     = 0.006       # gaussian noise std-dev
-SYNC      = bytes([0x9E, 0x3A])
-PREAMBLE  = bytes([0xAA]) * 12
-LEAD_SIL  = 0.35        # seconds of near-silence before the burst
-TRAIL_SIL = 0.40        # seconds of near-silence after the burst
+SR = 48000  # sample rate (Hz)
+BAUD = 96  # symbols per second  -> 500 samples/symbol
+F_MARK = 1855.0  # tone for bit '1' (Hz)
+F_SPACE = 3145.0  # tone for bit '0' (Hz)
+AMPL = 0.6  # peak amplitude of the tone
+NOISE = 0.006  # gaussian noise std-dev
+SYNC = bytes([0x9E, 0x3A])
+PREAMBLE = bytes([0xAA]) * 12
+LEAD_SIL = 0.35  # seconds of near-silence before the burst
+TRAIL_SIL = 0.40  # seconds of near-silence after the burst
 
-FLAG    = "NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
-PAYLOAD = ("SIGINT downlink 0x2217 :: frame recovered :: flag=" + FLAG +
-           " :: end of transmission").encode("ascii")
+FLAG = "NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
+PAYLOAD = (
+    "SIGINT downlink 0x2217 :: frame recovered :: flag="
+    + FLAG
+    + " :: end of transmission"
+).encode("ascii")
 
 OUT_WAV = "transmission.wav"
 
@@ -108,11 +111,11 @@ def synth(bits) -> np.ndarray:
 # minimodem at the file with default settings will lock onto it. Refutable in
 # minutes: it uses exactly the standard parameters the primary link avoids and
 # carries no CRC-framed structure. ------------------------------------------
-DECOY_MARK  = 1200.0
+DECOY_MARK = 1200.0
 DECOY_SPACE = 2200.0
-DECOY_BAUD  = 1200
-DECOY_AMPL  = 0.045
-DECOY_TEXT  = "NCTF{b3ll202_1200_8n1_is_the_decoy}".encode("ascii")
+DECOY_BAUD = 1200
+DECOY_AMPL = 0.045
+DECOY_TEXT = "NCTF{b3ll202_1200_8n1_is_the_decoy}".encode("ascii")
 
 
 def synth_bell202_uart(data: bytes) -> np.ndarray:
@@ -128,13 +131,13 @@ def synth_bell202_uart(data: bytes) -> np.ndarray:
         chunks.append(np.sin(ph))
         phase = (ph[-1] + two_pi * f * dt) % two_pi
 
-    for _ in range(16):   # idle marks
+    for _ in range(16):  # idle marks
         emit(1)
     for byte in data:
-        emit(0)                       # start bit
-        for i in range(8):            # LSB-first
+        emit(0)  # start bit
+        for i in range(8):  # LSB-first
             emit((byte >> i) & 1)
-        emit(1)                       # stop bit
+        emit(1)  # stop bit
     for _ in range(16):
         emit(1)
     return np.concatenate(chunks) * DECOY_AMPL
@@ -169,8 +172,10 @@ def main():
 
     dur = len(sig) / SR
     print(f"wrote {OUT_WAV}: {len(sig)} samples, {dur:.2f}s @ {SR} Hz")
-    print(f"frame bytes = {len(frame)}  payload bytes = {len(PAYLOAD)}  "
-          f"crc8 = 0x{crc8(bytes([len(PAYLOAD)])+PAYLOAD):02X}")
+    print(
+        f"frame bytes = {len(frame)}  payload bytes = {len(PAYLOAD)}  "
+        f"crc8 = 0x{crc8(bytes([len(PAYLOAD)])+PAYLOAD):02X}"
+    )
     print(f"flag = {FLAG}")
 
 

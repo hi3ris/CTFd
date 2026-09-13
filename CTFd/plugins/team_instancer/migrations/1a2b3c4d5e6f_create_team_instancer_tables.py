@@ -50,7 +50,9 @@ def upgrade(op=None):
             sa.Column("created_at", sa.DateTime(), nullable=True),
             sa.Column("start_time", sa.DateTime(), nullable=True),
             sa.Column("renew_count", sa.Integer(), nullable=True),
-            sa.ForeignKeyConstraint(["challenge_id"], ["challenges.id"], ondelete="CASCADE"),
+            sa.ForeignKeyConstraint(
+                ["challenge_id"], ["challenges.id"], ondelete="CASCADE"
+            ),
             sa.PrimaryKeyConstraint("id"),
             sa.UniqueConstraint("account_id", "challenge_id", name="uq_team_challenge"),
         )
@@ -72,5 +74,5 @@ def downgrade(op=None):
     for t in ("frp_port", "team_instance", "team_instance_challenge"):
         try:
             op.drop_table(t)
-        except Exception:
+        except Exception:  # nosec B110 - best-effort drop of a possibly-absent table
             pass

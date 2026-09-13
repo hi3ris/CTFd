@@ -1,6 +1,6 @@
 import $ from "jquery";
 
-$.fn.serializeJSON = function(omit_nulls) {
+$.fn.serializeJSON = function (omit_nulls) {
   let params = {};
   let form = $(this);
   let values = form.serializeArray();
@@ -8,20 +8,20 @@ $.fn.serializeJSON = function(omit_nulls) {
   values = values.concat(
     form
       .find("input[type=checkbox]:checked")
-      .map(function() {
+      .map(function () {
         return { name: this.name, value: true };
       })
-      .get()
+      .get(),
   );
   values = values.concat(
     form
       .find("input[type=checkbox]:not(:checked)")
-      .map(function() {
+      .map(function () {
         return { name: this.name, value: false };
       })
-      .get()
+      .get(),
   );
-  values.map(x => {
+  values.map((x) => {
     if (omit_nulls) {
       if (x.value !== null && x.value !== "") {
         params[x.name] = x.value;
@@ -39,7 +39,7 @@ $.fn.serializeJSON = function(omit_nulls) {
 };
 
 //http://stackoverflow.com/a/2648463 - wizardry!
-String.prototype.format = String.prototype.f = function() {
+String.prototype.format = String.prototype.f = function () {
   let s = this,
     i = arguments.length;
 
@@ -50,7 +50,7 @@ String.prototype.format = String.prototype.f = function() {
 };
 
 //http://stackoverflow.com/a/7616484
-String.prototype.hashCode = function() {
+String.prototype.hashCode = function () {
   let hash = 0,
     i,
     chr,
@@ -89,7 +89,7 @@ export function WindowController() {
   this._pingTimeout = setTimeout(ping, 17000);
 }
 
-WindowController.prototype.destroy = function() {
+WindowController.prototype.destroy = function () {
   clearTimeout(this._pingTimeout);
   clearTimeout(this._checkTimeout);
 
@@ -99,7 +99,7 @@ WindowController.prototype.destroy = function() {
   this.broadcast("bye");
 };
 
-WindowController.prototype.handleEvent = function(event) {
+WindowController.prototype.handleEvent = function (event) {
   if (event.type === "unload") {
     this.destroy();
   } else if (event.key === "broadcast") {
@@ -115,11 +115,11 @@ WindowController.prototype.handleEvent = function(event) {
   }
 };
 
-WindowController.prototype.sendPing = function() {
+WindowController.prototype.sendPing = function () {
   this.broadcast("ping");
 };
 
-WindowController.prototype.hello = function(event) {
+WindowController.prototype.hello = function (event) {
   this.ping(event);
   if (event.id < this.id) {
     this.check();
@@ -128,16 +128,16 @@ WindowController.prototype.hello = function(event) {
   }
 };
 
-WindowController.prototype.ping = function(event) {
+WindowController.prototype.ping = function (event) {
   this.others[event.id] = +new Date();
 };
 
-WindowController.prototype.bye = function(event) {
+WindowController.prototype.bye = function (event) {
   delete this.others[event.id];
   this.check();
 };
 
-WindowController.prototype.check = function(_event) {
+WindowController.prototype.check = function (_event) {
   var now = +new Date(),
     takeMaster = true,
     id;
@@ -154,12 +154,12 @@ WindowController.prototype.check = function(_event) {
   }
 };
 
-WindowController.prototype.masterDidChange = function() {};
+WindowController.prototype.masterDidChange = function () {};
 
-WindowController.prototype.broadcast = function(type, data) {
+WindowController.prototype.broadcast = function (type, data) {
   var event = {
     id: this.id,
-    type: type
+    type: type,
   };
   for (var x in data) {
     event[x] = data[x];
@@ -194,15 +194,13 @@ export function colorHash(str) {
 }
 
 export function htmlEntities(string) {
-  return $("<div/>")
-    .text(string)
-    .html();
+  return $("<div/>").text(string).html();
 }
 
 export function cumulativeSum(arr) {
   let result = arr.concat();
   for (let i = 0; i < arr.length; i++) {
-    result[i] = arr.slice(0, i + 1).reduce(function(p, i) {
+    result[i] = arr.slice(0, i + 1).reduce(function (p, i) {
       return p + i;
     });
   }
@@ -260,21 +258,19 @@ export function copyToClipboard(event, selector) {
   // Show tooltip to user
   $(event.target).tooltip({
     title: "Copied!",
-    trigger: "manual"
+    trigger: "manual",
   });
   $(event.target).tooltip("show");
 
-  setTimeout(function() {
+  setTimeout(function () {
     $(event.target).tooltip("hide");
   }, 1500);
 }
 
 export function makeSortableTables() {
   $("th.sort-col").append(` <i class="fas fa-sort"></i>`);
-  $("th.sort-col").click(function() {
-    var table = $(this)
-      .parents("table")
-      .eq(0);
+  $("th.sort-col").click(function () {
+    var table = $(this).parents("table").eq(0);
     var rows = table
       .find("tr:gt(0)")
       .toArray()
@@ -288,7 +284,7 @@ export function makeSortableTables() {
     }
   });
   function comparer(index) {
-    return function(a, b) {
+    return function (a, b) {
       var valA = getCellValue(a, index),
         valB = getCellValue(b, index);
       return $.isNumeric(valA) && $.isNumeric(valB)
@@ -297,9 +293,6 @@ export function makeSortableTables() {
     };
   }
   function getCellValue(row, index) {
-    return $(row)
-      .children("td")
-      .eq(index)
-      .text();
+    return $(row).children("td").eq(index).text();
   }
 }

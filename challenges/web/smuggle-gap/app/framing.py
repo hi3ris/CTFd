@@ -116,16 +116,18 @@ def _read_chunked(buf: bytes, start: int) -> Optional[int]:
         i = nl + 2
         if size == 0:
             # terminating chunk -> expect the closing CRLF right here
-            if buf[i:i + 2] == CRLF:
+            if buf[i : i + 2] == CRLF:
                 return i + 2
             return None
         i += size
-        if buf[i:i + 2] != CRLF:
+        if buf[i : i + 2] != CRLF:
             return None
         i += 2
 
 
-def app_split_requests(buf: bytes) -> Tuple[List[Tuple[str, str, Dict[str, str], bytes]], int]:
+def app_split_requests(
+    buf: bytes,
+) -> Tuple[List[Tuple[str, str, Dict[str, str], bytes]], int]:
     """Parse as many complete requests as `buf` contains, the way the APP does.
 
     THE DISCREPANCY: when a request carries `Transfer-Encoding: chunked` the app

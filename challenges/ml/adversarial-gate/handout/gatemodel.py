@@ -53,7 +53,7 @@ def _im2col(x, kh, kw, pad):
     cols = np.empty((Cin, kh, kw, Ho, Wo), dtype=x.dtype)
     for i in range(kh):
         for j in range(kw):
-            cols[:, i, j, :, :] = xp[:, i:i + Ho, j:j + Wo]
+            cols[:, i, j, :, :] = xp[:, i : i + Ho, j : j + Wo]
     return cols.reshape(Cin * kh * kw, Ho * Wo), (Ho, Wo)
 
 
@@ -64,7 +64,7 @@ def _col2im(dcols, x_shape, kh, kw, pad):
     dxp = np.zeros((Cin, H + 2 * pad, W + 2 * pad), dtype=np.float64)
     for i in range(kh):
         for j in range(kw):
-            dxp[:, i:i + Ho, j:j + Wo] += dcols[:, i, j, :, :]
+            dxp[:, i : i + Ho, j : j + Wo] += dcols[:, i, j, :, :]
     if pad == 0:
         return dxp
     return dxp[:, pad:-pad, pad:-pad]
@@ -157,20 +157,28 @@ class GateModel:
         logits = self.Wf @ flat + self.bf
 
         # backward from logits[target]
-        dflat = self.Wf[target]                       # (1024,)
+        dflat = self.Wf[target]  # (1024,)
         dp2 = dflat.reshape(p2.shape)
         dr2 = _maxpool2_backward(dp2, idx2, r2.shape)
         da2 = dr2 * (a2 > 0)
         # conv2 backward -> dp1
-        dp1 = _col2im((self.Wc2.reshape(self.Wc2.shape[0], -1).T
-                       @ da2.reshape(da2.shape[0], -1)),
-                      p1.shape, 3, 3, 1)
+        dp1 = _col2im(
+            (self.Wc2.reshape(self.Wc2.shape[0], -1).T @ da2.reshape(da2.shape[0], -1)),
+            p1.shape,
+            3,
+            3,
+            1,
+        )
         dr1 = _maxpool2_backward(dp1, idx1, r1.shape)
         da1 = dr1 * (a1 > 0)
         # conv1 backward -> dx  (input is single channel)
-        dx = _col2im((self.Wc1.reshape(self.Wc1.shape[0], -1).T
-                      @ da1.reshape(da1.shape[0], -1)),
-                     x.shape, 3, 3, 1)
+        dx = _col2im(
+            (self.Wc1.reshape(self.Wc1.shape[0], -1).T @ da1.reshape(da1.shape[0], -1)),
+            x.shape,
+            3,
+            3,
+            1,
+        )
         # through preprocess: d/d(uint8) = dx * (1/255)/0.5
         dpix = (dx / (255.0 * 0.5)).reshape(SIDE, SIDE)
         return logits, dpix

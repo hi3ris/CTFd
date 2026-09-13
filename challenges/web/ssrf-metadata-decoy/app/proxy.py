@@ -84,7 +84,9 @@ def fetch():
 
     parsed = urlparse(url)
     if parsed.scheme not in ("http", "https"):
-        return Response("only http/https are allowed", status=400, mimetype="text/plain")
+        return Response(
+            "only http/https are allowed", status=400, mimetype="text/plain"
+        )
 
     if _host_is_blocked(parsed.hostname or ""):
         return Response(
@@ -108,7 +110,9 @@ def fetch():
             ctype = upstream.headers.get("Content-Type", "application/octet-stream")
             return Response(body, status=upstream.status_code, mimetype=ctype)
     except requests.exceptions.RequestException as exc:
-        return Response(f"upstream fetch failed: {exc}", status=502, mimetype="text/plain")
+        return Response(
+            f"upstream fetch failed: {exc}", status=502, mimetype="text/plain"
+        )
 
 
 # Small convenience for local sanity checks only.

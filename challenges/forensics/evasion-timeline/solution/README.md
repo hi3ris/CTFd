@@ -19,17 +19,17 @@ lists the Sysmon field meanings; it deliberately does **not** name the technique
 
 An attacker created a malicious process with a **forged parent** (Windows
 `PROC_THREAD_ATTRIBUTE_PARENT_PROCESS` / `UpdateProcThreadAttribute`). Sysmon
-faithfully records the *spoofed* `ParentProcessId` / `ParentProcessGuid` it was
-handed, so the process tree *looks* clean — the malicious PowerShell appears to
+faithfully records the _spoofed_ `ParentProcessId` / `ParentProcessGuid` it was
+handed, so the process tree _looks_ clean — the malicious PowerShell appears to
 descend from a trusted `wermgr.exe` (PID **6284**), a normal Windows Error
 Reporting host.
 
 The lie is only visible on the **timeline**:
 
-| event | ProcessGuid | UtcTime |
-|---|---|---|
-| `wermgr.exe` **created** (PID 6284) | `{715573D9-...}` | 08:33:07 |
-| `wermgr.exe` **terminated** (EventID 5) | `{715573D9-...}` | 08:33:12 |
+| event                                                                    | ProcessGuid      | UtcTime  |
+| ------------------------------------------------------------------------ | ---------------- | -------- |
+| `wermgr.exe` **created** (PID 6284)                                      | `{715573D9-...}` | 08:33:07 |
+| `wermgr.exe` **terminated** (EventID 5)                                  | `{715573D9-...}` | 08:33:12 |
 | malicious `powershell.exe` created, **claiming parent `{715573D9-...}`** | `{30207CEC-...}` | 08:33:40 |
 
 The claimed parent had already **terminated 28 seconds earlier**. A dead process
@@ -88,18 +88,18 @@ reasoning, not by reading a hint.
 
 ## Why this resists a one-shot LLM answer
 
-* **Not a name/path signature.** The malicious image is a legitimate
+- **Not a name/path signature.** The malicious image is a legitimate
   `powershell.exe` under `System32`, its parent is a legitimate `wermgr.exe`, and
-  its encoded command looks like the several *benign* admin `-EncodedCommand`
+  its encoded command looks like the several _benign_ admin `-EncodedCommand`
   invocations elsewhere in the log. Pattern-matching "suspicious process" gets
   you nowhere.
-* **The tell is a relationship across two events at different times**, buried in
+- **The tell is a relationship across two events at different times**, buried in
   ~2,800 events — a Process-Terminate for a GUID, then a later Process-Create
   claiming that GUID as parent. You must build the create/terminate index and
   compare timestamps, not scan lines.
-* **Two flag-shaped strings.** A model that shortcuts to "decode all encoded
+- **Two flag-shaped strings.** A model that shortcuts to "decode all encoded
   PowerShell and grab the NCTF" will likely surface the decoy. Choosing
-  correctly *requires* the timeline correlation.
+  correctly _requires_ the timeline correlation.
 
 ## Reproducing the log
 

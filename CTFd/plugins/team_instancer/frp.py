@@ -35,14 +35,15 @@ def proxy_block(name, port):
 
 
 _PROXY_RE_TMPL = (
-    r"\n\[\[proxies\]\]\n"
-    r'name = "{name}"\n'
-    r"(?:(?!\n\[\[proxies\]\]).)*"
+    r"\n\[\[proxies\]\]\n" r'name = "{name}"\n' r"(?:(?!\n\[\[proxies\]\]).)*"
 )
 
 
 def has_proxy(config_text, name):
-    return re.search(_PROXY_RE_TMPL.format(name=re.escape(name)), config_text, re.S) is not None
+    return (
+        re.search(_PROXY_RE_TMPL.format(name=re.escape(name)), config_text, re.S)
+        is not None
+    )
 
 
 def add_proxy(config_text, name, port):
@@ -55,22 +56,24 @@ def add_proxy(config_text, name, port):
 
 def remove_proxy(config_text, name):
     """Strip the stanza whose name matches (idempotent: a no-op if absent)."""
-    return re.sub(
-        _PROXY_RE_TMPL.format(name=re.escape(name)), "", config_text, flags=re.S
-    ).rstrip("\n") + "\n"
+    return (
+        re.sub(
+            _PROXY_RE_TMPL.format(name=re.escape(name)), "", config_text, flags=re.S
+        ).rstrip("\n")
+        + "\n"
+    )
 
 
 # --- Port allocation -------------------------------------------------------
+
 
 def allocate_port(instance_id, account_id, challenge_id):
     """Claim a free port atomically. Uses SELECT ... FOR UPDATE SKIP LOCKED on
     MariaDB 10.6+; callers on older MariaDB should set SKIP_LOCKED=False (the
     serialization is acceptable at this scale)."""
     from .models import FrpPort, db
-    q = (
-        FrpPort.query.filter(FrpPort.instance_id.is_(None))
-        .order_by(FrpPort.port.asc())
-    )
+
+    q = FrpPort.query.filter(FrpPort.instance_id.is_(None)).order_by(FrpPort.port.asc())
     if settings.is_active():
         try:
             q = q.with_for_update(skip_locked=True)
@@ -89,6 +92,7 @@ def allocate_port(instance_id, account_id, challenge_id):
 def release_port(instance_id):
     """Free every port held by an instance (idempotent)."""
     from .models import FrpPort, db
+
     FrpPort.query.filter_by(instance_id=instance_id).update(
         {"instance_id": None, "account_id": None, "challenge_id": None}
     )
@@ -98,9 +102,13 @@ def release_port(instance_id):
 def ensure_port_pool():
     """Populate frp_port with the configured range if empty. Called from load()."""
     from .models import FrpPort, db
+
     if db.session.query(FrpPort.port).first() is not None:
         return
     db.session.bulk_save_objects(
-        [FrpPort(port=p) for p in range(settings.PORT_RANGE_START, settings.PORT_RANGE_END + 1)]
+        [
+            FrpPort(port=p)
+            for p in range(settings.PORT_RANGE_START, settings.PORT_RANGE_END + 1)
+        ]
     )
     db.session.commit()

@@ -30,7 +30,7 @@ tripped it. Probe it:
 
 - `os`, `posix`, `subprocess`, `sys`, `builtins`, `importlib` -> blocked.
 - `builtins.open` pickles as `io.open`; `io` is **not** blocked, but it returns a
-  *file object*, not the file's contents.
+  _file object_, not the file's contents.
 - one-shot readers that would hand you the contents in a single reduce
   (`linecache.getlines`, `gzip.open`+read, `pathlib.Path.read_text`, ...) are all
   blocked. That is the hint: the author blocked the single-call reads, so you
@@ -50,7 +50,7 @@ result = mc(f)                       # == f.read() == the flag text
 
 Every GLOBAL used (`operator.methodcaller`, `codecs.open`) is on an allowed
 module, so `find_class` is happy. The three `REDUCE`s run inside `pickle.load`
-before the guard can care what they *did*.
+before the guard can care what they _did_.
 
 ## The pickle
 
@@ -98,12 +98,12 @@ placeholder. It is not the flag; do not submit it. Ruling it out costs nothing.
 "Pickle `__reduce__` gives RCE" is textbook and an LLM will produce the naive
 `os.system` payload instantly -- which is **rejected** here. The challenge's
 friction is threefold and is where a one-prompt answer fails: (1) recognising
-from the rejection messages that it is a *denylist* and enumerating what survives
+from the rejection messages that it is a _denylist_ and enumerating what survives
 (specifically that the single-call file readers are blocked but `codecs`/`io`
-/`operator` are not); (2) knowing that pickle's `REDUCE` invokes *any* stack
+/`operator` are not); (2) knowing that pickle's `REDUCE` invokes _any_ stack
 object, so callables can be chained; and (3) hand-assembling a multi-`REDUCE`
 pickle at the opcode level, since `pickletools`/`pickle` will not emit this shape
 for you from ordinary objects. An LLM used as a reasoning assistant will get
 there with iteration -- probe, read errors, adjust -- but not in a single shot,
 and the server-side oracle (flag only exists in the instance, only returned if
-your object *is* it) means offline brute force is useless.
+your object _is_ it) means offline brute force is useless.

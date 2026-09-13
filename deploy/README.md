@@ -27,12 +27,12 @@ changent : rien ne justifie de laisser une machine allumee.
    +---------------------+        +-----------------------+
 ```
 
-| `phase` | Front | Arena | Noeud IA | Cout |
-|---|---|---|---|---|
-| `off` | — | — | — | **0 USD d'EC2** |
-| `setup` | `t4g.small` | — | — | ~0,02 USD/h |
-| `preselection` | `t4g.medium` | `c6a.4xlarge` | `g4dn.xlarge` | ~1,30 USD/h |
-| `final` | `t4g.small` | `c6a.2xlarge` | `g4dn.xlarge` | ~0,96 USD/h |
+| `phase`        | Front        | Arena         | Noeud IA      | Cout            |
+| -------------- | ------------ | ------------- | ------------- | --------------- |
+| `off`          | —            | —             | —             | **0 USD d'EC2** |
+| `setup`        | `t4g.small`  | —             | —             | ~0,02 USD/h     |
+| `preselection` | `t4g.medium` | `c6a.4xlarge` | `g4dn.xlarge` | ~1,30 USD/h     |
+| `final`        | `t4g.small`  | `c6a.2xlarge` | `g4dn.xlarge` | ~0,96 USD/h     |
 
 Hors evenement, aucune instance EC2 n'existe. Seul subsiste le bucket S3 des
 archives, pour environ 0,50 USD par mois.
@@ -45,7 +45,7 @@ entre les deux journees divise ces montants par deux.
 
 ## A faire des maintenant : le quota GPU
 
-Sur un compte AWS neuf, le quota *Running On-Demand G and VT instances* est
+Sur un compte AWS neuf, le quota _Running On-Demand G and VT instances_ est
 souvent a zero, et une `g4dn.xlarge` en consomme 4 vCPU. La demande
 d'augmentation prend plusieurs jours ouvres.
 
@@ -65,12 +65,12 @@ cp terraform/terraform.tfvars.example terraform/terraform.tfvars
 
 Renseigner dans `terraform.tfvars` :
 
-| Variable | Role |
-|---|---|
-| `ssh_public_key` | votre cle publique SSH |
-| `admin_cidrs` | **obligatoire**, l'IP publique de votre bureau ou VPN. Jamais `0.0.0.0/0` : c'est ce qui protege SSH |
-| `domain_name` | le domaine du CTF |
-| `route53_zone_id` | zone Route53, si vous voulez que le DNS soit automatique |
+| Variable          | Role                                                                                                 |
+| ----------------- | ---------------------------------------------------------------------------------------------------- |
+| `ssh_public_key`  | votre cle publique SSH                                                                               |
+| `admin_cidrs`     | **obligatoire**, l'IP publique de votre bureau ou VPN. Jamais `0.0.0.0/0` : c'est ce qui protege SSH |
+| `domain_name`     | le domaine du CTF                                                                                    |
+| `route53_zone_id` | zone Route53, si vous voulez que le DNS soit automatique                                             |
 
 ```bash
 make init

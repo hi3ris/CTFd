@@ -31,7 +31,7 @@ def b32_custom_decode(s: str, alphabet: str) -> bytes:
     idx = {c: i for i, c in enumerate(alphabet)}
     bits = "".join(f"{idx[c]:05b}" for c in s)
     n = len(bits) // 8
-    return bytes(int(bits[i * 8:i * 8 + 8], 2) for i in range(n))
+    return bytes(int(bits[i * 8 : i * 8 + 8], 2) for i in range(n))
 
 
 def main(path):

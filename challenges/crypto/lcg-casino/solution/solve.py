@@ -70,8 +70,8 @@ def recover(A, C, M, ranks, lowbits_candidates):
     for L in lowbits_candidates:
         r0, r1 = ranks[0], ranks[1]
         for low in range(1 << L):
-            x1 = (r0 << L) | low            # candidate full state at obs 0
-            x2 = (A * x1 + C) % M           # -> state at obs 1
+            x1 = (r0 << L) | low  # candidate full state at obs 0
+            x2 = (A * x1 + C) % M  # -> state at obs 1
             if (x2 >> L) != r1:
                 continue
             # verify against the remaining observed ranks
@@ -106,7 +106,7 @@ def main():
     while len(ranks) < N_OBS:
         prompt = c.readline()
         assert prompt["msg"] == "place_call"
-        c.send({"call": 0})                 # arbitrary; likely a miss
+        c.send({"call": 0})  # arbitrary; likely a miss
         rev = c.readline()
         assert rev["msg"] == "reveal"
         ranks.append(encode_rank(rev["shuffle"]))
@@ -126,7 +126,7 @@ def main():
             print(f"[+] FLAG: {prompt['flag']}")
             return
         assert prompt["msg"] == "place_call"
-        state = (A * state + C) % M         # next hand's state
+        state = (A * state + C) % M  # next hand's state
         call = decode_shuffle(state >> L)[0]  # predicted high card
         c.send({"call": call})
         rev = c.readline()
@@ -137,8 +137,10 @@ def main():
         if rev["result"] == "WIN":
             wins += 1
         else:
-            print(f"[!] miss at hand {rev['hand']} (call={call}, "
-                  f"high={rev['high_card']}) -- state desync, aborting")
+            print(
+                f"[!] miss at hand {rev['hand']} (call={call}, "
+                f"high={rev['high_card']}) -- state desync, aborting"
+            )
             sys.exit(1)
         print(f"[*] hand {rev['hand']}: WIN streak={rev['streak']}")
         # Some builds send the jackpot as a separate line after the winning

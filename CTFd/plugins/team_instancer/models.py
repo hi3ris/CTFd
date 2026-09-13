@@ -25,8 +25,8 @@ class TeamInstanceChallenge(Challenges):
     # initial / minimum / decay / function are inherited from the base
     # Challenges model (native since CTFd 3.8.1); do NOT redeclare them here.
     # Instancer columns.
-    docker_image = db.Column(db.String(160))   # e.g. "ctf-web-jwt-cousin:latest"
-    internal_port = db.Column(db.Integer)      # port the container listens on
+    docker_image = db.Column(db.String(160))  # e.g. "ctf-web-jwt-cousin:latest"
+    internal_port = db.Column(db.Integer)  # port the container listens on
 
     def __init__(self, *args, **kwargs):
         super().__init__(**kwargs)
@@ -38,7 +38,9 @@ class TeamInstanceChallenge(Challenges):
 class TeamInstance(db.Model):
     __tablename__ = "team_instance"
     id = db.Column(db.Integer, primary_key=True)
-    account_id = db.Column(db.Integer, index=True, nullable=False)  # team id in teams mode
+    account_id = db.Column(
+        db.Integer, index=True, nullable=False
+    )  # team id in teams mode
     challenge_id = db.Column(
         db.Integer, db.ForeignKey("challenges.id", ondelete="CASCADE"), nullable=False
     )
@@ -46,7 +48,9 @@ class TeamInstance(db.Model):
     port = db.Column(db.Integer)
     network_name = db.Column(db.String(128))
     proxy_name = db.Column(db.String(64))
-    status = db.Column(db.String(16), default="spawning")  # spawning|running|stopped|error
+    status = db.Column(
+        db.String(16), default="spawning"
+    )  # spawning|running|stopped|error
     # Python-side defaults (NOT server_default): SQLAlchemy populates them on
     # INSERT on every backend. A server_default is DDL-only and would be emitted
     # by create_all (SQLite dev) but not by the Alembic migration (MariaDB prod),
@@ -65,6 +69,8 @@ class TeamInstance(db.Model):
 class FrpPort(db.Model):
     __tablename__ = "frp_port"
     port = db.Column(db.Integer, primary_key=True)
-    instance_id = db.Column(db.Integer, db.ForeignKey("team_instance.id"), nullable=True)
+    instance_id = db.Column(
+        db.Integer, db.ForeignKey("team_instance.id"), nullable=True
+    )
     account_id = db.Column(db.Integer, nullable=True)
     challenge_id = db.Column(db.Integer, nullable=True)

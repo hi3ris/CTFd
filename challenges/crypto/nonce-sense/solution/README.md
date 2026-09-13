@@ -28,11 +28,11 @@ The device's RNG is broken so that **every nonce `k` has its most significant
 byte forced to zero**, i.e. `0 < k < 2²⁴⁸` on a 256-bit curve. You are not told
 this; you infer it. Two cheap ways to notice:
 
-- The challenge says the RNG is broken and hands you *many* signatures — the
+- The challenge says the RNG is broken and hands you _many_ signatures — the
   textbook setup for the Hidden Number Problem (HNP), which only bites when the
-  nonces are *small / partially known*.
+  nonces are _small / partially known_.
 - If you already know `d` for a test key you can confirm `k = a + t·d mod n`
-  lands below `2²⁴⁸` every time; here the structure is what you solve *for*.
+  lands below `2²⁴⁸` every time; here the structure is what you solve _for_.
 
 Knowing `k = a + t·d (mod n)` with `k` small is exactly HNP. With an 8-bit bias
 you need more than `256/8 = 32` signatures for the target to become the shortest
@@ -41,7 +41,7 @@ lattice vector; the capture gives 60 usable ones so there is comfortable margin.
 ## The decoy (refute it in a minute)
 
 Scan the `r` values: **two signatures share an identical `r`.** Identical `r` is
-the classic tell for a *reused nonce*, which would let you solve instantly from
+the classic tell for a _reused nonce_, which would let you solve instantly from
 just those two signatures:
 
 ```
@@ -51,7 +51,7 @@ k = (z1 - z2) / (s1 - s2) mod n ;  d = (s1·k - z1) / r mod n
 Do it and you get a `d'`. Check it against the public key: `d'·G ≠ Q`. **Refuted.**
 
 Why it fails: `r = x(k·G)`, and `x(k·G) = x((n−k)·G)`. So two signatures whose
-nonces are `k` and `n−k` produce the *same* `r` while using *different* nonces.
+nonces are `k` and `n−k` produce the _same_ `r` while using _different_ nonces.
 It is not a reused nonce, and those two nonces are full-range (top byte `0xff`
 for `n−k`), so they are **not** biased — they must be dropped, not exploited.
 The solver removes any `r` seen more than once and works on the remaining 60.
@@ -102,16 +102,16 @@ Expected output ends with:
 
 "Biased-nonce ECDSA → HNP → LLL" is a pattern a strong LLM recognises
 immediately, and it can usually emit a Sage/fpylll HNP solver. What this
-challenge makes the solver *earn*:
+challenge makes the solver _earn_:
 
 1. **Identify the bias magnitude from evidence.** The word is only "broken RNG".
-   The solver must determine it's a *high-bit* bias of exactly 8 bits (top byte
+   The solver must determine it's a _high-bit_ bias of exactly 8 bits (top byte
    zero) and size the lattice accordingly. An 8-bit bias is near the boundary:
    too few signatures and LLL returns garbage, so the model has to reason about
-   *how many* signatures / what `δ` are needed, not just paste a template.
+   _how many_ signatures / what `δ` are needed, not just paste a template.
 2. **Not fall for the decoy.** A one-shot "I see a repeated `r`, here's the
    nonce-reuse recovery" answer produces a wrong key. The correct move — repeated
-   `r` means `k` and `n−k`, i.e. *not* reuse, and those samples are non-biased and
+   `r` means `k` and `n−k`, i.e. _not_ reuse, and those samples are non-biased and
    must be excluded — requires actually checking the candidate against `Q`.
 3. **Ship a reduction that runs.** In an environment without fpylll/Sage the
    naive fraction-LLL an LLM tends to write is `O(n⁵)` and does not finish; a

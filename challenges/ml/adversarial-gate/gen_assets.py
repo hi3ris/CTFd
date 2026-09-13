@@ -29,7 +29,7 @@ sys.path.insert(0, os.path.join(os.path.dirname(__file__), "app"))
 import gatepkt  # noqa: E402
 from gatemodel import GateModel, SIDE, GRANTED, DENIED  # noqa: E402
 
-EPS = 8              # L-inf budget, in raw 0..255 integer levels
+EPS = 8  # L-inf budget, in raw 0..255 integer levels
 STAFF = 1
 CONV_SEED = 7
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -52,13 +52,20 @@ def make_badge(rng):
     up = np.kron(base, np.ones((4, 4)))
     up += rng.normal(0, 6, (SIDE, SIDE))
     up[6:9, 4:28] += 70
-    up[SIDE - 10:SIDE - 7, 4:28] += 55
+    up[SIDE - 10 : SIDE - 7, 4:28] += 55
     return np.clip(up, 0, 255).astype(np.uint8)
 
 
 def save_npz(convs, Wf, bf, path):
-    np.savez(path, Wc1=convs["Wc1"], bc1=convs["bc1"],
-             Wc2=convs["Wc2"], bc2=convs["bc2"], Wf=Wf, bf=bf)
+    np.savez(
+        path,
+        Wc1=convs["Wc1"],
+        bc1=convs["bc1"],
+        Wc2=convs["Wc2"],
+        bc2=convs["bc2"],
+        Wf=Wf,
+        bf=bf,
+    )
 
 
 def features_of(model, imgs):
@@ -72,7 +79,7 @@ def train_fc(F, labels, iters=6000, lr=0.4):
     bf = np.zeros(6)
     Y = np.array(labels)
     for _ in range(iters):
-        logits = F @ Wf.T + bf                       # (n,6)
+        logits = F @ Wf.T + bf  # (n,6)
         logits -= logits.max(axis=1, keepdims=True)
         p = np.exp(logits)
         p /= p.sum(axis=1, keepdims=True)
@@ -159,11 +166,15 @@ def main():
     if best is None:
         raise SystemExit("PGD failed to reach GRANTED -- unexpected")
     linf = int(np.max(np.abs(best.astype(int) - denied.astype(int))))
-    print(f"[+] conv_seed={CONV_SEED} anchors={len(anchor_imgs)} "
-          f"PGD margin={margin:.3f} Linf={linf} (<= {EPS})")
-    print(f"[+] fgsm-untargeted lands on class "
-          f"{m.predict(fgsm_untargeted_point(m, denied.astype(float), DENIED, EPS))} "
-          f"(GRANTED={GRANTED})")
+    print(
+        f"[+] conv_seed={CONV_SEED} anchors={len(anchor_imgs)} "
+        f"PGD margin={margin:.3f} Linf={linf} (<= {EPS})"
+    )
+    print(
+        f"[+] fgsm-untargeted lands on class "
+        f"{m.predict(fgsm_untargeted_point(m, denied.astype(float), DENIED, EPS))} "
+        f"(GRANTED={GRANTED})"
+    )
 
     # ---- write shipped assets ----
     save_npz(convs, Wf, bf, os.path.join(APP, "weights.npz"))
@@ -174,14 +185,22 @@ def main():
     np.save(os.path.join(HANDOUT, "denied_badge.npy"), denied)
     with open(os.path.join(HANDOUT, "denied_badge.gatepkt"), "wb") as fh:
         fh.write(gatepkt.encode(denied))
-    np.savez(os.path.join(HANDOUT, "weights.npz"),
-             Wc1=convs["Wc1"], bc1=convs["bc1"], Wc2=convs["Wc2"],
-             bc2=convs["bc2"], Wf=Wf, bf=bf)
+    np.savez(
+        os.path.join(HANDOUT, "weights.npz"),
+        Wc1=convs["Wc1"],
+        bc1=convs["bc1"],
+        Wc2=convs["Wc2"],
+        bc2=convs["bc2"],
+        Wf=Wf,
+        bf=bf,
+    )
 
     srng = np.random.default_rng(9000 + CONV_SEED)
     for i in range(6):
         b = make_badge(srng)
-        with open(os.path.join(HANDOUT, "samples", f"badge_{i:02d}.gatepkt"), "wb") as fh:
+        with open(
+            os.path.join(HANDOUT, "samples", f"badge_{i:02d}.gatepkt"), "wb"
+        ) as fh:
             fh.write(gatepkt.encode(b))
         if i < 2:
             np.save(os.path.join(HANDOUT, "samples", f"badge_{i:02d}.npy"), b)

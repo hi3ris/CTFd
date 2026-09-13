@@ -37,8 +37,9 @@ def parse_time(s: str) -> datetime:
 
 def decode_encoded_commands(cmdline: str):
     """Yield decoded strings for each -enc / -EncodedCommand base64 blob."""
-    for m in re.finditer(r"-(?:enc|encodedcommand)\s+([A-Za-z0-9+/=]{8,})",
-                         cmdline, re.IGNORECASE):
+    for m in re.finditer(
+        r"-(?:enc|encodedcommand)\s+([A-Za-z0-9+/=]{8,})", cmdline, re.IGNORECASE
+    ):
         blob = m.group(1)
         try:
             raw = base64.b64decode(blob)
@@ -49,8 +50,8 @@ def decode_encoded_commands(cmdline: str):
 
 
 def main(path):
-    creates = {}      # guid -> event
-    terminated = {}   # guid -> earliest terminate datetime
+    creates = {}  # guid -> event
+    terminated = {}  # guid -> earliest terminate datetime
     with open(path, encoding="utf-8") as f:
         for line in f:
             line = line.strip()
@@ -66,8 +67,10 @@ def main(path):
                 if g not in terminated or t < terminated[g]:
                     terminated[g] = t
 
-    print(f"[*] {len(creates)} process-create events, "
-          f"{len(terminated)} distinct terminations")
+    print(
+        f"[*] {len(creates)} process-create events, "
+        f"{len(terminated)} distinct terminations"
+    )
 
     anomalies = []
     for guid, child in creates.items():
@@ -93,14 +96,20 @@ def main(path):
     print("\n[+] Defense-evasion IOC (forged parent / PPID spoof):")
     print(f"      reason           : {reason}")
     print(f"      malicious Image  : {child['Image']}")
-    print(f"      malicious PID    : {child['ProcessId']}  "
-          f"guid {child['ProcessGuid']}")
+    print(
+        f"      malicious PID    : {child['ProcessId']}  "
+        f"guid {child['ProcessGuid']}"
+    )
     print(f"      created          : {child['UtcTime']}")
-    print(f"      claimed parent   : PID {child['ParentProcessId']} "
-          f"({child['ParentImage']}) guid {child['ParentProcessGuid']}")
+    print(
+        f"      claimed parent   : PID {child['ParentProcessId']} "
+        f"({child['ParentImage']}) guid {child['ParentProcessGuid']}"
+    )
     print(f"      parent created   : {parent['UtcTime']}")
-    print(f"      parent TERMINATED: {p_end}  "
-          f"({(c_time - p_end).total_seconds():.0f}s before the child)")
+    print(
+        f"      parent TERMINATED: {p_end}  "
+        f"({(c_time - p_end).total_seconds():.0f}s before the child)"
+    )
 
     flag = None
     for decoded in decode_encoded_commands(child["CommandLine"]):

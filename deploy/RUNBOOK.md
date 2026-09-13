@@ -68,7 +68,7 @@ Ces points, pas le code, peuvent faire rater le 23 octobre.
 - [ ] ⏱ **Quota GPU** : `make check-gpu-quota`. Si < 4 vCPU, **demander ≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Sans GPU → **toute la catégorie IA saute**.
 - [ ] ⏱ **Finale sur site ou distante** — deadline **18 septembre** (appro salle/switch/machines). Défaut si non tranché : portables perso sur VLAN contrôlé + téléphones en caisse.
 - [ ] **Domaine** acheté/réservé ; décider Route53 (DNS auto) ou manuel.
-- [ ] **Usage IA** : (A) mesurer la compétence *sans* assistance → IA autorisée en présélection, finale contrôlée [**recommandé**], ou (B) autorisée partout.
+- [ ] **Usage IA** : (A) mesurer la compétence _sans_ assistance → IA autorisée en présélection, finale contrôlée [**recommandé**], ou (B) autorisée partout.
 - [ ] **Juridique/RH** : notice de collecte (logs, prompts finale, conservation 30 j).
 
 ---
@@ -135,18 +135,16 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 - [ ] **Thème** : activer le thème custom **`hibris`** (aligné vitrine CERT.tg, drapeau Togo,
       glitch léger, sans marque CTFd ; pied de page « Organisé par CERT.tg » + « Powered by
       Hibris · ramses.dagban.tg »). Il est présent dans `CTFd/themes/hibris/`. L'activer une
-      fois, au choix :
-        - UI : *Admin → Config → Theme* → sélectionner `hibris` ;
-        - ou API : `curl -H "Authorization: Token <admin>" -H 'Content-Type: application/json' \`
-          `-X PATCH https://$CTF_DOMAIN/api/v1/configs -d '{"ctf_theme":"hibris"}'`.
+      fois, au choix : - UI : _Admin → Config → Theme_ → sélectionner `hibris` ; - ou API : `curl -H "Authorization: Token <admin>" -H 'Content-Type: application/json' \`
+      `-X PATCH https://$CTF_DOMAIN/api/v1/configs -d '{"ctf_theme":"hibris"}'`.
       CTFd 3.7 avertit sur les thèmes custom (SSTI via éditeur admin) : on l'installe par le
       système de fichiers (voie sûre), pas via l'éditeur. Vérifier le rendu (accueil, board,
       scoreboard, login, **pages d'erreur 404/403/429/500/502**) à la phase `setup` — cf. la
       note de compatibilité templates 3.7.7.
-- [ ] **Accueil « waou »** : l'accueil de CTFd est une *page CMS*, pas un template du thème —
+- [ ] **Accueil « waou »** : l'accueil de CTFd est une _page CMS_, pas un template du thème —
       par défaut elle trahit CTFd. Coller le bloc `deploy/theme-home-hero.html` dans
-      *Admin → Pages → page « / » (route vide/index) → éditeur → bouton `</>` (HTML)*, puis
-      *Save*. Bloc autonome (styles préfixés `.nctf-*`, mêmes couleurs/polices que le thème,
+      _Admin → Pages → page « / » (route vide/index) → éditeur → bouton `</>` (HTML)_, puis
+      _Save_. Bloc autonome (styles préfixés `.nctf-*`, mêmes couleurs/polices que le thème,
       titre `NCTF25` + glitch). Ajuster dates, chiffres et liens si besoin. Objectif : un
       participant ne doit pas deviner que c'est du CTFd.
 - [ ] **Règlement** publié AVANT l'ouverture des inscriptions (§6 garde-fous).
@@ -174,12 +172,12 @@ make check-arena            # images de challenge présentes
 
 Cadence pendant l'épreuve :
 
-| Quand | Commande | Attendu |
-|---|---|---|
-| toutes les ~30 min | `make backup` | dump **vérifié** (gzip -t + table users) envoyé sur S3 |
-| en continu (2ᵉ terminal) | `make logs` | pas d'erreur 5xx en rafale |
-| si piste IA active | `make gpu` | file Ollama non saturée en permanence |
-| au moindre doute | `make cost` | rappel de ce qui est facturé |
+| Quand                    | Commande      | Attendu                                                |
+| ------------------------ | ------------- | ------------------------------------------------------ |
+| toutes les ~30 min       | `make backup` | dump **vérifié** (gzip -t + table users) envoyé sur S3 |
+| en continu (2ᵉ terminal) | `make logs`   | pas d'erreur 5xx en rafale                             |
+| si piste IA active       | `make gpu`    | file Ollama non saturée en permanence                  |
+| au moindre doute         | `make cost`   | rappel de ce qui est facturé                           |
 
 - [ ] 🧑 24 au soir : `make season-down` (**sauvegarde vérifiée + archive S3 + destruction EC2**).
 - [ ] 🧑 **Ligne de coupe automatique** à la fermeture : inviter 14-16 équipes (marge + wildcards). Litiges d'intégrité traités **après** la finale.
@@ -191,35 +189,42 @@ Cadence pendant l'épreuve :
 Diagnostic d'abord : `make cost` (qu'est-ce qui tourne ?), `make logs`, `make ssh-*` puis `sudo cat /var/log/cloud-init-output.log`.
 
 **Front injoignable (HTTP KO)**
+
 1. `make ssh-front` → `cd /opt/ctfd/CTFd && docker compose ps`.
 2. Conteneur ctfd down → `docker compose up -d` ; logs → `docker compose logs ctfd`.
 3. cloud-init pas fini → attendre / `make wait-front`.
 4. Nginx/TLS cassé → revérifier `make tls-init` (DNS doit résoudre vers l'IP du front).
 
 **CTFd ne joint pas le Docker de l'arena** (instancier KO — **risque #1**)
+
 1. `make link` (réétablit le tunnel ssh dockerproxy + frpc).
 2. Échec du check → `make ssh-arena`, vérifier le démon Docker et l'overlay `--attachable`.
 3. Vérifier que `-p 127.0.0.1:P` fonctionne côté arena et que la plage frp (28000-28500) n'est pas épuisée (501 instances max).
 
 **Connexion joueur `front_ip:port` échoue**
+
 1. frpc admin joignable via le tunnel ? `PUT /api/config` + reload effectifs ?
 2. `allowPorts` frps couvre la plage ; le forward 7400 via dockerproxy est up.
 
 **Piste IA : 503 permanents / GPU saturé**
+
 1. `make gpu` : file pleine → c'est le comportement borné attendu sous pointe. Réduire les quotas d'admission (`AI_*` dans l'env de `ai-gateway`) sans rebuild.
 2. Ollama down → `make ssh-ai`, redémarrer le service ; vérifier le modèle téléchargé.
 3. Arène→front:8600 injoignable → vérifier la règle SG et l'injection `OLLAMA_URL`/`AI_PROXY_TOKEN`.
 
 **Disque plein (« no space left »)**
+
 - Les logs de tentatives IA sont en rotation bornée (pas la cause). Supprimer artefacts/anciens backups locaux ; sur l'arena, purger images/conteneurs morts. Les deletes réussissent même disque plein.
 
 **Corruption / perte de données** → **restaurer**
+
 ```
 make backup                                   # d'abord figer l'état courant
 make restore FILE=backups/<dump>.sql.gz       # restaure sur le front
 ```
 
 **Apply Terraform interrompu / à moitié raté**
+
 - Avec état distant : relancer simplement `make phase-<...>` (verrou DynamoDB + état S3 rendent l'apply reprenable). Si un verrou traîne (process tué) : `terraform -chdir=terraform force-unlock <LOCK_ID>` après avoir confirmé qu'aucun apply ne tourne.
 - Base branch/infra saine mais ressource bloquée : `terraform -chdir=terraform apply` seul re-converge.
 
@@ -264,15 +269,15 @@ make season-down            # si pas déjà détruit
 
 ## Annexe — carte des commandes
 
-| Commande | Rôle |
-|---|---|
-| `make init` / `make state-bootstrap` | init Terraform / état distant S3+DynamoDB |
-| `make check-gpu-quota` | quota GPU (à lancer **maintenant**) |
-| `make phase-setup / -preselection / -final / season-down` | leviers de coût |
-| `make wait-front / wait-arena` | attente provisionnement |
-| `make deploy / tls-init / link` | déploiement CTFd / HTTPS / liaison front↔arena↔IA |
-| `make check-arena / push-images` | images de challenge sur l'arena |
-| `make backup / restore FILE=... / archive` | sauvegarde vérifiée / restauration / archive S3 |
-| `make logs / gpu / cost` | supervision |
-| `make ssh-front / ssh-arena / ssh-ai` | shells |
-| `make destroy` | détruit l'EC2 (le bucket d'archives survit) |
+| Commande                                                  | Rôle                                                |
+| --------------------------------------------------------- | --------------------------------------------------- |
+| `make init` / `make state-bootstrap`                      | init Terraform / état distant S3+DynamoDB           |
+| `make check-gpu-quota`                                    | quota GPU (à lancer **maintenant**)                 |
+| `make phase-setup / -preselection / -final / season-down` | leviers de coût                                     |
+| `make wait-front / wait-arena`                            | attente provisionnement                             |
+| `make deploy / tls-init / link`                           | déploiement CTFd / HTTPS / liaison front↔arena↔IA |
+| `make check-arena / push-images`                          | images de challenge sur l'arena                     |
+| `make backup / restore FILE=... / archive`                | sauvegarde vérifiée / restauration / archive S3     |
+| `make logs / gpu / cost`                                  | supervision                                         |
+| `make ssh-front / ssh-arena / ssh-ai`                     | shells                                              |
+| `make destroy`                                            | détruit l'EC2 (le bucket d'archives survit)         |

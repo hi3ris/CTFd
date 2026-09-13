@@ -19,16 +19,16 @@ Document de suivi vivant. On coche les cases au fur et à mesure.
 Ce sont elles qui peuvent faire rater le 23 octobre, pas le code.
 
 - [!] **Demander le quota GPU AWS maintenant.** Compte neuf = quota « Running On-Demand
-      G and VT instances » souvent à 0 ; une `g4dn.xlarge` en consomme 4 vCPU. Délai de
-      traitement : plusieurs jours ouvrés. Lancer `cd deploy && make check-gpu-quota` ;
-      si < 4, demander ≥ 8 immédiatement. **Sans GPU, toute la catégorie IA saute.**
+  G and VT instances » souvent à 0 ; une `g4dn.xlarge` en consomme 4 vCPU. Délai de
+  traitement : plusieurs jours ouvrés. Lancer `cd deploy && make check-gpu-quota` ;
+  si < 4, demander ≥ 8 immédiatement. **Sans GPU, toute la catégorie IA saute.**
 - [!] **Décider : finale sur site ou distante.** Deadline **18 septembre** (appro salle /
-      switch / machines a un délai). Défaut si non tranché : portables perso sur VLAN
-      contrôlé + téléphones en caisse (moins fort, sans achat).
+  switch / machines a un délai). Défaut si non tranché : portables perso sur VLAN
+  contrôlé + téléphones en caisse (moins fort, sans achat).
 - [ ] **Trancher (A) ou (B)** sur l'usage de l'IA (cf. §2 du doc garde-fous) :
-      (A) mesurer la compétence *sans assistance* → IA autorisée en présélection, finale
-      contrôlée. (B) mesurer la compétence *avec* IA → autorisée partout. **Recommandé : A.**
-- [ ] **Confirmer : présélection par équipe.** ✅ *Confirmé le 10/09.* Impact déjà intégré
+      (A) mesurer la compétence _sans assistance_ → IA autorisée en présélection, finale
+      contrôlée. (B) mesurer la compétence _avec_ IA → autorisée partout. **Recommandé : A.**
+- [ ] **Confirmer : présélection par équipe.** ✅ _Confirmé le 10/09._ Impact déjà intégré
       (mode équipes CTFd, flags par `team_id`).
 - [ ] **Trancher : piste IA en présélection ou réservée à la finale.** Un GPU sert ~1-2
       req/s utiles ; à 300 joueurs la piste ne tient qu'avec quota bas + file stricte.
@@ -59,6 +59,7 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 - [x] Audit adverse (5 dimensions, 15 agents) → 6 blockers/majeurs confirmés et corrigés
 
 ### Reliquat Lot 1 (à traiter avant mise en prod, non bloquant maintenant)
+
 - [x] 🤖 **Nouvel audit infra vérifié** (8 dimensions, 20 agents, chaque finding re-vérifié
       en contradictoire) sur l'état COURANT du `deploy/` — remplace les 45 findings périmés.
       Résultat : `deploy/infra-audit.md`. **9 confirmés corrigés** dont **1 BLOCKER** (garde
@@ -67,8 +68,7 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       sur argv sudo) **différé** à la répétition Lot 5 (correctif dans une recette critique non
       testable hors infra live), documenté.
 - [x] 🤖 **Backend d'état distant S3 + verrou DynamoDB** écrit (opt-in) : `terraform/bootstrap/`
-      crée le bucket versionné/chiffré + la table de verrou (état local, une fois) ; `backend.tf.example`
-      + `backend.hcl.example` + `make state-bootstrap` + `make init` auto-détecte l'état distant.
+      crée le bucket versionné/chiffré + la table de verrou (état local, une fois) ; `backend.tf.example` + `backend.hcl.example` + `make state-bootstrap` + `make init` auto-détecte l'état distant.
       Un apply interrompu devient reprenable et les applies concurrents sont verrouillés.
       (`terraform validate` non exécuté : binaire absent de la session — vérif par inspection.)
 - [ ] 🧑 Décider Savings Plan / taille du front après le test de charge (Lot 5).
@@ -79,7 +79,6 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 - [x] `deploy/anti-llm-guardrails.md` : doc de décision (55 mesures → red team → synthèse)
 - [x] Principe présélection 0 % / finale décide ; liste de ce qu'on **ne** construit **pas**
-
 
 ---
 
@@ -140,10 +139,10 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       provisionne déjà le nœud GPU (`ai = g4dn.xlarge`, `ai_enabled = true`) et la gateway
       d'admission sur le front, donc les challenges IA sont jouables dès la présélection.
 - [~] 🧑🤖 **Playtest adverse** : pré-passe STATIQUE faite (52 agents, chaque verdict vérifié
-      en contradictoire) → `deploy/challenge-audit.md`. Règle stricte < 15 min : 22/26 jugés
-      LLM-trivial. **À arbitrer par l'organisateur** (présélection filtre / finale décide ;
-      l'anti-LLM est le risque le plus faible par doctrine). Le **vrai playtest live** (2 modèles
-      frontier + 1 harness agentique sur le front `setup`) reste 🧑 obligatoire avant la présél.
+  en contradictoire) → `deploy/challenge-audit.md`. Règle stricte < 15 min : 22/26 jugés
+  LLM-trivial. **À arbitrer par l'organisateur** (présélection filtre / finale décide ;
+  l'anti-LLM est le risque le plus faible par doctrine). Le **vrai playtest live** (2 modèles
+  frontier + 1 harness agentique sur le front `setup`) reste 🧑 obligatoire avant la présél.
 - [x] 🤖 **2 défauts techniques trouvés + traités** : `heap-note` **BLOCKER** (binaire livré
       exige GLIBC_2.34 vs libc 2.31 épinglée → injouable ; **garde de build** ajouté au Dockerfile,
       **rebuild sur Ubuntu 20.04 requis** 🧑) ; `strings-lie` solveur officiel cassé (FLEN codé en
@@ -183,34 +182,39 @@ casse chez nous sur 5 points (clé sur `user_id`, flag en boucle fermée conflic
 les patrons, on importe `team_hmac_flag.team_secret_for()` pour ne jamais redériver le secret.
 
 ### 2.1 Squelette plugin & type de challenge
+
 - [x] 🤖 Type `team_instance` (hérite du scoring dynamique + `docker_image`/`internal_port`),
       enregistré dans `CHALLENGE_CLASSES`, assets create/update/view. Charge même si inactif.
 - [x] 🤖 Les 15 challenges servis convertis `type: dynamic → team_instance` (+ `extra`), flag `team_hmac`.
 
 ### 2.2 Modèle & migration
+
 - [x] 🤖 Tables `team_instance` (clé équipe, unicité `(account_id, challenge_id)`) + `frp_port`.
       Révision Alembic ; `create_all` sur SQLite dev.
 - [ ] 🧑🤖 Exécuter réellement la migration sur **MariaDB** prod (vérifier `SKIP LOCKED` / version).
 
 ### 2.3 Client Docker & création
+
 - [x] 🤖 `containers.run` sur `DOCKER_HOST` (image locale, pas de pull), env **`TEAM_SECRET` seul**,
       réseau overlay par équipe, limites mem/cpu/**pids**, labels.
 - [ ] ⚠🧑🤖 **Répétition** : que le socket tunnelé porte `containers.run` sur image locale ;
       que `-p 127.0.0.1:P` marche sur l'arena ; création overlay `--attachable`.
 
 ### 2.4 Câblage FRP
+
 - [x] 🤖 Allocation de port atomique (`FOR UPDATE SKIP LOCKED`), génération/parsing du bloc TOML
       (idempotent, testé en unitaire), reload frpc. **Voie B retenue** : forward du 7400 via
       `dockerproxy` (+ `allowPorts` durci sur frps). dockerproxy/compose/Makefile/.env câblés.
-- [ ] ⚠🧑🤖 **Répétition** : joignabilité réelle de frpc admin via le tunnel ; `PUT /api/config`
-      + reload effectifs ; connexion joueur `front_ip:port` de bout en bout. **Risque #1.**
+- [ ] ⚠🧑🤖 **Répétition** : joignabilité réelle de frpc admin via le tunnel ; `PUT /api/config` + reload effectifs ; connexion joueur `front_ip:port` de bout en bout. **Risque #1.**
 
 ### 2.5 Routes & admission
+
 - [x] 🤖 Blueprint spawn/renew/destroy/status, `@authed_only`+`during_ctf_time`, **garde de
       prérequis** (rejeu de `challenges.py`), caps (`MAX_PER_TEAM`, global, unicité), rate-limit.
 - [ ] 🧑 Tenue sous ~300 équipes concurrentes sur le canal ssh unique (test de charge Lot 5).
 
 ### 2.6 TTL, reaper, réconciliation
+
 - [x] 🤖 Reaper thread dépendance-zéro (verrou `fcntl`, un seul worker), teardown idempotent,
       réconciliation DB↔Docker, purge au reboot arena.
 - [ ] ⚠🧑🤖 **Répétition** : réconciliation contre l'état arena réel.
@@ -231,6 +235,7 @@ app IA sert sa console + un `/verify` déterministe). On **ne les reconstruit pa
 Lot 3 = **une passerelle d'admission Ollama** sur le front + petits correctifs.
 
 ### Correctifs (faits)
+
 - [x] 🤖 **Chaîne de prérequis câblée** (elle n'était qu'en commentaire) : ai0→ai1→ai2→ai3
       via `requirements` (noms nus) dans les YAML.
 - [x] 🤖 **Accessibilité** : les conteneurs IA (sur l'arène) ne pouvaient pas joindre Ollama
@@ -239,9 +244,9 @@ Lot 3 = **une passerelle d'admission Ollama** sur le front + petits correctifs.
       `category: ai` ; `make link` écrit `AI_PROXY_URL`. Ollama reste fermé à l'arène.
 
 ### Passerelle d'admission (faite, validation live au Lot 5)
+
 - [x] 🤖 Service front `ai-gateway` : `POST /api/chat` (vérif jeton signé → équipe/niveau),
-      concurrence globale + par-niveau + **par équipe**, budget tokens **réservé à l'admission**
-      + rate-limit par équipe (fenêtres glissantes), file bornée (deadline unique),
+      concurrence globale + par-niveau + **par équipe**, budget tokens **réservé à l'admission** + rate-limit par équipe (fenêtres glissantes), file bornée (deadline unique),
       **normalisation du 503**. Revue adverse (14 agents) → 9 défauts corrigés (1 blocker,
       1 majeur, 7 mineurs).
 - [x] 🤖 ai1/ai3 envoient `AI_PROXY_TOKEN` en en-tête ; ai2 est déterministe (0 GPU).

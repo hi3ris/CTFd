@@ -62,6 +62,6 @@ Output:
 
 ## Files
 
-* `../gen.py` — deterministic builder for the ledger + flag (not shipped).
-* `../handout/ledger.coinvault`, `../handout/SPEC.md` — the player handout.
-* `solve.py` — this reference solver (Python stdlib only, sub-second).
+- `../gen.py` — deterministic builder for the ledger + flag (not shipped).
+- `../handout/ledger.coinvault`, `../handout/SPEC.md` — the player handout.
+- `solve.py` — this reference solver (Python stdlib only, sub-second).

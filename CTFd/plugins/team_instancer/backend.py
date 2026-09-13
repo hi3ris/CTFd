@@ -21,7 +21,8 @@ from . import frp, settings
 # Serializes the frpc config read-modify-write so concurrent spawns/teardowns/
 # reaps across gunicorn workers cannot clobber each other's proxy stanzas
 # (GET /api/config -> mutate -> PUT overwrites the whole file).
-_FRPC_LOCK_PATH = "/tmp/ctfd_instancer_frpc.lock"
+# lock file path, not sensitive data
+_FRPC_LOCK_PATH = "/tmp/ctfd_instancer_frpc.lock"  # nosec B108
 
 # docker SDK is only needed when the instancer is active; import lazily so the
 # plugin loads even where the package is absent (e.g. a bare dev CTFd).
@@ -45,6 +46,7 @@ def _client():
 
 # --- frpc admin (HTTP through dockerproxy) ---------------------------------
 
+
 def _frpc_request(method, path, body=None):
     url = f"http://{settings.FRPC_ADMIN_ADDR}{path}"
     data = body.encode() if isinstance(body, str) else body
@@ -56,7 +58,8 @@ def _frpc_request(method, path, body=None):
         req.add_header("Authorization", f"Basic {token}")
     if data is not None:
         req.add_header("Content-Type", "text/plain")
-    with urllib.request.urlopen(req, timeout=15) as resp:
+    # fixed internal http:// frpc admin URL, not user-controlled
+    with urllib.request.urlopen(req, timeout=15) as resp:  # nosec B310
         return resp.read().decode()
 
 
@@ -95,6 +98,7 @@ def _frpc_remove(name):
 
 # --- Container lifecycle ---------------------------------------------------
 
+
 def container_name(account_id, challenge_id):
     return f"ti-{account_id}-{challenge_id}"
 
@@ -102,7 +106,7 @@ def container_name(account_id, challenge_id):
 def _remove_by_name(client, name):
     try:
         client.containers.get(name).remove(force=True)
-    except Exception:
+    except Exception:  # nosec B110 - best-effort cleanup of a possibly-absent container
         pass
 
 
@@ -115,8 +119,10 @@ def spawn_container(account_id, challenge, env, port):
     client = _client()
     net_name = f"ctfd_team_{account_id}"
     try:
-        client.networks.create(net_name, driver=settings.network_driver(), attachable=True)
-    except Exception:
+        client.networks.create(
+            net_name, driver=settings.network_driver(), attachable=True
+        )
+    except Exception:  # nosec B110 - network already exists, nothing to do
         pass  # already exists
 
     # A stale container with the deterministic name would make run() 409. Remove
@@ -137,7 +143,7 @@ def spawn_container(account_id, challenge, env, port):
 
     mem = getattr(challenge, "mem_limit", None) or settings.DEFAULT_MEM_LIMIT
     container = client.containers.run(
-        image=challenge.docker_image,          # local image, no registry pull
+        image=challenge.docker_image,  # local image, no registry pull
         detach=True,
         name=name,
         environment=dict(env),
@@ -163,7 +169,7 @@ def teardown(instance):
     if instance.proxy_name:
         try:
             _frpc_remove(instance.proxy_name)
-        except Exception:
+        except Exception:  # nosec B110 - idempotent teardown, proxy may be gone
             pass
     if settings.is_active() and docker is not None:
         try:
@@ -172,11 +178,13 @@ def teardown(instance):
                 try:
                     c = client.containers.get(instance.container_id)
                     c.remove(force=True)
-                except Exception:
+                except Exception:  # nosec B110 - idempotent teardown, container may be gone
                     pass
             # Also remove by deterministic name: covers a container that was
             # created but whose id never made it into the row (spawn failure).
-            _remove_by_name(client, container_name(instance.account_id, instance.challenge_id))
+            _remove_by_name(
+                client, container_name(instance.account_id, instance.challenge_id)
+            )
             if instance.network_name:
                 try:
                     net = client.networks.get(instance.network_name)
@@ -184,9 +192,9 @@ def teardown(instance):
                     net.reload()
                     if not net.containers:
                         net.remove()
-                except Exception:
+                except Exception:  # nosec B110 - idempotent teardown, network may be in use/gone
                     pass
-        except Exception:
+        except Exception:  # nosec B110 - teardown never raises on an already-gone piece
             pass
     frp.release_port(instance.id)
 
@@ -199,7 +207,6 @@ def list_live_container_ids():
     """Container ids currently labelled as ours, for reconciliation."""
     client = _client()
     return {
-        c.id for c in client.containers.list(
-            all=True, filters={"label": "ctfd.instancer=1"}
-        )
+        c.id
+        for c in client.containers.list(all=True, filters={"label": "ctfd.instancer=1"})
     }

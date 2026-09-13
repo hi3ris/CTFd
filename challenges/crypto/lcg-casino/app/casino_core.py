@@ -28,15 +28,15 @@ short inferences from the published sample transcript.
 import math
 
 # --- Public RNG parameters (published in the banner and SPEC.md) -----------
-M = 1 << 40                 # modulus 2**40
-A = 2654435761             # multiplier (A % 4 == 1)
-C = 3039632973             # increment  (C is odd)  -> full period 2**40
+M = 1 << 40  # modulus 2**40
+A = 2654435761  # multiplier (A % 4 == 1)
+C = 3039632973  # increment  (C is odd)  -> full period 2**40
 
 # --- Public deck / encoding ------------------------------------------------
-DECK_N = 11                # 11-card deck, labels 0..10
+DECK_N = 11  # 11-card deck, labels 0..10
 
 # --- Withheld from the spec (inferable from the sample transcript) ----------
-LOWBITS = 16               # hidden low bits; rank = state >> LOWBITS in [0, 2**24)
+LOWBITS = 16  # hidden low bits; rank = state >> LOWBITS in [0, 2**24)
 
 _FACT = [math.factorial(i) for i in range(DECK_N + 1)]
 

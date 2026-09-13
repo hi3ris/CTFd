@@ -16,10 +16,12 @@ import hashlib, sys
 CHALLENGE_ID = "crypto-nonce-sense"
 
 # The private key baked into the shipped capture.json (author record).
-D = 0x690ba66683c56d39767739a1d314a86adea774001ead3aaceb43fb0304a338cb
+D = 0x690BA66683C56D39767739A1D314A86ADEA774001EAD3AACEB43FB0304A338CB
+
 
 def flag_for_key(d: int) -> str:
     return "NCTF{" + hashlib.sha256(("%064x" % d).encode()).hexdigest()[:32] + "}"
+
 
 if __name__ == "__main__":
     d = int(sys.argv[1], 0) if len(sys.argv) > 1 else D

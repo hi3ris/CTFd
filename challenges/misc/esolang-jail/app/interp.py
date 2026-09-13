@@ -18,12 +18,12 @@ import os
 import sys
 
 # ------------------------------------------------------------------ limits ---
-MAX_LINE = 65536          # bytes per input line
-MAX_STEPS = 200000        # instruction words executed per line
-MAX_STACK = 8192          # stack depth
-MAX_STR = 1 << 20         # max string length produced on the stack
-MEM_SIZE = 256            # cells of integer memory (persistent per connection)
-MAX_READ = 1 << 20        # cap on bytes returned by a host file read
+MAX_LINE = 65536  # bytes per input line
+MAX_STEPS = 200000  # instruction words executed per line
+MAX_STACK = 8192  # stack depth
+MAX_STR = 1 << 20  # max string length produced on the stack
+MEM_SIZE = 256  # cells of integer memory (persistent per connection)
+MAX_READ = 1 << 20  # cap on bytes returned by a host file read
 
 
 class JailError(Exception):
@@ -34,7 +34,7 @@ class VM:
     def __init__(self):
         self.stack = []
         self.mem = [0] * MEM_SIZE
-        self.out = []          # output buffer for the current line
+        self.out = []  # output buffer for the current line
         self.steps = 0
 
     # --- stack helpers -----------------------------------------------------
@@ -75,40 +75,43 @@ def _sys_strlen(vm):  # 0
 
 
 def _sys_concat(vm):  # 1
-    b = vm.pop_str(); a = vm.pop_str()
+    b = vm.pop_str()
+    a = vm.pop_str()
     vm.push(a + b)
 
 
 def _sys_substr(vm):  # 2
-    n = vm.pop_int(); start = vm.pop_int(); s = vm.pop_str()
+    n = vm.pop_int()
+    start = vm.pop_int()
+    s = vm.pop_str()
     if start < 0 or n < 0:
         raise JailError("substr: negative bounds")
-    vm.push(s[start:start + n])
+    vm.push(s[start : start + n])
 
 
-def _sys_itoa(vm):    # 3
+def _sys_itoa(vm):  # 3
     vm.push(str(vm.pop_int()))
 
 
-def _sys_atoi(vm):    # 4
+def _sys_atoi(vm):  # 4
     s = vm.pop_str().strip()
     if not (s.lstrip("-").isdigit()):
         raise JailError("atoi: not an integer")
     vm.push(int(s))
 
 
-def _sys_upper(vm):   # 5
+def _sys_upper(vm):  # 5
     vm.push(vm.pop_str().upper())
 
 
-def _sys_ord(vm):     # 6
+def _sys_ord(vm):  # 6
     s = vm.pop_str()
     if len(s) != 1:
         raise JailError("ord: expected a single character")
     vm.push(ord(s))
 
 
-def _sys_chr(vm):     # 7
+def _sys_chr(vm):  # 7
     n = vm.pop_int()
     if not (0 <= n <= 0x10FFFF):
         raise JailError("chr: code point out of range")
@@ -135,15 +138,15 @@ def _native_read(vm):  # 9  (hidden)
 
 
 DISPATCH = [
-    _sys_strlen,   # 0
-    _sys_concat,   # 1
-    _sys_substr,   # 2
-    _sys_itoa,     # 3
-    _sys_atoi,     # 4
-    _sys_upper,    # 5
-    _sys_ord,      # 6
-    _sys_chr,      # 7
-    _native_env,   # 8  (hidden -- not part of the exposed range)
+    _sys_strlen,  # 0
+    _sys_concat,  # 1
+    _sys_substr,  # 2
+    _sys_itoa,  # 3
+    _sys_atoi,  # 4
+    _sys_upper,  # 5
+    _sys_ord,  # 6
+    _sys_chr,  # 7
+    _native_env,  # 8  (hidden -- not part of the exposed range)
     _native_read,  # 9  (hidden -- not part of the exposed range)
 ]
 
@@ -169,32 +172,46 @@ def op_pop(vm):
 
 
 def op_dup(vm):
-    v = vm.pop(); vm.push(v); vm.push(v)
+    v = vm.pop()
+    vm.push(v)
+    vm.push(v)
 
 
 def op_swap(vm):
-    b = vm.pop(); a = vm.pop(); vm.push(b); vm.push(a)
+    b = vm.pop()
+    a = vm.pop()
+    vm.push(b)
+    vm.push(a)
 
 
 def op_over(vm):
-    b = vm.pop(); a = vm.pop(); vm.push(a); vm.push(b); vm.push(a)
+    b = vm.pop()
+    a = vm.pop()
+    vm.push(a)
+    vm.push(b)
+    vm.push(a)
 
 
 def _bin_int(fn):
     def run(vm):
-        b = vm.pop_int(); a = vm.pop_int(); vm.push(fn(a, b))
+        b = vm.pop_int()
+        a = vm.pop_int()
+        vm.push(fn(a, b))
+
     return run
 
 
 def op_div(vm):
-    b = vm.pop_int(); a = vm.pop_int()
+    b = vm.pop_int()
+    a = vm.pop_int()
     if b == 0:
         raise JailError("division by zero")
     vm.push(a // b)
 
 
 def op_mod(vm):
-    b = vm.pop_int(); a = vm.pop_int()
+    b = vm.pop_int()
+    a = vm.pop_int()
     if b == 0:
         raise JailError("modulo by zero")
     vm.push(a % b)
@@ -216,7 +233,8 @@ def op_load(vm):
 
 
 def op_store(vm):
-    addr = vm.pop_int(); val = vm.pop_int()
+    addr = vm.pop_int()
+    val = vm.pop_int()
     if not (0 <= addr < MEM_SIZE):
         raise JailError(f"STORE: address {addr} out of range (0..{MEM_SIZE - 1})")
     vm.mem[addr] = val
@@ -276,11 +294,16 @@ def op_help(vm):
 
 
 OPS = {
-    "POP": op_pop, "DUP": op_dup, "SWAP": op_swap, "OVER": op_over,
+    "POP": op_pop,
+    "DUP": op_dup,
+    "SWAP": op_swap,
+    "OVER": op_over,
     "ADD": _bin_int(lambda a, b: a + b),
     "SUB": _bin_int(lambda a, b: a - b),
     "MUL": _bin_int(lambda a, b: a * b),
-    "DIV": op_div, "MOD": op_mod, "NEG": op_neg,
+    "DIV": op_div,
+    "MOD": op_mod,
+    "NEG": op_neg,
     "EQ": _bin_int(lambda a, b: 1 if a == b else 0),
     "NE": _bin_int(lambda a, b: 1 if a != b else 0),
     "LT": _bin_int(lambda a, b: 1 if a < b else 0),
@@ -288,10 +311,14 @@ OPS = {
     "AND": _bin_int(lambda a, b: 1 if (a and b) else 0),
     "OR": _bin_int(lambda a, b: 1 if (a or b) else 0),
     "NOT": op_not,
-    "LOAD": op_load, "STORE": op_store,
-    "PRINT": op_print, "EMIT": op_emit,
+    "LOAD": op_load,
+    "STORE": op_store,
+    "PRINT": op_print,
+    "EMIT": op_emit,
     "SYS": op_sys,
-    "STACK": op_stack, "RESET": op_reset, "HELP": op_help,
+    "STACK": op_stack,
+    "RESET": op_reset,
+    "HELP": op_help,
 }
 
 
@@ -308,9 +335,9 @@ def tokenize(line):
         if c.isspace():
             i += 1
             continue
-        if c == "#":                     # comment to end of line
+        if c == "#":  # comment to end of line
             break
-        if c == '"':                     # string literal
+        if c == '"':  # string literal
             i += 1
             buf = []
             while i < n and line[i] != '"':
@@ -324,7 +351,7 @@ def tokenize(line):
                 i += 1
             if i >= n:
                 raise JailError("unterminated string literal")
-            i += 1                       # consume closing quote
+            i += 1  # consume closing quote
             toks.append(("str", "".join(buf)))
             continue
         # bare token up to next whitespace
@@ -333,7 +360,7 @@ def tokenize(line):
             j += 1
         word = line[i:j]
         i = j
-        if word.isdigit():               # non-negative integer literal only
+        if word.isdigit():  # non-negative integer literal only
             toks.append(("int", int(word)))
         else:
             toks.append(("word", word.upper()))
@@ -371,7 +398,7 @@ def main():
     sys.stdout.flush()
     while True:
         line = sys.stdin.readline()
-        if not line:                     # EOF / disconnect
+        if not line:  # EOF / disconnect
             break
         line = line[:MAX_LINE].rstrip("\n").rstrip("\r")
         vm.steps = 0
@@ -383,7 +410,7 @@ def main():
                     sys.stdout.write("\n")
         except JailError as e:
             sys.stdout.write(f"error: {e}\n")
-        except Exception:                # never leak a host traceback
+        except Exception:  # never leak a host traceback
             sys.stdout.write("error: internal\n")
         sys.stdout.write("marble> ")
         sys.stdout.flush()

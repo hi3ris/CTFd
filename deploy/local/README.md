@@ -22,7 +22,7 @@ make local-playtest         # spawn -> solveur de reference -> soumission, pour 
 
 Puis ouvrez http://localhost:8000 : `admin` / `admin` pour l'administration,
 `playtest` / `playtest` pour jouer (deja dans une equipe). Naviguez comme un
-participant : accueil, board, un challenge servi (bouton *Demarrer l'instance*),
+participant : accueil, board, un challenge servi (bouton _Demarrer l'instance_),
 scoreboard, une 404.
 
 Avec l'IA (optionnel, CPU) :
@@ -35,13 +35,13 @@ make local-playtest ARGS="--ai --only ai/ai1-naive-guard"
 
 ## Ce que chaque etape prouve
 
-| Etape | Ce qui est verifie | Ce qui casserait sur AWS sinon |
-|---|---|---|
-| `local-up` | l'image CTFd se construit, les plugins chargent, migrations OK | `make deploy` en echec au premier `phase-setup` |
-| `local-build-images` | chaque Dockerfile de challenge construit | `make push-images` pousse une image manquante -> instance 500 |
-| `local-seed` | les 36 `challenge.yml` s'importent (types, flags `team_hmac`, fichiers, prerequis) | import a la main le jour J, erreurs silencieuses |
-| `local-smoke` | theme hibris rendu, aucune trace CTFd, tous les assets en 200, chaine IA verrouillee | participants voient du CTFd / du CSS casse |
-| `local-playtest` | l'instancier spawne, le solveur obtient le flag, la plateforme l'accepte (`team_hmac`) | un challenge insoluble decouvert par les joueurs |
+| Etape                | Ce qui est verifie                                                                     | Ce qui casserait sur AWS sinon                                |
+| -------------------- | -------------------------------------------------------------------------------------- | ------------------------------------------------------------- |
+| `local-up`           | l'image CTFd se construit, les plugins chargent, migrations OK                         | `make deploy` en echec au premier `phase-setup`               |
+| `local-build-images` | chaque Dockerfile de challenge construit                                               | `make push-images` pousse une image manquante -> instance 500 |
+| `local-seed`         | les 36 `challenge.yml` s'importent (types, flags `team_hmac`, fichiers, prerequis)     | import a la main le jour J, erreurs silencieuses              |
+| `local-smoke`        | theme hibris rendu, aucune trace CTFd, tous les assets en 200, chaine IA verrouillee   | participants voient du CTFd / du CSS casse                    |
+| `local-playtest`     | l'instancier spawne, le solveur obtient le flag, la plateforme l'accepte (`team_hmac`) | un challenge insoluble decouvert par les joueurs              |
 
 Le playtest donne un verdict par challenge : `PASS`, `FAIL`, `GATED`
 (prerequis IA ; `--unlock-chain` pour tester ai2/ai3 sans ai1), `STUB` (ai3 et
@@ -74,7 +74,7 @@ Oui, tout tourne sur Docker Desktop. Ce qu'il faut savoir :
 - **Mac Apple Silicon** : plusieurs challenges (pwn, reverse) embarquent des binaires
   x86-64. Construisez et lancez tout en amd64, une fois pour toutes :
   `export DOCKER_DEFAULT_PLATFORM=linux/amd64` avant `make local-*`. C'est emule
-  (Rosetta/QEMU), donc plus lent — activez *Use Rosetta for x86_64/amd64 emulation*
+  (Rosetta/QEMU), donc plus lent — activez _Use Rosetta for x86_64/amd64 emulation_
   dans les settings. Ollama en amd64 emule est tres lent : prenez `OLLAMA_MODEL=llama3.2:3b`
   ou testez l'IA sur une machine x86.
 - **Windows** : passez par **WSL2** (Ubuntu) avec l'integration Docker Desktop activee :

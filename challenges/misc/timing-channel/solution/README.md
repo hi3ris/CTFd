@@ -9,7 +9,7 @@ datagrams from an agent (`192.0.2.50`) to a collector (`198.51.100.10:9999`).
 Every datagram carries the same banner plus a monotonic `seq=` counter. The
 bytes are deliberately information-free — decoding, XOR-ing, or diffing the
 payloads leads nowhere, and the `seq=` counter is just `0,1,2,...`. The
-description says as much: *the secret isn't in what was said.*
+description says as much: _the secret isn't in what was said._
 
 The signal is **when** each datagram arrives.
 
@@ -18,8 +18,8 @@ The signal is **when** each datagram arrives.
 Look at the inter-arrival gaps between consecutive datagrams. They fall into
 two tight clusters with an empty valley between them (a bimodal distribution):
 
-* a **short** gap (~40 ms) = bit `0`
-* a **long** gap (~180 ms) = bit `1`
+- a **short** gap (~40 ms) = bit `0`
+- a **long** gap (~180 ms) = bit `1`
 
 You do not need to know the exact threshold: sort the gaps and cut at the widest
 empty band (~110 ms here). Reading the bits in capture order, MSB-first, 8 bits

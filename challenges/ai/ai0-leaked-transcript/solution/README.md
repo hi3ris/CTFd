@@ -18,19 +18,20 @@ field. The leaked system prompt lives at:
 
 ## Solve path
 
-1. Open `transcript.json` and read `metadata.runtime_config.system_prompt`.
-2. Inside the prompt is an "audit-handoff token for this deployment":
+1.  Open `transcript.json` and read `metadata.runtime_config.system_prompt`.
+2.  Inside the prompt is an "audit-handoff token for this deployment":
 
-       fWQzbDQzdjNyX3RwbTBycF9tM3Q1eXN7RlRD
+    fWQzbDQzdjNyX3RwbTBycF9tM3Q1eXN7RlRD
 
-3. It is stated to be lightly protected. base64-decode it:
+3.  It is stated to be lightly protected. base64-decode it:
 
-       }d3l43v3r_tpm0rp_m3t5ys{FTC
+        }d3l43v3r_tpm0rp_m3t5ys{FTC
 
-   That is clearly the flag written backwards.
-4. Reverse the string to get the flag:
+    That is clearly the flag written backwards.
 
-       NCTF{sy5t3m_pr0mpt_r3v34l3d}
+4.  Reverse the string to get the flag:
+
+    NCTF{sy5t3m_pr0mpt_r3v34l3d}
 
 One-liner:
 

@@ -41,8 +41,9 @@ def flag(secret: str) -> str:
     In the new contract this is used only to reproduce the LOCAL DEV flag from
     a dev TEAM_SECRET; on the arena the flag comes from FLAG / CHALLENGE_SECRET.
     """
-    digest = hmac.new(secret.encode(), CHALLENGE_ID.encode(),
-                      hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 

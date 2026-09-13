@@ -2,24 +2,24 @@
 
 Transformer le scoreboard en **course animée** : chaque équipe est un coureur
 qui avance selon son score, les dépassements s'animent en direct, avec un
-compte à rebours *avant* le départ et un *temps restant* pendant l'épreuve.
+compte à rebours _avant_ le départ et un _temps restant_ pendant l'épreuve.
 Objectif d'ambiance : un écran qu'on projette dans la salle, lisible, « waou »,
 et qui ne ressemble en rien à un scoreboard CTFd standard.
 
 > Cosmétique pure : **aucun impact sur le scoring**. La course ne fait que
-> *lire* les données que CTFd expose déjà. Si le JS casse, la table reste.
+> _lire_ les données que CTFd expose déjà. Si le JS casse, la table reste.
 
 ---
 
 ## 1. Ce sur quoi on s'appuie (déjà présent, rien à développer côté serveur)
 
-| Donnée | Source | Remarque |
-|---|---|---|
-| Rang + score + nom par équipe | `GET /api/v1/scoreboard` (`CTFd.api.get_scoreboard_list()`) | ordonné, public |
-| Détail top N (courbe de score dans le temps) | `GET /api/v1/scoreboard/top/<count>` | pour d'éventuelles « accélérations » |
-| Début / fin de l'épreuve | `init.start` / `init.end` (epoch) injectés dans `base.html` | alimente les deux countdowns |
-| Gel du classement | géré serveur : l'API renvoie l'état gelé aux non-admins | la course se fige toute seule |
-| Nonce CSRF, mode équipes | `init.csrfNonce`, `init.userMode` | déjà là |
+| Donnée                                       | Source                                                      | Remarque                             |
+| -------------------------------------------- | ----------------------------------------------------------- | ------------------------------------ |
+| Rang + score + nom par équipe                | `GET /api/v1/scoreboard` (`CTFd.api.get_scoreboard_list()`) | ordonné, public                      |
+| Détail top N (courbe de score dans le temps) | `GET /api/v1/scoreboard/top/<count>`                        | pour d'éventuelles « accélérations » |
+| Début / fin de l'épreuve                     | `init.start` / `init.end` (epoch) injectés dans `base.html` | alimente les deux countdowns         |
+| Gel du classement                            | géré serveur : l'API renvoie l'état gelé aux non-admins     | la course se fige toute seule        |
+| Nonce CSRF, mode équipes                     | `init.csrfNonce`, `init.userMode`                           | déjà là                              |
 
 **Conséquence** : c'est un travail **100 % thème** (un template + un JS + un CSS),
 zéro modification de plugin, zéro risque pour le scoring ou la sécurité.
@@ -47,13 +47,13 @@ On ne peut pas afficher 300 coureurs lisibles. Modèle retenu :
 - **Position X** = `score / scoreMax_courant` mappé sur ~[5 %, 90 %] de la piste
   (le leader n'atteint jamais 100 % : la « ligne d'arrivée » n'est franchie qu'à
   la fin de l'épreuve, sinon plus rien ne bouge visuellement une fois qu'on a un
-  gros leader). L'écart en X reflète l'écart de points → on *voit* la domination.
+  gros leader). L'écart en X reflète l'écart de points → on _voit_ la domination.
 - **Voie Y** = rang courant. Quand deux équipes changent d'ordre, leurs voies
   s'échangent avec une transition douce : **c'est le dépassement**, l'effet clé.
 - **Coup d'accélérateur** : à chaque nouveau solve détecté (score qui monte
   entre deux polls), petit boost visuel (traînée / poussière / flash tricolore)
   sur le coureur concerné + son nom qui pulse une fois.
-- **Égalités** : CTFd départage par *date du dernier solve* (déjà dans l'ordre
+- **Égalités** : CTFd départage par _date du dernier solve_ (déjà dans l'ordre
   de l'API) → on garde l'ordre de l'API tel quel, pas de tri maison.
 
 **Engins** : pas d'assets lourds (décision déjà prise : pas de 3D, pas de packs
@@ -98,7 +98,7 @@ Tourney, terminal).
 - **Respect du gel & de la visibilité** : si `score_visibility` = admins, la
   course ne s'affiche pas aux joueurs (comme la table). On ne contourne rien.
 - **Dégradation** : JS en échec ou API muette → on garde la table `{% cache %}`
-  déjà rendue côté serveur. La course est un *enrichissement*, pas un prérequis.
+  déjà rendue côté serveur. La course est un _enrichissement_, pas un prérequis.
 
 ---
 
@@ -137,20 +137,21 @@ Tourney, terminal).
       (« l'écran de la salle : ouvrir /scoreboard?big=1 en plein écran »).
 
 Chaque lot est **thème-only**, se teste dans `deploy/local/` (`make local-up`
-+ un seed de faux scores), et se replie proprement sur la table existante.
+
+- un seed de faux scores), et se replie proprement sur la table existante.
 
 ---
 
 ## 8. Risques & garde-fous
 
-| Risque | Mitigation |
-|---|---|
+| Risque                                         | Mitigation                                                                             |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------- |
 | Charge serveur (300 éq. × N viewers × polling) | 12-15 s d'intervalle, cache 60 s réutilisé, pause onglet caché, un seul endpoint léger |
-| Illisible à 300 | Top N + peloton agrégé + ta voie ; mode salle = top 10-15 |
-| Distraction / triche visuelle | 100 % cosmétique, lit l'API publique, aucun accès scoring |
-| Fuite post-gel | on lit l'API non-admin qui est déjà gelée ; on ne recalcule rien |
-| Épilepsie / motion sickness | `prefers-reduced-motion`, confettis discrets et optionnels |
-| Régression scoreboard | la course est un calque ; la table `{% cache %}` reste le socle |
+| Illisible à 300                                | Top N + peloton agrégé + ta voie ; mode salle = top 10-15                              |
+| Distraction / triche visuelle                  | 100 % cosmétique, lit l'API publique, aucun accès scoring                              |
+| Fuite post-gel                                 | on lit l'API non-admin qui est déjà gelée ; on ne recalcule rien                       |
+| Épilepsie / motion sickness                    | `prefers-reduced-motion`, confettis discrets et optionnels                             |
+| Régression scoreboard                          | la course est un calque ; la table `{% cache %}` reste le socle                        |
 
 ---
 

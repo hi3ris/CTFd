@@ -62,8 +62,8 @@ INSTANCE_TTL = _int("INSTANCER_TTL", 3600)
 MAX_RENEW_COUNT = _int("INSTANCER_MAX_RENEW", 5)
 
 # Admission controls.
-MAX_PER_TEAM = _int("INSTANCER_MAX_PER_TEAM", 3)      # concurrent instances / team
-MAX_TOTAL = _int("INSTANCER_MAX_TOTAL", 480)          # global cap; < port-range size
+MAX_PER_TEAM = _int("INSTANCER_MAX_PER_TEAM", 3)  # concurrent instances / team
+MAX_TOTAL = _int("INSTANCER_MAX_TOTAL", 480)  # global cap; < port-range size
 SPAWN_RATELIMIT = os.environ.get("INSTANCER_SPAWN_RATELIMIT", "6/minute")
 
 # Reaper cadence (seconds). Deliberately not too aggressive: our Docker channel
@@ -95,7 +95,8 @@ def port_binding(port):
     """Host-side binding for the container port. On the arena the container is
     only reachable through frp, so bind loopback; locally players hit the host
     directly, so bind every interface."""
-    return ("127.0.0.1", port) if uses_frp() else ("0.0.0.0", port)
+    # direct/local mode intentionally binds every interface (see docstring)
+    return ("127.0.0.1", port) if uses_frp() else ("0.0.0.0", port)  # nosec B104
 
 
 def extra_hosts():

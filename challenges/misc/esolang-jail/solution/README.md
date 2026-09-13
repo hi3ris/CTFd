@@ -6,7 +6,7 @@
 interactive REPL over TCP (`nc host port`). The jail's premise: a Marble program
 can compute freely but cannot touch the host -- no file word, no import, no
 eval. The only bridge to host-provided helpers is the `SYS` gate, which is meant
-to expose *only* the Marble standard library (pure string/number helpers,
+to expose _only_ the Marble standard library (pure string/number helpers,
 slots 0..7).
 
 The escape is a **missing lower bound on the `SYS` index** (a negative-index /
@@ -24,10 +24,10 @@ op_sys:  idx = pop_int();  if idx >= SAFE_COUNT: reject;  DISPATCH[idx](vm)
 The guard rejects `idx >= 8` but never checks `idx < 0`. Python list indexing
 wraps negative indices, so:
 
-- `SYS -1` -> `DISPATCH[-1]` -> `read(path)`  (arbitrary host file read)
-- `SYS -2` -> `DISPATCH[-2]` -> `env(name)`   (arbitrary host env lookup)
+- `SYS -1` -> `DISPATCH[-1]` -> `read(path)` (arbitrary host file read)
+- `SYS -2` -> `DISPATCH[-2]` -> `env(name)` (arbitrary host env lookup)
 
-The tokenizer refuses negative *literals* (`\d+` only), but Marble produces
+The tokenizer refuses negative _literals_ (`\d+` only), but Marble produces
 negatives with ordinary arithmetic (`0 1 SUB`, or `1 NEG`) -- so the value is
 easy to build, the bug is that `SYS` accepts it.
 

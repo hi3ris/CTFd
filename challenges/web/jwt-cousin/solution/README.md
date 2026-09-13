@@ -4,7 +4,7 @@
 
 ## TL;DR
 
-The token is *not* a JWT. It is `<payload>.<sig>` (no header). The signature is
+The token is _not_ a JWT. It is `<payload>.<sig>` (no header). The signature is
 a truncated HMAC over a **canonical claim string that the server rebuilds from
 a fixed subset of the claims — and that subset does not include `role`**. So
 you can take any valid token, change `role` to `admin` in the JSON payload, and
@@ -23,7 +23,7 @@ $ curl -s -X POST $URL/api/login -d '{"user":"guest","pass":"guest"}' -H 'Conten
 Two segments, dot-separated. The first is base64url JSON:
 
 ```json
-{"sub":"guest","role":"guest","exp":1789068927,"v":1,"alg":"HS256"}
+{ "sub": "guest", "role": "guest", "exp": 1789068927, "v": 1, "alg": "HS256" }
 ```
 
 The second (`b15d...`) is 32 hex chars — a truncated HMAC.
@@ -45,17 +45,17 @@ signature, set `alg:none`, and watch it get rejected. Move on.
 ## Finding the real signature scheme
 
 You cannot recover the server key (per-instance, random), so forging by
-*re-signing* is out. The other question is: **what does the signature actually
+_re-signing_ is out. The other question is: **what does the signature actually
 cover?** Probe one claim at a time against the live oracle (`/api/whoami`
 verifies without needing admin):
 
-| mutation to a valid guest token         | result       |
-|-----------------------------------------|--------------|
-| change `sub`  (keep sig)                | invalid      |
-| change `exp`  (keep sig)                | invalid      |
-| change `v`    (keep sig)                | invalid      |
-| change `alg`  (keep sig)                | **verifies** |
-| change `role` (keep sig)                | **verifies** |
+| mutation to a valid guest token | result       |
+| ------------------------------- | ------------ |
+| change `sub` (keep sig)         | invalid      |
+| change `exp` (keep sig)         | invalid      |
+| change `v` (keep sig)           | invalid      |
+| change `alg` (keep sig)         | **verifies** |
+| change `role` (keep sig)        | **verifies** |
 
 `role` is outside the signed data. That is the whole bug: the canonical string
 the server signs is `sub=<sub>;exp=<exp>;v=<v>` — `role` (the thing
@@ -80,7 +80,7 @@ FLAG: NCTF{...}
 
 The endpoint only returns the flag after it actually flips server state
 (`maintenance -> false`, rotation counter incremented) under an `admin` role —
-the flag is emitted for the *effect*, not for any particular payload shape.
+the flag is emitted for the _effect_, not for any particular payload shape.
 
 ## Flag
 
@@ -90,13 +90,13 @@ validation.
 
 ## Honest note on LLM assistance
 
-An LLM is genuinely useful here and this is only an *easy* challenge, so that's
+An LLM is genuinely useful here and this is only an _easy_ challenge, so that's
 expected. What an LLM does **badly**: its first instinct is JWT. Pasted into a
 model cold, it burns effort on `alg:none`, key confusion, and jwt.io — all dead
 ends, because there's no header and the signature isn't over the base64
 segments. What an LLM does **well**, once it's told/notices this isn't a real
 JWT: the "sign a subset, authorize on a field outside it" bug is a known class,
 and with the live oracle to probe one claim at a time it will find that `role`
-isn't covered fairly quickly. The resistance is entirely in *not* being a JWT;
+isn't covered fairly quickly. The resistance is entirely in _not_ being a JWT;
 the payoff after that realization is small. It is intentionally sized as an
 early-board web point, not a filter.

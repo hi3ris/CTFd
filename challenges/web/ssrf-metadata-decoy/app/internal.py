@@ -61,8 +61,9 @@ def registry_root():
 def admin_ping():
     if not _from_loopback():
         # Should be unreachable from outside (port unpublished), but enforce.
-        return Response("forbidden: app-tier callers only\n", status=403,
-                        mimetype="text/plain")
+        return Response(
+            "forbidden: app-tier callers only\n", status=403, mimetype="text/plain"
+        )
     # The effect happened: an internal admin endpoint was reached server-side.
     return jsonify(
         {

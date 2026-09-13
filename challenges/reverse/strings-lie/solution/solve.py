@@ -24,12 +24,14 @@ Usage: python3 solve.py [path-to-chall]
 """
 import sys, string
 
-PLEN = 23        # length of the passphrase / target[]
-FLAG_MAX = 64    # upper bound while scanning for the closing brace
+PLEN = 23  # length of the passphrase / target[]
+FLAG_MAX = 64  # upper bound while scanning for the closing brace
 PRINTABLE = set(bytes(string.ascii_letters + string.digits + "_{}!?-", "ascii"))
+
 
 def invert(window):
     return bytes(((window[i] - (i * 7 + 3)) & 0xFF) ^ 0x5A for i in range(PLEN))
+
 
 def main():
     path = sys.argv[1] if len(sys.argv) > 1 else "../chall"
@@ -38,7 +40,7 @@ def main():
     # 1) candidate passphrases: every PLEN-window that inverts to clean ASCII
     candidates = []
     for off in range(len(data) - PLEN):
-        p = invert(data[off:off + PLEN])
+        p = invert(data[off : off + PLEN])
         if all(c in PRINTABLE for c in p):
             candidates.append(p)
 
@@ -63,6 +65,7 @@ def main():
                     return
     print("no solution found", file=sys.stderr)
     sys.exit(1)
+
 
 if __name__ == "__main__":
     main()

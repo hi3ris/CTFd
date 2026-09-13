@@ -10,7 +10,7 @@ channel index `i` for `i in range(n+1)`, never checking `i` against the
 documented channel count (3 channels: 0,1,2). There is a fourth, undocumented
 **maintenance** channel at index **3**. `n` is validated to `0..3`, so you can
 never say `CFG 7` to reach index 3 directly -- but at the boundary `n == 3` the
-off-by-one write lands *exactly* on index 3. Arm it non-zero and the hidden
+off-by-one write lands _exactly_ on index 3. Arm it non-zero and the hidden
 `DUMP` command unlocks and returns the flag.
 
 Solve:
@@ -76,7 +76,7 @@ for i in range(n + 1):          # BUG: should be range(n)
 
 The backing store has 4 slots. Index 3 is the maintenance channel, one past the
 documented three. The only `i` that reaches 3 is when `range(n+1)` includes 3,
-i.e. `n == 3`. And `n` is capped at 3, so `n == 3` is the *only* value where the
+i.e. `n == 3`. And `n` is capped at 3, so `n == 3` is the _only_ value where the
 off-by-one write hits the hidden channel. That is the "length field fuzzed into
 an off-by-one state."
 
@@ -125,12 +125,12 @@ wins, and no offline reasoning over an artifact can produce the flag. See
 
 ## Honest note on LLM assistance
 
-- **Where an LLM helps:** the moment it can *drive the socket*, an LLM is good
+- **Where an LLM helps:** the moment it can _drive the socket_, an LLM is good
   at hypothesising "off-by-one on a length field" from the `session.log` anomaly
   and the spec's "check the entry loop bound" TODO, and at scripting the probe.
-  This keeps it a *medium*, not a *hard*.
+  This keeps it a _medium_, not a _hard_.
 - **Where it does not solve it for free:** the flag is a server-side oracle, so
-  there is no static artifact to grind offline all night -- solving *requires*
+  there is no static artifact to grind offline all night -- solving _requires_
   live, iterative interaction with the per-team instance (rate-limited, logged).
   A single prompt over the handout cannot produce a flag; at minimum the solver
   must (a) notice CFG over-reads, (b) realise only the boundary `n == 3` reaches

@@ -25,39 +25,185 @@ import subprocess
 import sys
 
 # --- constants a player reads out of the binary's init_dispatch / permute ---
-OP_SEED   = 0x1F3D5B79
+OP_SEED = 0x1F3D5B79
 SBOX_SEED = 0xC0FFEE42
 
 NAMES = [
-    "NOP","HALT","MOV","MOVI","ADD","SUB","MUL","XOR","AND","OR","SHL","SHR",
-    "ROL","ROR","NOT","NEG","ADDI","SUBI","XORI","ANDI","ORI","MULI","SHLI",
-    "SHRI","ROLI","RORI","CMP","CMPI","TEST","LDB","LDW","LDD","STB","STW",
-    "STD","LEA","PUSH","POP","JMP","JZ","JNZ","JC","JNC","JG","JL","JGE","JLE",
-    "JA","JB","CALL","RET","IN","OUT","RND","SBOX","ISBOX","ROL8","ROR8",
-    "POPCNT","CLZ","BSWAP","REVB","SEXTB","MULH","DIV","MOD","MIN","MAX","SWP",
-    "INC","DEC","CLR","SETZ","NAND","NOR","ADC","SBB","MIX","ENTER","LEAVE",
+    "NOP",
+    "HALT",
+    "MOV",
+    "MOVI",
+    "ADD",
+    "SUB",
+    "MUL",
+    "XOR",
+    "AND",
+    "OR",
+    "SHL",
+    "SHR",
+    "ROL",
+    "ROR",
+    "NOT",
+    "NEG",
+    "ADDI",
+    "SUBI",
+    "XORI",
+    "ANDI",
+    "ORI",
+    "MULI",
+    "SHLI",
+    "SHRI",
+    "ROLI",
+    "RORI",
+    "CMP",
+    "CMPI",
+    "TEST",
+    "LDB",
+    "LDW",
+    "LDD",
+    "STB",
+    "STW",
+    "STD",
+    "LEA",
+    "PUSH",
+    "POP",
+    "JMP",
+    "JZ",
+    "JNZ",
+    "JC",
+    "JNC",
+    "JG",
+    "JL",
+    "JGE",
+    "JLE",
+    "JA",
+    "JB",
+    "CALL",
+    "RET",
+    "IN",
+    "OUT",
+    "RND",
+    "SBOX",
+    "ISBOX",
+    "ROL8",
+    "ROR8",
+    "POPCNT",
+    "CLZ",
+    "BSWAP",
+    "REVB",
+    "SEXTB",
+    "MULH",
+    "DIV",
+    "MOD",
+    "MIN",
+    "MAX",
+    "SWP",
+    "INC",
+    "DEC",
+    "CLR",
+    "SETZ",
+    "NAND",
+    "NOR",
+    "ADC",
+    "SBB",
+    "MIX",
+    "ENTER",
+    "LEAVE",
 ]
 OP = {n: i for i, n in enumerate(NAMES)}
 FMT = {}
-for n in ["NOP","HALT","RET","LEAVE"]: FMT[n]="NONE"
-for n in ["NOT","NEG","PUSH","POP","IN","OUT","RND","BSWAP","REVB","SEXTB",
-          "INC","DEC","CLR","SETZ"]: FMT[n]="R1"
-for n in ["MOV","ADD","SUB","MUL","XOR","AND","OR","SHL","SHR","ROL","ROR",
-          "CMP","TEST","SBOX","ISBOX","POPCNT","CLZ","MULH","DIV","MOD","MIN",
-          "MAX","SWP","NAND","NOR","ADC","SBB","MIX"]: FMT[n]="R2"
-for n in ["MOVI","ADDI","SUBI","XORI","ANDI","ORI","MULI","SHLI","SHRI","ROLI",
-          "RORI","CMPI","ROL8","ROR8"]: FMT[n]="RI"
-for n in ["LDB","LDW","LDD","STB","STW","STD","LEA"]: FMT[n]="RM"
-for n in ["JMP","JZ","JNZ","JC","JNC","JG","JL","JGE","JLE","JA","JB","CALL"]:
-    FMT[n]="BR"
-FMT["ENTER"]="IMM"
+for n in ["NOP", "HALT", "RET", "LEAVE"]:
+    FMT[n] = "NONE"
+for n in [
+    "NOT",
+    "NEG",
+    "PUSH",
+    "POP",
+    "IN",
+    "OUT",
+    "RND",
+    "BSWAP",
+    "REVB",
+    "SEXTB",
+    "INC",
+    "DEC",
+    "CLR",
+    "SETZ",
+]:
+    FMT[n] = "R1"
+for n in [
+    "MOV",
+    "ADD",
+    "SUB",
+    "MUL",
+    "XOR",
+    "AND",
+    "OR",
+    "SHL",
+    "SHR",
+    "ROL",
+    "ROR",
+    "CMP",
+    "TEST",
+    "SBOX",
+    "ISBOX",
+    "POPCNT",
+    "CLZ",
+    "MULH",
+    "DIV",
+    "MOD",
+    "MIN",
+    "MAX",
+    "SWP",
+    "NAND",
+    "NOR",
+    "ADC",
+    "SBB",
+    "MIX",
+]:
+    FMT[n] = "R2"
+for n in [
+    "MOVI",
+    "ADDI",
+    "SUBI",
+    "XORI",
+    "ANDI",
+    "ORI",
+    "MULI",
+    "SHLI",
+    "SHRI",
+    "ROLI",
+    "RORI",
+    "CMPI",
+    "ROL8",
+    "ROR8",
+]:
+    FMT[n] = "RI"
+for n in ["LDB", "LDW", "LDD", "STB", "STW", "STD", "LEA"]:
+    FMT[n] = "RM"
+for n in [
+    "JMP",
+    "JZ",
+    "JNZ",
+    "JC",
+    "JNC",
+    "JG",
+    "JL",
+    "JGE",
+    "JLE",
+    "JA",
+    "JB",
+    "CALL",
+]:
+    FMT[n] = "BR"
+FMT["ENTER"] = "IMM"
 BR_WIDTH = 3
 
 
 def xs32(x):
     x &= 0xFFFFFFFF
     x ^= (x << 13) & 0xFFFFFFFF
-    x ^= (x >> 17)
+    x ^= x >> 17
     x ^= (x << 5) & 0xFFFFFFFF
     return x & 0xFFFFFFFF
 
@@ -72,7 +218,7 @@ def permutation(seed, n=256):
     return arr
 
 
-OPMAP = permutation(OP_SEED)          # raw -> internal op
+OPMAP = permutation(OP_SEED)  # raw -> internal op
 INV_OPMAP = [0] * 256
 for raw, internal in enumerate(OPMAP):
     INV_OPMAP[internal] = raw
@@ -90,14 +236,17 @@ def venc(v):
         if v:
             out.append(b | 1)
         else:
-            out.append(b); break
+            out.append(b)
+            break
     return bytes(out)
 
 
 def read_varint(buf, pc):
-    val = 0; shift = 0
+    val = 0
+    shift = 0
     while True:
-        b = buf[pc]; pc += 1
+        b = buf[pc]
+        pc += 1
         val |= (b >> 1) << shift
         shift += 7
         if not (b & 1):
@@ -106,7 +255,8 @@ def read_varint(buf, pc):
 
 
 def ror8(x, n):
-    x &= 0xFF; n &= 7
+    x &= 0xFF
+    n &= 7
     return x if n == 0 else ((x >> n) | (x << (8 - n))) & 0xFF
 
 
@@ -128,14 +278,24 @@ def disasm(buf, start):
             if f == "NONE":
                 pass
             elif f in ("R1",):
-                b = buf[pc]; pc += 1; ins["d"] = b >> 4
+                b = buf[pc]
+                pc += 1
+                ins["d"] = b >> 4
             elif f in ("R2",):
-                b = buf[pc]; pc += 1; ins["d"] = b >> 4; ins["s"] = b & 0xF
+                b = buf[pc]
+                pc += 1
+                ins["d"] = b >> 4
+                ins["s"] = b & 0xF
             elif f == "RI":
-                b = buf[pc]; pc += 1; ins["d"] = b >> 4
+                b = buf[pc]
+                pc += 1
+                ins["d"] = b >> 4
                 ins["imm"], pc = read_varint(buf, pc)
             elif f == "RM":
-                b = buf[pc]; pc += 1; ins["d"] = b >> 4; ins["base"] = b & 0xF
+                b = buf[pc]
+                pc += 1
+                ins["d"] = b >> 4
+                ins["base"] = b & 0xF
                 ins["off"], pc = read_varint(buf, pc)
             elif f == "BR":
                 ins["tgt"], pc = read_varint(buf, pc)
@@ -169,8 +329,9 @@ def main():
     L = sum(1 for i in ins if i["op"] == "IN")
 
     # round boundaries: each round begins with MOVI to r6 (the carry seed)
-    round_starts = [k for k, i in enumerate(ins)
-                    if i["op"] == "MOVI" and i.get("d") == 6]
+    round_starts = [
+        k for k, i in enumerate(ins) if i["op"] == "MOVI" and i.get("d") == 6
+    ]
     R = len(round_starts)
 
     # compare loop begins at the first CMPI on r1 after the last round
@@ -185,8 +346,8 @@ def main():
     bounds = round_starts + [cmp_start]
     ivs, rots, cs = [], [], []
     for r in range(R):
-        blk = ins[bounds[r]:bounds[r + 1]]
-        ivs.append(blk[0]["imm"])                       # MOVI r6, IV
+        blk = ins[bounds[r] : bounds[r + 1]]
+        ivs.append(blk[0]["imm"])  # MOVI r6, IV
         rot = next(i["imm"] for i in blk if i["op"] == "ROL8")
         rots.append(rot)
         cs.append([i["imm"] for i in blk if i["op"] == "XORI" and i.get("d") == 1])
@@ -219,8 +380,12 @@ def main():
     try:
         r = subprocess.run([path], input=flag, capture_output=True, timeout=30)
         ok = b"Access granted" in r.stdout
-        print("[*] binary says:", r.stdout.decode(errors="replace").strip(),
-              "=>", "OK" if ok else "FAIL")
+        print(
+            "[*] binary says:",
+            r.stdout.decode(errors="replace").strip(),
+            "=>",
+            "OK" if ok else "FAIL",
+        )
         sys.exit(0 if ok else 1)
     except Exception as e:
         print("[!] could not run binary to verify:", e)

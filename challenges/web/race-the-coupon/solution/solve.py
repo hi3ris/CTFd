@@ -25,8 +25,10 @@ N = int(sys.argv[2]) if len(sys.argv) > 2 else 20
 def post(path, payload):
     data = json.dumps(payload).encode()
     req = urllib.request.Request(
-        BASE + path, data=data,
-        headers={"Content-Type": "application/json"}, method="POST",
+        BASE + path,
+        data=data,
+        headers={"Content-Type": "application/json"},
+        method="POST",
     )
     try:
         with urllib.request.urlopen(req, timeout=30) as r:
@@ -63,7 +65,9 @@ def main():
     print(f"[*] {committed}/{N} redemptions committed (single-use coupon!)")
 
     wallet = get("/api/wallet")
-    print(f"[*] final balance: {wallet['balance']}  withdrawals: {wallet['withdrawals']}")
+    print(
+        f"[*] final balance: {wallet['balance']}  withdrawals: {wallet['withdrawals']}"
+    )
 
     flag = find_flag(results) or find_flag(wallet)
     if flag:

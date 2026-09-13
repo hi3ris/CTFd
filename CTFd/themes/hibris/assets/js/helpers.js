@@ -6,7 +6,7 @@ import { htmlEntities, colorHash, copyToClipboard } from "./utils";
 const utils = {
   htmlEntities: htmlEntities,
   colorHash: colorHash,
-  copyToClipboard: copyToClipboard
+  copyToClipboard: copyToClipboard,
 };
 
 const files = {
@@ -23,7 +23,7 @@ const files = {
 
     var pg = ezq.ezProgressBar({
       width: 0,
-      title: "Upload Progress"
+      title: "Upload Progress",
     });
     $.ajax({
       url: CTFd.config.urlRoot + "/api/v1/files",
@@ -32,48 +32,48 @@ const files = {
       cache: false,
       contentType: false,
       processData: false,
-      xhr: function() {
+      xhr: function () {
         var xhr = $.ajaxSettings.xhr();
-        xhr.upload.onprogress = function(e) {
+        xhr.upload.onprogress = function (e) {
           if (e.lengthComputable) {
             var width = (e.loaded / e.total) * 100;
             pg = ezq.ezProgressBar({
               target: pg,
-              width: width
+              width: width,
             });
           }
         };
         return xhr;
       },
-      success: function(data) {
+      success: function (data) {
         form.reset();
         pg = ezq.ezProgressBar({
           target: pg,
-          width: 100
+          width: 100,
         });
-        setTimeout(function() {
+        setTimeout(function () {
           pg.modal("hide");
         }, 500);
 
         if (cb) {
           cb(data);
         }
-      }
+      },
     });
-  }
+  },
 };
 
 const comments = {
-  get_comments: extra_args => {
+  get_comments: (extra_args) => {
     const CTFd = window.CTFd;
     return CTFd.fetch("/api/v1/comments?" + $.param(extra_args), {
       method: "GET",
       credentials: "same-origin",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json"
-      }
-    }).then(function(response) {
+        "Content-Type": "application/json",
+      },
+    }).then(function (response) {
       return response.json();
     });
   },
@@ -82,46 +82,46 @@ const comments = {
     let body = {
       content: comment,
       type: type,
-      ...extra_args
+      ...extra_args,
     };
     CTFd.fetch("/api/v1/comments", {
       method: "POST",
       credentials: "same-origin",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json"
+        "Content-Type": "application/json",
       },
-      body: JSON.stringify(body)
+      body: JSON.stringify(body),
     })
-      .then(function(response) {
+      .then(function (response) {
         return response.json();
       })
-      .then(function(response) {
+      .then(function (response) {
         if (cb) {
           cb(response);
         }
       });
   },
-  delete_comment: comment_id => {
+  delete_comment: (comment_id) => {
     const CTFd = window.CTFd;
     return CTFd.fetch(`/api/v1/comments/${comment_id}`, {
       method: "DELETE",
       credentials: "same-origin",
       headers: {
         Accept: "application/json",
-        "Content-Type": "application/json"
-      }
-    }).then(function(response) {
+        "Content-Type": "application/json",
+      },
+    }).then(function (response) {
       return response.json();
     });
-  }
+  },
 };
 
 const helpers = {
   files,
   comments,
   utils,
-  ezq
+  ezq,
 };
 
 export default helpers;

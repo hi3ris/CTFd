@@ -12,18 +12,18 @@ only; treat edge cases as unspecified.
 
 ## Verbs
 
-| Verb        | Meaning                                                        |
-|-------------|----------------------------------------------------------------|
-| `PING`      | Liveness. Replies `PONG`.                                      |
-| `STAT`      | Reports the state of the channels and a summary `mask`.        |
-| `HELP`      | Lists the verbs the server currently offers.                   |
-| `CFG <n>`   | Provisions channels. See below.                                |
+| Verb      | Meaning                                                 |
+| --------- | ------------------------------------------------------- |
+| `PING`    | Liveness. Replies `PONG`.                               |
+| `STAT`    | Reports the state of the channels and a summary `mask`. |
+| `HELP`    | Lists the verbs the server currently offers.            |
+| `CFG <n>` | Provisions channels. See below.                         |
 
 ## Channels
 
 The device exposes **3 provisionable channels**, numbered `0`, `1`, `2`. Each
 channel holds one byte (`00`..`ff`). `STAT` reports each channel and a `mask`
-whose bit *k* is set when channel *k* is non-zero.
+whose bit _k_ is set when channel _k_ is non-zero.
 
 > `reserved_admin_ch` in `STAT` output is a hardware constant. Not
 > provisionable from this protocol.
@@ -36,8 +36,8 @@ whose bit *k* is set when channel *k* is non-zero.
     ...
 
 `<n>` is the number of channels to configure; **valid range `0..3`**. After the
-header line the server reads `<n>` entry lines. Entry line *k* is the new value
-for channel *k*, given as **two hex digits** (e.g. `01`, `ff`). The server
+header line the server reads `<n>` entry lines. Entry line _k_ is the new value
+for channel _k_, given as **two hex digits** (e.g. `01`, `ff`). The server
 replies `OK mask=0x..` with the resulting mask.
 
 Example (configure channels 0 and 1):

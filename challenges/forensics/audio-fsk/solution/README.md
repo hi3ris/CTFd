@@ -7,15 +7,15 @@
 `transmission.wav` is a continuous-phase 2-FSK downlink. The physical layer is
 deliberately non-standard, so canned tools fail:
 
-| parameter        | value                                    |
-|------------------|------------------------------------------|
-| sample rate      | 48000 Hz (from the WAV header)           |
-| baud             | **96** (exactly 500 samples/symbol)      |
-| mark (bit `1`)   | **1855 Hz**                              |
-| space (bit `0`)  | **3145 Hz** (space is *higher* than mark)|
-| bit order        | MSB-first                                |
-| framing          | preamble → sync → len → payload → CRC-8  |
-| sync word        | `0x9E 0x3A`                              |
+| parameter       | value                                     |
+| --------------- | ----------------------------------------- |
+| sample rate     | 48000 Hz (from the WAV header)            |
+| baud            | **96** (exactly 500 samples/symbol)       |
+| mark (bit `1`)  | **1855 Hz**                               |
+| space (bit `0`) | **3145 Hz** (space is _higher_ than mark) |
+| bit order       | MSB-first                                 |
+| framing         | preamble → sync → len → payload → CRC-8   |
+| sync word       | `0x9E 0x3A`                               |
 
 There are **no UART start/stop bits** on the primary link — it is a raw
 contiguous bitstream framed by a preamble and a custom sync word, with a CRC-8
@@ -24,7 +24,7 @@ contiguous bitstream framed by a preamble and a custom sync word, with a CRC-8
 ## Solve path
 
 1. **Confirm it is FSK.** A spectrogram (or a plain FFT of the loud burst) shows
-   two dominant tones, ~1855 Hz and ~3145 Hz. These are *not* Bell-103
+   two dominant tones, ~1855 Hz and ~3145 Hz. These are _not_ Bell-103
    (1270/1070) or Bell-202 (1200/2200), so `minimodem` defaults will not work.
 
 2. **Measure the two tones.** Window the energetic burst and take an FFT; the two
@@ -74,7 +74,7 @@ file can lock onto it and recover:
 NCTF{b3ll202_1200_8n1_is_the_decoy}
 ```
 
-It is refutable in minutes: it uses *exactly* the standard parameters the brief
+It is refutable in minutes: it uses _exactly_ the standard parameters the brief
 says the primary link avoids, and it has none of the preamble/sync/CRC framing
 the brief describes. The real payload is CRC-verified; the decoy is not. The
 decoy sits below the burst-detection threshold, so the reference solver's tone
@@ -82,12 +82,12 @@ and baud estimates never see it.
 
 ## What an LLM does well / badly here
 
-* **Well:** recognising the spectrogram shows 2-FSK, writing a Goertzel/FFT
+- **Well:** recognising the spectrogram shows 2-FSK, writing a Goertzel/FFT
   demodulator, and computing a CRC-8 once told the polynomial. These are
   standard and a model produces them quickly.
-* **Badly / where it stalls:** the challenge resists a single prompt. A first
+- **Badly / where it stalls:** the challenge resists a single prompt. A first
   attempt almost always assumes Bell-202 + UART 8N1 (and may proudly return the
-  **decoy** flag). Getting the real flag requires *measuring* the non-standard
+  **decoy** flag). Getting the real flag requires _measuring_ the non-standard
   tones and baud from the signal, realising there are **no start/stop bits**,
   discovering the sync word `0x9E3A`, and resolving the tone→bit polarity — an
   iterative, evidence-driven loop, not a recall task. The continuous-phase edges

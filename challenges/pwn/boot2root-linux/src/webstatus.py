@@ -53,15 +53,13 @@ class Handler(BaseHTTPRequestHandler):
             return
         if parsed.path == "/diag":
             qs = parse_qs(parsed.query)
-            target = (qs.get("target", ["localhost"])[0])
+            target = qs.get("target", ["localhost"])[0]
             # --- VULNERABILITY: unsanitised concatenation into a shell -------
             # A defensive implementation would pass an argv list without a
             # shell, or validate `target` as a hostname. This does neither.
             cmd = "getent hosts " + target
             try:
-                out = subprocess.run(
-                    cmd, shell=True, capture_output=True, timeout=8
-                )
+                out = subprocess.run(cmd, shell=True, capture_output=True, timeout=8)
                 body = (out.stdout + out.stderr).decode("utf-8", "replace")
             except subprocess.TimeoutExpired:
                 body = "(timeout)"

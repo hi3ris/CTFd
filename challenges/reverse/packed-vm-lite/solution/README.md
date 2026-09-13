@@ -33,28 +33,28 @@ array (`PROG`), driven by a program counter, with a 256-byte stack and a 16-entr
 register file. That shape - fetch opcode, dispatch, mutate stack/regs, advance
 pc - is a bytecode VM. Recover the semantics opcode by opcode. The full ISA is:
 
-| op   | name   | effect                                             |
-|------|--------|----------------------------------------------------|
-| 0x01 | PUSH i | push imm                                           |
-| 0x03 | DUP    | duplicate top                                      |
-| 0x05 | LDR i  | push regs[i]                                        |
-| 0x06 | STR i  | pop -> regs[i]                                      |
-| 0x07 | INC i  | regs[i]++                                           |
-| 0x09 | LOADR  | pop idx -> push input[idx]                          |
-| 0x0A | LOADK  | pop idx -> push KEY[idx]                            |
-| 0x0B | LOADT  | pop idx -> push TARGET[idx]                         |
-| 0x0C | ADD    | (a+b)&0xff                                          |
-| 0x0E | XOR    | a^b                                                |
-| 0x10 | OR     | a|b                                                |
-| 0x12 | ADDI i | top += i                                           |
-| 0x14 | MULI i | top *= i                                           |
-| 0x15 | ANDI i | top &= i                                           |
-| 0x16 | ROLV   | pop amt, pop val -> rotl8(val, amt&7)               |
-| 0x19 | CMPEQ  | pop a,b -> (a==b)?1:0                               |
-| 0x1B | CHKLEN i | if len!=i set regs[3]=1                           |
-| 0x1C | JMP i  | pc = i (ABSOLUTE offset)                            |
-| 0x1E | JNZ i  | pop; if !=0 pc = i                                  |
-| 0x1F | HALT   | stop                                               |
+| op   | name     | effect                                |
+| ---- | -------- | ------------------------------------- | --- |
+| 0x01 | PUSH i   | push imm                              |
+| 0x03 | DUP      | duplicate top                         |
+| 0x05 | LDR i    | push regs[i]                          |
+| 0x06 | STR i    | pop -> regs[i]                        |
+| 0x07 | INC i    | regs[i]++                             |
+| 0x09 | LOADR    | pop idx -> push input[idx]            |
+| 0x0A | LOADK    | pop idx -> push KEY[idx]              |
+| 0x0B | LOADT    | pop idx -> push TARGET[idx]           |
+| 0x0C | ADD      | (a+b)&0xff                            |
+| 0x0E | XOR      | a^b                                   |
+| 0x10 | OR       | a                                     | b   |
+| 0x12 | ADDI i   | top += i                              |
+| 0x14 | MULI i   | top \*= i                             |
+| 0x15 | ANDI i   | top &= i                              |
+| 0x16 | ROLV     | pop amt, pop val -> rotl8(val, amt&7) |
+| 0x19 | CMPEQ    | pop a,b -> (a==b)?1:0                 |
+| 0x1B | CHKLEN i | if len!=i set regs[3]=1               |
+| 0x1C | JMP i    | pc = i (ABSOLUTE offset)              |
+| 0x1E | JNZ i    | pop; if !=0 pc = i                    |
+| 0x1F | HALT     | stop                                  |
 
 Gotchas that punish skimming:
 
@@ -111,7 +111,7 @@ described, deriving and inverting the per-byte transform is straightforward and
 a capable model writes the correct inverse in one shot. The real work - and
 where a one-prompt attempt fails - is faithfully reading the dispatch table from
 the stripped binary: absolute (not relative) jumps, the stack-supplied rotate
-amount, the feedback chaining on the *raw* byte rather than the transformed one,
+amount, the feedback chaining on the _raw_ byte rather than the transformed one,
 and not being lured into "explaining" the two dead opcodes or the decoy string.
 Get any of those wrong and the inverse produces garbage that the binary rejects,
 which is exactly the built-in check (`solve.py` runs the binary to confirm). So

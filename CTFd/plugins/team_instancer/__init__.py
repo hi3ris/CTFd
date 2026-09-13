@@ -22,18 +22,18 @@ from CTFd.plugins import register_plugin_assets_directory
 from CTFd.plugins.challenges import CHALLENGE_CLASSES, BaseChallenge
 from CTFd.plugins.dynamic_challenges.decay import DECAY_FUNCTIONS, logarithmic
 from CTFd.plugins.migrations import upgrade
+from CTFd.utils.config import is_teams_mode
 from CTFd.utils.decorators import authed_only, during_ctf_time_only, ratelimit
 from CTFd.utils.decorators.visibility import check_challenge_visibility
 from CTFd.utils.user import get_current_user
-from CTFd.utils.config import is_teams_mode
 
 from . import backend, frp, settings
 from .models import TeamInstance, TeamInstanceChallenge
 
-
 # --------------------------------------------------------------------------
 # Challenge type
 # --------------------------------------------------------------------------
+
 
 class TeamInstanceValueChallenge(BaseChallenge):
     id = "team_instance"
@@ -99,6 +99,7 @@ class TeamInstanceValueChallenge(BaseChallenge):
 # Shared helpers
 # --------------------------------------------------------------------------
 
+
 def _account_id():
     """The scoring/solve account: the team in teams mode, else the user."""
     user = get_current_user()
@@ -117,8 +118,10 @@ def _prereqs_met(user, challenge):
     if challenge.requirements:
         requirements = challenge.requirements.get("prerequisites", [])
         solve_ids = {
-            cid for cid, in Solves.query.with_entities(Solves.challenge_id)
-            .filter_by(account_id=user.account_id).all()
+            cid
+            for cid, in Solves.query.with_entities(Solves.challenge_id)
+            .filter_by(account_id=user.account_id)
+            .all()
         }
         all_ids = {c.id for c in Challenges.query.with_entities(Challenges.id).all()}
         prereqs = set(requirements).intersection(all_ids)
@@ -176,6 +179,7 @@ bp = TeamInstanceValueChallenge.blueprint
 
 def _json(payload, code=200):
     from flask import jsonify
+
     return jsonify(payload), code
 
 
@@ -186,7 +190,9 @@ def _json(payload, code=200):
 @ratelimit(method="POST", limit=6, interval=60)
 def spawn():
     if not settings.is_active():
-        return _json({"success": False, "error": "Instancier inactif hors evenement."}, 503)
+        return _json(
+            {"success": False, "error": "Instancier inactif hors evenement."}, 503
+        )
 
     user = get_current_user()
     if is_teams_mode() and user.team_id is None:
@@ -212,25 +218,52 @@ def spawn():
         account_id=account_id, challenge_id=challenge.id
     ).first()
     if existing:
-        return _json({
-            "success": True, "status": existing.status,
-            "connection": _connection_info(existing.port),
-            "remaining": _remaining_seconds(existing),
-        })
+        return _json(
+            {
+                "success": True,
+                "status": existing.status,
+                "connection": _connection_info(existing.port),
+                "remaining": _remaining_seconds(existing),
+            }
+        )
 
     # Cap: concurrent instances per team, and global.
-    if TeamInstance.query.filter_by(account_id=account_id).count() >= settings.MAX_PER_TEAM:
-        return _json({"success": False, "error": f"Maximum {settings.MAX_PER_TEAM} instances simultanees par equipe."}, 429)
+    if (
+        TeamInstance.query.filter_by(account_id=account_id).count()
+        >= settings.MAX_PER_TEAM
+    ):
+        return _json(
+            {
+                "success": False,
+                "error": f"Maximum {settings.MAX_PER_TEAM} instances simultanees par equipe.",
+            },
+            429,
+        )
     if TeamInstance.query.count() >= settings.MAX_TOTAL:
-        return _json({"success": False, "error": "Capacite maximale atteinte, reessayez bientot."}, 503)
+        return _json(
+            {
+                "success": False,
+                "error": "Capacite maximale atteinte, reessayez bientot.",
+            },
+            503,
+        )
 
     # The challenge id label lives in the team_hmac flag's content. We inject
     # only the per-challenge secret and the concrete flag — never the team
     # master secret, so a compromised container cannot yield other flags.
     from CTFd.plugins.team_hmac_flag import challenge_secret_for, expected_flag
-    flag_row = Flags.query.filter_by(challenge_id=challenge.id, type="team_hmac").first()
+
+    flag_row = Flags.query.filter_by(
+        challenge_id=challenge.id, type="team_hmac"
+    ).first()
     if flag_row is None or not (flag_row.content or "").strip():
-        return _json({"success": False, "error": "Challenge mal configure (flag team_hmac absent)."}, 500)
+        return _json(
+            {
+                "success": False,
+                "error": "Challenge mal configure (flag team_hmac absent).",
+            },
+            500,
+        )
     label = flag_row.content.strip()
     container_env = {
         "FLAG": expected_flag(account_id, label),
@@ -238,7 +271,9 @@ def spawn():
     }
 
     instance = TeamInstance(
-        account_id=account_id, challenge_id=challenge.id, status="spawning",
+        account_id=account_id,
+        challenge_id=challenge.id,
+        status="spawning",
         proxy_name=frp.proxy_name(account_id, challenge.id),
     )
     db.session.add(instance)
@@ -246,13 +281,18 @@ def spawn():
         db.session.commit()
     except Exception:
         db.session.rollback()
-        return _json({"success": False, "error": "Instance deja en cours de creation."}, 409)
+        return _json(
+            {"success": False, "error": "Instance deja en cours de creation."}, 409
+        )
 
     port = frp.allocate_port(instance.id, account_id, challenge.id)
     if port is None:
         db.session.delete(instance)
         db.session.commit()
-        return _json({"success": False, "error": "Aucun port disponible, reessayez bientot."}, 503)
+        return _json(
+            {"success": False, "error": "Aucun port disponible, reessayez bientot."},
+            503,
+        )
     instance.port = port
 
     # AI challenges reach the model only through the admission gateway, never
@@ -263,9 +303,17 @@ def spawn():
             frp.release_port(instance.id)
             db.session.delete(instance)
             db.session.commit()
-            return _json({"success": False, "error": "Passerelle IA non configuree (AI_PROXY_URL)."}, 503)
+            return _json(
+                {
+                    "success": False,
+                    "error": "Passerelle IA non configuree (AI_PROXY_URL).",
+                },
+                503,
+            )
         container_env["OLLAMA_URL"] = settings.AI_PROXY_URL
-        container_env["AI_PROXY_TOKEN"] = _mint_proxy_token(account_id, label, instance.id)
+        container_env["AI_PROXY_TOKEN"] = _mint_proxy_token(
+            account_id, label, instance.id
+        )
         if settings.OLLAMA_MODEL_OVERRIDE:  # local laptops: a lighter model
             container_env["OLLAMA_MODEL"] = settings.OLLAMA_MODEL_OVERRIDE
 
@@ -284,11 +332,14 @@ def spawn():
         db.session.commit()
         return _json({"success": False, "error": f"Echec du demarrage: {e}"}, 500)
 
-    return _json({
-        "success": True, "status": "running",
-        "connection": _connection_info(port),
-        "remaining": _remaining_seconds(instance),
-    })
+    return _json(
+        {
+            "success": True,
+            "status": "running",
+            "connection": _connection_info(port),
+            "remaining": _remaining_seconds(instance),
+        }
+    )
 
 
 @bp.route("/status", methods=["GET"])
@@ -301,11 +352,14 @@ def status():
     ).first()
     if instance is None:
         return _json({"success": True, "status": "none"})
-    return _json({
-        "success": True, "status": instance.status,
-        "connection": _connection_info(instance.port),
-        "remaining": _remaining_seconds(instance),
-    })
+    return _json(
+        {
+            "success": True,
+            "status": instance.status,
+            "connection": _connection_info(instance.port),
+            "remaining": _remaining_seconds(instance),
+        }
+    )
 
 
 @bp.route("/renew", methods=["POST"])
@@ -320,7 +374,9 @@ def renew():
     if instance is None:
         return _json({"success": False, "error": "Aucune instance."}, 404)
     if instance.renew_count >= settings.MAX_RENEW_COUNT:
-        return _json({"success": False, "error": "Nombre maximal de prolongations atteint."}, 429)
+        return _json(
+            {"success": False, "error": "Nombre maximal de prolongations atteint."}, 429
+        )
     instance.start_time = datetime.datetime.utcnow()
     instance.renew_count += 1
     db.session.commit()
@@ -347,7 +403,9 @@ def destroy():
 # Reaper: single-worker background thread, fcntl-locked.
 # --------------------------------------------------------------------------
 
-_REAPER_LOCK_PATH = "/tmp/ctfd_team_instancer.lock"
+_REAPER_LOCK_PATH = (
+    "/tmp/ctfd_team_instancer.lock"  # nosec B108 - lock file path, not sensitive data
+)
 
 
 def _reap_once(app):
@@ -389,7 +447,7 @@ def _reaper_loop(app):
     while True:
         try:
             _reap_once(app)
-        except Exception:
+        except Exception:  # nosec B110 - reaper loop must survive a single bad pass
             pass
         time.sleep(settings.REAP_INTERVAL)
 
@@ -398,18 +456,17 @@ def _reaper_loop(app):
 # Plugin entry point
 # --------------------------------------------------------------------------
 
+
 def load(app):
     upgrade(plugin_name="team_instancer")
     CHALLENGE_CLASSES["team_instance"] = TeamInstanceValueChallenge
-    register_plugin_assets_directory(
-        app, base_path="/plugins/team_instancer/assets/"
-    )
+    register_plugin_assets_directory(app, base_path="/plugins/team_instancer/assets/")
     app.register_blueprint(bp, url_prefix="/plugins/team_instancer")
 
     # Seed the port pool (no-op if already populated or table missing).
     try:
         frp.ensure_port_pool()
-    except Exception:
+    except Exception:  # nosec B110 - no-op if pool already seeded or table missing
         pass
 
     # Start the reaper only when the instancer is active.

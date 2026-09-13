@@ -59,7 +59,9 @@ def get_flag() -> str:
         return "NCTF{" + challenge_secret[:24] + "}"
     # LOCAL DEV ONLY -- no per-challenge secret present in the environment.
     team_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
-    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 
@@ -196,7 +198,9 @@ def whoami():
     claims = verify(bearer() or "")
     if not claims:
         return jsonify(error="invalid or expired token"), 401
-    return jsonify(sub=claims.get("sub"), role=claims.get("role"), exp=claims.get("exp"))
+    return jsonify(
+        sub=claims.get("sub"), role=claims.get("role"), exp=claims.get("exp")
+    )
 
 
 @app.route("/api/admin/rotate", methods=["POST", "GET"])
@@ -209,8 +213,12 @@ def rotate():
     # NOT cover. We verify the *effect* (an admin-only rotation happened),
     # not the shape of whatever token got us here.
     if claims.get("role") != "admin":
-        return jsonify(error="forbidden: admin role required",
-                       your_role=claims.get("role")), 403
+        return (
+            jsonify(
+                error="forbidden: admin role required", your_role=claims.get("role")
+            ),
+            403,
+        )
 
     with STATE_LOCK:
         STATE["maintenance"] = False

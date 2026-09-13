@@ -46,8 +46,8 @@ def extract_blob(path):
     p = off + 8
     xor_seed, xor_mul, plen = data[p], data[p + 1], data[p + 2]
     prog_len = data[p + 3] | (data[p + 4] << 8)
-    obf = data[p + 5:p + 5 + prog_len]
-    target = data[p + 5 + prog_len:p + 5 + prog_len + plen]
+    obf = data[p + 5 : p + 5 + prog_len]
+    target = data[p + 5 + prog_len : p + 5 + prog_len + plen]
     return xor_seed, xor_mul, plen, obf, list(target)
 
 
@@ -64,11 +64,14 @@ def disassemble(prog, plen):
     """Linear disassembly -- proves the stream decodes as valid instructions."""
     pc, out = 0, []
     while pc < len(prog):
-        op = prog[pc]; pc += 1
+        op = prog[pc]
+        pc += 1
         if op == PERM:
-            out.append((PERM, list(prog[pc:pc + plen]))); pc += plen
+            out.append((PERM, list(prog[pc : pc + plen])))
+            pc += plen
         elif op in IMM1:
-            out.append((op, prog[pc])); pc += 1
+            out.append((op, prog[pc]))
+            pc += 1
         else:
             out.append((op, None))
         if op == HALT:
@@ -76,8 +79,12 @@ def disassemble(prog, plen):
     return out
 
 
-def rol8(x, n): return ((x << n) | (x >> (8 - n))) & 0xFF
-def ror8(x, n): return ((x >> n) | (x << (8 - n))) & 0xFF
+def rol8(x, n):
+    return ((x << n) | (x >> (8 - n))) & 0xFF
+
+
+def ror8(x, n):
+    return ((x >> n) | (x << (8 - n))) & 0xFF
 
 
 def run_vm(prog, inp, plen):
@@ -85,31 +92,67 @@ def run_vm(prog, inp, plen):
     st = [0] * 64
     stk, pc = [], 0
     while pc < len(prog):
-        op = prog[pc]; pc += 1
+        op = prog[pc]
+        pc += 1
         if op == HALT or op == 0x00:
             break
-        elif op == NOP:      pass
-        elif op == PUSHI:    stk.append(prog[pc]); pc += 1
-        elif op == LDIN:     stk.append(inp[prog[pc]]); pc += 1
-        elif op == LDST:     stk.append(st[prog[pc]]); pc += 1
-        elif op == STST:     st[prog[pc]] = stk.pop(); pc += 1
-        elif op == POP:      stk.pop()
-        elif op == DUP:      stk.append(stk[-1])
-        elif op == SWAP:     stk[-1], stk[-2] = stk[-2], stk[-1]
-        elif op == ADD:      b = stk.pop(); stk[-1] = (stk[-1] + b) & 0xFF
-        elif op == SUB:      b = stk.pop(); stk[-1] = (stk[-1] - b) & 0xFF
-        elif op == XOR:      b = stk.pop(); stk[-1] ^= b
-        elif op == AND:      b = stk.pop(); stk[-1] &= b
-        elif op == OR:       b = stk.pop(); stk[-1] |= b
-        elif op == MULMOD:   b = stk.pop(); stk[-1] = (stk[-1] * b) & 0xFF
-        elif op == ROL:      c = prog[pc] & 7; stk[-1] = rol8(stk[-1], c); pc += 1
-        elif op == ROR:      c = prog[pc] & 7; stk[-1] = ror8(stk[-1], c); pc += 1
+        elif op == NOP:
+            pass
+        elif op == PUSHI:
+            stk.append(prog[pc])
+            pc += 1
+        elif op == LDIN:
+            stk.append(inp[prog[pc]])
+            pc += 1
+        elif op == LDST:
+            stk.append(st[prog[pc]])
+            pc += 1
+        elif op == STST:
+            st[prog[pc]] = stk.pop()
+            pc += 1
+        elif op == POP:
+            stk.pop()
+        elif op == DUP:
+            stk.append(stk[-1])
+        elif op == SWAP:
+            stk[-1], stk[-2] = stk[-2], stk[-1]
+        elif op == ADD:
+            b = stk.pop()
+            stk[-1] = (stk[-1] + b) & 0xFF
+        elif op == SUB:
+            b = stk.pop()
+            stk[-1] = (stk[-1] - b) & 0xFF
+        elif op == XOR:
+            b = stk.pop()
+            stk[-1] ^= b
+        elif op == AND:
+            b = stk.pop()
+            stk[-1] &= b
+        elif op == OR:
+            b = stk.pop()
+            stk[-1] |= b
+        elif op == MULMOD:
+            b = stk.pop()
+            stk[-1] = (stk[-1] * b) & 0xFF
+        elif op == ROL:
+            c = prog[pc] & 7
+            stk[-1] = rol8(stk[-1], c)
+            pc += 1
+        elif op == ROR:
+            c = prog[pc] & 7
+            stk[-1] = ror8(stk[-1], c)
+            pc += 1
         elif op == PERM:
             tmp = [st[prog[pc + i]] for i in range(plen)]
-            st[:plen] = tmp; pc += plen
-        elif op == CMP:      stk.pop(); stk.pop()      # comparison, no state change
-        elif op == JMP:      pc = prog[pc]
-        else:                raise SystemExit("bad opcode 0x%02x" % op)
+            st[:plen] = tmp
+            pc += plen
+        elif op == CMP:
+            stk.pop()
+            stk.pop()  # comparison, no state change
+        elif op == JMP:
+            pc = prog[pc]
+        else:
+            raise SystemExit("bad opcode 0x%02x" % op)
     return st[:plen]
 
 
@@ -135,8 +178,10 @@ def main():
     seed, mul, plen, obf, target = extract_blob(binpath)
     prog = deobfuscate(obf, seed, mul)
     dis = disassemble(prog, plen)
-    print("[*] blob: plen=%d prog_len=%d seed=0x%02x mul=0x%02x  (%d instrs)"
-          % (plen, len(prog), seed, mul, len(dis)))
+    print(
+        "[*] blob: plen=%d prog_len=%d seed=0x%02x mul=0x%02x  (%d instrs)"
+        % (plen, len(prog), seed, mul, len(dis))
+    )
 
     inp = recover_input(prog, plen, target)
     st = run_vm(prog, inp, plen)
@@ -145,8 +190,11 @@ def main():
     print("[*] recovered input : %r" % inp_bytes)
 
     # the recovered input IS the inner flag text; confirm against the real binary
-    out = subprocess.run([binpath], input=inp_bytes + b"\n",
-                         capture_output=True).stdout.decode().strip()
+    out = (
+        subprocess.run([binpath], input=inp_bytes + b"\n", capture_output=True)
+        .stdout.decode()
+        .strip()
+    )
     print("[*] binary output   : %s" % out)
     expected = "NCTF{" + inp_bytes.decode() + "}"
     assert out == expected, "binary did not print the expected flag"

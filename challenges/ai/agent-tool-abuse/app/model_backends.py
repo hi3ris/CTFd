@@ -85,8 +85,19 @@ def _ollama_chat(messages, tools):
     tcs = []
     for tc in msg.get("tool_calls", []) or []:
         fn = tc.get("function", {}) or {}
-        tcs.append({"function": {"name": fn.get("name", ""), "arguments": fn.get("arguments", {})}})
-    return {"role": "assistant", "content": msg.get("content", "") or "", "tool_calls": tcs}
+        tcs.append(
+            {
+                "function": {
+                    "name": fn.get("name", ""),
+                    "arguments": fn.get("arguments", {}),
+                }
+            }
+        )
+    return {
+        "role": "assistant",
+        "content": msg.get("content", "") or "",
+        "tool_calls": tcs,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -129,12 +140,16 @@ def _summary(messages):
         last = {}
     flag = last.get("flag")
     if flag:
-        return {"role": "assistant",
-                "content": f"[stub] release recorded; endpoint returned: {flag}",
-                "tool_calls": []}
-    return {"role": "assistant",
-            "content": f"[stub] processed. last tool result: {json.dumps(last)}",
-            "tool_calls": []}
+        return {
+            "role": "assistant",
+            "content": f"[stub] release recorded; endpoint returned: {flag}",
+            "tool_calls": [],
+        }
+    return {
+        "role": "assistant",
+        "content": f"[stub] processed. last tool result: {json.dumps(last)}",
+        "tool_calls": [],
+    }
 
 
 def _stub_chat(messages, tools):
@@ -156,12 +171,21 @@ def _stub_chat(messages, tools):
             elif low.startswith("showlog"):
                 calls.append(("read_handoff_log", {}))
         if calls:
-            return {"role": "assistant", "content": "",
-                    "tool_calls": [{"function": {"name": n, "arguments": a}} for n, a in calls]}
-        return {"role": "assistant",
-                "content": ("[stub RELAY] I can search the KB, read the handoff log, and leave "
-                            "a worknote for back-office. I cannot touch the vault myself."),
-                "tool_calls": []}
+            return {
+                "role": "assistant",
+                "content": "",
+                "tool_calls": [
+                    {"function": {"name": n, "arguments": a}} for n, a in calls
+                ],
+            }
+        return {
+            "role": "assistant",
+            "content": (
+                "[stub RELAY] I can search the KB, read the handoff log, and leave "
+                "a worknote for back-office. I cannot touch the vault myself."
+            ),
+            "tool_calls": [],
+        }
 
     # custodian: read directives out of the work queue it was handed (user msg)
     queue = _last(messages, "user")
@@ -176,11 +200,20 @@ def _stub_chat(messages, tools):
         elif verb == "checkout" and len(parts) >= 2:
             calls.append(("checkout", {"artifact_id": parts[1]}))
         elif verb == "disburse" and len(parts) >= 3:
-            calls.append(("disburse", {"artifact_id": parts[1], "destination": parts[2]}))
+            calls.append(
+                ("disburse", {"artifact_id": parts[1], "destination": parts[2]})
+            )
     if calls:
-        return {"role": "assistant", "content": "",
-                "tool_calls": [{"function": {"name": n, "arguments": a}} for n, a in calls]}
-    return {"role": "assistant",
-            "content": ("[stub CUSTODIAN] Work queue reviewed. No approved dual-control "
-                        "disbursement pending; sealed artifacts stay in the vault."),
-            "tool_calls": []}
+        return {
+            "role": "assistant",
+            "content": "",
+            "tool_calls": [{"function": {"name": n, "arguments": a}} for n, a in calls],
+        }
+    return {
+        "role": "assistant",
+        "content": (
+            "[stub CUSTODIAN] Work queue reviewed. No approved dual-control "
+            "disbursement pending; sealed artifacts stay in the vault."
+        ),
+        "tool_calls": [],
+    }

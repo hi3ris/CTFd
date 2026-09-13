@@ -5,15 +5,15 @@ import { createGraph, updateGraph } from "../graphs";
 
 const api_funcs = {
   team: [
-    x => CTFd.api.get_team_solves({ teamId: x }),
-    x => CTFd.api.get_team_fails({ teamId: x }),
-    x => CTFd.api.get_team_awards({ teamId: x })
+    (x) => CTFd.api.get_team_solves({ teamId: x }),
+    (x) => CTFd.api.get_team_fails({ teamId: x }),
+    (x) => CTFd.api.get_team_awards({ teamId: x }),
   ],
   user: [
-    x => CTFd.api.get_user_solves({ userId: x }),
-    x => CTFd.api.get_user_fails({ userId: x }),
-    x => CTFd.api.get_user_awards({ userId: x })
-  ]
+    (x) => CTFd.api.get_user_solves({ userId: x }),
+    (x) => CTFd.api.get_user_fails({ userId: x }),
+    (x) => CTFd.api.get_user_awards({ userId: x }),
+  ],
 };
 
 const createGraphs = (type, id, name, account_id) => {
@@ -22,8 +22,8 @@ const createGraphs = (type, id, name, account_id) => {
   Promise.all([
     solves_func(account_id),
     fails_func(account_id),
-    awards_func(account_id)
-  ]).then(responses => {
+    awards_func(account_id),
+  ]).then((responses) => {
     createGraph(
       "score_graph",
       "#score-graph",
@@ -31,7 +31,7 @@ const createGraphs = (type, id, name, account_id) => {
       type,
       id,
       name,
-      account_id
+      account_id,
     );
     createGraph(
       "category_breakdown",
@@ -40,7 +40,7 @@ const createGraphs = (type, id, name, account_id) => {
       type,
       id,
       name,
-      account_id
+      account_id,
     );
     createGraph(
       "solve_percentages",
@@ -49,7 +49,7 @@ const createGraphs = (type, id, name, account_id) => {
       type,
       id,
       name,
-      account_id
+      account_id,
     );
   });
 };
@@ -60,8 +60,8 @@ const updateGraphs = (type, id, name, account_id) => {
   Promise.all([
     solves_func(account_id),
     fails_func(account_id),
-    awards_func(account_id)
-  ]).then(responses => {
+    awards_func(account_id),
+  ]).then((responses) => {
     updateGraph(
       "score_graph",
       "#score-graph",
@@ -69,7 +69,7 @@ const updateGraphs = (type, id, name, account_id) => {
       type,
       id,
       name,
-      account_id
+      account_id,
     );
     updateGraph(
       "category_breakdown",
@@ -78,7 +78,7 @@ const updateGraphs = (type, id, name, account_id) => {
       type,
       id,
       name,
-      account_id
+      account_id,
     );
     updateGraph(
       "solve_percentages",
@@ -87,7 +87,7 @@ const updateGraphs = (type, id, name, account_id) => {
       type,
       id,
       name,
-      account_id
+      account_id,
     );
   });
 };

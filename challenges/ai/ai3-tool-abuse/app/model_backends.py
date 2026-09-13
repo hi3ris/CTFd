@@ -49,8 +49,12 @@ def _ollama_chat(messages, tools):
         "options": {"temperature": 0.6, "num_ctx": 8192},
     }
     try:
-        r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload,
-        headers={"Authorization": "Bearer " + os.environ.get("AI_PROXY_TOKEN", "")}, timeout=180)
+        r = requests.post(
+            f"{OLLAMA_URL}/api/chat",
+            json=payload,
+            headers={"Authorization": "Bearer " + os.environ.get("AI_PROXY_TOKEN", "")},
+            timeout=180,
+        )
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
         raise ModelError(f"model backend unavailable: {e.__class__.__name__}")
@@ -60,8 +64,19 @@ def _ollama_chat(messages, tools):
     tcs = []
     for tc in msg.get("tool_calls", []) or []:
         fn = tc.get("function", {}) or {}
-        tcs.append({"function": {"name": fn.get("name", ""), "arguments": fn.get("arguments", {})}})
-    return {"role": "assistant", "content": msg.get("content", "") or "", "tool_calls": tcs}
+        tcs.append(
+            {
+                "function": {
+                    "name": fn.get("name", ""),
+                    "arguments": fn.get("arguments", {}),
+                }
+            }
+        )
+    return {
+        "role": "assistant",
+        "content": msg.get("content", "") or "",
+        "tool_calls": tcs,
+    }
 
 
 # ---------------------------------------------------------------------------
@@ -105,7 +120,9 @@ def _stub_chat(messages, tools):
             continue
         verb = parts[0].lower()
         if verb == "approve" and len(parts) >= 2:
-            calls.append(("approve_change", {"ticket_id": parts[1], "approver": "stub"}))
+            calls.append(
+                ("approve_change", {"ticket_id": parts[1], "approver": "stub"})
+            )
         elif verb == "deploy" and len(parts) >= 3:
             args = {"service": parts[1], "environment": parts[2]}
             if len(parts) >= 4:
@@ -126,7 +143,9 @@ def _stub_chat(messages, tools):
         }
     return {
         "role": "assistant",
-        "content": ("[stub model] I can't approve changes or run production deploys for you. "
-                    "I can read tickets and do staging deploys."),
+        "content": (
+            "[stub model] I can't approve changes or run production deploys for you. "
+            "I can read tickets and do staging deploys."
+        ),
         "tool_calls": [],
     }

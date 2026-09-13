@@ -34,6 +34,7 @@ def find_flag(data: bytes):
 
 # --- layer detectors / peelers -------------------------------------------
 
+
 def peel_png_trailer(data: bytes):
     """A PNG whose bytes continue past the IEND chunk hide something after it.
     Return everything following the IEND chunk (its 4-byte CRC included)."""
@@ -138,13 +139,14 @@ def solve(data: bytes) -> bytes:
                 break
         else:
             raise SystemExit(
-                f"[layer {layer}] no known layer matched; stuck on "
-                f"{data[:16]!r}"
+                f"[layer {layer}] no known layer matched; stuck on " f"{data[:16]!r}"
             )
 
 
 def main() -> None:
-    default = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..", "keepsake.png")
+    default = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "keepsake.png"
+    )
     path = sys.argv[1] if len(sys.argv) > 1 else default
     with open(path, "rb") as f:
         data = f.read()

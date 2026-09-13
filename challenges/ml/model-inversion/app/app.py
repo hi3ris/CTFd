@@ -42,7 +42,7 @@ from model import Vault, derive_record, D, S, CLASSES, SEALED
 app = Flask(__name__)
 
 CHALLENGE_ID = "ml-model-inversion"
-TOL = int(os.environ.get("RECORD_TOL", "2"))   # L-inf tolerance on the record
+TOL = int(os.environ.get("RECORD_TOL", "2"))  # L-inf tolerance on the record
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 HANDOUT_DIR = os.environ.get("HANDOUT_DIR") or (
@@ -54,7 +54,7 @@ HANDOUT_DIR = os.environ.get("HANDOUT_DIR") or (
 VAULT = Vault(os.path.join(_HERE, "weights.npz"))
 
 MAX_BODY = 500_000
-MAX_PROBES = 64          # probes per /query request
+MAX_PROBES = 64  # probes per /query request
 
 
 # ---- per-challenge secret / record / flag ----------------------------------
@@ -66,7 +66,9 @@ def _challenge_secret() -> str:
     if cs:
         return cs
     dev_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
-    return hmac.new(dev_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    return hmac.new(
+        dev_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
 
 
 # the memorised record -- derived once at start-up, kept only in memory
@@ -102,9 +104,11 @@ def _rate_limited(ip: str) -> bool:
 
 
 def _client_ip() -> str:
-    return request.headers.get(
-        "X-Forwarded-For", request.remote_addr or "?"
-    ).split(",")[0].strip()
+    return (
+        request.headers.get("X-Forwarded-For", request.remote_addr or "?")
+        .split(",")[0]
+        .strip()
+    )
 
 
 def _as_record(vec, field):
@@ -207,12 +211,20 @@ def query():
 
     body = request.get_json(silent=True)
     if not isinstance(body, dict):
-        return jsonify(ok=False, message='send JSON {"probe": [...]} or {"probes": [[...]]}'), 400
+        return (
+            jsonify(
+                ok=False, message='send JSON {"probe": [...]} or {"probes": [[...]]}'
+            ),
+            400,
+        )
 
     if "probes" in body:
         probes = body["probes"]
         if not isinstance(probes, list) or not (1 <= len(probes) <= MAX_PROBES):
-            return jsonify(ok=False, message=f"'probes' must be 1..{MAX_PROBES} vectors"), 400
+            return (
+                jsonify(ok=False, message=f"'probes' must be 1..{MAX_PROBES} vectors"),
+                400,
+            )
         results = []
         for i, p in enumerate(probes):
             arr, err = _as_record(p, f"probes[{i}]")
@@ -245,12 +257,18 @@ def submit():
     # EFFECT verification: does the returned record match the memorised one?
     linf = int(np.max(np.abs(arr - RECORD)))
     if linf <= TOL:
-        return jsonify(ok=True, linf=linf,
-                       message="sealed record recovered -- vault unlocked",
-                       flag=compute_flag())
-    return jsonify(ok=False, linf=linf,
-                   message=f"record does not match the sealed one "
-                           f"(L-inf {linf} > tolerance {TOL})")
+        return jsonify(
+            ok=True,
+            linf=linf,
+            message="sealed record recovered -- vault unlocked",
+            flag=compute_flag(),
+        )
+    return jsonify(
+        ok=False,
+        linf=linf,
+        message=f"record does not match the sealed one "
+        f"(L-inf {linf} > tolerance {TOL})",
+    )
 
 
 if __name__ == "__main__":

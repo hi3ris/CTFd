@@ -8,7 +8,7 @@ autonome au format ctfcli (`challenge.yml`), important directement dans CTFd.
 - **Mode équipes** : la présélection est jouée par équipe. Les flags dynamiques
   dérivent du `team_id` (= `account_id` côté CTFd en mode équipes).
 - **Oracle côté serveur** pour les challenges à forte valeur : le flag n'est
-  émis qu'après vérification serveur d'un *effet*, jamais présent dans un
+  émis qu'après vérification serveur d'un _effet_, jamais présent dans un
   artefact téléchargeable. Voir `deploy/anti-llm-guardrails.md` §4.
 - **Chaîne de prérequis** pour la catégorie IA : niveau 0 sans inférence, puis
   1→2→3 débloqués via `challenge.yml: requirements`.

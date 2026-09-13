@@ -24,7 +24,7 @@ git log -p --all           # traverses refs only -> only shows the DECOY token
 ```
 
 `git log --all` walks refs, not the reflog, so it will **not** reach the dropped
-commit. It *will* surface the decoy in `NOTES.txt`
+commit. It _will_ surface the decoy in `NOTES.txt`
 (`NCTF{example_token_not_the_real_flag}`), which is clearly labelled as a fake
 placeholder. Ignore it.
 
@@ -61,7 +61,7 @@ An automated version is in [`solve.sh`](solve.sh):
 `NOTES.txt` contains `NCTF{example_token_not_the_real_flag}` in a bullet that
 literally says "this is a fake sample value." It is reachable from normal
 history, so a player who only greps `git log -p` finds it first. It is refutable
-in seconds from the note's own text and from the fact that it is *not* the
+in seconds from the note's own text and from the fact that it is _not_ the
 scrubbed `upload_token` the description asks for. Exactly one decoy, no attempt
 cost.
 
@@ -75,7 +75,7 @@ commit is unreachable-but-present, and crucially never runs `git gc`/`git prune`
 ## Honesty note — how an LLM does here
 
 This is a well-known git-forensics motif, so a capable LLM/agent will very likely
-one-shot it *if it can run git* against the extracted repo: `git reflog` +
+one-shot it _if it can run git_ against the extracted repo: `git reflog` +
 `git show` is the canonical move and is all over training data. The mild
 friction is (1) recognising that `git log`/`git log --all` is deliberately clean
 and that the reflog/`fsck` is required, and (2) not stopping at the decoy token.

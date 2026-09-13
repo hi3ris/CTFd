@@ -4,7 +4,7 @@
 
 A per-team TCP service exposes a classic **CBC padding oracle**, but wrapped in
 a home-grown binary framing (POP1) instead of HTTP, and it never tells you that
-the oracle *is* a padding oracle. Speak the framing, discover that `VERIFY`
+the oracle _is_ a padding oracle. Speak the framing, discover that `VERIFY`
 leaks PKCS#7 validity, run the standard byte-at-a-time attack to decrypt the
 token, strip padding, and `SUBMIT` it. The server checks the effect (you
 produced the true plaintext) and emits the per-team flag.
@@ -48,8 +48,8 @@ The protocol deliberately does not say what `VERIFY` computes. You infer it:
   block -> status flips to `0` (you corrupted the padding of the last block),
   while flipping a byte in an earlier block leaves it `1`.
 
-That behaviour -- a boolean that depends only on whether the *last decrypted
-block* has valid padding -- is the fingerprint of a PKCS#7 padding oracle. Once
+That behaviour -- a boolean that depends only on whether the _last decrypted
+block_ has valid padding -- is the fingerprint of a PKCS#7 padding oracle. Once
 you see it, the rest is textbook.
 
 ### 4. Byte-at-a-time recovery
@@ -101,7 +101,7 @@ technique; its friction is elsewhere and is genuine:
   LLM will still produce this, but it must get the framing byte-exact against a
   live socket, and a subtly wrong checksum or endianness silently desyncs.
 - **The oracle is unlabelled.** The service returns an opaque 1-word code and
-  never says "padding". The solver has to *establish* that it is a padding
+  never says "padding". The solver has to _establish_ that it is a padding
   oracle from probing behaviour rather than being told, which is real
   inference-from-evidence rather than pattern recall.
 - **Server-side effect gate.** The flag only exists after a correct `SUBMIT`
@@ -109,5 +109,5 @@ technique; its friction is elsewhere and is genuine:
   an autonomous agent cannot iterate all night without touching the service.
 
 Net: a capable solver (human or AI-assisted) will get this in reasonable time --
-it is a *medium*. What it resists is the one-prompt "paste the file, get the
+it is a _medium_. What it resists is the one-prompt "paste the file, get the
 flag" solve, because there is no file and the oracle must be characterised live.

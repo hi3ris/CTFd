@@ -23,10 +23,9 @@ import hashlib
 import hmac
 import os
 
-from CTFd.plugins.flags import FLAG_CLASSES, BaseFlag, FlagException
 from CTFd.plugins import register_plugin_assets_directory
+from CTFd.plugins.flags import FLAG_CLASSES, BaseFlag, FlagException
 from CTFd.utils.user import get_current_user
-
 
 FLAG_PREFIX = "NCTF{"
 FLAG_SUFFIX = "}"
@@ -71,7 +70,11 @@ def challenge_secret_for(account_id: int, challenge_id: str) -> str:
 
 
 def expected_flag(account_id: int, challenge_id: str) -> str:
-    return FLAG_PREFIX + challenge_secret_for(account_id, challenge_id)[:DIGEST_LEN] + FLAG_SUFFIX
+    return (
+        FLAG_PREFIX
+        + challenge_secret_for(account_id, challenge_id)[:DIGEST_LEN]
+        + FLAG_SUFFIX
+    )
 
 
 class CTFdTeamHmacFlag(BaseFlag):
@@ -106,6 +109,4 @@ class CTFdTeamHmacFlag(BaseFlag):
 
 def load(app):
     FLAG_CLASSES["team_hmac"] = CTFdTeamHmacFlag
-    register_plugin_assets_directory(
-        app, base_path="/plugins/team_hmac_flag/assets/"
-    )
+    register_plugin_assets_directory(app, base_path="/plugins/team_hmac_flag/assets/")

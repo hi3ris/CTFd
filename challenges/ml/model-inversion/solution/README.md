@@ -8,7 +8,7 @@ A confidence oracle leaks a **bilinear similarity** between your probe and a
 sealed record `r` the model memorised. Invert the softmax to read the SEALED
 logit, probe the `D=24` coordinate directions to read `u = M·(r/255)`, then solve
 the linear system with the white-box metric `M = EᵀE` to get `r = 255·M⁻¹u`. Hand
-`r` back to `/submit`; the server checks the *effect* (does the returned record
+`r` back to `/submit`; the server checks the _effect_ (does the returned record
 match the memorised one within L-inf 2) and emits the per-team flag.
 
 ## The oracle
@@ -26,7 +26,7 @@ and **never** returned by `/query` or present in any file.
 
 ## The inversion
 
-The SEALED logit is *linear in `r`*, so a handful of well-chosen probes pin it
+The SEALED logit is _linear in `r`_, so a handful of well-chosen probes pin it
 down exactly.
 
 1. **Invert the softmax.** For any probe, `s(p) = ln(P_SEALED / P_OTHER)` (the
@@ -61,7 +61,7 @@ description and handout is the whole puzzle. Other one-shot mistakes that fail:
 ## Offline soundness proof
 
 I cannot run Docker here (live run = **Lot 5**), so the attack was verified
-statically against the *actual* server code:
+statically against the _actual_ server code:
 
 ```
 $ python3 solve.py --offline

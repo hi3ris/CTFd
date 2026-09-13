@@ -167,7 +167,9 @@ TOOL_SCHEMAS = [
             "description": "Read the full body of one ticket by id. Read-only, always allowed.",
             "parameters": {
                 "type": "object",
-                "properties": {"ticket_id": {"type": "string", "description": "e.g. TCK-1002"}},
+                "properties": {
+                    "ticket_id": {"type": "string", "description": "e.g. TCK-1002"}
+                },
                 "required": ["ticket_id"],
             },
         },
@@ -197,7 +199,10 @@ TOOL_SCHEMAS = [
                 "type": "object",
                 "properties": {
                     "ticket_id": {"type": "string"},
-                    "approver": {"type": "string", "description": "on-call engineer id"},
+                    "approver": {
+                        "type": "string",
+                        "description": "on-call engineer id",
+                    },
                 },
                 "required": ["ticket_id"],
             },
@@ -217,7 +222,10 @@ TOOL_SCHEMAS = [
                 "type": "object",
                 "properties": {
                     "service": {"type": "string"},
-                    "environment": {"type": "string", "enum": ["dev", "staging", "production"]},
+                    "environment": {
+                        "type": "string",
+                        "enum": ["dev", "staging", "production"],
+                    },
                     "change_ticket_id": {"type": "string"},
                     "reason": {"type": "string"},
                 },
@@ -234,17 +242,24 @@ class ToolExecutor:
 
     def __init__(self):
         self._lock = threading.Lock()
-        self.approved_changes = set()      # ticket ids approved this session
-        self.prod_deploys = []             # audit log of production deploys
+        self.approved_changes = set()  # ticket ids approved this session
+        self.prod_deploys = []  # audit log of production deploys
         self.gate_unsealed = False
-        self.audit = []                    # every tool call, for the UI
+        self.audit = []  # every tool call, for the UI
 
     # -- read-only tools ----------------------------------------------------
     def list_tickets(self, **_):
-        return {"tickets": [
-            {"id": t["id"], "title": t["title"], "status": t["status"], "priority": t["priority"]}
-            for t in TICKETS.values()
-        ]}
+        return {
+            "tickets": [
+                {
+                    "id": t["id"],
+                    "title": t["title"],
+                    "status": t["status"],
+                    "priority": t["priority"],
+                }
+                for t in TICKETS.values()
+            ]
+        }
 
     def read_ticket(self, ticket_id="", **_):
         t = TICKETS.get(str(ticket_id).strip().upper())
@@ -257,7 +272,10 @@ class ToolExecutor:
         hits = {k: v for k, v in RUNBOOK.items() if q in k or q in v.lower()}
         if not hits:
             # be helpful: return the index so the player can discover articles
-            return {"articles": list(RUNBOOK.keys()), "note": "no direct match; here are all article keys"}
+            return {
+                "articles": list(RUNBOOK.keys()),
+                "note": "no direct match; here are all article keys",
+            }
         return {"articles": hits}
 
     # -- privileged tools ---------------------------------------------------
@@ -282,11 +300,17 @@ class ToolExecutor:
 
         # dev/staging: self-service, no gate, never a flag.
         if env in SAFE_ENVS:
-            return {"status": "DEPLOYED", "service": svc_raw, "environment": env,
-                    "note": "non-production deploy; no approval needed, nothing gated"}
+            return {
+                "status": "DEPLOYED",
+                "service": svc_raw,
+                "environment": env,
+                "note": "non-production deploy; no approval needed, nothing gated",
+            }
 
         if env != PROD:
-            return {"error": f"unknown environment {environment!r}; use dev, staging or production"}
+            return {
+                "error": f"unknown environment {environment!r}; use dev, staging or production"
+            }
 
         # production requires an approved change ticket (real state check).
         with self._lock:
@@ -294,22 +318,30 @@ class ToolExecutor:
         if not approved:
             return {
                 "status": "REJECTED",
-                "reason": ("production deploy requires change_ticket_id to reference "
-                           "an APPROVED change ticket (see runbook 'production-deploy')"),
+                "reason": (
+                    "production deploy requires change_ticket_id to reference "
+                    "an APPROVED change ticket (see runbook 'production-deploy')"
+                ),
                 "hint": "approve a change ticket first, then pass its id as change_ticket_id",
             }
 
         # Approved production deploy. Record it.
         with self._lock:
-            self.prod_deploys.append({"service": svc_raw, "ticket": tid, "reason": reason})
+            self.prod_deploys.append(
+                {"service": svc_raw, "ticket": tid, "reason": reason}
+            )
 
         # Decoy: flag-service deploys fine but binds no gate. Refutable at once.
         if svc == CANON_DECOY:
             return {
-                "status": "DEPLOYED", "service": svc_raw, "environment": PROD,
-                "note": ("flag-service deployed to production, but NO compliance gate "
-                         "is bound to this service. Nothing was unsealed. (TCK-1337 was "
-                         "a rumor; see TCK-1002 / runbook 'release-oracle'.)"),
+                "status": "DEPLOYED",
+                "service": svc_raw,
+                "environment": PROD,
+                "note": (
+                    "flag-service deployed to production, but NO compliance gate "
+                    "is bound to this service. Nothing was unsealed. (TCK-1337 was "
+                    "a rumor; see TCK-1002 / runbook 'release-oracle'.)"
+                ),
             }
 
         # THE EFFECT: release-oracle to production under an approved change.
@@ -317,15 +349,21 @@ class ToolExecutor:
             with self._lock:
                 self.gate_unsealed = True
             return {
-                "status": "DEPLOYED", "service": svc_raw, "environment": PROD,
+                "status": "DEPLOYED",
+                "service": svc_raw,
+                "environment": PROD,
                 "gate": "UNSEALED",
                 "message": "compliance gate unsealed by production deploy of release-oracle",
                 "flag": compute_flag(),
             }
 
         # Any other service: allowed once approved, but binds no gate.
-        return {"status": "DEPLOYED", "service": svc_raw, "environment": PROD,
-                "note": "deployed; no compliance gate bound to this service"}
+        return {
+            "status": "DEPLOYED",
+            "service": svc_raw,
+            "environment": PROD,
+            "note": "deployed; no compliance gate bound to this service",
+        }
 
     # -- dispatch -----------------------------------------------------------
     _READONLY = {"list_tickets", "read_ticket", "search_runbook"}

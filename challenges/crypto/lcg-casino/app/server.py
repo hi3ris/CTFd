@@ -98,20 +98,28 @@ class Handler(socketserver.BaseRequestHandler):
             "multiplier": core.A,
             "increment": core.C,
             "deck": DECK_N,
-            "shuffle": ("factorial-base (lexicographic) decode of the published "
-                        "rank into a permutation of [0..deck-1]; see SPEC.md"),
+            "shuffle": (
+                "factorial-base (lexicographic) decode of the published "
+                "rank into a permutation of [0..deck-1]; see SPEC.md"
+            ),
             "commitment": commitment,
-            "commitment_note": ("SHA-256 of the secret seed, published for "
-                                "auditability. The seed itself is never revealed."),
+            "commitment_note": (
+                "SHA-256 of the secret seed, published for "
+                "auditability. The seed itself is never revealed."
+            ),
             "streak_target": STREAK_TARGET,
             "flag_format": "NCTF{...}",
-            "rules": ("Each hand: send your call for the HIGH card, then the "
-                      "hand is dealt and the full shuffle is published. Land "
-                      f"{STREAK_TARGET} correct calls in a row to take the "
-                      "jackpot. Any miss resets the streak to 0. Hands are "
-                      "unlimited."),
-            "protocol": ("line-delimited JSON. Reply to each place_call with "
-                         '{"call": <int 0..deck-1>}.'),
+            "rules": (
+                "Each hand: send your call for the HIGH card, then the "
+                "hand is dealt and the full shuffle is published. Land "
+                f"{STREAK_TARGET} correct calls in a row to take the "
+                "jackpot. Any miss resets the streak to 0. Hands are "
+                "unlimited."
+            ),
+            "protocol": (
+                "line-delimited JSON. Reply to each place_call with "
+                '{"call": <int 0..deck-1>}.'
+            ),
         }
         self._send(banner)
 
@@ -126,25 +134,31 @@ class Handler(socketserver.BaseRequestHandler):
                 msg = json.loads(line.decode())
                 call = int(msg["call"])
             except Exception:
-                self._send({"msg": "error",
-                            "detail": 'expected {"call": <int 0..%d>}' % (DECK_N - 1)})
+                self._send(
+                    {
+                        "msg": "error",
+                        "detail": 'expected {"call": <int 0..%d>}' % (DECK_N - 1),
+                    }
+                )
                 # Treat a malformed call as an automatic miss so the protocol
                 # stays in lockstep; it costs nothing but the streak.
                 call = -1
 
             state, perm, high = core.deal(state)
-            win = (call == high)
+            win = call == high
             streak = streak + 1 if win else 0
 
-            self._send({
-                "msg": "reveal",
-                "hand": hand,
-                "shuffle": perm,
-                "high_card": high,
-                "your_call": call,
-                "result": "WIN" if win else "MISS",
-                "streak": streak,
-            })
+            self._send(
+                {
+                    "msg": "reveal",
+                    "hand": hand,
+                    "shuffle": perm,
+                    "high_card": high,
+                    "your_call": call,
+                    "result": "WIN" if win else "MISS",
+                    "streak": streak,
+                }
+            )
 
             if streak >= STREAK_TARGET:
                 self._send({"msg": "jackpot", "flag": compute_flag()})

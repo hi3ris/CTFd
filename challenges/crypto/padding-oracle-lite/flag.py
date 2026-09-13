@@ -39,7 +39,9 @@ _DEV_TEAM_SECRET_FALLBACK = "local-dev-secret"
 
 def flag(team_secret: str) -> str:
     """Legacy per-team derivation, kept for compatibility / local dev only."""
-    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 

@@ -30,7 +30,7 @@ bit is set in byte 0, use the shifted character (so `b`→`B`, `-`→`_`, `2`→
 
 1. **Two devices are on the bus.** Besides the keyboard (device address 3,
    8-byte reports) there is a **mouse** (device address 5, 4-byte reports)
-   producing motion noise the whole time. If you dump *every* interrupt
+   producing motion noise the whole time. If you dump _every_ interrupt
    `usb.capdata` and decode it, the mouse bytes corrupt the text. This is the
    intended decoy — and it is instantly refutable: the mouse reports are
    4 bytes, not 8, and sit on a different device address. Filter to the device
@@ -78,7 +78,7 @@ usbmon header struct — no hand-faked bytes.
 ## Honest note on LLM difficulty
 
 A frontier LLM knows the USB HID usage table and the usbmon format cold, so the
-"decode keystrokes from a USB pcap" *skeleton* is nearly one-prompt solvable.
+"decode keystrokes from a USB pcap" _skeleton_ is nearly one-prompt solvable.
 This challenge is kept from being trivial by three concrete, evidence-driven
 snags rather than by obscurity:
 
@@ -92,4 +92,4 @@ snags rather than by obscurity:
 
 None of these need telepathy — every one is visible in the capture — but they
 do require reading the evidence instead of pattern-matching a template, which
-is what keeps it an honest *easy* rather than a freebie.
+is what keeps it an honest _easy_ rather than a freebie.

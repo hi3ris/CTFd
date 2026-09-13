@@ -11,7 +11,7 @@ function switchTab(event) {
   $(event.target)
     .closest("[role=tabpanel]")
     .find("input,textarea")
-    .each(function(i, e) {
+    .each(function (i, e) {
       let $e = $(e);
       let status = e.checkValidity();
       if (status === false) {
@@ -30,12 +30,12 @@ function switchTab(event) {
 }
 
 function processDateTime(datetime) {
-  return function(_event) {
+  return function (_event) {
     let date_picker = $(`#${datetime}-date`);
     let time_picker = $(`#${datetime}-time`);
     let unix_time = dayjs(
       `${date_picker.val()} ${time_picker.val()}`,
-      "YYYY-MM-DD HH:mm"
+      "YYYY-MM-DD HH:mm",
     ).unix();
 
     if (isNaN(unix_time)) {
@@ -59,7 +59,7 @@ function mlcSetup(_event) {
     start: $("#start-preview").val(),
     end: $("#end-preview").val(),
     platform: "CTFd",
-    state: window.STATE
+    state: window.STATE,
   };
 
   const ret = [];
@@ -68,20 +68,17 @@ function mlcSetup(_event) {
   }
   window.open(
     "https://www.majorleaguecyber.org/events/new?" + ret.join("&"),
-    "_blank"
+    "_blank",
   );
 }
 
 $(() => {
   $(".tab-next").click(switchTab);
-  $("input").on("keypress", function(e) {
+  $("input").on("keypress", function (e) {
     // Hook Enter button
     if (e.keyCode == 13) {
       e.preventDefault();
-      $(e.target)
-        .closest(".tab-pane")
-        .find("button[data-href]")
-        .click();
+      $(e.target).closest(".tab-pane").find("button[data-href]").click();
     }
   });
 
@@ -90,45 +87,40 @@ $(() => {
   $("#start-date,#start-time").change(processDateTime("start"));
   $("#end-date,#end-time").change(processDateTime("end"));
 
-  $("#config-color-picker").on("input", function(_e) {
+  $("#config-color-picker").on("input", function (_e) {
     $("#config-color-input").val($(this).val());
   });
 
-  $("#config-color-reset").click(function() {
+  $("#config-color-reset").click(function () {
     $("#config-color-input").val("");
     $("#config-color-picker").val("");
   });
 
-  window.addEventListener("storage", function(event) {
+  window.addEventListener("storage", function (event) {
     if (event.key == "integrations" && event.newValue) {
       let integration = JSON.parse(event.newValue);
       if (integration["name"] == "mlc") {
-        $("#integration-mlc")
-          .text("Already Configured")
-          .attr("disabled", true);
+        $("#integration-mlc").text("Already Configured").attr("disabled", true);
         window.focus();
         localStorage.removeItem("integrations");
       }
     }
   });
 
-  $("#setup-form").submit(function(e) {
+  $("#setup-form").submit(function (e) {
     if ($("#newsletter-checkbox").prop("checked")) {
-      let email = $(e.target)
-        .find("input[name=email]")
-        .val();
+      let email = $(e.target).find("input[name=email]").val();
 
       $.ajax({
         type: "POST",
-        url:
-          "https://ctfd.us15.list-manage.com/subscribe/post-json?u=6c7fa6feeced52775aec9d015&id=dd1484208e&c=?",
+        url: "https://ctfd.us15.list-manage.com/subscribe/post-json?u=6c7fa6feeced52775aec9d015&id=dd1484208e&c=?",
         data: {
           EMAIL: email,
           subscribe: "Subscribe",
-          b_6c7fa6feeced52775aec9d015_dd1484208e: ""
+          b_6c7fa6feeced52775aec9d015_dd1484208e: "",
         },
         dataType: "jsonp",
-        contentType: "application/json; charset=utf-8"
+        contentType: "application/json; charset=utf-8",
       });
     }
   });

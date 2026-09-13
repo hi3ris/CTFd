@@ -23,8 +23,9 @@ import json
 
 def post(base, path, obj):
     data = json.dumps(obj).encode()
-    req = urllib.request.Request(base + path, data=data,
-                                 headers={"Content-Type": "application/json"})
+    req = urllib.request.Request(
+        base + path, data=data, headers={"Content-Type": "application/json"}
+    )
     return json.load(urllib.request.urlopen(req, timeout=15))
 
 

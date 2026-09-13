@@ -15,13 +15,13 @@ All multi-byte integers are **little-endian**.
 
 ## 1. Image header (offset 0x00, 8 bytes)
 
-| Offset | Size | Field       | Meaning                                                   |
-|-------:|-----:|-------------|-----------------------------------------------------------|
-| 0x00   | 4    | `MAGIC`     | ASCII `"AE32"` (0x41 0x45 0x33 0x32).                      |
-| 0x04   | 1    | `NBANKS`    | Number of logical banks in the register file.             |
-| 0x05   | 1    | `VAULT_LEN` | Length in bytes of the key held in the vault.             |
-| 0x06   | 1    | `STRIDE`    | Intra-bank spacing between successive vault slots (bytes). |
-| 0x07   | 1    | `HCK`       | Header checksum. See note.                                 |
+| Offset | Size | Field       | Meaning                                                    |
+| -----: | ---: | ----------- | ---------------------------------------------------------- |
+|   0x00 |    4 | `MAGIC`     | ASCII `"AE32"` (0x41 0x45 0x33 0x32).                      |
+|   0x04 |    1 | `NBANKS`    | Number of logical banks in the register file.              |
+|   0x05 |    1 | `VAULT_LEN` | Length in bytes of the key held in the vault.              |
+|   0x06 |    1 | `STRIDE`    | Intra-bank spacing between successive vault slots (bytes). |
+|   0x07 |    1 | `HCK`       | Header checksum. See note.                                 |
 
 **Header checksum (`HCK`).** `HCK = (sum of the seven bytes at 0x00..0x06) mod 256`.
 It validates the header block **only**. It deliberately does **not** cover the bank

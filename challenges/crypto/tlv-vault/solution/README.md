@@ -15,11 +15,11 @@ details break any parser that treats it like DER/protobuf or generic TLV:
 
 1. **Length prefixes count records/entries, not bytes.** The header's
    `rec_count` is a number of records; each record's `count` is a number of
-   *entries*, and you must multiply by the per-type entry size to advance.
+   _entries_, and you must multiply by the per-type entry size to advance.
 2. **The header checksum covers the header only** (`sum(bytes[0:7]) & 0xFF`).
    Checksumming the whole file never validates - a hint you're using it wrong.
 3. **The ciphertext offset is relative to EOF.** `ciphertext_start =
-   filesize - ct_off`. Reading from start-of-file lands in the wrong place.
+filesize - ct_off`. Reading from start-of-file lands in the wrong place.
 4. **The `version` byte is a key mask.** Each stored key byte must be XORed
    with `version` to get the real key byte. Raw XOR (skipping the mask) yields
    near-garbage - the tell that something is still off.
@@ -44,7 +44,7 @@ the spec refutes it in one line. It never costs an attempt.
 - `version = 0x7c`.
 - KEY: `count=8`, so 8 entries x 2 bytes = 16 bytes. Entries are
   `(pos, stored)` and appear **out of order**: `(2,0x9d)(6,0x83)(0,0xf6)
-  (3,0x8e)(1,0x16)(7,0x31)(4,0xef)(5,0xd8)`. Real key byte =
+(3,0x8e)(1,0x16)(7,0x31)(4,0xef)(5,0xd8)`. Real key byte =
   `stored ^ version`, e.g. `key[0] = 0xf6 ^ 0x7c = 0x8a`.
 - META: `ct_len=32`, `ct_off=36`. `filesize = 68`, so
   `ciphertext_start = 68 - 36 = 32 (0x20)`. The last 4 bytes (`00 45 4e 44`)
@@ -79,7 +79,7 @@ some files. You need a general reader.
   reading `count` as a byte length (walks off the first record), checksumming
   the whole file and declaring the files corrupt, reading the ciphertext from
   start-of-file, and forgetting the `version` mask (producing text that is
-  *almost* readable, which is a nasty tarpit because it looks close). A model
+  _almost_ readable, which is a nasty tarpit because it looks close). A model
   that reads the spec carefully and iterates against "does this decode to ASCII"
   will get there; a one-prompt "decode this file" attempt generally does not,
   because no single assumption is standard and the traps compound.

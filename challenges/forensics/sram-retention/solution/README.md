@@ -21,21 +21,21 @@ trip up a fast reader.
 
 Header at `0x00` (little-endian throughout):
 
-| Off  | Sz | Field       |
-|------|----|-------------|
-| 0x00 | 4  | `MAGIC` = `AE32` |
-| 0x04 | 1  | `NBANKS`    |
-| 0x05 | 1  | `VAULT_LEN` |
-| 0x06 | 1  | `STRIDE`    |
-| 0x07 | 1  | `HCK` (checksum of bytes 0x00..0x06 only) |
+| Off  | Sz  | Field                                     |
+| ---- | --- | ----------------------------------------- |
+| 0x00 | 4   | `MAGIC` = `AE32`                          |
+| 0x04 | 1   | `NBANKS`                                  |
+| 0x05 | 1   | `VAULT_LEN`                               |
+| 0x06 | 1   | `STRIDE`                                  |
+| 0x07 | 1   | `HCK` (checksum of bytes 0x00..0x06 only) |
 
 Then at `0x08`, `NBANKS` × u16 LE bank base table. Each bank starts with tag
 `b"BNK" + bytes([logical_id])`; vault registers begin 4 bytes after the tag.
 
 ## The three things you have to get right
 
-1. **Bank offsets are end-of-file relative.** The table stores a *distance from
-   EOF*, not an absolute offset:
+1. **Bank offsets are end-of-file relative.** The table stores a _distance from
+   EOF_, not an absolute offset:
    `phys(bank i) = filesize - table_entry[i]`.
    The `BNK`+id tag at the computed offset confirms you did it right. (If you read
    the entries as absolute offsets they point into noise and no tag appears.)
@@ -46,7 +46,7 @@ Then at `0x08`, `NBANKS` × u16 LE bank base table. Each bank starts with tag
 
 3. **The key is interleaved round-robin across logical banks.** Byte `k` of the
    key is in logical bank `k % NBANKS`, slot `j = k // NBANKS`, at intra-bank
-   offset `4 + j*STRIDE`. Consecutive key bytes live in *different* banks, so any
+   offset `4 + j*STRIDE`. Consecutive key bytes live in _different_ banks, so any
    single bank read in isolation gives you gibberish. De-interleave in that order.
 
 ## Solve
@@ -89,7 +89,7 @@ grab.
 
 ## Honest note for pre-testing
 
-This is a *careful reading + de-interleave* problem, not an obscure-tooling one.
+This is a _careful reading + de-interleave_ problem, not an obscure-tooling one.
 A capable solver (LLM included) that actually reads the datasheet can write the
 parser directly; the samples exist precisely so you can confirm the interleave
 order without guesswork. What makes it non-trivial and non-one-prompt:

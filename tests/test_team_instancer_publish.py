@@ -25,6 +25,7 @@ def _reload_settings(monkeypatch, **env):
     for k, v in env.items():
         monkeypatch.setenv(k, v)
     from CTFd.plugins.team_instancer import settings
+
     return importlib.reload(settings)
 
 
@@ -38,7 +39,9 @@ def test_default_is_frp_on_arena(monkeypatch):
 
 
 def test_direct_mode_publishes_on_host_bridge(monkeypatch):
-    s = _reload_settings(monkeypatch, INSTANCER_PUBLISH="direct", INSTANCER_OLLAMA_MODEL="llama3.2:3b")
+    s = _reload_settings(
+        monkeypatch, INSTANCER_PUBLISH="direct", INSTANCER_OLLAMA_MODEL="llama3.2:3b"
+    )
     assert not s.uses_frp()
     assert s.network_driver() == "bridge"
     assert s.port_binding(28001) == ("0.0.0.0", 28001)
@@ -48,6 +51,7 @@ def test_direct_mode_publishes_on_host_bridge(monkeypatch):
 
 def test_unknown_mode_is_rejected_at_import(monkeypatch):
     import pytest
+
     with pytest.raises(RuntimeError):
         _reload_settings(monkeypatch, INSTANCER_PUBLISH="magic")
     _reload_settings(monkeypatch)  # restore for other tests
@@ -56,6 +60,7 @@ def test_unknown_mode_is_rejected_at_import(monkeypatch):
 def test_frpc_calls_are_skipped_in_direct_mode(monkeypatch):
     _reload_settings(monkeypatch, INSTANCER_PUBLISH="direct")
     from CTFd.plugins.team_instancer import backend
+
     importlib.reload(backend)
     called = []
     monkeypatch.setattr(backend, "_frpc_request", lambda *a, **k: called.append(a))

@@ -6,14 +6,14 @@ recording itself.
 
 ## What we know
 
-* It is **binary FSK** (two tones, one per bit). The two tone frequencies are
+- It is **binary FSK** (two tones, one per bit). The two tone frequencies are
   **not** the textbook Bell-103/Bell-202 pairs — measure them from the capture.
-* The modulator is **continuous-phase** (no clicks at symbol boundaries), so
+- The modulator is **continuous-phase** (no clicks at symbol boundaries), so
   edge-triggered symbol clocking behaves.
-* There are **no UART start/stop bits and no parity** on the primary link. It is
+- There are **no UART start/stop bits and no parity** on the primary link. It is
   a raw, contiguous bitstream. (An off-the-shelf `minimodem` run assuming 8N1
-  Bell-202 will *not* give you the payload.)
-* We do not know which tone is `1` and which is `0`, nor the bit order — you must
+  Bell-202 will _not_ give you the payload.)
+- We do not know which tone is `1` and which is `0`, nor the bit order — you must
   recover those.
 
 ## Frame structure (once you have the raw bits)

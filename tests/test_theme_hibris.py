@@ -5,7 +5,13 @@ template or a missing static file before anything reaches AWS."""
 import os
 import re
 
-from tests.helpers import create_ctfd, destroy_ctfd, login_as_user, register_user, setup_ctfd
+from tests.helpers import (
+    create_ctfd,
+    destroy_ctfd,
+    login_as_user,
+    register_user,
+    setup_ctfd,
+)
 
 os.environ.setdefault("CTF_TEAM_FLAG_SECRET", "test-secret")
 
@@ -20,6 +26,7 @@ def _app():
     # first request, as Flask requires — so this test sees the URLs a real
     # server renders, whatever the test order.
     from CTFd.utils.helpers import asset_cache_url_default, env_asset_url_default
+
     for fn in (env_asset_url_default, asset_cache_url_default):
         if fn not in app.url_default_functions.get(None, []):
             app.url_defaults(fn)
@@ -35,12 +42,14 @@ def test_public_pages_render_with_hibris_branding():
             assert r.status_code == 200, path
             html = r.get_data(as_text=True)
             assert "family=Tourney" in html, f"{path}: hibris fonts not loaded"
-            assert "Powered by <strong>Hibris</strong>" in html, f"{path}: footer credit missing"
+            assert (
+                "Powered by <strong>Hibris</strong>" in html
+            ), f"{path}: footer credit missing"
             assert "Organisé par CERT.tg" in html, f"{path}: organizer credit missing"
             assert "Powered by CTFd" not in html, f"{path}: CTFd tell leaked"
         home = client.get("/").get_data(as_text=True)
         assert 'name="theme-color" content="#00040d"' in home
-        assert 'img/cert.png' in home
+        assert "img/cert.png" in home
     destroy_ctfd(app)
 
 
@@ -55,6 +64,7 @@ def test_error_pages_are_terminal_styled_and_french():
         assert "GET /this-does-not-exist" in html
         assert "File not found" not in html
         from flask import render_template
+
         for code in ("403", "404", "429", "500", "502"):
             with app.test_request_context(f"/x/{code}"):
                 html = render_template(f"errors/{code}.html", error="boom")
@@ -68,8 +78,14 @@ def test_every_referenced_theme_asset_resolves():
         anon = app.test_client()
         register_user(app)
         authed = login_as_user(app)
-        pages = [(anon, "/"), (anon, "/login"), (anon, "/scoreboard"), (anon, "/users"),
-                 (authed, "/settings"), (authed, "/notifications")]
+        pages = [
+            (anon, "/"),
+            (anon, "/login"),
+            (anon, "/scoreboard"),
+            (anon, "/users"),
+            (authed, "/settings"),
+            (authed, "/notifications"),
+        ]
         seen, broken = set(), []
         for client, path in pages:
             html = client.get(path, follow_redirects=True).get_data(as_text=True)
@@ -82,7 +98,10 @@ def test_every_referenced_theme_asset_resolves():
                     broken.append(key)
         assert seen, "no theme assets referenced at all?"
         assert not broken, f"theme assets 404: {broken}"
-        for url in ("/plugins/team_instancer/assets/view.js", "/plugins/team_instancer/assets/view.html"):
+        for url in (
+            "/plugins/team_instancer/assets/view.js",
+            "/plugins/team_instancer/assets/view.html",
+        ):
             assert anon.get(url).status_code == 200, url
     destroy_ctfd(app)
 
@@ -92,6 +111,7 @@ def test_plugins_register_their_types():
     with app.app_context():
         from CTFd.plugins.challenges import CHALLENGE_CLASSES
         from CTFd.plugins.flags import FLAG_CLASSES
+
         assert "team_instance" in CHALLENGE_CLASSES
         assert "team_hmac" in FLAG_CLASSES
     destroy_ctfd(app)

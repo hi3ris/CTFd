@@ -5,30 +5,30 @@ import hljs from "highlight.js";
 export default () => {
   // TODO: This is kind of a hack to mimic a React-like state construct.
   // It should be removed once we have a real front-end framework in place.
-  $(":input").each(function() {
+  $(":input").each(function () {
     $(this).data("initial", $(this).val());
   });
 
   $(".form-control").bind({
-    focus: function() {
+    focus: function () {
       $(this).removeClass("input-filled-invalid");
       $(this).addClass("input-filled-valid");
     },
-    blur: function() {
+    blur: function () {
       if ($(this).val() === "") {
         $(this).removeClass("input-filled-invalid");
         $(this).removeClass("input-filled-valid");
       }
-    }
+    },
   });
 
-  $(".form-control").each(function() {
+  $(".form-control").each(function () {
     if ($(this).val()) {
       $(this).addClass("input-filled-valid");
     }
   });
 
-  $(".page-select").change(function() {
+  $(".page-select").change(function () {
     let url = new URL(window.location);
     url.searchParams.set("page", this.value);
     window.location.href = url.toString();
@@ -38,7 +38,7 @@ export default () => {
 
   $(() => {
     // Syntax highlighting
-    document.querySelectorAll("pre code").forEach(block => {
+    document.querySelectorAll("pre code").forEach((block) => {
       hljs.highlightBlock(block);
     });
   });

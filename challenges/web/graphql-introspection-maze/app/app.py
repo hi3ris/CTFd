@@ -74,7 +74,9 @@ def compute_flag() -> str:
     # CHALLENGE_SECRET are always injected. Reproduces the old per-team value so
     # off-arena runs still work.
     team_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
-    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 
@@ -190,9 +192,15 @@ schema = build_schema(SDL)
 
 # Attach the custom scalar behaviour.
 node_ref = schema.type_map["NodeRef"]
-node_ref.serialize = lambda value: value if isinstance(value, str) else encode_noderef(value["kind"], value["ordinal"])
+node_ref.serialize = (
+    lambda value: value
+    if isinstance(value, str)
+    else encode_noderef(value["kind"], value["ordinal"])
+)
 node_ref.parse_value = decode_noderef  # from variables
-node_ref.parse_literal = lambda ast, _vars=None: decode_noderef(getattr(ast, "value", None))  # inline literal
+node_ref.parse_literal = lambda ast, _vars=None: decode_noderef(
+    getattr(ast, "value", None)
+)  # inline literal
 
 # ---------------------------------------------------------------------------
 # Per-session server-side state (the "effect" lives here).
@@ -205,10 +213,18 @@ SESSIONS = {}  # sid -> {"clearance": str, "email": str}
 ANNOUNCEMENTS = [
     (41, "Scheduled maintenance", "Region ATLAS-3 read-only 02:00-02:30 UTC."),
     (44, "Deprecation notice", "Legacy /v1 refs retire next quarter; ids stay opaque."),
-    (47, "New operator onboarding", "Ask your sponsor to reassign your clearance from OBSERVER."),
+    (
+        47,
+        "New operator onboarding",
+        "Ask your sponsor to reassign your clearance from OBSERVER.",
+    ),
     (52, "Incident retro", "ATLAS-3 latency spike root-caused to cache stampede."),
     (58, "Policy update", "Warrant issuance moved to the offline signing HSM."),
-    (63, "Break-glass runbook", "To take ROOT, redeem a valid warrant against the ops mutation; expired warrants can no longer be redeemed at the edge."),
+    (
+        63,
+        "Break-glass runbook",
+        "To take ROOT, redeem a valid warrant against the ops mutation; expired warrants can no longer be redeemed at the edge.",
+    ),
 ]
 
 YOU_ORDINAL = 1337  # your principal
@@ -336,7 +352,12 @@ def index():
 @app.get("/graphql")
 def graphql_get():
     # No GraphiQL. Explicit, so tools don't assume it's just missing.
-    return jsonify({"errors": [{"message": "GraphQL over GET is not enabled; POST a query."}]}), 405
+    return (
+        jsonify(
+            {"errors": [{"message": "GraphQL over GET is not enabled; POST a query."}]}
+        ),
+        405,
+    )
 
 
 def _ensure_session():
@@ -348,7 +369,9 @@ def _ensure_session():
             new = True
         # Touch to create state on first use.
         with _LOCK:
-            SESSIONS.setdefault(sid, {"clearance": "OBSERVER", "email": "operator@atlas.example"})
+            SESSIONS.setdefault(
+                sid, {"clearance": "OBSERVER", "email": "operator@atlas.example"}
+            )
     return sid, new
 
 

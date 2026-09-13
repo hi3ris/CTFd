@@ -29,8 +29,9 @@ STATIC_FLAG = "NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
 
 
 def team_flag(team_secret: str) -> str:
-    digest = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(),
-                      hashlib.sha256).hexdigest()
+    digest = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + digest[:24] + "}"
 
 

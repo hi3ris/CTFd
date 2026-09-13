@@ -48,8 +48,8 @@ MODEL = os.environ.get("OLLAMA_MODEL", "llama3.1:8b")
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://localhost:11434").rstrip("/")
 
 # Conversation limits (generous; just keeps the backend from being hammered)
-MAX_TURNS = 40          # user turns kept in a session's history
-MAX_MSG_CHARS = 4000    # per user message
+MAX_TURNS = 40  # user turns kept in a session's history
+MAX_MSG_CHARS = 4000  # per user message
 
 
 # ---------------------------------------------------------------------------
@@ -144,8 +144,12 @@ def call_ollama(messages):
         "stream": False,
         "options": {"temperature": 0.7, "num_ctx": 4096},
     }
-    r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload,
-        headers={"Authorization": "Bearer " + os.environ.get("AI_PROXY_TOKEN", "")}, timeout=120)
+    r = requests.post(
+        f"{OLLAMA_URL}/api/chat",
+        json=payload,
+        headers={"Authorization": "Bearer " + os.environ.get("AI_PROXY_TOKEN", "")},
+        timeout=120,
+    )
     r.raise_for_status()
     data = r.json()
     return data.get("message", {}).get("content", "")
@@ -223,7 +227,11 @@ def health():
 
 @app.post("/chat")
 def chat():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip()
+    ip = (
+        request.headers.get("X-Forwarded-For", request.remote_addr or "?")
+        .split(",")[0]
+        .strip()
+    )
     if _rate_limited(ip):
         return jsonify(error="rate limited, slow down a little"), 429
 
@@ -269,10 +277,14 @@ def verify():
 
     # One decoy, refutable in seconds: the public demo token is not the secret.
     if hmac.compare_digest(cand, CANON_DEMO):
-        return jsonify(ok=False, message="that is the PUBLIC demo token, not the guarded secret")
+        return jsonify(
+            ok=False, message="that is the PUBLIC demo token, not the guarded secret"
+        )
 
     if hmac.compare_digest(cand, CANON_SECRET):
-        return jsonify(ok=True, message="correct -- secret recovered", flag=compute_flag())
+        return jsonify(
+            ok=True, message="correct -- secret recovered", flag=compute_flag()
+        )
 
     return jsonify(ok=False, message="not the guarded secret")
 

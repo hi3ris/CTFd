@@ -14,7 +14,7 @@ import struct
 import sys
 
 MAGIC = b"AE32"
-VAULT_BASE = 4      # vault registers start after the 4-byte bank tag "BNK"+id
+VAULT_BASE = 4  # vault registers start after the 4-byte bank tag "BNK"+id
 
 
 def decode(data):
@@ -36,9 +36,9 @@ def decode(data):
     phys = []
     for i in range(nbanks):
         stored = struct.unpack_from("<H", data, 0x08 + 2 * i)[0]
-        base = filesize - stored          # <-- the twist: distance from EOF
+        base = filesize - stored  # <-- the twist: distance from EOF
         # sanity: each bank starts with tag b"BNK" + logical id
-        assert data[base:base + 3] == b"BNK", f"bank {i} tag missing at {base:#x}"
+        assert data[base : base + 3] == b"BNK", f"bank {i} tag missing at {base:#x}"
         assert data[base + 3] == i, f"bank {i} id mismatch"
         phys.append(base)
 

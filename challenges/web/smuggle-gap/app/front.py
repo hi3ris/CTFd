@@ -136,8 +136,11 @@ def serve() -> None:
     srv.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     srv.bind((LISTEN_HOST, LISTEN_PORT))
     srv.listen(128)
-    print(f"[front] edge proxy listening on {LISTEN_HOST}:{LISTEN_PORT} "
-          f"-> app {BACKEND_HOST}:{BACKEND_PORT}", flush=True)
+    print(
+        f"[front] edge proxy listening on {LISTEN_HOST}:{LISTEN_PORT} "
+        f"-> app {BACKEND_HOST}:{BACKEND_PORT}",
+        flush=True,
+    )
     while True:
         conn, _addr = srv.accept()
         threading.Thread(target=handle_client, args=(conn,), daemon=True).start()

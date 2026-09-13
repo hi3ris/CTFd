@@ -13,16 +13,16 @@ be recognised from its **magic bytes / structure**.
 
 ## The onion (outside → in)
 
-| Layer | What it is | How you know | How to peel |
-|------:|------------|--------------|-------------|
-| L0 | valid **PNG** with data appended after `IEND` | the file is bigger than the PNG; bytes continue past the `IEND` chunk | carve everything after `IEND`+CRC |
-| L1 | a **ZIP** archive (its one entry) | `PK\x03\x04` local-file-header signature | unzip; read the single member |
-| L2 | **Ascii85** text | printable, framed `<~ … ~>` | `base64.a85decode(…, adobe=True)` |
-| L3 | a **gzip** stream | magic `1f 8b` | `gzip.decompress` |
-| L4 | a **bzip2** stream | magic `BZh` | `bz2.decompress` |
-| L5 | a **POSIX tar** with `flag.txt` | `ustar` at offset 257 | extract the member → the flag |
+| Layer | What it is                                    | How you know                                                          | How to peel                       |
+| ----: | --------------------------------------------- | --------------------------------------------------------------------- | --------------------------------- |
+|    L0 | valid **PNG** with data appended after `IEND` | the file is bigger than the PNG; bytes continue past the `IEND` chunk | carve everything after `IEND`+CRC |
+|    L1 | a **ZIP** archive (its one entry)             | `PK\x03\x04` local-file-header signature                              | unzip; read the single member     |
+|    L2 | **Ascii85** text                              | printable, framed `<~ … ~>`                                           | `base64.a85decode(…, adobe=True)` |
+|    L3 | a **gzip** stream                             | magic `1f 8b`                                                         | `gzip.decompress`                 |
+|    L4 | a **bzip2** stream                            | magic `BZh`                                                           | `bz2.decompress`                  |
+|    L5 | a **POSIX tar** with `flag.txt`               | `ustar` at offset 257                                                 | extract the member → the flag     |
 
-Each transform is the *only* thing that makes sense given the bytes in hand;
+Each transform is the _only_ thing that makes sense given the bytes in hand;
 there are no format labels anywhere. Recognising `PK`, `1f 8b`, `BZh`, `<~ ~>`,
 and the tar `ustar` magic is the whole challenge.
 
@@ -64,7 +64,7 @@ python3 solve.py ../keepsake.png
 
 Per the anti-LLM authoring rules the description only sets the scene ("an
 ordinary picture that weighs too much; peel it") and never names PNG, zip,
-Ascii85, gzip, bzip2 or tar. The player has to *deduce* each layer from magic
+Ascii85, gzip, bzip2 or tar. The player has to _deduce_ each layer from magic
 bytes. There are no self-labelled decoys and the flag never appears verbatim in
 the handout — it exists only inside the innermost tar member (`gen.py` asserts
 this at build time).
@@ -80,7 +80,7 @@ Re-running produces a byte-identical handout (verified via `md5sum`).
 
 A capable agent that can run code will likely solve this: the individual moves
 (carve trailing zip, spot `1f 8b`, `bunzip2`, untar) are textbook. The friction
-that keeps it honest at **medium** is that *nothing states the chain* — the
+that keeps it honest at **medium** is that _nothing states the chain_ — the
 solver must inspect-and-dispatch at each of six layers, recover from the
 appended-zip offset quirk, and recognise Adobe-framed Ascii85 rather than plain
 base64. It rewards reading bytes, not reading the prompt.

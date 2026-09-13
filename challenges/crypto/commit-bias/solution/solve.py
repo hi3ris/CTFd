@@ -53,9 +53,9 @@ def berlekamp_massey_fp(seq, p):
 
 def parse(path):
     p = None
-    reveals = {}          # idx -> Y
-    commits = {}          # idx -> 16-byte commit
-    vault = None          # (idx, commit_bytes, ct_bytes)
+    reveals = {}  # idx -> Y
+    commits = {}  # idx -> 16-byte commit
+    vault = None  # (idx, commit_bytes, ct_bytes)
     for raw in open(path):
         line = raw.strip()
         if not line or line.startswith("#") or line.startswith("COINVAULT"):
@@ -73,15 +73,18 @@ def parse(path):
         elif line.startswith("VAULT"):
             parts = line.split("|")
             fields = dict(kv.split("=", 1) for kv in parts[1:])
-            vault = (int(fields["IDX"]),
-                     bytes.fromhex(fields["C"]),
-                     bytes.fromhex(fields["CT"]))
+            vault = (
+                int(fields["IDX"]),
+                bytes.fromhex(fields["C"]),
+                bytes.fromhex(fields["CT"]),
+            )
     return p, reveals, commits, vault
 
 
 def commit(val, idx, fe_bytes):
-    return hashlib.sha256(val.to_bytes(fe_bytes, "big")
-                          + idx.to_bytes(4, "big")).digest()[:16]
+    return hashlib.sha256(
+        val.to_bytes(fe_bytes, "big") + idx.to_bytes(4, "big")
+    ).digest()[:16]
 
 
 def unseal(ct, val, fe_bytes):
@@ -103,8 +106,10 @@ def solve(path):
     # sanity: every opened commitment must match its revealed draw
     for i in idxs:
         assert commit(reveals[i], i, fe_bytes) == commits[i], f"bad commit @{i}"
-    print(f"[*] parsed {len(seq)} opened draws over a {p.bit_length()}-bit field; "
-          f"all commitments verify")
+    print(
+        f"[*] parsed {len(seq)} opened draws over a {p.bit_length()}-bit field; "
+        f"all commitments verify"
+    )
 
     # recover the hidden linear recurrence from the opened stream
     coeffs = berlekamp_massey_fp(seq, p)
@@ -126,8 +131,9 @@ def solve(path):
     y_vault = y[vault_idx]
 
     # the vault commitment is the proof our prediction is right
-    assert commit(y_vault, vault_idx, fe_bytes) == vault_commit, \
-        "predicted vault draw does not match its published commitment"
+    assert (
+        commit(y_vault, vault_idx, fe_bytes) == vault_commit
+    ), "predicted vault draw does not match its published commitment"
     print(f"[+] predicted sealed draw y_{vault_idx} matches the vault commitment")
 
     flag = unseal(ct, y_vault, fe_bytes).decode()
@@ -136,6 +142,7 @@ def solve(path):
 
 
 if __name__ == "__main__":
-    default = os.path.join(os.path.dirname(os.path.abspath(__file__)),
-                           "..", "handout", "ledger.coinvault")
+    default = os.path.join(
+        os.path.dirname(os.path.abspath(__file__)), "..", "handout", "ledger.coinvault"
+    )
     solve(sys.argv[1] if len(sys.argv) > 1 else default)

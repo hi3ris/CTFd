@@ -25,22 +25,27 @@ curl -s -F model=@model.pkl http://HOST:PORT/validate
 Success -- the object loaded, here is its repr:
 
 ```json
-{"status":"ok","loaded_type":"dict",
- "model_summary":"{'name': 'demo-linear', 'weights': [0.1, -0.4, 2.0]}",
- "truncated":false}
+{
+  "status": "ok",
+  "loaded_type": "dict",
+  "model_summary": "{'name': 'demo-linear', 'weights': [0.1, -0.4, 2.0]}",
+  "truncated": false
+}
 ```
 
 Rejected -- the restricted loader refused a class, and tells you why:
 
 ```json
-{"status":"rejected",
- "reason":"class not allowed: os.system (module 'os' is blocked)"}
+{
+  "status": "rejected",
+  "reason": "class not allowed: os.system (module 'os' is blocked)"
+}
 ```
 
 Error -- the pickle failed to load for some other reason:
 
 ```json
-{"status":"error","reason":"UnpicklingError: ..."}
+{ "status": "error", "reason": "UnpicklingError: ..." }
 ```
 
 ## The included example

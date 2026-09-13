@@ -6,14 +6,14 @@ terminated). It is not HTTP.
 
 ## The game
 
-An 11-card deck, cards labelled `0..10`. Each *hand*:
+An 11-card deck, cards labelled `0..10`. Each _hand_:
 
 1. Server prompts you: `{"msg":"place_call","hand":n,"streak":s}`
 2. You reply with your call **before** the deal:
    `{"call": <int 0..10>}`
 3. The server deals the hand and publishes the full result:
    `{"msg":"reveal","hand":n,"shuffle":[...11 cards...],
-     "high_card":h,"your_call":c,"result":"WIN"|"MISS","streak":s'}`
+"high_card":h,"your_call":c,"result":"WIN"|"MISS","streak":s'}`
 
 Land **10 correct calls in a row** and the service pays the jackpot:
 `{"msg":"jackpot","flag":"NCTF{...}"}`. Any miss resets the streak to `0`.
@@ -75,5 +75,5 @@ place a live call.
 ## A word on the commitment
 
 Chasing a SHA-256 preimage of the committed seed is a dead end and unnecessary:
-you never need the seed. Recover the *running state* from a couple of published
+you never need the seed. Recover the _running state_ from a couple of published
 shuffles and you can call every future hand exactly.

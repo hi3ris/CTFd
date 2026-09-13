@@ -52,7 +52,7 @@ from gatemodel import GateModel, CLASSES, GRANTED, SIDE
 app = Flask(__name__)
 
 CHALLENGE_ID = "ml-adversarial-gate"
-EPS = int(os.environ.get("GATE_EPS", "8"))     # L-inf budget in 0..255 levels
+EPS = int(os.environ.get("GATE_EPS", "8"))  # L-inf budget in 0..255 levels
 
 _HERE = os.path.dirname(os.path.abspath(__file__))
 # In the container the handout corpus is copied to <app>/handout; in the dev
@@ -66,7 +66,7 @@ HANDOUT_DIR = os.environ.get("HANDOUT_DIR") or (
 MODEL = GateModel(os.path.join(_HERE, "weights.npz"))
 DENIED = np.load(os.path.join(_HERE, "denied_badge.npy")).astype(np.int32)
 
-MAX_BODY = 200_000     # a 32x32 QGP1 packet is ~1KB; cap generously
+MAX_BODY = 200_000  # a 32x32 QGP1 packet is ~1KB; cap generously
 
 
 # ---- per-challenge flag (new contract; mirrors flag.py get_flag()) ----
@@ -83,7 +83,9 @@ def compute_flag() -> str:
         return "NCTF{" + cs[:24] + "}"
     # LOCAL DEV fallback only -- never reached in the arena.
     dev_secret = os.environ.get("TEAM_SECRET", "local-dev-secret")
-    dig = hmac.new(dev_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    dig = hmac.new(
+        dev_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + dig[:24] + "}"
 
 
@@ -184,7 +186,7 @@ def _extract_blob():
         body = request.get_json(silent=True) or {}
         b64 = body.get("badge")
         if not isinstance(b64, str) or not b64.strip():
-            return None, "send {\"badge\": \"<base64 QGP1 packet>\"}"
+            return None, 'send {"badge": "<base64 QGP1 packet>"}'
         try:
             return base64.b64decode(b64, validate=False), None
         except Exception:
@@ -197,7 +199,11 @@ def _extract_blob():
 
 @app.post("/submit")
 def submit():
-    ip = request.headers.get("X-Forwarded-For", request.remote_addr or "?").split(",")[0].strip()
+    ip = (
+        request.headers.get("X-Forwarded-For", request.remote_addr or "?")
+        .split(",")[0]
+        .strip()
+    )
     if _rate_limited(ip):
         return jsonify(ok=False, message="rate limited, slow down a little"), 429
 
@@ -216,27 +222,39 @@ def submit():
 
     arr = np.array(rows, dtype=np.int64)
     if arr.shape != (SIDE, SIDE):
-        return jsonify(ok=False,
-                       message=f"badge must be {SIDE}x{SIDE}, got {arr.shape}")
+        return jsonify(
+            ok=False, message=f"badge must be {SIDE}x{SIDE}, got {arr.shape}"
+        )
     if arr.min() < 0 or arr.max() > 255:
         return jsonify(ok=False, message="pixel values must be 0..255")
 
     # 2. epsilon bound -- measured in raw 0..255 integer levels
     linf = int(np.max(np.abs(arr - DENIED)))
     if linf > EPS:
-        return jsonify(ok=False, linf=linf,
-                       message=f"perturbation exceeds L-inf budget "
-                               f"(eps={EPS}); your L-inf = {linf}")
+        return jsonify(
+            ok=False,
+            linf=linf,
+            message=f"perturbation exceeds L-inf budget "
+            f"(eps={EPS}); your L-inf = {linf}",
+        )
 
     # 3. run the REAL classifier and 4. verify the EFFECT
     pred = MODEL.predict(arr.astype(np.uint8))
     label = CLASSES[pred]
     if pred == GRANTED:
-        return jsonify(ok=True, linf=linf, predicted=label,
-                       message="gate opened -- badge classified GRANTED",
-                       flag=compute_flag())
-    return jsonify(ok=False, linf=linf, predicted=label,
-                   message=f"badge classified {label}, not GRANTED")
+        return jsonify(
+            ok=True,
+            linf=linf,
+            predicted=label,
+            message="gate opened -- badge classified GRANTED",
+            flag=compute_flag(),
+        )
+    return jsonify(
+        ok=False,
+        linf=linf,
+        predicted=label,
+        message=f"badge classified {label}, not GRANTED",
+    )
 
 
 if __name__ == "__main__":

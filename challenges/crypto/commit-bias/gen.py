@@ -39,10 +39,10 @@ HERE = os.path.dirname(os.path.abspath(__file__))
 HANDOUT = os.path.join(HERE, "handout")
 
 # --- fixed knobs -----------------------------------------------------------
-SEED       = 20260913          # deterministic build
-ORDER_K    = 7                 # secret recurrence order
-N_REVEAL   = 48                # opened rounds published in the ledger
-VAULT_IDX  = N_REVEAL          # index of the sealed (un-opened) vault round
+SEED = 20260913  # deterministic build
+ORDER_K = 7  # secret recurrence order
+N_REVEAL = 48  # opened rounds published in the ledger
+VAULT_IDX = N_REVEAL  # index of the sealed (un-opened) vault round
 
 FLAG = "NCTF{c0mmit_r3v34l_but_th3_dr4ws_w3re_l1n34rly_l1nk3d}"
 
@@ -88,7 +88,7 @@ def berlekamp_massey_fp(seq, p):
     """Minimal linear recurrence for seq over F_p (p prime).
     Returns coeffs c with  y_n = sum_{i=1..L} c[i-1]*y_{n-i}  (mod p)."""
     n = len(seq)
-    C = [1] + [0] * n         # connection polynomial
+    C = [1] + [0] * n  # connection polynomial
     B = [1] + [0] * n
     L, m, b = 0, 1, 1
     for i in range(n):
@@ -122,8 +122,8 @@ def build():
 
     # Secret recurrence: order-k coefficients + k seed draws, all in F_p.
     while True:
-        coeffs = [rng.randrange(1, p) for _ in range(ORDER_K)]   # c_1..c_k
-        y = [rng.randrange(1, p) for _ in range(ORDER_K)]        # y_0..y_{k-1}
+        coeffs = [rng.randrange(1, p) for _ in range(ORDER_K)]  # c_1..c_k
+        y = [rng.randrange(1, p) for _ in range(ORDER_K)]  # y_0..y_{k-1}
         # generate through the vault index
         while len(y) <= VAULT_IDX:
             r = len(y)
@@ -160,13 +160,18 @@ def build():
     lines.append("# CoinVault fair-flip ledger export. See SPEC.md to parse.")
     lines.append("P=%x" % p)
     lines.append("ROUNDS=%d" % N_REVEAL)
-    lines.append("# opened rounds:  R<idx>|C=<16-byte commit hex>|Y=<draw hex>|B=<coin bit>")
+    lines.append(
+        "# opened rounds:  R<idx>|C=<16-byte commit hex>|Y=<draw hex>|B=<coin bit>"
+    )
     for r in range(N_REVEAL):
-        lines.append("R%03d|C=%s|Y=%x|B=%d" % (
-            r, commit(y[r], r).hex(), y[r], y[r] & 1))
+        lines.append(
+            "R%03d|C=%s|Y=%x|B=%d" % (r, commit(y[r], r).hex(), y[r], y[r] & 1)
+        )
     lines.append("# sealed vault round: committed and funded, never opened.")
-    lines.append("VAULT|IDX=%d|C=%s|CT=%s" % (
-        VAULT_IDX, commit(y_vault, VAULT_IDX).hex(), ct.hex()))
+    lines.append(
+        "VAULT|IDX=%d|C=%s|CT=%s"
+        % (VAULT_IDX, commit(y_vault, VAULT_IDX).hex(), ct.hex())
+    )
     text = "\n".join(lines) + "\n"
 
     os.makedirs(HANDOUT, exist_ok=True)

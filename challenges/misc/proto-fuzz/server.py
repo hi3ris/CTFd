@@ -49,7 +49,7 @@ PORT = int(os.environ.get("PORT", "9109"))
 # is intentionally NOT part of the documented count -- it sits adjacent in the
 # backing store and is only reachable through the CFG length off-by-one.
 DOC_CHANNELS = 3
-STORE_SIZE = 4          # channels 0..3; index 3 == maintenance
+STORE_SIZE = 4  # channels 0..3; index 3 == maintenance
 MAINT = 3
 
 FLAG = get_flag()
@@ -92,12 +92,12 @@ class FZLPHandler(socketserver.StreamRequestHandler):
         m = 0
         for i in range(STORE_SIZE):
             if self.channels[i]:
-                m |= (1 << i)
+                m |= 1 << i
         return m
 
     def handle(self):
         # Per-connection state.
-        self.channels = bytearray(STORE_SIZE)   # index 3 (MAINT) starts locked
+        self.channels = bytearray(STORE_SIZE)  # index 3 (MAINT) starts locked
         try:
             self.wfile.write(BANNER)
             self.wfile.flush()
@@ -127,8 +127,12 @@ class FZLPHandler(socketserver.StreamRequestHandler):
                 elif verb == "STAT":
                     self.reply(
                         "STAT ch0=%02x ch1=%02x ch2=%02x mask=0x%02x reserved_admin_ch=0x07"
-                        % (self.channels[0], self.channels[1],
-                           self.channels[2], self.mask())
+                        % (
+                            self.channels[0],
+                            self.channels[1],
+                            self.channels[2],
+                            self.mask(),
+                        )
                     )
 
                 elif verb == "CFG":
@@ -147,8 +151,10 @@ class FZLPHandler(socketserver.StreamRequestHandler):
 
                 elif verb == "SU":
                     # Decoy dead-end. Always refuses regardless of input.
-                    self.reply("ERR: SU disabled on this build; "
-                               "channels are provisioned via CFG")
+                    self.reply(
+                        "ERR: SU disabled on this build; "
+                        "channels are provisioned via CFG"
+                    )
 
                 else:
                     self.reply("ERR unknown verb (try HELP)")
@@ -185,7 +191,7 @@ class FZLPHandler(socketserver.StreamRequestHandler):
         # final iteration writes index 3 == the maintenance channel.
         for i in range(n + 1):
             entry = self.read_line()
-            self.channels[i] = parse_hex_byte(entry)   # store is size 4: safe
+            self.channels[i] = parse_hex_byte(entry)  # store is size 4: safe
 
         armed_now = bool(self.channels[MAINT])
         if armed_now:

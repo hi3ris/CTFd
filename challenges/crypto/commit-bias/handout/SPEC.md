@@ -3,7 +3,7 @@
 A CoinVault table runs a commit-reveal coin-flip game. Each round the dealer
 first **seals** its draw (publishes a commitment), then later **opens** it
 (reveals the draw so anyone can recheck the seal). This file is a plain-text
-export of one table's session. This document tells you only how to *parse* it.
+export of one table's session. This document tells you only how to _parse_ it.
 
 ## Encoding
 
@@ -28,7 +28,7 @@ One line per opened round, index `r = 0 .. ROUNDS-1`:
 R<rrr>|C=<hex>|Y=<hex>|B=<bit>
 ```
 
-* `C` — the round's **commitment**, 16 bytes (32 hex chars). It is defined as
+- `C` — the round's **commitment**, 16 bytes (32 hex chars). It is defined as
 
   ```
   C = SHA256( Y_bytes || r_bytes )[:16]
@@ -37,9 +37,9 @@ R<rrr>|C=<hex>|Y=<hex>|B=<bit>
   where `Y_bytes = Y.to_bytes(FE, "big")` and `r_bytes = r.to_bytes(4, "big")`.
   You can (and should) recompute it from `Y` to confirm your parsing.
 
-* `Y` — the round's **draw**, a field element in `F_p`, hex.
+- `Y` — the round's **draw**, a field element in `F_p`, hex.
 
-* `B` — the published **coin** of the round, equal to `Y mod 2`.
+- `B` — the published **coin** of the round, equal to `Y mod 2`.
 
 ### The vault round
 
@@ -49,10 +49,10 @@ Exactly one line:
 VAULT|IDX=<int>|C=<hex>|CT=<hex>
 ```
 
-* `IDX` — the vault round's index (it directly follows the opened rounds).
-* `C` — its commitment, formed exactly like `C` above (with `r = IDX`). The
+- `IDX` — the vault round's index (it directly follows the opened rounds).
+- `C` — its commitment, formed exactly like `C` above (with `r = IDX`). The
   vault round is **committed but never opened**: its draw `Y` is not in the file.
-* `CT` — the sealed vault payload, a byte string (hex). It is the flag XORed
+- `CT` — the sealed vault payload, a byte string (hex). It is the flag XORed
   with a SHA-256 counter-mode keystream keyed by the vault draw `Y_vault`:
 
   ```

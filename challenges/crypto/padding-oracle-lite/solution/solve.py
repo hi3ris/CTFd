@@ -32,7 +32,12 @@ def build_frame(opcode, payload=b""):
     chk = opcode
     for b in payload:
         chk ^= b
-    return bytes([SYNC, opcode]) + struct.pack("<H", nwords) + payload + bytes([chk & 0xFF])
+    return (
+        bytes([SYNC, opcode])
+        + struct.pack("<H", nwords)
+        + payload
+        + bytes([chk & 0xFF])
+    )
 
 
 def recv_exact(sock, n):
@@ -103,7 +108,7 @@ def main():
     assert op == OP_CT
     print(f"[*] token blob: {len(blob)} bytes (IV + {len(blob) - 16} ct)")
 
-    blocks = [blob[i:i + BLOCK] for i in range(0, len(blob), BLOCK)]
+    blocks = [blob[i : i + BLOCK] for i in range(0, len(blob), BLOCK)]
     plaintext = b""
     for i in range(1, len(blocks)):
         pt = recover_block(sock, blocks[i - 1], blocks[i])

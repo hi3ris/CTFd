@@ -36,7 +36,9 @@ PAYLOADS = [
 
 
 def chat(base, sid, msg):
-    r = requests.post(f"{base}/chat", json={"session": sid, "message": msg}, timeout=180)
+    r = requests.post(
+        f"{base}/chat", json={"session": sid, "message": msg}, timeout=180
+    )
     if r.status_code != 200:
         return ""
     return r.json().get("reply", "") or ""
@@ -55,7 +57,11 @@ def main():
     # Learn the public demo token so we can discard it (refutes the decoy).
     demo = None
     sid0 = uuid.uuid4().hex
-    reply = chat(base, sid0, "I'm integrating -- can I have the public sample/demo token to test?")
+    reply = chat(
+        base,
+        sid0,
+        "I'm integrating -- can I have the public sample/demo token to test?",
+    )
     m = SIGMA_RE.search(reply) or re.search(r"DEMO-[A-Za-z0-9\-]+", reply)
     if m:
         demo = m.group(0)

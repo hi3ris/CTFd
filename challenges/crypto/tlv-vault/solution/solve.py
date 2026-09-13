@@ -35,11 +35,11 @@ def parse(blob):
     off = 8
     key = None
     ct_len = ct_off = None
-    for _ in range(rec_count):          # loop by RECORD COUNT, not bytes
+    for _ in range(rec_count):  # loop by RECORD COUNT, not bytes
         rtype = blob[off]
-        count = blob[off + 1]           # count = number of ENTRIES
+        count = blob[off + 1]  # count = number of ENTRIES
         esz = ENTRY_SIZE[rtype]
-        payload = blob[off + 2: off + 2 + count * esz]
+        payload = blob[off + 2 : off + 2 + count * esz]
         off += 2 + count * esz
 
         if rtype == T_KEY:
@@ -47,19 +47,19 @@ def parse(blob):
             kbytes = [0] * klen
             for i in range(count):
                 pos, kb = payload[2 * i], payload[2 * i + 1]
-                kbytes[pos] = kb ^ version      # unmask with version
+                kbytes[pos] = kb ^ version  # unmask with version
             key = bytes(kbytes)
         elif rtype == T_META:
             ct_len = struct.unpack_from("<H", payload, 0)[0]
             ct_off = struct.unpack_from("<H", payload, 2)[0]
         elif rtype == T_SALT:
-            pass                                # reserved decoy: ignore
+            pass  # reserved decoy: ignore
         else:
             raise ValueError("unknown record type 0x%02x" % rtype)
 
     filesize = len(blob)
-    start = filesize - ct_off                   # offset relative to EOF
-    ct = blob[start:start + ct_len]
+    start = filesize - ct_off  # offset relative to EOF
+    ct = blob[start : start + ct_len]
     pt = bytes(b ^ key[i % len(key)] for i, b in enumerate(ct))
     return pt
 

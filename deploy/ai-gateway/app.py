@@ -53,7 +53,9 @@ if _TOKEN_KEY_HEX:
     _TOKEN_KEY = bytes.fromhex(_TOKEN_KEY_HEX)
 else:
     _master = os.environ.pop("CTF_TEAM_FLAG_SECRET", "")
-    _TOKEN_KEY = hmac.new(_master.encode(), b"ai-proxy-token-key", hashlib.sha256).digest()
+    _TOKEN_KEY = hmac.new(
+        _master.encode(), b"ai-proxy-token-key", hashlib.sha256
+    ).digest()
     del _master
 
 
@@ -65,15 +67,15 @@ def _int(env, d):
 
 
 # Admission parameters (tune at rehearsal).
-RATE_MAX = _int("AI_RATE_MAX", 10)                 # messages per window per team
-RATE_WINDOW = _int("AI_RATE_WINDOW", 60)           # seconds
-TOKEN_BUDGET = _int("AI_TOKEN_BUDGET", 60000)      # tokens per window per team
-TOKEN_WINDOW = _int("AI_TOKEN_WINDOW", 3600)       # seconds
+RATE_MAX = _int("AI_RATE_MAX", 10)  # messages per window per team
+RATE_WINDOW = _int("AI_RATE_WINDOW", 60)  # seconds
+TOKEN_BUDGET = _int("AI_TOKEN_BUDGET", 60000)  # tokens per window per team
+TOKEN_WINDOW = _int("AI_TOKEN_WINDOW", 3600)  # seconds
 GLOBAL_MAX_INFLIGHT = _int("AI_GLOBAL_INFLIGHT", 6)
-LEVEL_MAX_DEFAULT = _int("AI_LEVEL_MAX", 4)        # per-level global concurrency
+LEVEL_MAX_DEFAULT = _int("AI_LEVEL_MAX", 4)  # per-level global concurrency
 MAX_PER_TEAM_INFLIGHT = _int("AI_TEAM_INFLIGHT", 2)  # a team's share of the global pool
-EST_TOKENS = _int("AI_EST_TOKENS", 1200)           # provisional budget reservation per call
-QUEUE_WAIT = _int("AI_QUEUE_WAIT", 20)             # total seconds a request may wait for a slot
+EST_TOKENS = _int("AI_EST_TOKENS", 1200)  # provisional budget reservation per call
+QUEUE_WAIT = _int("AI_QUEUE_WAIT", 20)  # total seconds a request may wait for a slot
 UPSTREAM_TIMEOUT = _int("AI_UPSTREAM_TIMEOUT", 180)
 LOG_DIR = os.environ.get("AI_LOG_DIR", "/var/log/ai-gateway")
 LOG_CONTENT = os.environ.get("AI_LOG_CONTENT", "0") == "1"
@@ -87,13 +89,13 @@ except OSError:
 
 # --- shared state (guarded by _lock) --------------------------------------
 _lock = threading.Lock()
-_rate = {}           # team -> [ts, ...]
-_tokens = {}         # team -> [(ts, count), ...]
-_reserved = {}       # team -> provisional tokens reserved for in-flight calls
-_inflight = {}       # team -> count of in-flight calls (per-team share of pool)
+_rate = {}  # team -> [ts, ...]
+_tokens = {}  # team -> [(ts, count), ...]
+_reserved = {}  # team -> provisional tokens reserved for in-flight calls
+_inflight = {}  # team -> count of in-flight calls (per-team share of pool)
 _team_level = set()  # (team, level) currently in flight
 _global_inflight = threading.BoundedSemaphore(GLOBAL_MAX_INFLIGHT)
-_level_sems = {}     # level -> BoundedSemaphore
+_level_sems = {}  # level -> BoundedSemaphore
 _log_lock = threading.Lock()
 
 # Set up a size-bounded rotating log so attempts.jsonl cannot fill the disk it
@@ -106,8 +108,10 @@ _attempt_log.setLevel(logging.INFO)
 _attempt_log.propagate = False
 try:
     _h = logging.handlers.RotatingFileHandler(
-        os.path.join(LOG_DIR, "attempts.jsonl"), maxBytes=LOG_MAX_BYTES,
-        backupCount=LOG_BACKUPS, encoding="utf-8",
+        os.path.join(LOG_DIR, "attempts.jsonl"),
+        maxBytes=LOG_MAX_BYTES,
+        backupCount=LOG_BACKUPS,
+        encoding="utf-8",
     )
     _h.setFormatter(logging.Formatter("%(message)s"))
     _attempt_log.addHandler(_h)
@@ -138,7 +142,9 @@ def _verify_token(tok):
         acct, level, iid, exp, sig = raw.rsplit(":", 4)
     except Exception:
         return None
-    good = hmac.new(_TOKEN_KEY, f"{acct}:{level}:{iid}:{exp}".encode(), hashlib.sha256).hexdigest()[:32]
+    good = hmac.new(
+        _TOKEN_KEY, f"{acct}:{level}:{iid}:{exp}".encode(), hashlib.sha256
+    ).hexdigest()[:32]
     if not hmac.compare_digest(sig, good):
         return None
     if int(exp) < int(time.time()):
@@ -150,7 +156,10 @@ def _log_attempt(team, level, payload, data, verdict=None):
     """Append one JSONL record. Never on the critical path: a logging failure
     must not turn an already-generated model response into a 500."""
     rec = {
-        "ts": int(time.time()), "team": team, "level": level, "verdict": verdict,
+        "ts": int(time.time()),
+        "team": team,
+        "level": level,
+        "verdict": verdict,
         "model": (data or {}).get("model"),
         "prompt_tokens": (data or {}).get("prompt_eval_count"),
         "completion_tokens": (data or {}).get("eval_count"),
@@ -188,7 +197,9 @@ def metrics():
 
 @app.route("/api/chat", methods=["POST"])
 def chat():
-    ident = _verify_token(request.headers.get("Authorization") or request.headers.get("X-AI-Proxy-Token"))
+    ident = _verify_token(
+        request.headers.get("Authorization") or request.headers.get("X-AI-Proxy-Token")
+    )
     if ident is None:
         return jsonify({"error": "jeton d'admission invalide ou expire"}), 401
     team, level = ident
@@ -208,7 +219,9 @@ def chat():
         spent = sum(c for _, c in _tokens[team]) + _reserved.get(team, 0)
         if spent >= TOKEN_BUDGET:
             _log_attempt(team, level, payload, None, verdict="denied:budget")
-            return _busy("Budget de tokens de l'equipe atteint pour l'instant.", TOKEN_WINDOW)
+            return _busy(
+                "Budget de tokens de l'equipe atteint pour l'instant.", TOKEN_WINDOW
+            )
         # A team may hold at most its share of the global pool, so a couple of
         # teams cannot monopolise the GPU across the levels they can drive.
         if _inflight.get(team, 0) >= MAX_PER_TEAM_INFLIGHT:
@@ -243,7 +256,9 @@ def chat():
         # Force non-streaming so we get token counts and a single JSON body.
         payload["stream"] = False
         try:
-            r = requests.post(f"{OLLAMA_URL}/api/chat", json=payload, timeout=UPSTREAM_TIMEOUT)
+            r = requests.post(
+                f"{OLLAMA_URL}/api/chat", json=payload, timeout=UPSTREAM_TIMEOUT
+            )
         except requests.RequestException:
             return _busy("Backend indisponible, reessayez.", 10)
         if r.status_code == 503:

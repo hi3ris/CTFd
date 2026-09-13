@@ -134,14 +134,14 @@ def build_png(width: int = 96, height: int = 96) -> bytes:
 
 
 def main() -> None:
-    tar_bytes = build_tar(FLAG)          # L4
-    bz_bytes = build_bzip2(tar_bytes)    # L3
-    gz_bytes = build_gzip(bz_bytes)      # L2
+    tar_bytes = build_tar(FLAG)  # L4
+    bz_bytes = build_bzip2(tar_bytes)  # L3
+    gz_bytes = build_gzip(bz_bytes)  # L2
     a85_bytes = build_ascii85(gz_bytes)  # L1
-    zip_bytes = build_zip(a85_bytes)     # zip container
-    png_bytes = build_png()              # L0 valid image
+    zip_bytes = build_zip(a85_bytes)  # zip container
+    png_bytes = build_png()  # L0 valid image
 
-    handout = png_bytes + zip_bytes      # PNG + appended ZIP polyglot
+    handout = png_bytes + zip_bytes  # PNG + appended ZIP polyglot
 
     with open(OUT, "wb") as f:
         f.write(handout)

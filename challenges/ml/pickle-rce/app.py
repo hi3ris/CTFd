@@ -52,43 +52,131 @@ SUMMARY_LIMIT = 4096
 # `m` is blocked if `m == prefix` or `m.startswith(prefix + ".")`.
 BLOCKED_MODULE_PREFIXES = (
     # direct command / process / OS surface
-    "os", "nt", "posix", "posixpath", "ntpath",
-    "subprocess", "sys", "signal", "resource",
-    "multiprocessing", "asyncio", "threading", "concurrent",
-    "socket", "ssl", "selectors", "asyncore",
-    "ctypes", "cffi", "mmap",
-    "platform", "sysconfig", "getpass", "pwd", "grp", "spwd",
+    "os",
+    "nt",
+    "posix",
+    "posixpath",
+    "ntpath",
+    "subprocess",
+    "sys",
+    "signal",
+    "resource",
+    "multiprocessing",
+    "asyncio",
+    "threading",
+    "concurrent",
+    "socket",
+    "ssl",
+    "selectors",
+    "asyncore",
+    "ctypes",
+    "cffi",
+    "mmap",
+    "platform",
+    "sysconfig",
+    "getpass",
+    "pwd",
+    "grp",
+    "spwd",
     # string-exec / debugger / import machinery
-    "builtins", "__builtin__",            # also name-filtered below
-    "importlib", "imp", "runpy", "pkgutil", "modulefinder",
-    "code", "codeop", "ast", "dis", "compileall", "py_compile",
-    "pdb", "bdb", "cProfile", "profile", "trace", "timeit",
-    "inspect", "gc", "types", "typing",
-    "pty", "tty", "termios", "fcntl",
+    "builtins",
+    "__builtin__",  # also name-filtered below
+    "importlib",
+    "imp",
+    "runpy",
+    "pkgutil",
+    "modulefinder",
+    "code",
+    "codeop",
+    "ast",
+    "dis",
+    "compileall",
+    "py_compile",
+    "pdb",
+    "bdb",
+    "cProfile",
+    "profile",
+    "trace",
+    "timeit",
+    "inspect",
+    "gc",
+    "types",
+    "typing",
+    "pty",
+    "tty",
+    "termios",
+    "fcntl",
     # anything that reads a whole file/stream in one call
-    "linecache", "fileinput", "tokenize",
-    "gzip", "bz2", "lzma", "zlib",
-    "tarfile", "zipfile", "zipimport",
-    "shutil", "tempfile", "pathlib", "glob", "fnmatch", "stat",
-    "configparser", "csv", "sqlite3", "dbm", "shelve",
+    "linecache",
+    "fileinput",
+    "tokenize",
+    "gzip",
+    "bz2",
+    "lzma",
+    "zlib",
+    "tarfile",
+    "zipfile",
+    "zipimport",
+    "shutil",
+    "tempfile",
+    "pathlib",
+    "glob",
+    "fnmatch",
+    "stat",
+    "configparser",
+    "csv",
+    "sqlite3",
+    "dbm",
+    "shelve",
     # serialization escape hatches (no pickle-in-pickle, no marshal)
-    "pickle", "_pickle", "cPickle", "pickletools",
-    "marshal", "dill", "cloudpickle", "joblib", "numpy",
+    "pickle",
+    "_pickle",
+    "cPickle",
+    "pickletools",
+    "marshal",
+    "dill",
+    "cloudpickle",
+    "joblib",
+    "numpy",
     # network / browser / package tooling
-    "webbrowser", "antigravity", "urllib", "http", "ftplib",
-    "smtplib", "telnetlib", "requests",
-    "pip", "setuptools", "distutils", "ensurepip", "venv",
-    "logging",   # logging.config.* can exec
+    "webbrowser",
+    "antigravity",
+    "urllib",
+    "http",
+    "ftplib",
+    "smtplib",
+    "telnetlib",
+    "requests",
+    "pip",
+    "setuptools",
+    "distutils",
+    "ensurepip",
+    "venv",
+    "logging",  # logging.config.* can exec
 )
 
 # Even for the (blocked) builtins module we spell out a tiny safe set, so that a
 # future maintainer who "just needs list/dict" can loosen the module check
 # without immediately handing over eval/exec/open/getattr. It is unused while
 # builtins is fully blocked above, but documents intent.
-SAFE_BUILTIN_NAMES = frozenset({
-    "bytes", "bytearray", "str", "int", "float", "bool", "complex",
-    "list", "tuple", "dict", "set", "frozenset", "range", "slice",
-})
+SAFE_BUILTIN_NAMES = frozenset(
+    {
+        "bytes",
+        "bytearray",
+        "str",
+        "int",
+        "float",
+        "bool",
+        "complex",
+        "list",
+        "tuple",
+        "dict",
+        "set",
+        "frozenset",
+        "range",
+        "slice",
+    }
+)
 
 
 class ClassBlocked(pickle.UnpicklingError):
@@ -152,7 +240,9 @@ Notes for integrators:
 
 There is a stale placeholder file at /flag.decoy from an old fixture. It is not
 a flag -- read it and you will see. Ignore it.
-""" % (FLAG_PATH,)
+""" % (
+    FLAG_PATH,
+)
 
 
 @app.route("/", methods=["GET"])
@@ -183,20 +273,26 @@ def validate():
     except ClassBlocked as exc:
         return jsonify(status="rejected", reason=str(exc)), 200
     except Exception as exc:  # noqa: BLE001 -- surface load errors to the player
-        return jsonify(
-            status="error",
-            reason="%s: %s" % (type(exc).__name__, exc),
-            trace=traceback.format_exc(limit=3),
-        ), 200
+        return (
+            jsonify(
+                status="error",
+                reason="%s: %s" % (type(exc).__name__, exc),
+                trace=traceback.format_exc(limit=3),
+            ),
+            200,
+        )
 
     summary = repr(obj)
     truncated = len(summary) > SUMMARY_LIMIT
-    return jsonify(
-        status="ok",
-        loaded_type=type(obj).__name__,
-        model_summary=summary[:SUMMARY_LIMIT],
-        truncated=truncated,
-    ), 200
+    return (
+        jsonify(
+            status="ok",
+            loaded_type=type(obj).__name__,
+            model_summary=summary[:SUMMARY_LIMIT],
+            truncated=truncated,
+        ),
+        200,
+    )
 
 
 if __name__ == "__main__":

@@ -54,14 +54,17 @@ def route(method: str, target: str, headers, body: bytes) -> bytes:
     path = target.split("?", 1)[0].split("#", 1)[0]
 
     if path == "/" and method == "GET":
-        return _resp("200 OK", {
-            "service": "nimbus internal appd",
-            "note": "you are talking to the app tier; requests normally arrive "
-                    "via the edge",
-            "public_endpoints": ["GET /", "GET /status", "POST /submit"],
-            "management_endpoints": ["GET /internal/flag"],
-            "management_note": "management endpoints are not exposed at the edge",
-        })
+        return _resp(
+            "200 OK",
+            {
+                "service": "nimbus internal appd",
+                "note": "you are talking to the app tier; requests normally arrive "
+                "via the edge",
+                "public_endpoints": ["GET /", "GET /status", "POST /submit"],
+                "management_endpoints": ["GET /internal/flag"],
+                "management_note": "management endpoints are not exposed at the edge",
+            },
+        )
 
     if path == "/status" and method == "GET":
         # DECOY: a 'debug routing' knob that looks like it can re-target a
@@ -77,22 +80,28 @@ def route(method: str, target: str, headers, body: bytes) -> bytes:
         return _resp("200 OK", out)
 
     if path == "/submit" and method == "POST":
-        return _resp("200 OK", {
-            "accepted": True,
-            "bytes": len(body),
-            "note": "job queued",
-        })
+        return _resp(
+            "200 OK",
+            {
+                "accepted": True,
+                "bytes": len(body),
+                "note": "job queued",
+            },
+        )
 
     if path == "/internal/flag" and method == "GET":
         # The internal management route. Reaching this at all is the win: the
         # edge forbids it, so a request only lands here through the framing gap.
-        return _resp("200 OK", {
-            "route": "internal.flag",
-            "granted": True,
-            "message": "internal route reached -- the edge should never have "
-                       "let this request through",
-            "flag": FLAG,
-        })
+        return _resp(
+            "200 OK",
+            {
+                "route": "internal.flag",
+                "granted": True,
+                "message": "internal route reached -- the edge should never have "
+                "let this request through",
+                "flag": FLAG,
+            },
+        )
 
     return _resp("404 Not Found", {"error": "no such route", "path": path})
 

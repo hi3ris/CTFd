@@ -130,7 +130,7 @@ def main():
     plaintexts.insert(flag_index, FLAG)  # now 8 entries
 
     for i, pt in enumerate(plaintexts, start=1):
-        with_salt = (i % 2 == 0)  # half the samples carry the decoy SALT record
+        with_salt = i % 2 == 0  # half the samples carry the decoy SALT record
         blob = build_vault(pt, seed=1000 + i, with_salt=with_salt)
         path = os.path.join(out_dir, f"vault_{i:02d}.vlt")
         with open(path, "wb") as f:

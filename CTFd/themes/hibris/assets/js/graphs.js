@@ -9,40 +9,40 @@ const graph_configs = {
       let option = {
         title: {
           left: "center",
-          text: "Score over Time"
+          text: "Score over Time",
         },
         tooltip: {
           trigger: "axis",
           axisPointer: {
-            type: "cross"
-          }
+            type: "cross",
+          },
         },
         legend: {
           type: "scroll",
           orient: "horizontal",
           align: "left",
           bottom: 0,
-          data: [name]
+          data: [name],
         },
         toolbox: {
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+          },
         },
         grid: {
-          containLabel: true
+          containLabel: true,
         },
         xAxis: [
           {
             type: "category",
             boundaryGap: false,
-            data: []
-          }
+            data: [],
+          },
         ],
         yAxis: [
           {
-            type: "value"
-          }
+            type: "value",
+          },
         ],
         dataZoom: [
           {
@@ -52,10 +52,10 @@ const graph_configs = {
             filterMode: "filter",
             height: 20,
             top: 35,
-            fillerColor: "rgba(233, 236, 241, 0.4)"
-          }
+            fillerColor: "rgba(233, 236, 241, 0.4)",
+          },
         ],
-        series: []
+        series: [],
       };
 
       const times = [];
@@ -78,7 +78,7 @@ const graph_configs = {
         }
       }
 
-      times.forEach(time => {
+      times.forEach((time) => {
         option.xAxis[0].data.push(time);
       });
 
@@ -88,23 +88,23 @@ const graph_configs = {
         label: {
           normal: {
             show: true,
-            position: "top"
-          }
+            position: "top",
+          },
         },
         areaStyle: {
           normal: {
-            color: colorHash(name + id)
-          }
+            color: colorHash(name + id),
+          },
         },
         itemStyle: {
           normal: {
-            color: colorHash(name + id)
-          }
+            color: colorHash(name + id),
+          },
         },
-        data: cumulativeSum(scores)
+        data: cumulativeSum(scores),
       });
       return option;
-    }
+    },
   },
 
   category_breakdown: {
@@ -112,23 +112,23 @@ const graph_configs = {
       let option = {
         title: {
           left: "center",
-          text: "Category Breakdown"
+          text: "Category Breakdown",
         },
         tooltip: {
-          trigger: "item"
+          trigger: "item",
         },
         toolbox: {
           show: true,
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+          },
         },
         legend: {
           type: "scroll",
           orient: "vertical",
           top: "middle",
           right: 0,
-          data: []
+          data: [],
         },
         series: [
           {
@@ -138,19 +138,19 @@ const graph_configs = {
             avoidLabelOverlap: false,
             label: {
               show: false,
-              position: "center"
+              position: "center",
             },
             itemStyle: {
               normal: {
                 label: {
                   show: true,
-                  formatter: function(data) {
+                  formatter: function (data) {
                     return `${data.percent}% (${data.value})`;
-                  }
+                  },
                 },
                 labelLine: {
-                  show: true
-                }
+                  show: true,
+                },
               },
               emphasis: {
                 label: {
@@ -158,24 +158,24 @@ const graph_configs = {
                   position: "center",
                   textStyle: {
                     fontSize: "14",
-                    fontWeight: "normal"
-                  }
-                }
-              }
+                    fontWeight: "normal",
+                  },
+                },
+              },
             },
             emphasis: {
               label: {
                 show: true,
                 fontSize: "30",
-                fontWeight: "bold"
-              }
+                fontWeight: "bold",
+              },
             },
             labelLine: {
-              show: false
+              show: false,
             },
-            data: []
-          }
-        ]
+            data: [],
+          },
+        ],
       };
       const solves = responses[0].data;
       const categories = [];
@@ -204,12 +204,12 @@ const graph_configs = {
         option.series[0].data.push({
           value: counts[index],
           name: category,
-          itemStyle: { color: colorHash(category) }
+          itemStyle: { color: colorHash(category) },
         });
       });
 
       return option;
-    }
+    },
   },
 
   solve_percentages: {
@@ -219,22 +219,22 @@ const graph_configs = {
       let option = {
         title: {
           left: "center",
-          text: "Solve Percentages"
+          text: "Solve Percentages",
         },
         tooltip: {
-          trigger: "item"
+          trigger: "item",
         },
         toolbox: {
           show: true,
           feature: {
-            saveAsImage: {}
-          }
+            saveAsImage: {},
+          },
         },
         legend: {
           orient: "vertical",
           top: "middle",
           right: 0,
-          data: ["Fails", "Solves"]
+          data: ["Fails", "Solves"],
         },
         series: [
           {
@@ -244,19 +244,19 @@ const graph_configs = {
             avoidLabelOverlap: false,
             label: {
               show: false,
-              position: "center"
+              position: "center",
             },
             itemStyle: {
               normal: {
                 label: {
                   show: true,
-                  formatter: function(data) {
+                  formatter: function (data) {
                     return `${data.name} - ${data.value} (${data.percent}%)`;
-                  }
+                  },
                 },
                 labelLine: {
-                  show: true
-                }
+                  show: true,
+                },
               },
               emphasis: {
                 label: {
@@ -264,40 +264,40 @@ const graph_configs = {
                   position: "center",
                   textStyle: {
                     fontSize: "14",
-                    fontWeight: "normal"
-                  }
-                }
-              }
+                    fontWeight: "normal",
+                  },
+                },
+              },
             },
             emphasis: {
               label: {
                 show: true,
                 fontSize: "30",
-                fontWeight: "bold"
-              }
+                fontWeight: "bold",
+              },
             },
             labelLine: {
-              show: false
+              show: false,
             },
             data: [
               {
                 value: fails_count,
                 name: "Fails",
-                itemStyle: { color: "rgb(207, 38, 0)" }
+                itemStyle: { color: "rgb(207, 38, 0)" },
               },
               {
                 value: solves_count,
                 name: "Solves",
-                itemStyle: { color: "rgb(0, 209, 64)" }
-              }
-            ]
-          }
-        ]
+                itemStyle: { color: "rgb(0, 209, 64)" },
+              },
+            ],
+          },
+        ],
       };
 
       return option;
-    }
-  }
+    },
+  },
 };
 
 export function createGraph(
@@ -307,12 +307,12 @@ export function createGraph(
   type,
   id,
   name,
-  account_id
+  account_id,
 ) {
   const cfg = graph_configs[graph_type];
   let chart = echarts.init(document.querySelector(target));
   chart.setOption(cfg.format(type, id, name, account_id, data));
-  $(window).on("resize", function() {
+  $(window).on("resize", function () {
     if (chart != null && chart != undefined) {
       chart.resize();
     }
@@ -326,7 +326,7 @@ export function updateGraph(
   type,
   id,
   name,
-  account_id
+  account_id,
 ) {
   const cfg = graph_configs[graph_type];
   let chart = echarts.init(document.querySelector(target));

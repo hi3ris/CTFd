@@ -51,13 +51,13 @@ def sealed_logit(conf: dict) -> float:
 def recover(query_conf, M) -> np.ndarray:
     """Recover the record given a confidence oracle `query_conf(probe)->dict`
     and the white-box metric M."""
-    base = sealed_logit(query_conf(np.zeros(D, dtype=int)))     # s(0) = C0
+    base = sealed_logit(query_conf(np.zeros(D, dtype=int)))  # s(0) = C0
     u = np.zeros(D)
     for i in range(D):
         p = np.zeros(D, dtype=int)
         p[i] = 255
-        u[i] = sealed_logit(query_conf(p)) - base               # (M (r/S))_i
-    r = S * np.linalg.solve(M, u)                               # r = S M^{-1} u
+        u[i] = sealed_logit(query_conf(p)) - base  # (M (r/S))_i
+    r = S * np.linalg.solve(M, u)  # r = S M^{-1} u
     return np.clip(np.round(r), 0, 255).astype(int)
 
 
@@ -72,6 +72,7 @@ def _http_query(base_url):
         )
         with urllib.request.urlopen(req, timeout=30) as r:
             return json.loads(r.read())["confidence"]
+
     return q
 
 
@@ -123,26 +124,34 @@ def solve_offline():
         out = bytearray()
         i = 0
         while len(out) < D:
-            out.extend(hmac.new(secret.encode(),
-                                b"model-inversion-record|%d" % i,
-                                hashlib.sha256).digest())
+            out.extend(
+                hmac.new(
+                    secret.encode(), b"model-inversion-record|%d" % i, hashlib.sha256
+                ).digest()
+            )
             i += 1
         return np.frombuffer(bytes(out[:D]), dtype=np.uint8).astype(int)
 
     ok = True
     for team in ("alpha", "bravo", "charlie"):
-        secret = hmac.new(team.encode(), b"ml-model-inversion", hashlib.sha256).hexdigest()
+        secret = hmac.new(
+            team.encode(), b"ml-model-inversion", hashlib.sha256
+        ).hexdigest()
         r_true = derive_record(secret)
-        q = lambda p, r=r_true: vault.confidence(p, r)      # the live oracle
+        q = lambda p, r=r_true: vault.confidence(p, r)  # the live oracle
         r_hat = recover(q, vault.M)
         linf = int(np.max(np.abs(r_hat - r_true)))
         # trap: naive identity-metric read of the same probes
         base = sealed_logit(q(np.zeros(D, dtype=int)))
-        u = np.array([sealed_logit(q(np.eye(D, dtype=int)[i] * 255)) - base for i in range(D)])
+        u = np.array(
+            [sealed_logit(q(np.eye(D, dtype=int)[i] * 255)) - base for i in range(D)]
+        )
         naive = np.clip(np.round(S * u), 0, 255).astype(int)
         naive_linf = int(np.max(np.abs(naive - r_true)))
-        print(f"team {team:8s}: recovered L-inf={linf} (<=2 unlocks) | "
-              f"identity-metric trap L-inf={naive_linf}")
+        print(
+            f"team {team:8s}: recovered L-inf={linf} (<=2 unlocks) | "
+            f"identity-metric trap L-inf={naive_linf}"
+        )
         ok = ok and (linf <= 2) and (naive_linf > 2)
     print("[offline] all teams recovered exactly, trap fails:", ok)
     return ok

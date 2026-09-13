@@ -39,10 +39,9 @@ no expected payload and nothing to grep offline.
 - The flag string never appears in any downloadable artifact. It is derived in
   the container from `TEAM_SECRET` and returned by the API **only** when the
   persisted wallet balance is strictly negative.
-- The success oracle checks the *effect* (overdrawn wallet), not a request
+- The success oracle checks the _effect_ (overdrawn wallet), not a request
   shape. Any interleaving that overdraws wins; there is no "correct payload".
-- One request, or many *sequential* requests, can never drive the balance below
-  40. You must win the read-then-write race.
+- One request, or many _sequential_ requests, can never drive the balance below 40. You must win the read-then-write race.
 
 ## The decoy
 
@@ -72,7 +71,7 @@ flag) to retry from a clean 100.
   on the coupon redemption") is immediate for any capable model, and it will
   write a correct threaded solver on the first try.
 - **Badly / the actual work:** the flag cannot be produced by reasoning. It is
-  gated behind an *effect on a live, per-team instance*, so the team must
+  gated behind an _effect on a live, per-team instance_, so the team must
   actually launch their instance, drive real concurrent traffic at it, and win a
   scheduling race under the server's threading model. A pure "paste the source,
   read back the flag" workflow yields nothing. An agent that is given network

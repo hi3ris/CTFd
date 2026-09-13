@@ -86,7 +86,7 @@ def sliding_decision(sig, sr, f_lo, f_hi, win):
     centers = np.arange(0, n - win, step)
     dec = np.zeros(len(centers), dtype=np.int8)
     for i, c in enumerate(centers):
-        blk = sig[c:c + win]
+        blk = sig[c : c + win]
         p_lo = goertzel_power(blk, f_lo, sr)
         p_hi = goertzel_power(blk, f_hi, sr)
         dec[i] = 1 if p_lo >= p_hi else 0
@@ -122,7 +122,7 @@ def bits_to_bytes_msb(bits, offset):
     i = offset
     while i + 8 <= len(bits):
         v = 0
-        for b in bits[i:i + 8]:
+        for b in bits[i : i + 8]:
             v = (v << 1) | b
         out.append(v)
         i += 8
@@ -146,7 +146,7 @@ def try_decode(sym_bits):
         n = frame[0]
         if n + 2 > len(frame):
             continue
-        payload = frame[1:1 + n]
+        payload = frame[1 : 1 + n]
         crc = frame[1 + n]
         if crc8(bytes([n]) + payload) == crc:
             return payload, polarity, pos, True
@@ -174,7 +174,7 @@ def main():
         sym = []
         s = offset
         while s + spb_i <= len(burst):
-            seg = burst[s:s + spb_i]
+            seg = burst[s : s + spb_i]
             m0, m1 = spb_i // 3, 2 * spb_i // 3
             mid = seg[m0:m1]
             p_lo = goertzel_power(mid, f_lo, sr)
@@ -209,6 +209,7 @@ def main():
     text = payload.decode("ascii", "replace")
     print(f"[*] payload: {text}")
     import re
+
     m = re.search(r"CTF\{[^}]*\}", text)
     print("\nFLAG:", m.group(0) if m else "(not found)")
 

@@ -21,14 +21,14 @@ Aucun developpement n'est necessaire pour le verrouillage lui-meme. Le champ
 de challenges, et CTFd l'applique cote serveur :
 
 - `CTFd/api/v1/challenges.py` : la liste des challenges masque (`type:
-  "hidden"`, nom `???`) ou retire ceux dont les prerequis ne sont pas remplis,
+"hidden"`, nom `???`) ou retire ceux dont les prerequis ne sont pas remplis,
   selon l'option `anonymize` ;
 - le meme fichier renvoie **403** sur `/api/v1/challenges/<id>/attempt` si les
   prerequis ne sont pas satisfaits ;
 - la comparaison porte sur `account_id`, donc en mode equipes le deblocage est
   bien collectif, pas individuel.
 
-Cote administration : *Challenge > Requirements*, en cochant les challenges
+Cote administration : _Challenge > Requirements_, en cochant les challenges
 prealables.
 
 ## Le piege a ne pas rater
@@ -58,12 +58,12 @@ equipes.
 
 ## L'echelle proposee
 
-| Niveau | Prerequis | Inference | Idee |
-|---|---|---|---|
-| 0 | aucun | **aucune** | Analyse statique : une fuite de system prompt dans un fichier fourni, une carte de modele, un historique de conversation exporte. Le flag s'obtient en lisant, pas en discutant. |
-| 1 | niveau 0 | legere | System prompt naif gardant un flag. Quelques echanges suffisent. Reponses courtes imposees. |
-| 2 | niveau 1 | moyenne | Filtre de sortie sur le flag (regex + variantes encodees). Il faut faire produire le flag sous une forme detournee. |
-| 3 | niveau 2 | lourde | Le flag n'est jamais dans le contexte : il est accessible via un outil que le modele peut appeler. Le joueur doit detourner l'usage de l'outil. Contexte long, plusieurs tours. |
+| Niveau | Prerequis | Inference  | Idee                                                                                                                                                                             |
+| ------ | --------- | ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| 0      | aucun     | **aucune** | Analyse statique : une fuite de system prompt dans un fichier fourni, une carte de modele, un historique de conversation exporte. Le flag s'obtient en lisant, pas en discutant. |
+| 1      | niveau 0  | legere     | System prompt naif gardant un flag. Quelques echanges suffisent. Reponses courtes imposees.                                                                                      |
+| 2      | niveau 1  | moyenne    | Filtre de sortie sur le flag (regex + variantes encodees). Il faut faire produire le flag sous une forme detournee.                                                              |
+| 3      | niveau 2  | lourde     | Le flag n'est jamais dans le contexte : il est accessible via un outil que le modele peut appeler. Le joueur doit detourner l'usage de l'outil. Contexte long, plusieurs tours.  |
 
 Le niveau 0 sans inference est ce qui rend la categorie accessible aux 300
 participants sans aucun cout GPU, tout en filtrant naturellement la suite.

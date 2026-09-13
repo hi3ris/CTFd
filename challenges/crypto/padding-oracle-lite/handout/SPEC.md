@@ -31,17 +31,17 @@ word count is always exact.
 
 ## Opcodes
 
-| opcode | direction        | name    | payload                                   |
-|--------|------------------|---------|-------------------------------------------|
-| 0x11   | server -> client | BANNER  | ascii banner (sent once, on connect)      |
-| 0x10   | client -> server | GETCT   | empty                                     |
-| 0x12   | server -> client | CT      | `IV(16) || ciphertext` (ciphertext is a multiple of 16) |
-| 0x20   | client -> server | VERIFY  | an `IV(16) || ciphertext` blob to test    |
-| 0x21   | server -> client | STATUS  | one word (2 bytes): a status code         |
-| 0x30   | client -> server | SUBMIT  | your recovered token plaintext            |
-| 0x31   | server -> client | FLAG    | ascii flag                                |
-| 0x32   | server -> client | NOPE    | ascii "wrong token"                       |
-| 0x0xEE | server -> client | ERR     | ascii error reason                        |
+| opcode | direction        | name   | payload                              |
+| ------ | ---------------- | ------ | ------------------------------------ | --- | -------------------------------------------- |
+| 0x11   | server -> client | BANNER | ascii banner (sent once, on connect) |
+| 0x10   | client -> server | GETCT  | empty                                |
+| 0x12   | server -> client | CT     | `IV(16)                              |     | ciphertext` (ciphertext is a multiple of 16) |
+| 0x20   | client -> server | VERIFY | an `IV(16)                           |     | ciphertext` blob to test                     |
+| 0x21   | server -> client | STATUS | one word (2 bytes): a status code    |
+| 0x30   | client -> server | SUBMIT | your recovered token plaintext       |
+| 0x31   | server -> client | FLAG   | ascii flag                           |
+| 0x32   | server -> client | NOPE   | ascii "wrong token"                  |
+| 0x0xEE | server -> client | ERR    | ascii error reason                   |
 
 The cipher is AES-128-CBC. The `STATUS` word is returned big-endian; you will
 see it take exactly two distinct values across different `VERIFY` inputs. The

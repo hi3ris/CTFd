@@ -88,15 +88,15 @@ TOKEN_BLOB = IV + _CT  # 16 + 48 = 64 bytes
 # ---------------------------------------------------------------------------
 SYNC = 0xAA
 
-OP_BANNER = 0x11   # server -> client (on connect)
-OP_GETCT = 0x10    # client -> server : request token ciphertext
-OP_CT = 0x12       # server -> client : IV||CT
-OP_VERIFY = 0x20   # client -> server : IV||CT to test
-OP_STATUS = 0x21   # server -> client : 1 word status code
-OP_SUBMIT = 0x30   # client -> server : recovered plaintext token
-OP_FLAG = 0x31     # server -> client : the flag
-OP_NOPE = 0x32     # server -> client : wrong token
-OP_ERR = 0xEE      # server -> client : protocol/usage error (ascii reason)
+OP_BANNER = 0x11  # server -> client (on connect)
+OP_GETCT = 0x10  # client -> server : request token ciphertext
+OP_CT = 0x12  # server -> client : IV||CT
+OP_VERIFY = 0x20  # client -> server : IV||CT to test
+OP_STATUS = 0x21  # server -> client : 1 word status code
+OP_SUBMIT = 0x30  # client -> server : recovered plaintext token
+OP_FLAG = 0x31  # server -> client : the flag
+OP_NOPE = 0x32  # server -> client : wrong token
+OP_ERR = 0xEE  # server -> client : protocol/usage error (ascii reason)
 
 
 def build_frame(opcode: int, payload: bytes = b"") -> bytes:
@@ -106,7 +106,12 @@ def build_frame(opcode: int, payload: bytes = b"") -> bytes:
     chk = opcode
     for b in payload:
         chk ^= b
-    return bytes([SYNC, opcode]) + struct.pack("<H", nwords) + payload + bytes([chk & 0xFF])
+    return (
+        bytes([SYNC, opcode])
+        + struct.pack("<H", nwords)
+        + payload
+        + bytes([chk & 0xFF])
+    )
 
 
 def recv_exact(sock, n: int) -> bytes:
@@ -180,7 +185,9 @@ class Handler(socketserver.BaseRequestHandler):
 
                 elif opcode == OP_SUBMIT:
                     if payload == TOKEN:
-                        sock.sendall(build_frame(OP_FLAG, self._pad(compute_flag().encode())))
+                        sock.sendall(
+                            build_frame(OP_FLAG, self._pad(compute_flag().encode()))
+                        )
                     else:
                         sock.sendall(build_frame(OP_NOPE, self._pad(b"wrong token")))
 

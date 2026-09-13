@@ -7,12 +7,12 @@ Each file begins with the ASCII magic `VLT1`.
 
 ## Header (fixed, 8 bytes)
 
-| offset | size | field       | notes                                             |
-|-------:|-----:|-------------|---------------------------------------------------|
-| 0      | 4    | `magic`     | `VLT1`                                             |
-| 4      | 1    | `version`   | format version byte. It is **also mixed into the key material.** |
-| 5      | 2    | `rec_count` | uint16, little-endian. Number of **records**.      |
-| 7      | 1    | `hdr_cksum` | integrity byte. It covers the **header only**.     |
+| offset | size | field       | notes                                                            |
+| -----: | ---: | ----------- | ---------------------------------------------------------------- |
+|      0 |    4 | `magic`     | `VLT1`                                                           |
+|      4 |    1 | `version`   | format version byte. It is **also mixed into the key material.** |
+|      5 |    2 | `rec_count` | uint16, little-endian. Number of **records**.                    |
+|      7 |    1 | `hdr_cksum` | integrity byte. It covers the **header only**.                   |
 
 > Note: `hdr_cksum` is a simple additive checksum of the header bytes that
 > precede it. If you try to checksum the whole file you will be disappointed.
@@ -25,9 +25,9 @@ Records may appear in **any order**.
 Every record starts with:
 
 | offset | size | field   | notes                                                   |
-|-------:|-----:|---------|---------------------------------------------------------|
-| 0      | 1    | `type`  | record type tag                                         |
-| 1      | 1    | `count` | number of **entries** in this record (NOT a byte count) |
+| -----: | ---: | ------- | ------------------------------------------------------- |
+|      0 |    1 | `type`  | record type tag                                         |
+|      1 |    1 | `count` | number of **entries** in this record (NOT a byte count) |
 
 ...followed by `count` entries. The size of one entry depends on `type`.
 
@@ -36,7 +36,7 @@ Every record starts with:
 - `0x4B` **KEY** - carries the XOR key schedule.
   Each entry is 2 bytes: `(position, stored_byte)`.
   Entries are not guaranteed to be in position order, and positions are
-  0-based. The real key byte at each position is *not* the stored byte as-is;
+  0-based. The real key byte at each position is _not_ the stored byte as-is;
   the `version` field is involved. (Recovering ASCII plaintext confirms when
   you have it right.)
 

@@ -20,6 +20,7 @@ verified against per-session mutable server state, never a prompt shape.
 - Standalone: no prerequisites.
 
 ## Files
+
 - `challenge.yml` -- ctfcli manifest (`type: team_instance`, category `ai`,
   `flags: [{type: team_hmac, content: ai-agent-tool-abuse}]`).
 - `Dockerfile`, `docker-compose.yml` -- image `ctf-agent-tool-abuse:latest`.
@@ -36,9 +37,11 @@ verified against per-session mutable server state, never a prompt shape.
   `--live` iteration helper.
 
 ## Author self-test (offline, no GPU)
+
 ```
 MODEL_BACKEND=stub TEAM_SECRET=local-demo-team-secret python3 solution/solve.py
 ```
+
 Proves: read tools work; the `art-3` decoy does not unseal; sealed disburse
 without checkout is rejected; sealed + internal disburse does not unseal; the
 real checkout + external disburse unseals the gate and returns a flag equal to

@@ -36,7 +36,9 @@ def flag(team_secret: str) -> str:
     this reproduces the same flag body off-arena where only a team secret is
     available.
     """
-    dig = hmac.new(team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256).hexdigest()
+    dig = hmac.new(
+        team_secret.encode(), CHALLENGE_ID.encode(), hashlib.sha256
+    ).hexdigest()
     return "NCTF{" + dig[:24] + "}"
 
 

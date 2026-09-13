@@ -84,23 +84,25 @@ def _wallet_view():
 
 @app.get("/")
 def index():
-    return jsonify({
-        "service": "NimbusPay store wallet API",
-        "start_balance": START_BALANCE,
-        "coupon": {
-            "code": COUPON_CODE,
-            "amount": COUPON_AMOUNT,
-            "policy": "single-use; wallet must cover the withdrawal",
-        },
-        "endpoints": {
-            "GET  /api/wallet": "current authoritative wallet state",
-            "POST /api/coupon/redeem": "body {\"code\": \"...\"} -- withdraw via coupon",
-            "POST /api/reset": "instant self-service reset of this instance",
-            "POST /api/promo/apply": "body {\"code\": \"...\"} -- legacy promo endpoint",
-        },
-        "goal": "Make the authoritative wallet balance go strictly negative.",
-        "flag_format": "NCTF{...}",
-    })
+    return jsonify(
+        {
+            "service": "NimbusPay store wallet API",
+            "start_balance": START_BALANCE,
+            "coupon": {
+                "code": COUPON_CODE,
+                "amount": COUPON_AMOUNT,
+                "policy": "single-use; wallet must cover the withdrawal",
+            },
+            "endpoints": {
+                "GET  /api/wallet": "current authoritative wallet state",
+                "POST /api/coupon/redeem": 'body {"code": "..."} -- withdraw via coupon',
+                "POST /api/reset": "instant self-service reset of this instance",
+                "POST /api/promo/apply": 'body {"code": "..."} -- legacy promo endpoint',
+            },
+            "goal": "Make the authoritative wallet balance go strictly negative.",
+            "flag_format": "NCTF{...}",
+        }
+    )
 
 
 @app.get("/api/wallet")
@@ -167,19 +169,21 @@ def reset():
 @app.post("/api/promo/apply")
 def promo_apply():
     body = request.get_json(silent=True) or {}
-    code = (body.get("code") or request.form.get("code") or "")
+    code = body.get("code") or request.form.get("code") or ""
     # Deliberately "vulnerable"-looking: reflects the code and pretends to apply
     # stacked discounts. All fabricated; the real wallet is not read or written.
     fabricated = START_BALANCE + 900
     if "'" in code or "--" in code.lower() or " or " in code.lower():
         fabricated = 999999
-    return jsonify({
-        "ok": True,
-        "applied_code": code,
-        "note": "legacy promo engine (v1) -- deprecated",
-        "display_balance": fabricated,
-        # No flag here. This does not change /api/wallet. It never will.
-    })
+    return jsonify(
+        {
+            "ok": True,
+            "applied_code": code,
+            "note": "legacy promo engine (v1) -- deprecated",
+            "display_balance": fabricated,
+            # No flag here. This does not change /api/wallet. It never will.
+        }
+    )
 
 
 if __name__ == "__main__":

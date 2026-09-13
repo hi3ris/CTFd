@@ -42,20 +42,58 @@ import re
 
 # The set of methods the transform tool accepts. app.py validates against this.
 ALLOWED_METHODS = [
-    "plain", "base64", "base32", "hex", "rot13", "reverse",
-    "spaced", "dashed", "nato", "charcodes", "base64x2",
+    "plain",
+    "base64",
+    "base32",
+    "hex",
+    "rot13",
+    "reverse",
+    "spaced",
+    "dashed",
+    "nato",
+    "charcodes",
+    "base64x2",
 ]
 
 _NATO = {
-    "a": "alfa", "b": "bravo", "c": "charlie", "d": "delta", "e": "echo",
-    "f": "foxtrot", "g": "golf", "h": "hotel", "i": "india", "j": "juliett",
-    "k": "kilo", "l": "lima", "m": "mike", "n": "november", "o": "oscar",
-    "p": "papa", "q": "quebec", "r": "romeo", "s": "sierra", "t": "tango",
-    "u": "uniform", "v": "victor", "w": "whiskey", "x": "xray", "y": "yankee",
+    "a": "alfa",
+    "b": "bravo",
+    "c": "charlie",
+    "d": "delta",
+    "e": "echo",
+    "f": "foxtrot",
+    "g": "golf",
+    "h": "hotel",
+    "i": "india",
+    "j": "juliett",
+    "k": "kilo",
+    "l": "lima",
+    "m": "mike",
+    "n": "november",
+    "o": "oscar",
+    "p": "papa",
+    "q": "quebec",
+    "r": "romeo",
+    "s": "sierra",
+    "t": "tango",
+    "u": "uniform",
+    "v": "victor",
+    "w": "whiskey",
+    "x": "xray",
+    "y": "yankee",
     "z": "zulu",
-    "0": "zero", "1": "one", "2": "two", "3": "three", "4": "four",
-    "5": "five", "6": "six", "7": "seven", "8": "eight", "9": "niner",
-    "-": "dash", "_": "underscore",
+    "0": "zero",
+    "1": "one",
+    "2": "two",
+    "3": "three",
+    "4": "four",
+    "5": "five",
+    "6": "six",
+    "7": "seven",
+    "8": "eight",
+    "9": "niner",
+    "-": "dash",
+    "_": "underscore",
 }
 
 
@@ -124,15 +162,19 @@ def apply_filter(text: str, secret: str):
     for candidate in (secret, secret[::-1], codecs.encode(secret, "rot_13")):
         n = _norm(candidate)
         if n and n in norm_text:
-            return ("[OUTPUT FILTER] guarded value detected -- response "
-                    "withheld.", True)
+            return (
+                "[OUTPUT FILTER] guarded value detected -- response " "withheld.",
+                True,
+            )
 
     # (3) one-layer base64 / hex decode of every long token
     for tok in re.findall(r"[A-Za-z0-9+/=]{8,}", text):
         core = tok.strip("=")
         for decoded in (_try_b64(tok), _try_hex(core)):
             if decoded and sb in decoded:
-                return ("[OUTPUT FILTER] guarded value detected -- response "
-                        "withheld.", True)
+                return (
+                    "[OUTPUT FILTER] guarded value detected -- response " "withheld.",
+                    True,
+                )
 
     return (text, False)

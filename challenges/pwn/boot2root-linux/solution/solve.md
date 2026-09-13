@@ -103,7 +103,7 @@ uid=0(root) gid=0(root) groups=0(root)
 NCTF{...}
 ```
 
-That file is `root:root` mode `400`; reaching this line *is* the proof of root.
+That file is `root:root` mode `400`; reaching this line _is_ the proof of root.
 
 ---
 
@@ -125,11 +125,11 @@ $ ./solve.sh http://<host>:<port>
 
 ## Why an LLM can't one-shot this
 
-* No source and no handout: the injection point, the SUID owner, the sudo rule,
-  and their ordering must all be *discovered* on the live box by enumeration.
-* Three independent stages that must be chained in the right order and across
+- No source and no handout: the injection point, the SUID owner, the sudo rule,
+  and their ordering must all be _discovered_ on the live box by enumeration.
+- Three independent stages that must be chained in the right order and across
   three identities (www -> app -> root); solving any one in isolation yields no
   flag.
-* Effect-based win: the flag exists only in a `root:root 400` file, so the
+- Effect-based win: the flag exists only in a `root:root 400` file, so the
   chain must actually execute; there is no payload shape or endpoint that
   returns it early, and nothing to replay from another team's instance.

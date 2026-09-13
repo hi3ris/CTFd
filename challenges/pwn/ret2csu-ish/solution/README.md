@@ -146,7 +146,7 @@ in particular, break single-prompt / naive-automation solves:
   via a first `read` syscall into `.bss`. This is a small but real step that
   auto-ROP helpers do not do for you.
 
-What an LLM does *well* here: recognising the static-ROP-to-execve pattern,
+What an LLM does _well_ here: recognising the static-ROP-to-execve pattern,
 listing the gadgets, computing the stack offset from the disassembly, and
 writing the syscall chain. What trips it up: the additive transform (it will
 often send an un-pre-imaged chain and get a silent crash), the missing

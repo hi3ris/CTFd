@@ -30,8 +30,8 @@ import struct
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 MAGIC = b"AE32"
-VAULT_BASE = 4          # bytes: vault registers start after the 4-byte bank tag
-BANK_STRIDE_LEN = 64    # physical span reserved per bank region
+VAULT_BASE = 4  # bytes: vault registers start after the 4-byte bank tag
+BANK_STRIDE_LEN = 64  # physical span reserved per bank region
 
 FLAG = "NCTF{sram_retention_bank_interleave}"
 
@@ -71,7 +71,7 @@ def build(payload, nbanks, stride, phys_offsets, filesize, seed, decoy=None):
     buf[4] = nbanks
     buf[5] = L
     buf[6] = stride
-    buf[7] = sum(buf[0:7]) & 0xFF          # checksum over header bytes 0..6 only
+    buf[7] = sum(buf[0:7]) & 0xFF  # checksum over header bytes 0..6 only
 
     # --- bank base table at 0x08: nbanks * u16 LE, EOF-relative ---
     tbl = 0x08
@@ -83,12 +83,12 @@ def build(payload, nbanks, stride, phys_offsets, filesize, seed, decoy=None):
     # --- bank tags ---
     for i in range(nbanks):
         base = phys_offsets[i]
-        buf[base:base + 4] = b"BNK" + bytes([i])
+        buf[base : base + 4] = b"BNK" + bytes([i])
 
     # --- decoy (contiguous plausible-but-wrong string in the noise) ---
     if decoy is not None:
         off, data = decoy
-        buf[off:off + len(data)] = data
+        buf[off : off + len(data)] = data
 
     # --- interleaved vault ---
     for k in range(L):
@@ -126,12 +126,44 @@ def main():
     # ---- worked samples with KNOWN plaintext ----
     samples = [
         # (name, payload, nbanks, stride, phys_offsets, filesize, seed)
-        ("sample_01", b"HELLO_AE32_WORLD",       3, 2, [0x080, 0x180, 0x100], 0x300, 1),
-        ("sample_02", b"retention-check-abc",     4, 3, [0x200, 0x080, 0x180, 0x100], 0x400, 2),
-        ("sample_03", b"bank0/bank1/bank2",       3, 4, [0x100, 0x300, 0x200], 0x400, 3),
-        ("sample_04", b"AE-32 register file",     5, 2, [0x300, 0x080, 0x280, 0x180, 0x100], 0x400, 4),
-        ("sample_05", b"deinterleave_me_now_ok",  6, 3, [0x300, 0x080, 0x340, 0x180, 0x100, 0x280], 0x400, 5),
-        ("sample_06", b"vault=noncontiguous",     4, 5, [0x080, 0x300, 0x180, 0x280], 0x400, 6),
+        ("sample_01", b"HELLO_AE32_WORLD", 3, 2, [0x080, 0x180, 0x100], 0x300, 1),
+        (
+            "sample_02",
+            b"retention-check-abc",
+            4,
+            3,
+            [0x200, 0x080, 0x180, 0x100],
+            0x400,
+            2,
+        ),
+        ("sample_03", b"bank0/bank1/bank2", 3, 4, [0x100, 0x300, 0x200], 0x400, 3),
+        (
+            "sample_04",
+            b"AE-32 register file",
+            5,
+            2,
+            [0x300, 0x080, 0x280, 0x180, 0x100],
+            0x400,
+            4,
+        ),
+        (
+            "sample_05",
+            b"deinterleave_me_now_ok",
+            6,
+            3,
+            [0x300, 0x080, 0x340, 0x180, 0x100, 0x280],
+            0x400,
+            5,
+        ),
+        (
+            "sample_06",
+            b"vault=noncontiguous",
+            4,
+            5,
+            [0x080, 0x300, 0x180, 0x280],
+            0x400,
+            6,
+        ),
     ]
     known = []
     for name, payload, n, stride, offs, fsize, seed in samples:
@@ -141,7 +173,9 @@ def main():
 
     with open(os.path.join(HERE, "samples", "KNOWN.txt"), "w") as f:
         f.write("# Expected decoded vault contents for each sample dump.\n")
-        f.write("# Use these to validate your parser before running on retention.dump.\n")
+        f.write(
+            "# Use these to validate your parser before running on retention.dump.\n"
+        )
         f.write("# filename\tdecoded_vault\n")
         f.write("\n".join(known) + "\n")
     print("wrote samples/KNOWN.txt")
