@@ -51,9 +51,7 @@ flags:
 tags:
   - web
   - http
-  - proxy
-  - parsing
-  - desync
+  - hard
 
 # challenge-id (for HMAC / requirements wiring): web-smuggle-gap
 # No prerequisites; standalone.

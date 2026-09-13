@@ -62,9 +62,6 @@ files:
   - handout/weights.npz
 tags:
   - ml
-  - model-inversion
-  - model-extraction
-  - confidence-oracle
   - hard
 
 connection_info: http://{host}:8080/

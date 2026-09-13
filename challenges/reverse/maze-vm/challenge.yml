@@ -64,9 +64,8 @@ flags:
 tags:
   - reverse
   - elf
-  - bytecode-vm
-  - threaded-dispatch
   - static-analysis
+  - hard
 
 files:
   - chall

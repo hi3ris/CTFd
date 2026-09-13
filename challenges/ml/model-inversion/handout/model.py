@@ -3,28 +3,12 @@
 model.py -- the AEGIS-VAULT "sealed record recall" scorer (handout / white-box).
 
 This is the EXACT code the live oracle runs, with one thing removed: the
-memorised record `r`. Everything about how a probe is scored is here, so you can
-reproduce the oracle for any record of your own choosing and check your work
-offline before touching the live instance.
+memorised record `r`. `E` is shipped in weights.npz. The record `r` is the
+per-team secret the live vault memorised -- it is never in these files and never
+returned by the API.
 
-The similarity metric is a fixed, team-common bilinear form:
-
-    s(p) = (p/255)^T  M  (r/255)  +  C0            # M = E^T E  (symmetric PD)
-    P(SEALED | p) = softmax([0, s(p)])[1] = sigmoid(s(p))
-
-`E` is shipped in weights.npz; `M = E^T E`. The record `r` is the per-team
-secret the live vault memorised -- it is never in these files and never returned
-by the API. Your task is to recover it from the confidence oracle alone.
-
-Quick self-test (pick any record you like and confirm you can recover it from
-confidences only):
-
-    from model import Vault, D
-    import numpy as np
-    v = Vault("weights.npz")
-    r = np.random.randint(0, 256, D)          # a record only YOU know
-    conf = v.confidence(np.zeros(D, int), r)  # what the live API would return
-    #   ... now try to recover r using confidence() as a black box ...
+You can instantiate `Vault` with a record you choose and call `confidence(...)`
+to reproduce the oracle offline for your own testing.
 """
 import math
 import os

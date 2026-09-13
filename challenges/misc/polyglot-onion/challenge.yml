@@ -49,9 +49,6 @@ flags:
 
 tags:
   - misc
-  - polyglot
-  - file-formats
-  - forensics
   - medium
 
 state: visible

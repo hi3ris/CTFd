@@ -18,9 +18,12 @@ FLAG="$(python3 /opt/flag.py)"
 printf '%s\n' "$FLAG" > /root/flag
 chown root:root /root/flag
 chmod 400 /root/flag
-# scrub the flag from root's environment so it survives only in the file; the
-# foothold service (started below as www) is never given FLAG in its env.
-unset FLAG
+# Scrub ALL flag-bearing secrets from the environment so the flag survives only
+# in the root-owned file. The foothold service runs as www and must NOT inherit
+# CHALLENGE_SECRET / TEAM_SECRET: flag == NCTF{CHALLENGE_SECRET[:24]}, so a www
+# shell that could read `env` (the stage-1 RCE) would otherwise recover the flag
+# with zero privesc, skipping the whole chain.
+unset FLAG CHALLENGE_SECRET TEAM_SECRET
 
 PORT="${PORT:-8080}"
 echo "[entrypoint] boot2root-linux: flag planted at /root/flag (root:root 400)" >&2

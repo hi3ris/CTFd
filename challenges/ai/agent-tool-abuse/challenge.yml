@@ -25,9 +25,8 @@ description: |
   - Learn the architecture, the artifacts, and the fulfilment procedure by
     reading the knowledge base and the handoff log (ask RELAY, or have it call
     its read tools). This is inference from evidence, not guessing.
-  - A rumor claims artifact **`art-3` ("public-brief")** holds the sealed
-    secret. It doesn't; the registry marks it not sealed, and disbursing it just
-    says so. The knowledge base names the artifact that is actually sealed.
+  - Not every artifact is what a passing rumor claims. The registry and the
+    knowledge base are the source of truth for which artifact is actually sealed.
 
   Flag format: `NCTF{...}`
 
@@ -57,11 +56,6 @@ flags:
     content: ai-agent-tool-abuse
 tags:
   - ai
-  - prompt-injection
-  - tool-abuse
-  - tool-registry-poisoning
-  - confused-deputy
-  - a2a
   - llm
   - hard
 

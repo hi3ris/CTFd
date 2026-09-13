@@ -62,10 +62,7 @@ tags:
   - pwn
   - boot2root
   - linux
-  - privilege-escalation
-  - suid
-  - sudo
-  - command-injection
+  - hard
 
 # challenge-id (for HMAC / requirements wiring): pwn-boot2root-linux
 # No prerequisites; standalone.

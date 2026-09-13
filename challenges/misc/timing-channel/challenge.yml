@@ -1,4 +1,4 @@
-name: "Timing Channel"
+name: "Heartbeat"
 author: "ctf-team"
 category: misc
 description: |
@@ -13,8 +13,7 @@ description: |
   Recover it and submit it.
 
   Notes:
-    * The payloads are intentionally uninteresting. Staring harder at the bytes
-      will not help.
+    * Every heartbeat's payload is identical apart from a plain counter.
     * The capture is one-directional and lossless: every heartbeat the agent
       sent is present, in order.
 
@@ -42,9 +41,7 @@ files:
 
 tags:
   - misc
-  - pcap
   - network
-  - covert-channel
   - medium
 
 connection_info: null

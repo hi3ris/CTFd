@@ -25,8 +25,8 @@ description: |
   The `SYS` gate exposes the Marble standard library -- pure string/number
   helpers, slots **0..7**: `0 strlen  1 concat  2 substr  3 itoa  4 atoi
   5 upper  6 ord  7 chr`. By design the jail keeps the host out of reach: there
-  is no file word, no import, no eval, and `SYS` refuses anything above the
-  exposed range. A well-behaved Marble program is fully contained.
+  is no file word, no import, no eval, and `SYS` exposes only the standard
+  library above. A well-behaved Marble program is fully contained.
 
   Your goal: **escape the sandbox and read this instance's flag.** The flag is
   not in any downloadable file and cannot be recovered by reading a program's
@@ -64,10 +64,8 @@ flags:
 tags:
   - misc
   - jail
-  - escape
   - esolang
-  - interpreter
-  - sandbox
+  - medium
 
 # Prerequisite chain: none. This is a standalone challenge.
 # (If wired into a chain, prereqs are set by challenge ID at import time via a

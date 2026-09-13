@@ -14,9 +14,9 @@ description: |
   that un-opened draw -- so if the game is truly fair, the vault is unrecoverable
   and the sealed value is anyone's guess.
 
-  It is not. Something about how the table produces its "fresh" draws makes the
-  session far less unpredictable than the commitments suggest. Study the opened
-  rounds closely enough and the sealed vault draw is not a guess at all.
+  Is it, though? A commitment only binds the dealer to a draw it has already
+  chosen; it says nothing about how those draws are chosen in the first place.
+  The opened rounds are all in the ledger.
 
   Recover the sealed vault draw, unseal the payout blob, and read the flag.
   `SPEC.md` documents the file format (and the exact commitment / sealing
@@ -43,10 +43,8 @@ flags:
 
 tags:
   - crypto
-  - commitment
-  - prng
-  - state-recovery
   - custom-format
+  - medium
 
 # Files handed to players. Only the ledger export and its parse spec are
 # distributed; gen.py and the solution/ directory are NOT shipped.
