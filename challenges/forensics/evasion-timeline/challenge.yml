@@ -1,0 +1,60 @@
+name: "Evasion Timeline"
+author: "ctf-team"
+category: forensics
+description: |
+  A finance workstation's EDR quietly failed to act during an alert storm, and a
+  later hunt turned up a stray autorun and a call-out to a low-reputation host.
+  We exported the endpoint's Sysmon telemetry for triage: `sysmon.jsonl`, one
+  JSON event per line (process, network, image-load, file, registry, DNS).
+
+  At a glance the process tree looks clean — every process traces back to a
+  normal Windows parent. But something walked in under the cover of a trusted
+  process, and the **parentage the telemetry is claiming cannot be true**. Don't
+  trust image names or paths; correlate the events against the clock, find the
+  one process whose recorded lineage is impossible, and pull the indicator it is
+  hiding.
+
+  Read `TRIAGE_BRIEF.md` for the scenario and the Sysmon field reference.
+
+  Notes:
+    * The log is mostly benign boot/service/user-session noise from a real work
+      session. The anomaly is a single event relationship, not a single event.
+    * More than one process was launched with an encoded/obfuscated command
+      line, and admins encode commands too. Which one is the intruder is decided
+      by the evidence, not by the presence of encoding. Anything that "decodes
+      to a flag" without justifying itself against the timeline is not it.
+
+  Flag format: NCTF{...}  (lowercase letters, digits and underscores inside).
+
+# This is a STATIC, downloadable forensics artifact: the challenge IS the log
+# export, so the flag is baked into the telemetry. No served component and no
+# per-team HMAC flag (see the forensics static-artifact exception in the
+# wave-2 authoring rules). gen.py rebuilds the log deterministically and is kept
+# out of the player bundle; files: ships only the handout.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 400
+type: dynamic
+extra:
+  initial: 400
+  decay: 45
+  minimum: 120
+
+flags:
+  - "NCTF{ppid_sp00f_dead_parent_6284}"
+
+files:
+  - sysmon.jsonl
+  - TRIAGE_BRIEF.md
+
+tags:
+  - forensics
+  - dfir
+  - sysmon
+  - windows
+  - timeline
+  - mitre-attack
+  - medium
+
+connection_info: null

@@ -1,0 +1,82 @@
+name: boot2root-linux
+author: dagbanjaphet
+category: pwn
+type: team_instance
+description: |
+  **boot2root-linux** -- a full Linux box in a single per-team container. Get a
+  foothold, escalate all the way to **root**, and read `/root/flag`.
+
+  You are handed only a running host: `http://{host}:{port}`. A minimal internal
+  service is listening. There are no downloads and no source: everything you
+  need is *on the box* once you land your first shell.
+
+  Your objective, end to end:
+
+    1. Find and exploit the network-facing service to get **code execution as an
+       unprivileged service account**.
+    2. From there, work through the machine's **local misconfigurations** to
+       move up to more privileged accounts and finally to **root**. This is a
+       multi-stage local privilege-escalation chain -- expect to pivot through
+       more than one account and to combine more than one weakness. Enumerate.
+    3. As root, read `/root/flag`.
+
+  The flag lives **only** in `/root/flag`, owned by `root` and mode `400`: it is
+  not world-readable, it is not in any environment variable you can reach as the
+  service user, and it is **not** baked into the image. There is no shortcut and
+  no "verify" endpoint that will hand it to you -- the win condition is the
+  effect of actually reading that file as root. If you can `cat /root/flag`, you
+  have rooted the box.
+
+  Per-team instance: each team gets its own container and its own flag, so
+  nothing you find can be replayed against another team.
+
+  Flag format: `NCTF{...}`
+
+  Connect:  `http://{host}:{port}`
+
+# Dynamic scoring (hard).
+value: 500
+extra:
+  docker_image: ctf-boot2root-linux:latest
+  internal_port: 8080
+  initial: 500
+  decay: 20
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships in this file. The container derives it
+# at runtime from the injected per-challenge secret as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-boot2root-linux")[:24] + "}"
+# (equivalently "NCTF{" + CHALLENGE_SECRET[:24] + "}"; see flag.py). The
+# platform's team_hmac flag class recomputes and validates each team's flag on
+# submission, so `flags` carries only the challenge-id label, not a value.
+flags:
+  - type: team_hmac
+    content: pwn-boot2root-linux
+
+# No handout: this is a black-box boot2root. Nothing is shipped to the player;
+# the whole challenge lives in the running container. (No `files:` on purpose --
+# shipping the image contents would reveal the intended chain.)
+
+tags:
+  - pwn
+  - boot2root
+  - linux
+  - privilege-escalation
+  - suid
+  - sudo
+  - command-injection
+
+# challenge-id (for HMAC / requirements wiring): pwn-boot2root-linux
+# No prerequisites; standalone.
+
+# Served challenge: the platform instancier starts one container per team,
+# injects FLAG / CHALLENGE_SECRET, and templates connection_info with the
+# team's host:port.
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile in this directory; must be named
+# ctf-boot2root-linux:latest so `make push-images` picks it up.

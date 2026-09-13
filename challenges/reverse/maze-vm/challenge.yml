@@ -1,0 +1,72 @@
+name: maze-vm
+author: challenge-team
+category: reverse
+description: |-
+  We recovered a small self-contained "gate" binary. It refuses to explain
+  itself: instead of checking your passphrase with ordinary code, it carries an
+  embedded program for a machine of its own and runs that program to decide
+  whether you are let in. Feed it the one input it accepts and it hands you the
+  flag; feed it anything else and it just says "Denied."
+
+  A few things frustrate a casual read of the file:
+
+    - The embedded program is not stored as-is. It is scrambled and only
+      unpacked in memory as the binary starts, so what you see at rest in the
+      file is not what actually executes. Reproduce the unpacking first.
+
+    - The machine does not use a normal instruction decoder you can pattern-match
+      against a compiler's output. Work out how it fetches and dispatches its
+      own instructions, and what each one does, before you trust any listing.
+
+  There is NO flag string and NO passphrase string in the binary: only enough
+  to recognize the correct input once it reaches the gate. The accepted input
+  is itself the secret -- when it validates, the binary prints it back to you
+  inside the flag wrapper. Recover that input.
+
+  The artifact is a native x86-64 Linux ELF. No network access is required;
+  everything you need is inside the file.
+
+  Flag format: NCTF{...}
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the validation logic locally (explicitly allowed by the guardrails
+# for RE). No plaintext flag or passphrase is present -- only target = F(pass),
+# the transformed image the embedded program compares against. Static flag.
+#
+# Invented ISA (not DER/protobuf/known-VM, and deliberately unlike synthvm):
+#   - a stack + small-register HYBRID machine driven by a THREADED
+#     (computed-goto) dispatch loop rather than a switch,
+#   - a byte-oriented opcode set including a modular-multiply (MULMOD) and a
+#     whole-array BYTE-PERMUTE (PERM) as the only cross-byte mixing step,
+#   - LIGHT anti-analysis: the bytecode is stored rolling-XOR obfuscated and
+#     decoded in memory at startup (self-synchronizing keystream), so the
+#     at-rest bytes differ from what runs. No debugger tricks: fully static.
+# The transform is a bijection over the 16-byte input, so exactly one input
+# validates. The checker is unrolled, so the work is in lifting/reasoning
+# about the program, not a tiny loop. See src/gen.py for the full spec
+# (dev-only, NOT shipped).
+#
+# Distinct from synthvm (different dispatch model, different anti-analysis,
+# different opcode set, and the flag is DERIVED/printed on success rather than
+# being the raw input compared to a target). Standalone: no 'requirements'
+# chain. Nothing served: no connection_info.
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 45
+  minimum: 150
+
+flags:
+  - NCTF{m4ze_vm_thr34d3d}
+
+tags:
+  - reverse
+  - elf
+  - bytecode-vm
+  - threaded-dispatch
+  - static-analysis
+
+files:
+  - chall
