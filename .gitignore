@@ -99,3 +99,5 @@ challenges/**/.build.log
 # above would otherwise silently drop them from the repo and break both the
 # Docker build and the ctfcli import on a fresh clone).
 !challenges/**/handout/**
+# ...but never bytecode caches inside them.
+challenges/**/handout/**/__pycache__/
