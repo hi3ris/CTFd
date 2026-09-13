@@ -153,7 +153,7 @@ def run_solver(runner, chdir, cmd, timeout):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", default=os.environ.get("CTFD_URL", "http://localhost:8000"))
+    ap.add_argument("--url", default=os.environ.get("CTFD_URL", "http://localhost:" + os.environ.get("CTFD_PORT", "8000")))
     ap.add_argument("--only", nargs="*", default=[])
     ap.add_argument("--static-only", action="store_true")
     ap.add_argument("--served-only", action="store_true")

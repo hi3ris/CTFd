@@ -38,7 +38,7 @@ def login(url, name, password):
 
 def main():
     ap = argparse.ArgumentParser()
-    ap.add_argument("--url", default=os.environ.get("CTFD_URL", "http://localhost:8000"))
+    ap.add_argument("--url", default=os.environ.get("CTFD_URL", "http://localhost:" + os.environ.get("CTFD_PORT", "8000")))
     ap.add_argument("--expect-challenges", type=int, default=36)
     a = ap.parse_args()
     url = a.url.rstrip("/")

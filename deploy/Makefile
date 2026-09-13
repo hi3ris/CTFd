@@ -415,10 +415,10 @@ local-venv: ## [local] Cree local/.venv avec ctfcli + requests (Kali/Debian : pi
 # Les images sont construites avec `docker build` (pas `compose build`) : ce
 # dernier exige le plugin buildx, absent de certains Docker (Kali, Debian).
 .PHONY: local-up
-local-up: ## [local] CTFd + MariaDB + Redis sur http://localhost:8000
+local-up: ## [local] CTFd + MariaDB + Redis sur http://localhost:8000 (CTFD_PORT=8080 si occupe)
 	docker build -t ctfd-local:latest -f ../Dockerfile ..
 	$(LOCAL_COMPOSE) up -d ctfd db cache
-	@echo; echo "CTFd : http://localhost:8000   ->   make local-seed"
+	@echo; echo "CTFd : http://localhost:$${CTFD_PORT:-8000}   ->   make local-seed"
 
 .PHONY: local-up-ai
 local-up-ai: ## [local] Idem + Ollama (CPU) + passerelle IA ; OLLAMA_MODEL=... pour un modele leger

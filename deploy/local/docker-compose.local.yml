@@ -28,7 +28,7 @@ services:
     user: root
     restart: unless-stopped
     ports:
-      - "8000:8000"
+      - "${CTFD_PORT:-8000}:8000"
     environment:
       - UPLOAD_FOLDER=/var/uploads
       - DATABASE_URL=mysql+pymysql://ctfd:${DB_PASSWORD:-ctfd}@db/ctfd
