@@ -45,7 +45,7 @@ def redeem():
 
 
 def find_flag(obj):
-    m = re.search(r"CTF\{[^}]+\}", json.dumps(obj))
+    m = re.search(r"NCTF\{[^}]+\}", json.dumps(obj))
     return m.group(0) if m else None
 
 

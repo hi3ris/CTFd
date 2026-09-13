@@ -3,18 +3,24 @@
 {% block content %}
 <div class="jumbotron">
 	<div class="container">
-		<h1>Scoreboard</h1>
+		<h1>Grand Prix NCTF</h1>
 	</div>
 </div>
 <div class="container">
 	{% include "components/errors.html" %}
 
-	<div id="score-graph" class="row d-flex align-items-center">
-		<div class="col-md-12 text-center">
-			<i class="fas fa-circle-notch fa-spin fa-3x fa-fw spinner"></i>
-		</div>
+	<!-- Sélecteur de vue : la Course est la vue par défaut ; la table reste en repli
+	     (et sert de fond accessible / sans-JS). -->
+	<div class="race-switch" role="tablist" aria-label="Vue du classement">
+		<button type="button" class="rsw-btn active" data-view="race" role="tab" aria-selected="true">🏎️ Course</button>
+		<button type="button" class="rsw-btn" data-view="table" role="tab" aria-selected="false">Table</button>
 	</div>
 
+	<!-- La piste (remplie par le script plus bas). Cachée tant que le JS n'a pas
+	     confirmé qu'il a des données : sans JS, on voit directement la table. -->
+	<div id="race" class="race" hidden aria-hidden="true"></div>
+
+	<div id="board-table">
 	{% cache 60, CacheKeys.PUBLIC_SCOREBOARD_TABLE %}
 	{% if standings %}
 	<div id="scoreboard" class="row">
@@ -34,18 +40,6 @@
 						<td>
 							<a href="{{ generate_account_url(standing.account_id) }}">
 								{{ standing.name | truncate(50) }}
-
-								{% if standing.oauth_id %}
-									{% if Configs.user_mode == 'teams' %}
-									<a href="https://majorleaguecyber.org/t/{{ standing.name }}">
-										<span class="badge badge-primary">Official</span>
-									</a>
-									{% elif Configs.user_mode == 'users' %}
-									<a href="https://majorleaguecyber.org/u/{{ standing.name }}">
-										<span class="badge badge-primary">Official</span>
-									</a>
-									{% endif %}
-								{% endif %}
 							</a>
 						</td>
 						<td>{{ standing.score }}</td>
@@ -57,13 +51,369 @@
 	</div>
 	{% endif %}
 	{% endcache %}
+	</div>
 </div>
 {% endblock %}
 
 {% block scripts %}
-	<script defer src="{{ url_for('views.themes', path='js/echarts.bundle.js') }}"></script>
-{% endblock %}
+<style>
+/* ===================================================================
+   Grand Prix NCTF — scoreboard « course ». 100% thème, aucune dépendance.
+   Voitures en CSS/SVG, couleur = hash du nom d'équipe. Dépassements =
+   transition CSS sur la position de voie. Countdowns pilotés par
+   init.start / init.end. Mode fun (nitro, feux de départ, damier, podium,
+   confettis) — tout est coupé sous prefers-reduced-motion.
+   =================================================================== */
+:root { --lane-h: 46px; }
+.race-switch { display:flex; gap:.4rem; margin:.2rem 0 1rem; }
+.rsw-btn {
+	font-family:'JetBrains Mono',monospace; font-size:.8rem; letter-spacing:.5px;
+	background:#0b0f18; color:#c7cfda; border:1px solid var(--line); border-radius:6px;
+	padding:.35rem .8rem; cursor:pointer; transition:border-color .12s, color .12s;
+}
+.rsw-btn:hover { color:var(--yellow); }
+.rsw-btn.active { color:#fff; border-color:var(--red); background:rgba(210,16,52,.14); }
 
-{% block entrypoint %}
-	<script defer src="{{ url_for('views.themes', path='js/pages/scoreboard.js') }}"></script>
+.race { position:relative; }
+.race .rc-head {
+	display:flex; align-items:baseline; justify-content:space-between; gap:1rem;
+	flex-wrap:wrap; margin-bottom:.6rem;
+}
+.race .rc-title { font-family:'Tourney',system-ui,sans-serif; font-weight:800;
+	text-transform:uppercase; letter-spacing:2px; font-size:1.2rem; color:#fff; }
+.race .rc-clock {
+	font-family:'JetBrains Mono',monospace; font-size:1.05rem; color:var(--yellow);
+	border:1px solid var(--line); border-radius:6px; padding:.25rem .7rem; background:#05070d;
+}
+.race .rc-clock b { color:#fff; }
+.race .rc-clock.live { color:var(--green-b); border-color:var(--green-b); }
+.race .rc-clock.frozen { color:#7fb2ff; border-color:#3a5b8f; }
+.race .rc-clock.done { color:var(--red); border-color:var(--red); }
+
+/* La piste */
+.track {
+	position:relative; background:
+		repeating-linear-gradient(90deg, transparent 0 78px, rgba(255,255,255,.03) 78px 80px),
+		radial-gradient(1200px 300px at 90% -20%, rgba(210,16,52,.08), transparent 60%),
+		#070a12;
+	border:1px solid var(--line); border-radius:10px; overflow:hidden;
+	transition:height .4s ease;
+}
+.track .startline { position:absolute; left:4.5%; top:0; bottom:0; width:2px; background:rgba(255,255,255,.25); }
+.track .finishline {
+	position:absolute; right:6%; top:0; bottom:0; width:14px;
+	background:
+		repeating-conic-gradient(#fff 0 25%, #111 0 50%) 0 0 / 14px 14px;
+	opacity:.5;
+}
+.track.done .finishline { opacity:1; box-shadow:0 0 18px rgba(255,255,255,.5); }
+
+/* Une voiture + son étiquette, positionnées en absolu ; la transition sur
+   top (= voie/rang) EST le dépassement animé. */
+.car-lane {
+	position:absolute; left:0; right:0; height:var(--lane-h);
+	transition:top .9s cubic-bezier(.34,1.2,.5,1);
+	display:flex; align-items:center;
+}
+.car-lane .rank {
+	position:absolute; left:.4rem; width:1.4rem; text-align:right;
+	font-family:'JetBrains Mono',monospace; font-size:.8rem; color:var(--muted);
+}
+.car-wrap {
+	position:absolute; transition:left 1.1s cubic-bezier(.22,.61,.36,1);
+	display:flex; align-items:center; gap:.5rem; transform:translateX(-50%);
+	white-space:nowrap;
+}
+.car {
+	width:52px; height:24px; position:relative; filter:drop-shadow(0 3px 3px rgba(0,0,0,.5));
+}
+.car .num { position:absolute; inset:0; display:flex; align-items:center; justify-content:center;
+	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.62rem; color:#00000099; z-index:2; }
+.car-name {
+	font-family:'Lato',sans-serif; font-weight:700; font-size:.82rem; color:#eef3f8;
+	max-width:170px; overflow:hidden; text-overflow:ellipsis;
+}
+.car-score { font-family:'JetBrains Mono',monospace; font-size:.78rem; color:var(--yellow); }
+
+/* Nitro : bref boost quand l'équipe marque (mode fun) */
+@keyframes nitro { 0%{transform:translateX(-50%) scale(1)} 30%{transform:translateX(-50%) scale(1.14)} 100%{transform:translateX(-50%) scale(1)} }
+.car-wrap.boost { animation:nitro .6s ease; }
+.car-wrap.boost .flame {
+	position:absolute; right:100%; top:50%; transform:translateY(-50%);
+	width:26px; height:10px; margin-right:-2px; border-radius:6px 2px 2px 6px;
+	background:linear-gradient(90deg, transparent, var(--yellow), var(--red)); opacity:.9;
+	animation:flick .12s steps(2) infinite;
+}
+@keyframes flick { 50% { opacity:.5; transform:translateY(-50%) scaleX(.8); } }
+.pluspts {
+	position:absolute; left:50%; top:-4px; transform:translateX(-50%);
+	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.78rem; color:var(--green-b);
+	animation:floatUp 1.2s ease forwards; pointer-events:none;
+}
+@keyframes floatUp { 0%{opacity:0; transform:translate(-50%,4px)} 20%{opacity:1} 100%{opacity:0; transform:translate(-50%,-22px)} }
+
+/* Peloton agrégé (les équipes hors top N) */
+.peloton {
+	position:absolute; left:0; right:0; display:flex; align-items:center;
+	transition:top .9s ease;
+}
+.peloton .bubble {
+	position:absolute; transform:translateX(-50%); display:flex; align-items:center; gap:.4rem;
+	font-family:'JetBrains Mono',monospace; font-size:.74rem; color:#c7cfda;
+	background:#0b0f18; border:1px dashed var(--line); border-radius:20px; padding:.15rem .6rem;
+}
+
+/* Feux de départ (mode fun) */
+.lights { display:flex; gap:.5rem; justify-content:center; margin:.4rem 0; }
+.lights .lamp { width:20px; height:20px; border-radius:50%; background:#2a0b0f; border:1px solid #3a1418; }
+.lights .lamp.on { background:var(--red); box-shadow:0 0 12px var(--red); }
+.lights.go .lamp { background:var(--green-b); box-shadow:0 0 14px var(--green-b); border-color:var(--green-b); }
+
+/* Podium à l'arrivée */
+.podium { display:flex; align-items:flex-end; justify-content:center; gap:.6rem; margin-top:1rem; }
+.podium .step { width:32%; max-width:200px; text-align:center; }
+.podium .step .who { font-family:'Lato',sans-serif; font-weight:700; color:#fff; margin-bottom:.3rem;
+	overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.podium .step .bar { border-radius:6px 6px 0 0; border:1px solid var(--line); border-bottom:0;
+	display:flex; align-items:flex-start; justify-content:center; padding-top:.4rem;
+	font-family:'Tourney',sans-serif; font-weight:800; color:#0a0a0a; }
+.podium .p1 .bar { height:120px; background:linear-gradient(180deg,#ffe27a,var(--yellow)); }
+.podium .p2 .bar { height:88px;  background:linear-gradient(180deg,#e6ecf3,#aeb8c4); }
+.podium .p3 .bar { height:64px;  background:linear-gradient(180deg,#e6a463,#b9702e); color:#fff; }
+
+/* Confettis tricolores */
+.confetti { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.confetti i { position:absolute; top:-12px; width:8px; height:12px; opacity:.9;
+	animation:fall linear forwards; }
+@keyframes fall { to { transform:translateY(115%) rotate(540deg); opacity:1; } }
+
+.race .waiting { text-align:center; color:var(--muted); font-family:'JetBrains Mono',monospace;
+	padding:2.5rem 1rem; }
+.race .yourcar { position:absolute; left:0; right:0; }
+
+/* Mode vidéoprojecteur : /scoreboard?big=1 */
+.race.big { --lane-h:64px; }
+.race.big .car { width:74px; height:34px; }
+.race.big .car-name { font-size:1.05rem; max-width:280px; }
+.race.big .car-score { font-size:1rem; }
+.race.big .rc-title { font-size:1.8rem; }
+.race.big .rc-clock { font-size:1.6rem; }
+body.bigmode .navbar, body.bigmode .footer, body.bigmode .jumbotron,
+body.bigmode .race-switch, body.bigmode #board-table { display:none !important; }
+body.bigmode #race { margin-top:1rem; }
+
+@media (max-width:640px) {
+	.car-name { max-width:96px; font-size:.72rem; }
+	.car { width:40px; height:20px; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.car-lane, .car-wrap, .peloton { transition:none; }
+	.car-wrap.boost { animation:none; }
+	.confetti { display:none; }
+	.pluspts { animation:none; opacity:0; }
+}
+</style>
+
+<script defer>
+(function () {
+	"use strict";
+	var mount = document.getElementById("race");
+	var tableBox = document.getElementById("board-table");
+	if (!mount) return;
+
+	var URLROOT = (window.init && init.urlRoot) || "";
+	var START = window.init && init.start ? Number(init.start) * 1000 : null;
+	var END   = window.init && init.end   ? Number(init.end)   * 1000 : null;
+	var TOPN = 12;
+	var POLL_MS = 12000;
+	var big = /[?&]big=1/.test(location.search);
+	if (big) { document.body.classList.add("bigmode"); mount.classList.add("big"); TOPN = 14; }
+
+	var prevScores = {};   // account_id -> score, pour détecter les nouveaux solves
+	var started = false;
+
+	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+	function hue(name){ var h=0; name=String(name||""); for(var i=0;i<name.length;i++){h=(h*31+name.charCodeAt(i))>>>0;} return h%360; }
+	function carSVG(h){
+		// petite voiture vue de côté, teinte = hash du nom
+		return '<svg class="car" viewBox="0 0 52 24" xmlns="http://www.w3.org/2000/svg">'
+			+ '<path d="M2 17 h48 a2 2 0 0 1 2 2 v1 a2 2 0 0 1 -2 2 H2 a2 2 0 0 1 -2 -2 v-1 a2 2 0 0 1 2 -2 z" fill="hsl('+h+',12%,18%)"/>'
+			+ '<path d="M6 17 l6 -8 a4 4 0 0 1 3 -2 h14 a4 4 0 0 1 3 1.5 l6 8.5 z" fill="hsl('+h+',70%,52%)"/>'
+			+ '<path d="M14 9 h11 l4 6 H11 z" fill="#0a0f18" opacity=".85"/>'
+			+ '<circle cx="14" cy="20" r="4" fill="#111"/><circle cx="14" cy="20" r="1.6" fill="#666"/>'
+			+ '<circle cx="38" cy="20" r="4" fill="#111"/><circle cx="38" cy="20" r="1.6" fill="#666"/>'
+			+ '<span class="num"></span></svg>';
+	}
+	function fmt(ms){
+		if (ms<0) ms=0; var s=Math.floor(ms/1000);
+		var d=Math.floor(s/86400); s-=d*86400;
+		var h=Math.floor(s/3600); s-=h*3600;
+		var m=Math.floor(s/60); s-=m*60;
+		function p(n){return (n<10?"0":"")+n;}
+		return (d>0? d+"j " : "") + p(h)+":"+p(m)+":"+p(s);
+	}
+
+	// Ossature
+	mount.innerHTML =
+		'<div class="rc-head"><span class="rc-title">🏁 Classement en course</span>'
+		+ '<span class="rc-clock" id="rc-clock">—</span></div>'
+		+ '<div class="lights" id="rc-lights" hidden></div>'
+		+ '<div class="track" id="rc-track"><div class="startline"></div><div class="finishline"></div></div>'
+		+ '<div id="rc-podium"></div>';
+
+	var track = document.getElementById("rc-track");
+	var clockEl = document.getElementById("rc-clock");
+	var lightsEl = document.getElementById("rc-lights");
+	var podiumEl = document.getElementById("rc-podium");
+	var lanes = {};   // account_id -> {laneEl, wrapEl}
+
+	function phase(now){
+		if (START && now < START) return "pre";
+		if (END && now >= END) return "done";
+		return "live";
+	}
+
+	function renderClock(now){
+		var ph = phase(now);
+		clockEl.className = "rc-clock" + (ph==="live"?" live":ph==="done"?" done":"");
+		if (ph==="pre"){ clockEl.innerHTML = "DÉPART DANS <b>"+fmt(START-now)+"</b>"; }
+		else if (ph==="live"){ clockEl.innerHTML = END ? "TEMPS RESTANT <b>"+fmt(END-now)+"</b>" : "EN COURSE"; }
+		else { clockEl.innerHTML = "ARRIVÉE — course terminée"; }
+		// feux de départ (mode fun) dans les 6 dernières secondes avant le départ
+		if (ph==="pre" && START-now <= 6000){
+			lightsEl.hidden = false;
+			var lit = 5 - Math.max(0, Math.ceil((START-now)/1000) - 1);
+			var html=""; for(var i=0;i<5;i++){ html += '<span class="lamp'+(i<lit?" on":"")+'"></span>'; }
+			lightsEl.className = "lights"; lightsEl.innerHTML = html;
+		} else if (ph==="live" && !started){
+			started = true; lightsEl.hidden = false; lightsEl.className="lights go";
+			lightsEl.innerHTML = '<span class="lamp"></span><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span>';
+			setTimeout(function(){ lightsEl.hidden = true; }, 1500);
+		} else if (ph!=="pre") {
+			if (started || ph==="done") lightsEl.hidden = true;
+		}
+	}
+
+	function layout(teams){
+		var laneH = big ? 64 : 46;
+		var top = teams.slice(0, TOPN);
+		var rest = teams.length - top.length;
+		var maxScore = Math.max(1, top.length ? top[0].score : 1);
+		var rows = top.length + (rest>0 ? 1 : 0);
+		track.style.height = Math.max(rows,1)*laneH + 18 + "px";
+		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		top.forEach(function(t, i){
+			var xpct = 4.5 + (t.score/maxScore) * 82;   // startline 4.5% -> ~86%
+			var L = lanes[t.account_id];
+			if (!L){
+				var lane = document.createElement("div");
+				lane.className = "car-lane";
+				var h = hue(t.name);
+				lane.innerHTML = '<span class="rank"></span><div class="car-wrap">'
+					+ carSVG(h) + '<span class="car-name"></span> <span class="car-score"></span></div>';
+				track.appendChild(lane);
+				L = lanes[t.account_id] = { lane:lane, wrap:lane.querySelector(".car-wrap"),
+					rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
+					score:lane.querySelector(".car-score"), num:lane.querySelector(".num"), h:h };
+			}
+			L.lane.style.top = (i*laneH) + "px";
+			L.wrap.style.left = xpct + "%";
+			L.rank.textContent = (i+1);
+			L.name.textContent = t.name;
+			L.score.textContent = t.score;
+			if (L.num) L.num.textContent = (i+1);
+			// nitro si le score a monté depuis le dernier poll (mode fun)
+			var was = prevScores[t.account_id];
+			if (was != null && t.score > was && !reduced){
+				var wrap = L.wrap;
+				wrap.classList.remove("boost"); void wrap.offsetWidth; wrap.classList.add("boost");
+				if (!wrap.querySelector(".flame")){ var f=document.createElement("span"); f.className="flame"; wrap.appendChild(f); }
+				var pp=document.createElement("span"); pp.className="pluspts"; pp.textContent="+"+(t.score-was); wrap.appendChild(pp);
+				setTimeout(function(){ var fl=wrap.querySelector(".flame"); if(fl) fl.remove(); if(pp) pp.remove(); wrap.classList.remove("boost"); }, 1300);
+			}
+		});
+		// équipes sorties du top N : on retire leur voiture
+		Object.keys(lanes).forEach(function(id){
+			if (!top.some(function(t){return String(t.account_id)===String(id);})){ lanes[id].lane.remove(); delete lanes[id]; }
+		});
+		// peloton agrégé
+		var pel = document.getElementById("rc-peloton");
+		if (rest>0){
+			if (!pel){ pel=document.createElement("div"); pel.className="peloton"; pel.id="rc-peloton";
+				pel.innerHTML='<span class="bubble"></span>'; track.appendChild(pel); }
+			pel.style.top = (top.length*laneH) + "px";
+			pel.querySelector(".bubble").innerHTML = "🏍️ +"+rest+" équipe"+(rest>1?"s":"")+" dans le peloton";
+			pel.querySelector(".bubble").style.left = "10%";
+		} else if (pel){ pel.remove(); }
+
+		teams.forEach(function(t){ prevScores[t.account_id]=t.score; });
+	}
+
+	function podium(teams){
+		if (phase(Date.now())!=="done" || !teams.length){ podiumEl.innerHTML=""; track.classList.remove("done"); return; }
+		track.classList.add("done");
+		if (podiumEl.dataset.done) return; podiumEl.dataset.done="1";
+		var t = teams.slice(0,3), order=[1,0,2];
+		var html='<div class="podium">';
+		order.forEach(function(idx){ var p=t[idx]; if(!p) return; var cls="p"+(idx+1);
+			html += '<div class="step '+cls+'"><div class="who">'+esc(p.name)+'</div><div class="bar">'+(idx+1)+'</div></div>'; });
+		html += '</div>';
+		podiumEl.innerHTML = html;
+		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (!reduced) confetti();
+	}
+	function confetti(){
+		var cols=["#d21034","#ffce00","#006a4e","#ffffff"];
+		var box=document.createElement("div"); box.className="confetti";
+		for(var i=0;i<80;i++){ var p=document.createElement("i");
+			p.style.left=(Math.random()*100)+"%";
+			p.style.background=cols[i%cols.length];
+			p.style.animationDuration=(2+Math.random()*2.5)+"s";
+			p.style.animationDelay=(Math.random()*0.8)+"s";
+			box.appendChild(p); }
+		track.appendChild(box);
+		setTimeout(function(){ box.remove(); }, 5000);
+	}
+
+	function tick(){ renderClock(Date.now()); }
+
+	function refresh(){
+		fetch(URLROOT + "/api/v1/scoreboard", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (!j || !j.success || !Array.isArray(j.data)) return;
+				// première donnée valide -> on montre la course, on cache la table
+				if (mount.hasAttribute("hidden")){
+					mount.hidden=false; mount.setAttribute("aria-hidden","false");
+					if (tableBox && !big) tableBox.hidden=true;
+				}
+				var teams = j.data.map(function(d){ return {account_id:d.account_id, name:d.name, score:Number(d.score)||0}; });
+				if (!teams.length){ track.innerHTML='<div class="waiting">En attente des premiers scores… 🏁</div>'; return; }
+				layout(teams); podium(teams);
+			})
+			.catch(function(){ /* on garde la table en repli */ });
+	}
+
+	// Sélecteur de vue
+	document.querySelectorAll(".rsw-btn").forEach(function(b){
+		b.addEventListener("click", function(){
+			var v=b.dataset.view;
+			document.querySelectorAll(".rsw-btn").forEach(function(x){ x.classList.toggle("active", x===b); x.setAttribute("aria-selected", x===b?"true":"false"); });
+			if (v==="race"){ mount.hidden=false; if(tableBox) tableBox.hidden=true; }
+			else { mount.hidden=true; if(tableBox) tableBox.hidden=false; }
+		});
+	});
+	// plein écran au clavier (mode salle)
+	document.addEventListener("keydown", function(e){ if(e.key==="f" && !/input|textarea/i.test((e.target.tagName||""))){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); } });
+
+	// horloge chaque seconde ; scores toutes les 12s ; pause si onglet caché
+	tick(); refresh();
+	var clockTimer=setInterval(tick,1000), pollTimer=setInterval(refresh,POLL_MS);
+	document.addEventListener("visibilitychange", function(){
+		if (document.hidden){ clearInterval(pollTimer); pollTimer=null; }
+		else if (!pollTimer){ refresh(); pollTimer=setInterval(refresh,POLL_MS); }
+	});
+})();
+</script>
 {% endblock %}

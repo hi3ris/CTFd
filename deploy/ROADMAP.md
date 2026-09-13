@@ -90,8 +90,13 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       avant le départ + temps restant, podium à l'arrivée, mode vidéoprojecteur).
       100 % thème (template + JS + CSS), lit l'API existante, aucun impact scoring,
       se replie sur la table. Modèle Top N + peloton agrégé pour tenir 300 équipes.
-- [ ] 🤖 Lots A→G du plan (squelette → live → anim → countdowns → mode salle →
-      validation 300 équipes → repli/a11y). Chaque lot testable dans `deploy/local/`.
+- [x] 🤖 Lots A→D livrés (`themes/hibris/templates/scoreboard.html`, 100% inline, aucun
+      build JS) : piste + voitures 🏎️ (couleur=hash du nom), dépassements animés (voie=rang),
+      countdown avant départ + feux F1 + temps restant + gel + podium/confettis à l'arrivée,
+      mode fun, sélecteur Course(défaut)/Table, mode salle `?big=1` (touche `f` plein écran),
+      polling 12s + pause onglet caché, repli table + prefers-reduced-motion. Rendu vérifié.
+- [ ] 🤖 Lots E→G : « ta voiture » surlignée pour le joueur connecté, validation à 300 équipes
+      (seed de faux scores), captures écran, doc RUNBOOK (« écran salle : /scoreboard?big=1 »).
 - [ ] 🧑 Valider l'idée / le niveau d'animation voulu avant de lancer l'implémentation.
 
 ---
