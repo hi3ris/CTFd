@@ -2,7 +2,6 @@
 on the arena (production) or straight on the Docker host (local validation).
 The frp path is exercised at the rehearsal; this pins the switch itself."""
 import importlib
-import os
 
 import pytest
 
