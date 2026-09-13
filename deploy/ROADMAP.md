@@ -85,10 +85,11 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 ## Personnalisation — thème `hibris` ✅ (rendu à vérifier au setup)
 
-- [x] 🤖 Thème custom **`hibris`** dérivé de blueshield puis **rebrandé rock & roll togolais** :
-      tricolore Togo (vert/or/rouge + étoile) sur fond noir « scène », typo poster (Anton),
-      hovers énergiques. **Aucune marque CTFd ni Blueshield** ; pied de page
-      « ★ Powered by Zangbéto · ramses.dagban.tg ». Présent dans `CTFd/themes/hibris/`.
+- [x] 🤖 Thème custom **`hibris`** **aligné sur la vitrine officielle NCTF25 / CERT.tg**
+      (`github.com/hi3ris/NCTF25Vitrine`) : noir terminal, **tricolore Togo exact** (#d21034 / #ffce00 /
+      #006a4e), display **Tourney** + corps **Lato** + **JetBrains Mono** (flags/points), badges « résolu »
+      vert terminal, bordures tricolores nav/footer/hero. **Aucune marque CTFd ni Blueshield** ; pied de
+      page « Powered by Hibris · ramses.dagban.tg ». Présent dans `CTFd/themes/hibris/`.
 - [ ] 🧑 **Activer** le thème (`ctf_theme=hibris`) au setup et **vérifier le rendu** sous CTFd 3.7.7
       (cf. RUNBOOK §2). `blueshield.zip` d'origine conservé mais superflu.
 
