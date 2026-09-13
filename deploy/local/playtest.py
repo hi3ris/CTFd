@@ -110,7 +110,10 @@ class Ctfd:
         return self.s.post(self.url + "/plugins/team_instancer/spawn", json={"challenge_id": cid})
 
     def destroy(self, cid):
-        return self.s.post(self.url + "/plugins/team_instancer/destroy", json={"challenge_id": cid})
+        r = self.s.post(self.url + "/plugins/team_instancer/destroy", json={"challenge_id": cid})
+        if r.status_code != 200:
+            print(f"   !! destroy cid={cid} -> HTTP {r.status_code}: {r.text[:150]}", flush=True)
+        return r
 
     def attempt(self, cid, flag):
         r = self.s.post(self.url + "/api/v1/challenges/attempt", json={"challenge_id": cid, "submission": flag})
@@ -204,7 +207,12 @@ def main():
 
             host = port = None
             if mode in ("served", "ai"):
+                player.destroy(cid)          # nettoie une instance restee d'un run precedent
                 r = player.spawn(cid)
+                if r.status_code == 429:     # plafond par equipe : purge globale puis retry
+                    for oc in player.s.get(url + "/api/v1/challenges").json().get("data", []):
+                        player.destroy(oc["id"])
+                    r = player.spawn(cid)
                 try:
                     j = r.json()
                 except Exception:

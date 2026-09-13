@@ -45,7 +45,7 @@ services:
       - FRONT_PUBLIC_IP=${FRONT_PUBLIC_IP:-127.0.0.1}
       - WHALE_PORT_RANGE_START=${WHALE_PORT_RANGE_START:-28000}
       - WHALE_PORT_RANGE_END=${WHALE_PORT_RANGE_END:-28100}
-      - INSTANCER_MAX_PER_TEAM=${INSTANCER_MAX_PER_TEAM:-10}
+      - INSTANCER_MAX_PER_TEAM=${INSTANCER_MAX_PER_TEAM:-60}
       - INSTANCER_TTL=${INSTANCER_TTL:-3600}
       # --- IA : la passerelle est publiee sur l'hote (8600), comme en prod.
       # Les conteneurs IA la joignent via host.docker.internal (injecte par
