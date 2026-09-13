@@ -427,6 +427,11 @@ local-up-ai: ## [local] Idem + Ollama (CPU) + passerelle IA ; OLLAMA_MODEL=... p
 	$(LOCAL_COMPOSE) --profile ai up -d
 	@echo; echo "Le modele se telecharge en arriere-plan : make local-logs"
 
+.PHONY: local-fix-heapnote
+local-fix-heapnote: ## [local] Recompile le binaire heap-note sur glibc 2.31 (Ubuntu 20.04) puis construit son image
+	../challenges/pwn/heap-note/rebuild-binary.sh
+	./local/build-images.sh heap-note
+
 .PHONY: local-build-images
 local-build-images: ## [local] Construit les images ctf-* des challenges servis (ONLY=nom pour un seul)
 	./local/build-images.sh $(ONLY)
