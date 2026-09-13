@@ -412,14 +412,19 @@ local-venv: ## [local] Cree local/.venv avec ctfcli + requests (Kali/Debian : pi
 	local/.venv/bin/pip install -q --upgrade pip ctfcli requests
 	@echo "OK : les cibles local-* utilisent desormais local/.venv automatiquement"
 
+# Les images sont construites avec `docker build` (pas `compose build`) : ce
+# dernier exige le plugin buildx, absent de certains Docker (Kali, Debian).
 .PHONY: local-up
 local-up: ## [local] CTFd + MariaDB + Redis sur http://localhost:8000
-	$(LOCAL_COMPOSE) up -d --build ctfd db cache
+	docker build -t ctfd-local:latest -f ../Dockerfile ..
+	$(LOCAL_COMPOSE) up -d ctfd db cache
 	@echo; echo "CTFd : http://localhost:8000   ->   make local-seed"
 
 .PHONY: local-up-ai
 local-up-ai: ## [local] Idem + Ollama (CPU) + passerelle IA ; OLLAMA_MODEL=... pour un modele leger
-	$(LOCAL_COMPOSE) --profile ai up -d --build
+	docker build -t ctfd-local:latest -f ../Dockerfile ..
+	docker build -t ctfd-ai-gateway:latest ai-gateway
+	$(LOCAL_COMPOSE) --profile ai up -d
 	@echo; echo "Le modele se telecharge en arriere-plan : make local-logs"
 
 .PHONY: local-build-images
