@@ -1,0 +1,205 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>{{ Configs.ctf_name }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <link rel="shortcut icon" href="{{ Configs.ctf_small_icon }}" type="image/x-icon">
+
+    <!-- Fonts: heavy rock-poster display + condensed body -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Anton&family=Rajdhani:wght@400;500;700&display=swap">
+
+    <!-- base component styles -->
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/core.css') }}">
+
+    {% block stylesheets %}{% endblock %}
+    {{ Plugins.styles }}
+
+    <style>
+        /* ================================================================
+           Rock & roll, à la togolaise. Togo tricolour (green/gold/red +
+           white star) on a black stage. Heavy poster typography, loud
+           hovers. Nothing here says "CTFd".
+           ================================================================ */
+        :root {
+            --tg-green: #12a15f;
+            --tg-gold:  #ffd21e;
+            --tg-red:   #e4002b;
+            --ink:      #0b0b0d;
+            --stage:    #101014;
+            --panel:    #17171b;
+            --line:     #26262c;
+            --fg:       #f4f4f5;
+            --muted:    #a1a1aa;
+            --radius:   6px;
+        }
+
+        html { scroll-behavior: smooth; }
+
+        body {
+            margin: 0;
+            font-family: 'Rajdhani', system-ui, sans-serif;
+            font-weight: 500;
+            color: var(--fg);
+            background-color: var(--ink);
+            /* faint diagonal tricolour "stage lights" + a big ghost star */
+            background-image:
+                repeating-linear-gradient(115deg,
+                    rgba(18,161,95,0.05) 0 2px, transparent 2px 26px),
+                radial-gradient(1200px 600px at 82% -8%, rgba(228,0,43,0.10), transparent 60%),
+                radial-gradient(900px 500px at 12% 108%, rgba(18,161,95,0.10), transparent 60%),
+                linear-gradient(to bottom, #0d0d10, var(--ink));
+            background-attachment: fixed;
+        }
+
+        h1, h2, h3, h4, h5, .navbar-brand, .h1, .h2 {
+            font-family: 'Anton', 'Rajdhani', sans-serif;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: var(--fg);
+        }
+        h1, .h1 {
+            font-size: clamp(2rem, 6vw, 3.4rem);
+            line-height: 1.02;
+            text-shadow: 3px 3px 0 var(--tg-red), 6px 6px 0 rgba(18,161,95,0.35);
+        }
+        /* gold underline accent under section headers */
+        h2::after, h3::after {
+            content: ""; display: block; width: 2.2rem; height: 4px; margin-top: .35rem;
+            background: linear-gradient(90deg, var(--tg-green), var(--tg-gold), var(--tg-red));
+        }
+
+        /* Navbar: black bar with a tricolour underline and a star before the brand */
+        .navbar {
+            background-color: rgba(8,8,10,0.96) !important;
+            border-bottom: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--tg-green), var(--tg-gold), var(--tg-red)) 1;
+            backdrop-filter: blur(4px);
+        }
+        .navbar-brand {
+            font-size: 1.35rem; color: var(--fg) !important;
+        }
+        .navbar-brand::before {
+            content: "\2605"; color: var(--tg-gold); margin-right: .5rem;
+            text-shadow: 0 0 10px rgba(255,210,30,0.6);
+        }
+        .navbar .nav-link { color: #d4d4d8 !important; font-weight: 700; letter-spacing: .5px; text-transform: uppercase; font-size: .92rem; }
+        .navbar .nav-link:hover { color: var(--tg-gold) !important; }
+
+        a { color: var(--tg-gold); transition: all .15s ease-in-out; }
+        a:hover { color: var(--tg-red); text-shadow: 0 0 8px rgba(228,0,43,0.55); }
+
+        /* Buttons: loud, poster-like */
+        .btn {
+            transition: transform .12s ease, box-shadow .12s ease, background-color .12s;
+            text-transform: uppercase; font-weight: 700; letter-spacing: .6px;
+            border-radius: var(--radius);
+        }
+        .btn-primary {
+            background-color: var(--tg-gold); border-color: var(--tg-gold); color: #14140a;
+        }
+        .btn-primary:hover, .btn-primary:focus {
+            background-color: var(--tg-red); border-color: var(--tg-red); color: #fff;
+            transform: translateY(-2px); box-shadow: 0 6px 0 rgba(228,0,43,0.35);
+        }
+        .btn-secondary, .btn-info { background-color: var(--tg-green); border-color: var(--tg-green); color: #04120b; }
+        .btn-secondary:hover, .btn-info:hover { transform: translateY(-2px); filter: brightness(1.1); }
+
+        /* Panels / cards / challenge tiles */
+        .card, .modal-content, .jumbotron, .challenge-button, .challenge {
+            background-color: var(--panel) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: var(--radius) !important;
+            color: var(--fg);
+        }
+        .challenge-button, .challenge {
+            border-left: 3px solid var(--tg-gold) !important;
+            transition: transform .12s ease, box-shadow .12s ease, border-color .12s;
+        }
+        .challenge-button:hover, .challenge:hover {
+            transform: translateY(-3px);
+            border-left-color: var(--tg-red) !important;
+            box-shadow: 0 10px 24px rgba(0,0,0,0.5), 0 0 0 1px var(--tg-gold);
+        }
+
+        /* Tables / scoreboard */
+        table { color: var(--fg); }
+        .table thead th { border-bottom: 2px solid var(--tg-gold); text-transform: uppercase; letter-spacing: .5px; }
+        .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(255,255,255,0.02); }
+
+        /* Jumbotron / hero: a real stage */
+        .jumbotron {
+            background:
+                radial-gradient(700px 300px at 50% -40%, rgba(255,210,30,0.12), transparent 70%),
+                var(--stage) !important;
+            border-top: 4px solid transparent !important;
+            border-image: linear-gradient(90deg, var(--tg-green), var(--tg-gold), var(--tg-red)) 1;
+            text-align: center;
+        }
+
+        .form-control { background-color: #0e0e11; border: 1px solid var(--line); color: var(--fg); }
+        .form-control:focus { border-color: var(--tg-gold); box-shadow: 0 0 0 .15rem rgba(255,210,30,0.25); background-color:#0e0e11; color:var(--fg); }
+
+        /* Footer: black stage apron with tricolour top edge */
+        .footer {
+            background-color: #08080a;
+            color: var(--muted);
+            border-top: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--tg-green), var(--tg-gold), var(--tg-red)) 1;
+            padding: 1rem 0;
+        }
+        .footer a { color: var(--muted); }
+        .footer a:hover { color: var(--tg-gold); text-shadow: none; }
+
+        ::selection { background: var(--tg-gold); color: #14140a; }
+    </style>
+
+    <script type="text/javascript">
+        var init = {
+            'urlRoot': "{{ request.script_root }}",
+            'csrfNonce': "{{ Session.nonce }}",
+            'userMode': "{{ Configs.user_mode }}",
+            'userId': {{ Session.id }},
+            'start': {{ Configs.start | tojson }},
+            'end': {{ Configs.end | tojson }},
+            'theme_settings': {{ Configs.theme_settings | tojson }}
+        }
+    </script>
+
+    {{ Configs.theme_header }}
+</head>
+<body>
+
+    {% include "components/navbar.html" %}
+
+    <main role="main">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container flex-box text-center">
+            <a href="https://ramses.dagban.tg/" target="_blank" rel="noopener">
+                <small>&#9733; Powered by <strong>Zangb&eacute;to</strong> &middot; ramses.dagban.tg</small>
+            </a>
+        </div>
+    </footer>
+
+    <script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
+    <script defer src="{{ url_for('views.themes', path='js/core.js') }}"></script>
+    <script defer src="{{ url_for('views.themes', path='js/helpers.js') }}"></script>
+
+    {% block entrypoint %}
+    <script defer src="{{ url_for('views.themes', path='js/pages/main.js') }}"></script>
+    {% endblock %}
+
+    {% block scripts %}{% endblock %}
+    {{ Plugins.scripts }}
+    {{ Configs.theme_footer }}
+
+</body>
+</html>

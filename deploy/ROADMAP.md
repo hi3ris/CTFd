@@ -80,6 +80,18 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 - [x] `deploy/anti-llm-guardrails.md` : doc de décision (55 mesures → red team → synthèse)
 - [x] Principe présélection 0 % / finale décide ; liste de ce qu'on **ne** construit **pas**
 
+
+---
+
+## Personnalisation — thème `hibris` ✅ (rendu à vérifier au setup)
+
+- [x] 🤖 Thème custom **`hibris`** dérivé de blueshield puis **rebrandé rock & roll togolais** :
+      tricolore Togo (vert/or/rouge + étoile) sur fond noir « scène », typo poster (Anton),
+      hovers énergiques. **Aucune marque CTFd ni Blueshield** ; pied de page
+      « ★ Powered by Zangbéto · ramses.dagban.tg ». Présent dans `CTFd/themes/hibris/`.
+- [ ] 🧑 **Activer** le thème (`ctf_theme=hibris`) au setup et **vérifier le rendu** sous CTFd 3.7.7
+      (cf. RUNBOOK §2). `blueshield.zip` d'origine conservé mais superflu.
+
 ---
 
 ## Lot 4 — Challenges (écrits, à câbler + playtester) 🟡 PARTIEL

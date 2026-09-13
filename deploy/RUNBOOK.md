@@ -106,6 +106,15 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 ### Config CTFd + règlement 🧑
 
 - [ ] Mode équipes ; taille max d'équipe ; scoring dynamique ; compteurs de solves masqués ; scoreboard gelable ; fenêtre synchrone ; ToS obligatoire.
+- [ ] **Thème** : activer le thème custom **`hibris`** (rock & roll togolais, sans marque CTFd,
+      pied de page « Powered by Zangbéto · ramses.dagban.tg »). Il est présent dans
+      `CTFd/themes/hibris/`. L'activer une fois, au choix :
+        - UI : *Admin → Config → Theme* → sélectionner `hibris` ;
+        - ou API : `curl -H "Authorization: Token <admin>" -H 'Content-Type: application/json' \`
+          `-X PATCH https://$CTF_DOMAIN/api/v1/configs -d '{"ctf_theme":"hibris"}'`.
+      CTFd 3.7 avertit sur les thèmes custom (SSTI via éditeur admin) : on l'installe par le
+      système de fichiers (voie sûre), pas via l'éditeur. Vérifier le rendu (accueil, board,
+      scoreboard, login) à la phase `setup` — cf. la note de compatibilité templates 3.7.7.
 - [ ] **Règlement** publié AVANT l'ouverture des inscriptions (§6 garde-fous).
 
 ---
