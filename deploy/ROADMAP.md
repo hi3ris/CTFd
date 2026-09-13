@@ -83,6 +83,19 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 ---
 
+## Scoreboard « La Course » — écran de salle animé 🟡 ÉTUDE FAITE, à implémenter
+
+- [x] 🤖 **Étude & plan** : `deploy/scoreboard-race-design.md`. Scoreboard rendu
+      comme une course (coureurs par équipe, dépassements animés, compte à rebours
+      avant le départ + temps restant, podium à l'arrivée, mode vidéoprojecteur).
+      100 % thème (template + JS + CSS), lit l'API existante, aucun impact scoring,
+      se replie sur la table. Modèle Top N + peloton agrégé pour tenir 300 équipes.
+- [ ] 🤖 Lots A→G du plan (squelette → live → anim → countdowns → mode salle →
+      validation 300 équipes → repli/a11y). Chaque lot testable dans `deploy/local/`.
+- [ ] 🧑 Valider l'idée / le niveau d'animation voulu avant de lancer l'implémentation.
+
+---
+
 ## Personnalisation — thème `hibris` ✅ (rendu vérifié : pytest + stack locale)
 
 - [x] 🤖 Thème custom **`hibris`** **aligné sur la vitrine officielle NCTF25 / CERT.tg**
