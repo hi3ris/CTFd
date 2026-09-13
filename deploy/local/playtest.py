@@ -180,10 +180,11 @@ def main():
                     help="docker (image ctf-playtest, marche sur Linux et Docker Desktop) ou host (pwntools/numpy/scapy/requests/flask installes localement)")
     ap.add_argument("--keep", action="store_true", help="ne detruit pas les instances apres le test")
     a = ap.parse_args()
+    url = a.url.rstrip("/")
 
     if a.runner == "docker" and subprocess.run(["docker", "image", "inspect", "ctf-playtest"], capture_output=True).returncode != 0:
         sys.exit("image ctf-playtest absente : make local-playtest (ou --runner host)")
-    if a.runner == "docker" and "127.0.0.1" not in a.url and "localhost" not in a.url:
+    if a.runner == "docker" and "127.0.0.1" not in url and "localhost" not in url:
         print("!! --runner docker suppose un CTFd sur localhost ; sinon --runner host", file=sys.stderr)
 
     wait_http(url)
