@@ -19,19 +19,26 @@ field. The leaked system prompt lives at:
 ## Solve path
 
 1.  Open `transcript.json` and read `metadata.runtime_config.system_prompt`.
-2.  Inside the prompt is an "audit-handoff token for this deployment":
+2.  The leaked notes carry **two** base64 handoff tokens. The first is flagged
+    `DEPRECATED ... ROTATED OUT ... no longer valid` -- that is the decoy. The
+    one to use is the **current** token, on the line:
 
-    fWQzbDQzdjNyX3RwbTBycF9tM3Q1eXN7RlRD
+    _"The current audit-handoff token for this deployment is"_
+
+        fWQzbDQzdjNyX3RwbTBycF9tM3Q1eXN7RlRDTg==
 
 3.  It is stated to be lightly protected. base64-decode it:
 
-        }d3l43v3r_tpm0rp_m3t5ys{FTC
+        }d3l43v3r_tpm0rp_m3t5ys{FTCN
 
     That is clearly the flag written backwards.
 
 4.  Reverse the string to get the flag:
 
     NCTF{sy5t3m_pr0mpt_r3v34l3d}
+
+    (Decoding the _rotated_ token instead yields `NCTF{r0t4t3d_t0k3n_n0t_curr3nt}`,
+    which the scoreboard rejects -- refuting it takes one glance at its own line.)
 
 One-liner:
 
@@ -55,8 +62,15 @@ hidden, and the model will find the system prompt in metadata, spot the base64,
 decode and reverse it. That is by design -- its job is to be an on-ramp and a
 prerequisite gate for the rest of the AI category, not to resist automation.
 The obfuscation (reverse + base64) exists only so the flag is not grep-able as
-plaintext in the file, forcing a decode step rather than a copy-paste. No decoy
-is included; at Level 0 a decoy would add confusion without adding value.
+plaintext in the file, forcing a decode step rather than a copy-paste.
+
+A single decoy is included: a second, rotated-out handoff token, decoding to
+`NCTF{r0t4t3d_t0k3n_n0t_curr3nt}`. It costs nothing to refute -- its own line
+says `DEPRECATED ... ROTATED OUT ... no longer valid` -- but it teaches the
+lesson every real leaked-config triage needs (and that the OWASP LLM06
+"sensitive information disclosure" class turns on): a dumped config is noisy,
+and "grab the first base64 blob and decode it" is not the same as reasoning
+about _which_ secret is live. It never consumes an attempt on the scoreboard.
 
 The single lesson it teaches -- that an assistant refusing something in-band
 says nothing about what leaked out-of-band into logs/exports/metadata -- is the

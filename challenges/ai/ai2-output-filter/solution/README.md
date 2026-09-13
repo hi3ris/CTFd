@@ -24,8 +24,8 @@ only by `POST /verify` once you submit the recovered guarded value.
    then substring-search for the guarded value. This kills the raw value and
    _any_ interleaving with spaces, dashes, dots, newlines or letter-spacing.
 2. Repeat the normalised search for the **reversed** value and its **ROT13**.
-3. **Decode one layer**: every long base64-looking or hex-looking token is
-   decoded exactly once and checked for the value. Kills a single base64/hex.
+3. **Decode one layer**: every long base64-, **base32**- or hex-looking token is
+   decoded exactly once and checked for the value. Kills a single base64/base32/hex.
 
 So the obvious transforms are all dead:
 
@@ -34,22 +34,32 @@ So the obvious transforms are all dead:
 | `plain`, `spaced`, `dashed` | caught by the normalised substring search |
 | `reverse`                   | caught by the reverse check               |
 | `rot13`                     | caught by the rot13 check                 |
-| `base64`, `hex`             | caught by the one-layer decode            |
+| `base64`, `base32`, `hex`   | caught by the one-layer decode            |
 
 ## The crack
 
 The filter does exactly what a hurried author would write, and no more. It
 never:
 
-- tries **base32**,
 - interprets **decimal char codes**,
+- de-morses **dot/dash** sequences,
+- folds **full-width / unicode look-alike** letters back to ASCII,
 - spells **NATO / phonetic** words back into letters,
 - decodes **more than one layer** (so **double base64** slips past -- one decode
   yields `base64(secret)`, which is not the secret).
 
-Any of `charcodes`, `base32`, `base64x2` round-trips the value losslessly and
-survives. (`nato` also survives the filter but is **case-lossy** -- "sierra"
-could be `S` or `s` -- so it cannot alone reconstruct `SIGMA-<lowercase hex>`.)
+The survivors split in two:
+
+- **case-preserving** (usable directly for `/verify`): `charcodes`, `base64x2`,
+  `fullwidth`.
+- **case-lossy** (survive the filter but can't reproduce `SIGMA-<lowercase hex>`
+  exactly): `nato`, `morse` -- a phonetic/morse "sierra"/`...` can't tell `S`
+  from `s`. Reaching for one of these is a satisfying trap: it beats the filter
+  yet still fails `/verify`.
+
+> Escalation note: `base32` **used to** survive, but the filter now decodes one
+> base32 layer as well -- an example of the guard being hardened by one notch
+> while still leaving encodings it never anticipated.
 
 ## Solve path
 
@@ -84,7 +94,7 @@ seconds, costs no attempt.
   `/verify` oracle keyed to the team's `TEAM_SECRET`; pasting the challenge text
   into a model yields nothing usable.
 - **Frontier agent with live tool access:** _can_ solve this by iterating -- it
-  will read `/filter-policy`, enumerate the ~11 methods against the filter, spot
+  will read `/filter-policy`, enumerate the ~13 methods against the filter, spot
   the survivors, decode and verify. This is by design a filter-analysis puzzle,
   not a puzzle that resists an agent that is allowed to poke the service. What
   the design guarantees instead is that (a) nothing is recoverable offline, (b)

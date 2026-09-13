@@ -13,22 +13,50 @@ import re
 import sys
 
 
+def _deobfuscate(token: str):
+    """A leaked token is base64( reverse(flag) ). Return the flag, or None if
+    the blob is not a valid obfuscated NCTF flag."""
+    try:
+        decoded = base64.b64decode(token).decode("utf-8")
+    except Exception:
+        return None
+    flag = decoded[::-1]
+    return flag if flag.startswith("NCTF{") and flag.endswith("}") else None
+
+
 def solve(path: str) -> str:
     with open(path, "r", encoding="utf-8") as f:
         data = json.load(f)
 
     prompt = data["metadata"]["runtime_config"]["system_prompt"]
 
-    # The token is the base64 blob following "token for this deployment is".
-    m = re.search(r"token for this deployment is\s+([A-Za-z0-9+/=]+)", prompt)
-    if not m:
-        # Fallback: any long-ish base64 run in the prompt.
-        m = re.search(r"([A-Za-z0-9+/]{16,}={0,2})", prompt)
-    token = m.group(1)
+    # The leaked config is NOISY: it carries a rotated-out DECOY token as well
+    # as the current one. Decode EVERY base64 blob and discriminate, rather
+    # than grabbing the first one we see.
+    candidates = re.findall(r"([A-Za-z0-9+/]{16,}={0,2})", prompt)
+    decoded = [(tok, _deobfuscate(tok)) for tok in candidates]
+    valid = [(tok, flag) for tok, flag in decoded if flag]
 
-    decoded = base64.b64decode(token).decode("utf-8")
-    flag = decoded[::-1]  # de-obfuscate: it was base64(reverse(flag))
-    return flag
+    # Each token sits on its own operational-note line. Judge a token by the
+    # text of ITS line: reject one tagged DEPRECATED / ROTATED / previous /
+    # no longer valid; keep the one called "current".
+    def line_of(tok: str) -> str:
+        for line in prompt.splitlines():
+            if tok in line:
+                return line.upper()
+        return ""
+
+    def is_rotated(tok: str) -> bool:
+        line = line_of(tok)
+        return any(
+            w in line for w in ("DEPRECATED", "ROTATED", "PREVIOUS", "NO LONGER VALID")
+        )
+
+    current = [flag for tok, flag in valid if not is_rotated(tok)]
+    if current:
+        return current[0]
+    # Fallback: any valid flag we could recover.
+    return valid[0][1] if valid else ""
 
 
 if __name__ == "__main__":

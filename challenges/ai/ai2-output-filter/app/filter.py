@@ -22,18 +22,22 @@ the /filter-policy endpoint) is:
   (2) REVERSE / ROT13: the same normalised substring search is repeated for the
       reversed secret and for rot13(secret).
 
-  (3) ONE-LAYER DECODE: every contiguous token that looks like base64 or hex is
-      decoded EXACTLY ONCE; if the decoded bytes contain the secret, redact.
-      This catches a single base64 or hex encoding of the secret.
+  (3) ONE-LAYER DECODE: every contiguous token that looks like base64, base32
+      or hex is decoded EXACTLY ONCE; if the decoded bytes contain the secret,
+      redact. This catches a single base64, base32 or hex encoding.
 
 What the filter deliberately does NOT do (this is the crack):
-  - it never tries base32,
   - it never spells NATO/phonetic words back into letters,
   - it never interprets decimal char-code lists,
+  - it never de-morses dot/dash sequences,
+  - it never folds full-width / unicode look-alike letters back to ASCII,
   - it only decodes ONE layer, so a double-base64 slips through.
 
-So `nato`, `charcodes`, `base32`, and `base64x2` all survive; `plain`,
-`base64`, `hex`, `rot13`, `reverse`, `spaced`, `dashed` are all caught.
+So `nato`, `charcodes`, `morse`, `fullwidth`, and `base64x2` all survive;
+`plain`, `base64`, `base32`, `hex`, `rot13`, `reverse`, `spaced`, `dashed`
+are all caught. Note `nato` and `morse` are CASE-LOSSY (they survive the
+filter but cannot reproduce the exact secret for /verify) -- the usable
+bypasses are the case-preserving ones: `charcodes`, `base64x2`, `fullwidth`.
 """
 
 import base64
@@ -53,7 +57,51 @@ ALLOWED_METHODS = [
     "nato",
     "charcodes",
     "base64x2",
+    "morse",
+    "fullwidth",
 ]
+
+# International Morse for [a-z0-9] plus a hyphen prosign. Case-lossy on decode.
+_MORSE = {
+    "a": ".-",
+    "b": "-...",
+    "c": "-.-.",
+    "d": "-..",
+    "e": ".",
+    "f": "..-.",
+    "g": "--.",
+    "h": "....",
+    "i": "..",
+    "j": ".---",
+    "k": "-.-",
+    "l": ".-..",
+    "m": "--",
+    "n": "-.",
+    "o": "---",
+    "p": ".--.",
+    "q": "--.-",
+    "r": ".-.",
+    "s": "...",
+    "t": "-",
+    "u": "..-",
+    "v": "...-",
+    "w": ".--",
+    "x": "-..-",
+    "y": "-.--",
+    "z": "--..",
+    "0": "-----",
+    "1": ".----",
+    "2": "..---",
+    "3": "...--",
+    "4": "....-",
+    "5": ".....",
+    "6": "-....",
+    "7": "--...",
+    "8": "---..",
+    "9": "----.",
+    "-": "-....-",
+    "_": "..--.-",
+}
 
 _NATO = {
     "a": "alfa",
@@ -122,6 +170,13 @@ def transform(value: str, method: str) -> str:
         return " ".join(str(ord(ch)) for ch in value)
     if method == "base64x2":
         return base64.b64encode(base64.b64encode(b)).decode()
+    if method == "morse":
+        return " ".join(_MORSE.get(ch.lower(), "?") for ch in value)
+    if method == "fullwidth":
+        # Map ASCII printables (0x21-0x7E) to their full-width forms (+0xFEE0).
+        return "".join(
+            chr(ord(ch) + 0xFEE0) if 0x21 <= ord(ch) <= 0x7E else ch for ch in value
+        )
     raise ValueError("unknown method: %r" % method)
 
 
@@ -150,6 +205,19 @@ def _try_hex(tok: str):
         return None
 
 
+def _try_b32(tok: str):
+    # Standard base32 alphabet is A-Z2-7 (case-insensitive on decode). Reject
+    # tokens carrying any other symbol so a base64 blob is never mis-read here.
+    t = tok.rstrip("=").upper()
+    if len(t) < 8 or re.search(r"[^A-Z2-7]", t):
+        return None
+    pad = t + "=" * (-len(t) % 8)
+    try:
+        return base64.b32decode(pad)
+    except Exception:
+        return None
+
+
 def apply_filter(text: str, secret: str):
     """
     Return (safe_text, blocked). If the guarded secret is detectable by any of
@@ -167,10 +235,10 @@ def apply_filter(text: str, secret: str):
                 True,
             )
 
-    # (3) one-layer base64 / hex decode of every long token
+    # (3) one-layer base64 / base32 / hex decode of every long token
     for tok in re.findall(r"[A-Za-z0-9+/=]{8,}", text):
         core = tok.strip("=")
-        for decoded in (_try_b64(tok), _try_hex(core)):
+        for decoded in (_try_b64(tok), _try_b32(tok), _try_hex(core)):
             if decoded and sb in decoded:
                 return (
                     "[OUTPUT FILTER] guarded value detected -- response " "withheld.",
