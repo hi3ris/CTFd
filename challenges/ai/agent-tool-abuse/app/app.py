@@ -137,6 +137,9 @@ def run_turn(sess, user_msg):
     custodian_reply, _ = _agent_loop(
         "custodian", prompts.CUSTODIAN_SYSTEM_PROMPT, queue_msg,
         toolmod.CUSTODIAN_TOOL_SCHEMAS, executor, events)
+    # Worknotes handed to CUSTODIAN this turn are now drained: they will not be
+    # re-fed next turn (prevents unlimited free re-rolls off one planted note).
+    executor.mark_drained()
 
     return relay_reply, custodian_reply, events, executor.solved()
 
