@@ -4,6 +4,21 @@ The frp path is exercised at the rehearsal; this pins the switch itself."""
 import importlib
 import os
 
+import pytest
+
+from tests.helpers import create_ctfd, destroy_ctfd
+
+
+@pytest.fixture(autouse=True)
+def app_ctx():
+    # Importing the plugin package pulls CTFd decorators/constants, which need
+    # an application context at import time. Give every test one so the module
+    # can be (re)loaded regardless of which test file ran first.
+    app = create_ctfd(enable_plugins=True, setup=False)
+    with app.app_context():
+        yield
+    destroy_ctfd(app)
+
 
 def _reload_settings(monkeypatch, **env):
     for k in ("INSTANCER_PUBLISH", "INSTANCER_OLLAMA_MODEL", "DOCKER_HOST"):
