@@ -123,6 +123,20 @@ class Ctfd:
             return f"http {r.status_code}", r.text[:200]
 
 
+def wait_http(url, timeout=120):
+    """Attend que CTFd reponde (il vient peut-etre d'etre (re)cree par make local-up :
+    gunicorn + flask db upgrade prennent quelques secondes)."""
+    t0 = time.time()
+    while time.time() - t0 < timeout:
+        try:
+            if requests.get(url + "/healthcheck", timeout=5).status_code == 200:
+                return
+        except requests.RequestException:
+            pass
+        time.sleep(2)
+    sys.exit(f"CTFd ne repond pas sur {url} (make local-up ? make local-logs ?)")
+
+
 def wait_port(host, port, timeout=90):
     t0 = time.time()
     while time.time() - t0 < timeout:
@@ -172,8 +186,9 @@ def main():
     if a.runner == "docker" and "127.0.0.1" not in a.url and "localhost" not in a.url:
         print("!! --runner docker suppose un CTFd sur localhost ; sinon --runner host", file=sys.stderr)
 
-    admin = Ctfd(a.url, "admin", "admin")
-    player = Ctfd(a.url, "playtest", "playtest")
+    wait_http(url)
+    admin = Ctfd(url, "admin", "admin")
+    player = Ctfd(url, "playtest", "playtest")
     byname = {c["name"]: c for c in admin.challenges_admin()}
 
     saved_reqs = {}
