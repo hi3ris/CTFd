@@ -449,6 +449,14 @@ local-playtest: ## [local] Spawn -> solveur -> soumission, pour chaque challenge
 	docker build -q -t ctf-playtest -f local/Dockerfile.playtest local >/dev/null
 	$(LOCAL_PY) local/playtest.py $(ARGS)
 
+.PHONY: local-race-demo
+local-race-demo: ## [local] Peuple le scoreboard de fausses ecuries pour voir la course (ARGS="--live")
+	$(LOCAL_PY) local/seed_race_demo.py $(ARGS)
+
+.PHONY: local-race-clear
+local-race-clear: ## [local] Retire les ecuries de demo du scoreboard
+	$(LOCAL_PY) local/seed_race_demo.py --clear
+
 .PHONY: local-logs
 local-logs: ## [local] Logs de la stack locale
 	$(LOCAL_COMPOSE) --profile ai logs -f --tail=100
