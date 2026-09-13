@@ -83,15 +83,19 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
 ---
 
-## Personnalisation — thème `hibris` ✅ (rendu à vérifier au setup)
+## Personnalisation — thème `hibris` ✅ (rendu vérifié : pytest + stack locale)
 
 - [x] 🤖 Thème custom **`hibris`** **aligné sur la vitrine officielle NCTF25 / CERT.tg**
       (`github.com/hi3ris/NCTF25Vitrine`) : noir terminal, **tricolore Togo exact** (#d21034 / #ffce00 /
       #006a4e), display **Tourney** + corps **Lato** + **JetBrains Mono** (flags/points), badges « résolu »
       vert terminal, bordures tricolores nav/footer/hero. **Aucune marque CTFd ni Blueshield** ; pied de
       page « Powered by Hibris · ramses.dagban.tg ». Présent dans `CTFd/themes/hibris/`.
-- [ ] 🧑 **Activer** le thème (`ctf_theme=hibris`) au setup et **vérifier le rendu** sous CTFd 3.7.7
-      (cf. RUNBOOK §2). `blueshield.zip` d'origine conservé mais superflu.
+- [x] 🤖 **Rendu vérifié sous CTFd 3.7.7** : `tests/test_theme_hibris.py` rend toutes les pages
+      participants (SQLite, plugins chargés), pages d'erreur terminal, et vérifie que **chaque asset
+      référencé répond 200** (`main.min.css`, `js/pages/*.min.js`, logo CERT, assets plugin) et
+      qu'aucune trace « CTFd » ne fuit. Accueil CMS remplacé par `deploy/theme-home-hero.html`
+      (seed local ; à coller à la main sur AWS, cf. RUNBOOK §2). `blueshield.zip` conservé mais superflu.
+- [ ] 🧑 Contrôle visuel dans un navigateur via la stack locale (`make local-up local-seed`).
 
 ---
 
@@ -238,10 +242,22 @@ passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentati
 ## Lot 5 — Intégration & répétition générale 🔴 (semaine du 12 octobre)
 
 > 🤖 **Runbook rédigé** : `deploy/RUNBOOK.md` (préparation J-30→J-7, import ctfcli, bascules de
-> phase, cadence jours J, playbooks d'incident, clôture). Tout ci-dessous exige l'infra live.
+> phase, cadence jours J, playbooks d'incident, clôture).
+>
+> 🤖 **Stack de validation locale livrée** (`deploy/local/`, `make local-*`) : toute la plateforme
+> sur une machine — CTFd + DB + Redis (+ Ollama/passerelle IA en option), instancier en mode
+> `direct` (Docker local, ports publiés sans frp), seed (setup, thème, accueil, 36 challenges via
+> ctfcli), smoke HTTP, **playtest automatique** spawn → solveur → soumission pour les 36.
+> Déjà exécuté ici sans Docker (CTFd sur SQLite) : **36/36 challenges importés**, chaîne IA
+> vérifiée par le comportement, 2 bugs trouvés et corrigés (manifeste `commit-bias` sans `type:`,
+> solveur `git-archaeology` qui tronquait le `N` du flag). Reste ce qui exige l'infra live :
 
-- [ ] 🤖 Import de **tous** les challenges via ctfcli sur le front `setup`.
-- [ ] 🤖 Vérifier la chaîne de prérequis IA de bout en bout, et les scores dynamiques.
+- [x] 🤖 Import de **tous** les challenges via ctfcli — validé localement (36/36) ; à rejouer
+      tel quel sur le front `setup` (`ctf challenge install`, même ordre que `deploy/local/seed.py`).
+- [x] 🤖 Chaîne de prérequis IA vérifiée (ai1/2/3 masqués avant ai0, ai1 apparaît après) ;
+      scores dynamiques importés (`initial/decay/minimum`).
+- [ ] 🧑 `make local-build-images` + `make local-playtest` sur une machine avec Docker : aucun
+      `FAIL` attendu ; `STUB` (ai3, agent-tool-abuse) à rejouer à la main avec `local-up-ai`.
 - [ ] 🤖 **Test de charge à 300 connexions** (login + scoreboard + recalcul scoring) sur le
       front `preselection` → relever le vrai point de rupture, ajuster WORKERS/instance.
 - [ ] 🧑🤖 **Répétition générale** : 20-30 personnes internes, 3 h, sur l'infra de prod.

@@ -35,6 +35,32 @@ Sans cette étape, l'état reste **local** sur le poste (fonctionne, mais non re
 
 ---
 
+### Validation locale complète — AVANT tout `make phase-*` 🧑🤖
+
+Toute la plateforme tourne sur votre machine (Docker), avec les mêmes images,
+le même code et les mêmes plugins qu'en production. Cinq commandes, zéro coût
+AWS, et vous voyez exactement ce que verront les participants :
+
+```
+cd deploy
+make local-up               # CTFd + MariaDB + Redis  ->  http://localhost:8000
+make local-build-images     # les images ctf-* des 20 challenges servis
+make local-seed             # setup NCTF25, mode équipes, thème hibris, accueil, 36 challenges
+make local-smoke            # pages, thème, assets, API, chaîne IA verrouillée
+make local-playtest         # spawn -> solveur de référence -> soumission, challenge par challenge
+```
+
+- [ ] `local-smoke` : tout passe (aucune trace CTFd, tous les assets en 200).
+- [ ] `local-playtest` : aucun `FAIL`. Les `STUB` (ai3, agent-tool-abuse) se rejouent à la
+      main avec `make local-up-ai` (Ollama sur CPU) : c'est le pré-test adverse du §6.
+- [ ] Parcours manuel en tant que `playtest`/`playtest` : accueil, board, démarrer une
+      instance, soumettre, scoreboard, une 404.
+
+Détails, verdicts et différences assumées avec la prod : `deploy/local/README.md`.
+Sans Docker, le filet minimal reste `pytest tests/test_theme_hibris.py` (5 s).
+
+---
+
 ## 1. J-30 → J-14 — Délais incompressibles 🧑⏱
 
 Ces points, pas le code, peuvent faire rater le 23 octobre.

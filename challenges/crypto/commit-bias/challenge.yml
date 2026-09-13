@@ -27,6 +27,7 @@ description: |
   Flag format: `NCTF{...}`
 
 value: 300
+type: dynamic
 extra:
   initial: 300
   decay: 30

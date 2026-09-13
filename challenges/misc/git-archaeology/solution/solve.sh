@@ -31,5 +31,5 @@ fi
 echo "[*] recovered dangling commit: $DANGLE" >&2
 
 # 2) Read the scrubbed credentials file from that commit and extract the flag.
-FLAG="$(git show "$DANGLE:config.ini" | grep -oE 'CTF\{[^}]+\}' | head -1)"
+FLAG="$(git show "$DANGLE:config.ini" | grep -oE 'NCTF\{[^}]+\}' | head -1)"
 echo "$FLAG"

@@ -266,6 +266,8 @@ def spawn():
             return _json({"success": False, "error": "Passerelle IA non configuree (AI_PROXY_URL)."}, 503)
         container_env["OLLAMA_URL"] = settings.AI_PROXY_URL
         container_env["AI_PROXY_TOKEN"] = _mint_proxy_token(account_id, label, instance.id)
+        if settings.OLLAMA_MODEL_OVERRIDE:  # local laptops: a lighter model
+            container_env["OLLAMA_MODEL"] = settings.OLLAMA_MODEL_OVERRIDE
 
     try:
         cid, net = backend.spawn_container(account_id, challenge, container_env, port)

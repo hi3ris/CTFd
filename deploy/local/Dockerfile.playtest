@@ -1,0 +1,19 @@
+# Environnement d'execution des solveurs de reference (deploy/local/playtest.py).
+# Regroupe toutes leurs dependances pour que le playtest ne depende pas de ce
+# qui est installe sur la machine : pwntools (pwn), numpy (ml, audio), scapy
+# (pcap), requests/flask (web, ia), git/tar (git-archaeology), curl (b2r).
+# Lance avec --network host pour joindre les instances publiees sur 127.0.0.1.
+# amd64 impose : les solveurs reverse/pwn executent des ELF x86-64 (sur un Mac
+# Apple Silicon, Docker les emule via Rosetta/QEMU).
+FROM --platform=linux/amd64 python:3.11-slim-bookworm
+
+RUN apt-get update \
+ && apt-get install -y --no-install-recommends \
+      build-essential git tar curl ca-certificates libffi-dev libssl-dev \
+ && rm -rf /var/lib/apt/lists/*
+
+RUN pip install --no-cache-dir \
+      "pwntools>=4.12,<5" "numpy>=1.26,<3" "scapy>=2.5,<3" "requests>=2.31,<3" "Flask>=3,<4"
+
+WORKDIR /work
+ENV PWNLIB_NOTERM=1 PYTHONUNBUFFERED=1

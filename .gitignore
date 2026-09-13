@@ -89,3 +89,8 @@ deploy/backups/
 # are committed under their public/ dirs, not as _tmp_ files.
 challenges/**/_tmp_*
 challenges/**/__pycache__/
+
+# Deployment secrets and local validation stack
+deploy/front/.env
+deploy/.env
+challenges/**/.build.log

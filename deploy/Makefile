@@ -353,7 +353,7 @@ archive: ## Fige le scoreboard de la phase dans S3, en page autonome
 
 .PHONY: push-images
 push-images: ## Envoie les images de challenge dans S3 (lues depuis l'arena au prochain demarrage)
-	@test -d challenges || { echo "Aucun dossier challenges/"; exit 1; }
+	@test -d ../challenges || { echo "Aucun dossier challenges/ a la racine du depot"; exit 1; }
 	@mkdir -p /tmp/ctf-images
 	@for img in $$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep '^ctf-' || true); do \
 	   name=$$(echo "$$img" | tr '/:' '__'); \
@@ -396,3 +396,50 @@ destroy-all: ## Detruit l'EC2 et le reseau. Le bucket d'archives SURVIT.
 	@echo "pour le supprimer, il faut retirer ce garde-fou dans archive.tf, a la main."
 	@read -p "Taper 'detruire' pour confirmer : " ans; [ "$$ans" = "detruire" ] || exit 1
 	$(TF) apply -var 'phase=off'
+
+# --- Validation locale, avant AWS (voir local/README.md) --------------------
+# Toute la plateforme sur cette machine : memes images, meme code, memes
+# plugins. Aucune ressource AWS touchee.
+
+LOCAL_COMPOSE = docker compose -f local/docker-compose.local.yml
+LOCAL_PY     ?= python3
+
+.PHONY: local-up
+local-up: ## [local] CTFd + MariaDB + Redis sur http://localhost:8000
+	$(LOCAL_COMPOSE) up -d --build ctfd db cache
+	@echo; echo "CTFd : http://localhost:8000   ->   make local-seed"
+
+.PHONY: local-up-ai
+local-up-ai: ## [local] Idem + Ollama (CPU) + passerelle IA ; OLLAMA_MODEL=... pour un modele leger
+	$(LOCAL_COMPOSE) --profile ai up -d --build
+	@echo; echo "Le modele se telecharge en arriere-plan : make local-logs"
+
+.PHONY: local-build-images
+local-build-images: ## [local] Construit les images ctf-* des challenges servis (ONLY=nom pour un seul)
+	./local/build-images.sh $(ONLY)
+
+.PHONY: local-seed
+local-seed: ## [local] Setup NCTF25 + theme hibris + accueil + 36 challenges + equipe de test
+	$(LOCAL_PY) local/seed.py
+
+.PHONY: local-smoke
+local-smoke: ## [local] Verifie pages, theme, assets, API, chaine IA
+	$(LOCAL_PY) local/smoke.py
+
+.PHONY: local-playtest
+local-playtest: ## [local] Spawn -> solveur -> soumission, pour chaque challenge (ARGS="--only web/jwt-cousin")
+	docker build -q -t ctf-playtest -f local/Dockerfile.playtest local >/dev/null
+	$(LOCAL_PY) local/playtest.py $(ARGS)
+
+.PHONY: local-logs
+local-logs: ## [local] Logs de la stack locale
+	$(LOCAL_COMPOSE) --profile ai logs -f --tail=100
+
+.PHONY: local-down
+local-down: ## [local] Arrete la stack (base et uploads conserves)
+	$(LOCAL_COMPOSE) --profile ai down
+
+.PHONY: local-reset
+local-reset: ## [local] Arrete ET efface tout : base, uploads, modele Ollama, instances
+	$(LOCAL_COMPOSE) --profile ai down -v
+	-docker ps -aq --filter label=ctfd.instancer=1 | xargs -r docker rm -f

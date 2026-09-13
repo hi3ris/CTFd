@@ -76,6 +76,8 @@ class _FrpcLock:
 
 
 def _frpc_add(name, port):
+    if not settings.uses_frp():
+        return  # direct publish: the host port IS the public port
     with _FrpcLock():
         cfg = _frpc_request("GET", "/api/config")
         _frpc_request("PUT", "/api/config", frp.add_proxy(cfg, name, port))
@@ -83,6 +85,8 @@ def _frpc_add(name, port):
 
 
 def _frpc_remove(name):
+    if not settings.uses_frp():
+        return
     with _FrpcLock():
         cfg = _frpc_request("GET", "/api/config")
         _frpc_request("PUT", "/api/config", frp.remove_proxy(cfg, name))
@@ -111,7 +115,7 @@ def spawn_container(account_id, challenge, env, port):
     client = _client()
     net_name = f"ctfd_team_{account_id}"
     try:
-        client.networks.create(net_name, driver="overlay", attachable=True)
+        client.networks.create(net_name, driver=settings.network_driver(), attachable=True)
     except Exception:
         pass  # already exists
 
@@ -127,7 +131,8 @@ def spawn_container(account_id, challenge, env, port):
         name=name,
         environment=dict(env),
         network=net_name,
-        ports={f"{challenge.internal_port}/tcp": ("127.0.0.1", port)},
+        ports={f"{challenge.internal_port}/tcp": settings.port_binding(port)},
+        extra_hosts=settings.extra_hosts(),
         labels={
             "ctfd.instancer": "1",
             "ctfd.account": str(account_id),
