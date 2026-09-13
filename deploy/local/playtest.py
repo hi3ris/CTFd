@@ -69,9 +69,9 @@ PLAN = {
     "pwn/format-string-101":      ("served", "python3 solution/solve.py {HOST} {PORT}", 120),
     "pwn/heap-note":              ("served", "python3 solution/solve.py {HOST} {PORT}", 120),
     "pwn/ret2csu-ish":            ("served", "python3 solution/solve.py {HOST} {PORT}", 120),
-    "reverse/maze-vm":            ("static", "python3 solution/solve.py chall", 60),
-    "reverse/packed-vm-lite":     ("static", "python3 solution/solve.py vmcheck", 30),
-    "reverse/strings-lie":        ("static", "python3 solution/solve.py chall", 60),
+    "reverse/maze-vm":            ("static", "python3 solution/solve.py ./chall", 60),
+    "reverse/packed-vm-lite":     ("static", "python3 solution/solve.py ./vmcheck", 30),
+    "reverse/strings-lie":        ("static", "python3 solution/solve.py ./chall", 60),
     "reverse/synthvm":            ("static", "python3 solution/solve.py ./synthvm", 60),
     "web/graphql-introspection-maze": ("served", "python3 solution/solve.py {URL}", 120),
     "web/jwt-cousin":             ("served", "python3 solution/solve.py {URL}", 60),
@@ -121,6 +121,29 @@ class Ctfd:
             return r.json()["data"]["status"], r.json()["data"].get("message", "")
         except Exception:
             return f"http {r.status_code}", r.text[:200]
+
+
+def spawn_resilient(player, url, cid, tries=5):
+    """Spawn en gerant les deux 429 possibles : plafond d'instances par equipe
+    (-> on purge toutes les instances de l'equipe puis on retente) et rate-limit
+    anti-abus 6/60s sur /spawn (-> on attend la fenetre puis on retente). Le
+    rate-limit est un controle voulu en prod ; ici on le subit parce qu'un
+    playtest sequentiel spawne bien plus vite qu'une equipe reelle."""
+    for _ in range(tries):
+        r = player.spawn(cid)
+        if r.status_code != 429:
+            return r
+        try:
+            msg = r.json().get("error", "")
+        except Exception:
+            msg = r.text
+        if "instances" in msg.lower():      # plafond par equipe
+            for oc in player.s.get(url + "/api/v1/challenges").json().get("data", []):
+                player.destroy(oc["id"])
+        else:                                # rate-limit 6/60s : attendre la fenetre
+            print("   rate-limit /spawn (6/60s) atteint, attente 62s...", flush=True)
+            time.sleep(62)
+    return r
 
 
 def wait_http(url, timeout=120):
@@ -224,11 +247,7 @@ def main():
             host = port = None
             if mode in ("served", "ai"):
                 player.destroy(cid)          # nettoie une instance restee d'un run precedent
-                r = player.spawn(cid)
-                if r.status_code == 429:     # plafond par equipe : purge globale puis retry
-                    for oc in player.s.get(url + "/api/v1/challenges").json().get("data", []):
-                        player.destroy(oc["id"])
-                    r = player.spawn(cid)
+                r = spawn_resilient(player, url, cid)
                 try:
                     j = r.json()
                 except Exception:
