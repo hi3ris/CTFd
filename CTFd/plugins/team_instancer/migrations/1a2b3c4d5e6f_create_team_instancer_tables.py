@@ -24,13 +24,12 @@ def _has_table(op, name):
 
 def upgrade(op=None):
     if not _has_table(op, "team_instance_challenge"):
+        # initial / minimum / decay / function live on the base `challenges`
+        # table natively since CTFd 3.8.1 and are inherited, so the subtable
+        # only carries the two docker-specific columns.
         op.create_table(
             "team_instance_challenge",
             sa.Column("id", sa.Integer(), nullable=False),
-            sa.Column("initial", sa.Integer(), nullable=True),
-            sa.Column("minimum", sa.Integer(), nullable=True),
-            sa.Column("decay", sa.Integer(), nullable=True),
-            sa.Column("function", sa.String(length=32), nullable=True),
             sa.Column("docker_image", sa.String(length=160), nullable=True),
             sa.Column("internal_port", sa.Integer(), nullable=True),
             sa.ForeignKeyConstraint(["id"], ["challenges.id"], ondelete="CASCADE"),

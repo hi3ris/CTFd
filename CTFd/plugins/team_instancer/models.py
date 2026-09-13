@@ -1,9 +1,12 @@
 """Data models for the team instancer.
 
-- TeamInstanceChallenge: the challenge type. Subclasses Challenges directly and
-  carries its own dynamic-scoring columns (so we keep decay scoring WITHOUT
-  coupling to the dynamic_challenges table) plus the two docker fields. We reuse
-  only the decay math from dynamic_challenges, never its table.
+- TeamInstanceChallenge: the challenge type. Subclasses Challenges directly.
+  Since CTFd 3.8.1 the base `challenges` table carries the dynamic-scoring
+  columns (initial/minimum/decay/function) natively, so we INHERIT them rather
+  than redeclaring them on the subtable — redeclaring collided with the base
+  columns under joined-table inheritance (SAWarning "implicitly combining"). We
+  add only the two docker fields, and reuse the decay math from
+  dynamic_challenges (never its table).
 - TeamInstance: one live instance, keyed on the TEAM (account_id), not the user.
 - FrpPort: the pool of public ports, one row per port, allocated atomically.
 """
@@ -19,11 +22,8 @@ class TeamInstanceChallenge(Challenges):
     id = db.Column(
         db.Integer, db.ForeignKey("challenges.id", ondelete="CASCADE"), primary_key=True
     )
-    # Dynamic-scoring columns (same semantics as dynamic_challenges).
-    initial = db.Column(db.Integer, default=0)
-    minimum = db.Column(db.Integer, default=0)
-    decay = db.Column(db.Integer, default=0)
-    function = db.Column(db.String(32), default="logarithmic")
+    # initial / minimum / decay / function are inherited from the base
+    # Challenges model (native since CTFd 3.8.1); do NOT redeclare them here.
     # Instancer columns.
     docker_image = db.Column(db.String(160))   # e.g. "ctf-web-jwt-cousin:latest"
     internal_port = db.Column(db.Integer)      # port the container listens on
