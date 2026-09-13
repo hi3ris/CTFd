@@ -49,7 +49,7 @@ PLAN = {
     "ai/ai3-tool-abuse":          ("stub",   "MODEL_BACKEND=stub TEAM_SECRET=local-demo-team-secret python3 solution/solve.py", 60),
     "crypto/commit-bias":         ("static", "python3 solution/solve.py handout/ledger.coinvault", 60),
     "crypto/lcg-casino":          ("served", "python3 solution/solve.py {HOST} {PORT}", 120),
-    "crypto/nonce-sense":         ("static", "python3 solution/solve.py capture.json", 600),
+    "crypto/nonce-sense":         ("static", "python3 solution/solve.py capture.json", 1800),
     "crypto/padding-oracle-lite": ("served", "python3 solution/solve.py {HOST} {PORT}", 300),
     "crypto/tlv-vault":           ("static", "python3 solution/solve.py", 30),
     "forensics/audio-fsk":        ("static", "python3 solution/solve.py transmission.wav", 120),

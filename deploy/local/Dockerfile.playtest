@@ -10,10 +10,12 @@ FROM --platform=linux/amd64 python:3.11-slim-bookworm
 RUN apt-get update \
  && apt-get install -y --no-install-recommends \
       build-essential git tar curl ca-certificates libffi-dev libssl-dev \
+      libgmp-dev libmpfr-dev libfplll-dev pkg-config \
  && rm -rf /var/lib/apt/lists/*
 
 RUN pip install --no-cache-dir \
-      "pwntools>=4.12,<5" "numpy>=1.26,<3" "scapy>=2.5,<3" "requests>=2.31,<3" "Flask>=3,<4"
+      "pwntools>=4.12,<5" "numpy>=1.26,<3" "scapy>=2.5,<3" "requests>=2.31,<3" "Flask>=3,<4" \
+ && pip install --no-cache-dir fpylll || echo "fpylll indispo -> nonce-sense retombe sur la LLL Python (plus lente, timeout 1800s)"
 
 WORKDIR /work
 ENV PWNLIB_NOTERM=1 PYTHONUNBUFFERED=1
