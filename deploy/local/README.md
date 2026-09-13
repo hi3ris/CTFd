@@ -63,6 +63,26 @@ d'un LLM se rejoue a la main), `SKIP` (ai1 sans `--ai`).
 Ce qui n'est **pas** couvert localement et reste pour la repetition AWS (Lot 5) :
 le tunnel ssh/frp, le Swarm de l'arena, la charge a 300 equipes, TLS/DNS.
 
+## Docker Desktop (macOS / Windows)
+
+Oui, tout tourne sur Docker Desktop. Ce qu'il faut savoir :
+
+- **Ressources** : Settings > Resources, au moins 8 Go de RAM (12 avec le profil `ai`)
+  et ~20 Go de disque. Le socket Docker monte dans `ctfd` fonctionne tel quel.
+- **Ports** : les instances sont publiees sur `127.0.0.1:28000-28100` de votre machine,
+  Docker Desktop les redirige — `http://127.0.0.1:28001` marche depuis le navigateur.
+- **Mac Apple Silicon** : plusieurs challenges (pwn, reverse) embarquent des binaires
+  x86-64. Construisez et lancez tout en amd64, une fois pour toutes :
+  `export DOCKER_DEFAULT_PLATFORM=linux/amd64` avant `make local-*`. C'est emule
+  (Rosetta/QEMU), donc plus lent — activez *Use Rosetta for x86_64/amd64 emulation*
+  dans les settings. Ollama en amd64 emule est tres lent : prenez `OLLAMA_MODEL=llama3.2:3b`
+  ou testez l'IA sur une machine x86.
+- **Windows** : passez par **WSL2** (Ubuntu) avec l'integration Docker Desktop activee :
+  `make`, `bash` et Python y sont natifs, et le depot doit etre dans le systeme de fichiers
+  WSL (`~/CTFd`, pas `/mnt/c/...`, sinon les builds sont tres lents).
+- **Playtest** : le runner Docker n'utilise pas `--network host` (indisponible sur Desktop) ;
+  il joint les instances via `host.docker.internal`. Rien a configurer.
+
 ## Sans Docker du tout
 
 `make test` a la racine (ou `pytest tests/test_theme_hibris.py

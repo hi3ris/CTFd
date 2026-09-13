@@ -94,7 +94,7 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       participants (SQLite, plugins chargés), pages d'erreur terminal, et vérifie que **chaque asset
       référencé répond 200** (`main.min.css`, `js/pages/*.min.js`, logo CERT, assets plugin) et
       qu'aucune trace « CTFd » ne fuit. Accueil CMS remplacé par `deploy/theme-home-hero.html`
-      (seed local ; à coller à la main sur AWS, cf. RUNBOOK §2). `blueshield.zip` conservé mais superflu.
+      (seed local ; à coller à la main sur AWS, cf. RUNBOOK §2). `blueshield.zip` et les sources SCSS Blueshield supprimés (le thème est self-contained : CSS/JS compilés + surcharges inline de `base.html`).
 - [ ] 🧑 Contrôle visuel dans un navigateur via la stack locale (`make local-up local-seed`).
 
 ---

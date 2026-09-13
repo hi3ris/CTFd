@@ -133,7 +133,12 @@ def wait_port(host, port, timeout=90):
 
 def run_solver(runner, chdir, cmd, timeout):
     if runner == "docker":
-        full = ["docker", "run", "--rm", "--network", "host", "-v", f"{ROOT}:/work", "-w", f"/work/challenges/{chdir}",
+        # Pas de --network host (absent sur Docker Desktop) : le conteneur joint
+        # les instances publiees sur l'hote via host.docker.internal, que
+        # --add-host rend disponible sur Linux comme sur Desktop.
+        cmd = cmd.replace("127.0.0.1", "host.docker.internal").replace("localhost", "host.docker.internal")
+        full = ["docker", "run", "--rm", "--add-host", "host.docker.internal:host-gateway",
+                "-v", f"{ROOT}:/work", "-w", f"/work/challenges/{chdir}",
                 "-e", "PWNLIB_NOTERM=1", "ctf-playtest", "bash", "-lc", cmd]
         cwd = None
     else:
@@ -154,15 +159,15 @@ def main():
     ap.add_argument("--served-only", action="store_true")
     ap.add_argument("--ai", action="store_true", help="inclut ai1 (LLM reel via Ollama, profil ai)")
     ap.add_argument("--unlock-chain", action="store_true", help="retire temporairement les prerequis ai1->ai2->ai3")
-    # Le runner Docker utilise --network host pour joindre 127.0.0.1:<port> ;
-    # c'est natif sur Linux, pas sur Docker Desktop (macOS/Windows) -> host.
-    ap.add_argument("--runner", choices=["docker", "host"], default="docker" if sys.platform.startswith("linux") else "host",
-                    help="docker (Linux, image ctf-playtest) ou host (pwntools/numpy/scapy/requests/flask installes)")
+    ap.add_argument("--runner", choices=["docker", "host"], default="docker",
+                    help="docker (image ctf-playtest, marche sur Linux et Docker Desktop) ou host (pwntools/numpy/scapy/requests/flask installes localement)")
     ap.add_argument("--keep", action="store_true", help="ne detruit pas les instances apres le test")
     a = ap.parse_args()
 
     if a.runner == "docker" and subprocess.run(["docker", "image", "inspect", "ctf-playtest"], capture_output=True).returncode != 0:
         sys.exit("image ctf-playtest absente : make local-playtest (ou --runner host)")
+    if a.runner == "docker" and "127.0.0.1" not in a.url and "localhost" not in a.url:
+        print("!! --runner docker suppose un CTFd sur localhost ; sinon --runner host", file=sys.stderr)
 
     admin = Ctfd(a.url, "admin", "admin")
     player = Ctfd(a.url, "playtest", "playtest")
