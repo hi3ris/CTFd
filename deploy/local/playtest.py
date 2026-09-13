@@ -181,12 +181,17 @@ def main():
                 admin.patch(byname[n]["id"], {"requirements": {"prerequisites": []}})
         print(f">> chaine IA deverrouillee ({', '.join(saved_reqs)}) — restauree a la fin")
 
+    # Le nom CTFd d'un challenge vient de son challenge.yml (ex. "Audio FSK"),
+    # pas du nom de dossier.
+    def yml_name(d):
+        m = re.search(r"^name:\s*(.+)$", (CH / d / "challenge.yml").read_text(), re.M)
+        return m.group(1).strip().strip('"') if m else d.split("/")[1]
     todo = [d for d in PLAN if not a.only or d in a.only]
     results = []
     try:
         for d in todo:
             mode, cmd, timeout = PLAN[d]
-            name = d.split("/")[1]
+            name = yml_name(d)
             if a.static_only and mode != "static" or a.served_only and mode not in ("served", "ai"):
                 continue
             c = byname.get(name)

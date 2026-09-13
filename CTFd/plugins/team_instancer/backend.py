@@ -124,6 +124,17 @@ def spawn_container(account_id, challenge, env, port):
     name = container_name(account_id, challenge.id)
     _remove_by_name(client, name)
 
+    # Fail with a clear message rather than letting the SDK try a registry
+    # pull: images are local by design (arena: loaded from S3; laptop:
+    # deploy/local/build-images.sh).
+    try:
+        client.images.get(challenge.docker_image)
+    except Exception:
+        raise InstancerError(
+            f"image {challenge.docker_image} absente sur le Docker cible "
+            "(arena : make push-images ; local : make local-build-images)"
+        )
+
     mem = getattr(challenge, "mem_limit", None) or settings.DEFAULT_MEM_LIMIT
     container = client.containers.run(
         image=challenge.docker_image,          # local image, no registry pull
