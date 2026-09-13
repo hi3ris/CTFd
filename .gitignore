@@ -94,3 +94,8 @@ challenges/**/__pycache__/
 deploy/front/.env
 deploy/.env
 challenges/**/.build.log
+
+# Challenge handouts are deliverables, whatever their extension (*.so, *.log
+# above would otherwise silently drop them from the repo and break both the
+# Docker build and the ctfcli import on a fresh clone).
+!challenges/**/handout/**
