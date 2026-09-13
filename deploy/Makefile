@@ -402,7 +402,15 @@ destroy-all: ## Detruit l'EC2 et le reseau. Le bucket d'archives SURVIT.
 # plugins. Aucune ressource AWS touchee.
 
 LOCAL_COMPOSE = docker compose -f local/docker-compose.local.yml
-LOCAL_PY     ?= python3
+# `make local-venv` cree local/.venv (ctfcli + requests) ; les cibles l'utilisent
+# des qu'il existe. Sinon python3 du systeme (il faut alors ctfcli + requests).
+LOCAL_PY     ?= $(if $(wildcard local/.venv/bin/python),local/.venv/bin/python,python3)
+
+.PHONY: local-venv
+local-venv: ## [local] Cree local/.venv avec ctfcli + requests (Kali/Debian : pip systeme verrouille)
+	python3 -m venv local/.venv
+	local/.venv/bin/pip install -q --upgrade pip ctfcli requests
+	@echo "OK : les cibles local-* utilisent desormais local/.venv automatiquement"
 
 .PHONY: local-up
 local-up: ## [local] CTFd + MariaDB + Redis sur http://localhost:8000

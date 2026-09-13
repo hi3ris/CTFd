@@ -33,6 +33,8 @@ except ImportError:
     sys.exit("pip install requests ctfcli")
 
 ROOT = Path(__file__).resolve().parents[2]
+# ctfcli installe dans le meme environnement que l'interpreteur courant (venv), sinon PATH.
+CTF_BIN = str(Path(sys.executable).parent / "ctf") if (Path(sys.executable).parent / "ctf").exists() else "ctf"
 CHALLENGES = ROOT / "challenges"
 HERO = ROOT / "deploy" / "theme-home-hero.html"
 
@@ -141,7 +143,7 @@ def install_challenges(url, token, only, already):
             if name in already:
                 skip.append(d); continue
             log(f">> ctf challenge install {d}")
-            p = subprocess.run(["ctf", "challenge", "install", str(CHALLENGES / d)], cwd=tmp, capture_output=True, text=True)
+            p = subprocess.run([CTF_BIN, "challenge", "install", str(CHALLENGES / d)], cwd=tmp, capture_output=True, text=True)
             if p.returncode == 0:
                 ok.append(d)
             else:
