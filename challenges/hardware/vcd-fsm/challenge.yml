@@ -1,0 +1,47 @@
+name: vcd-fsm
+author: dagbanjaphet
+category: hardware
+description: |-
+  `trace.vcd` is a Value Change Dump exported from a simulation of a small state
+  machine. It has a clock (`clk`), a state index (`state`), an 8-bit output bus
+  (`dout`), and a wiggly `noise` bus. The machine emits one byte at a time on its
+  output.
+
+  Read the emitted byte sequence out of the waveform. The flag is that sequence
+  as ASCII.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{vcd_moore_fsm_output_trace}
+hints:
+  - content: >-
+      VCD is a plain-text format: `$var` lines map each signal to a short
+      identifier, then `#<time>` markers precede the value changes at that time
+      (`0!`/`1!` for a scalar, `b1010 #` for a bus). Rebuild each signal's value
+      over time by replaying the changes.
+    cost: 15
+    key: h1
+  - content: >-
+      It is a synchronous (Moore) machine: the output is only meaningful when
+      it is latched. Sample the `dout` bus on every RISING edge of `clk` and
+      ignore everything else - `noise` only moves between edges to distract you.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - hardware
+  - vcd
+  - fsm
+  - medium
+files:
+  - trace.vcd
+state: visible
+version: "0.1"

@@ -1,0 +1,45 @@
+name: firmware-blob
+author: dagbanjaphet
+category: hardware
+description: |-
+  We pulled `firmware.bin` off a device's flash chip. It starts with a small
+  custom header and a table of named sections, followed by the raw section data.
+  One section clearly is not readable text.
+
+  Parse the container, find the flag section, and recover its contents.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{xor_section_firmware_unpacked}
+hints:
+  - content: >-
+      The file begins with the ASCII magic `FWB1`, then a 16-bit version and a
+      16-bit section count. After that comes a section table; each entry is a
+      NUL-padded 8-byte name, then three little-endian 32-bit words: offset,
+      length, and flags.
+    cost: 10
+    key: h1
+  - content: >-
+      The `.flag` section's `flags` word has bit 0 set, meaning it is
+      XOR-encoded. The repeating XOR key is stored in the clear as the `.key`
+      section - XOR the flag bytes against it (cycling the key) to get ASCII.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - hardware
+  - firmware
+  - binary-parsing
+  - easy
+files:
+  - firmware.bin
+state: visible
+version: "0.1"
