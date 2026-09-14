@@ -1,0 +1,54 @@
+name: wayback-diff
+author: dagbanjaphet
+category: osint
+description: |-
+  Voici cinq captures archivées de la page d'accueil d'un portail, prises à des
+  dates différentes (style Wayback Machine). Un développeur a publié par erreur
+  un secret dans le code source, puis l'a discrètement retiré lors d'une capture
+  ultérieure.
+
+  Retrouvez ce qui a été publié puis effacé, décodez-le : c'est le flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{wayback_diff_scrubbed_dev_comment}
+hints:
+  - content: >-
+      Comparez les captures entre elles plutôt que de les lire une par une. Ce
+      qui compte, c'est ce qui a disparu d'une capture à la suivante.
+    cost: 15
+    key: h1
+  - content: >-
+      Les commentaires HTML (`<!-- ... -->`) contiennent des jetons en base64.
+      L'un d'eux n'apparaît que dans une seule capture avant d'être supprimé ;
+      les autres sont présents partout (leurres).
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Faites le diff des captures consécutives, isolez le jeton base64 présent
+      dans une capture et absent de la suivante, puis décodez-le en base64.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - web-archive
+  - diff
+  - medium
+files:
+  - snapshot_2021-02-10.html
+  - snapshot_2021-03-05.html
+  - snapshot_2021-03-19.html
+  - snapshot_2021-04-02.html
+  - snapshot_2021-05-14.html
+state: visible
+version: "0.1"

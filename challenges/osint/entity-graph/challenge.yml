@@ -1,0 +1,53 @@
+name: entity-graph
+author: dagbanjaphet
+category: osint
+description: |-
+  Le CERT.tg a exporté son graphe d'enquête sur la fuite de données de la
+  semaine dernière au format Maltego (`nodes.csv`, `edges.csv`). Le persona
+  `z3ro_237` a revendiqué la fuite ; il faut l'attribuer à une personne réelle.
+
+  Le graphe contient à la fois des liens confirmés par l'analyste et de simples
+  hypothèses. Retrouvez la seule identité réellement rattachée au persona et
+  lisez la note du dossier : elle contient le flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{maltego_pivot_kossivi_agbeko_unmasked}
+hints:
+  - content: >-
+      La colonne `relation` de `edges.csv` distingue les vrais pivots des
+      simples suppositions. Toutes les relations ne se valent pas.
+    cost: 15
+    key: h1
+  - content: >-
+      Ne suivez que les relations VÉRIFIÉES (same_email, same_phone,
+      same_device, owns_wallet, registered_by, confirmed_aka). Les relations
+      spéculatives (mentions, follows, similar_name) mènent à de faux profils.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Partez du nœud `z3ro_237`, faites un parcours en largeur en ne franchissant
+      que les arêtes vérifiées (traitées comme non orientées). Un seul nœud de
+      type `person` est atteignable : sa note est le flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - graph-pivot
+  - link-analysis
+  - medium
+files:
+  - nodes.csv
+  - edges.csv
+state: visible
+version: "0.1"

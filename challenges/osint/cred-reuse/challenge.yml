@@ -1,0 +1,56 @@
+name: cred-reuse
+author: dagbanjaphet
+category: osint
+description: |-
+  Un forum communautaire togolais a été piraté et sa base de comptes
+  (`dump.txt`) circule. On vous fournit aussi une liste de mots de passe
+  courants (`wordlist.txt`), la liste des services utilisés par chaque compte
+  (`services.csv`), et une note interne chiffrée du portail d'administration
+  (`admin_portal.enc`).
+
+  Un utilisateur a réutilisé son mot de passe partout. Retrouvez-le, déchiffrez
+  la note et lisez le jeton de secours : c'est le flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{cr3d_reuse_forum_to_admin_portal}
+hints:
+  - content: >-
+      Les mots de passe de `dump.txt` sont des empreintes SHA-1. La `wordlist`
+      fournie suffit à en casser la plupart par simple comparaison.
+    cost: 15
+    key: h1
+  - content: >-
+      `services.csv` dit qui utilise quoi. Cherchez le compte cassé qui apparaît
+      à la fois sur `forum` ET sur `admin-portal` : c'est le mot de passe
+      réutilisé. (Un compte admin-portal n'est pas dans la fuite : impasse.)
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      `admin_portal.enc` est chiffré par un flux XOR dont la clé dérive du mot de
+      passe réutilisé : keystream = concat(sha256(pass || counter_be32)).
+      Déchiffrez et lisez la ligne « jeton de secours ».
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - password-cracking
+  - credential-reuse
+  - medium
+files:
+  - dump.txt
+  - wordlist.txt
+  - services.csv
+  - admin_portal.enc
+state: visible
+version: "0.1"

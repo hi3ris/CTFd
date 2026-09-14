@@ -1,0 +1,31 @@
+{
+  "platform": "telegram",
+  "account": {
+    "username": "night_courier_tg",
+    "display_name": "Night Courier",
+    "email_on_file": "s.scribe.228@mailtg.tg",
+    "joined": "2024-02-11"
+  },
+  "messages": [
+    {
+      "id": 1,
+      "date": "2025-06-01T08:12:00Z",
+      "text": "canal ouvert. restez discrets."
+    },
+    {
+      "id": 2,
+      "date": "2025-06-02T21:40:00Z",
+      "text": "livraison Lomé -> Kara confirmée"
+    },
+    {
+      "id": 3,
+      "date": "2025-06-03T02:05:00Z",
+      "text": "backup key (ne pas perdre) hex=3d2b35221404120e1736070812010d3b0b1e15052d01030b1704043b1718013c0200140a0715"
+    },
+    {
+      "id": 4,
+      "date": "2025-06-04T13:00:00Z",
+      "text": "on efface tout dans 48h"
+    }
+  ]
+}

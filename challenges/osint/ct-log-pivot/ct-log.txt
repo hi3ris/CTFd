@@ -1,0 +1,10 @@
+# not_before | status | issuer | serial | sans
+2024-11-02 | valid | R3/LetsEncrypt | 03a1 | www.cert.tg,cert.tg
+2024-11-02 | valid | R3/LetsEncrypt | 03a2 | blog.cert.tg
+2025-01-15 | valid | E1/LetsEncrypt | 0510 | mail.cert.tg
+2025-02-01 | valid | GTS/Google | 77ff | vpn.cert.tg
+2025-02-03 | valid | GTS/Google | 8801 | www.togocom.tg,togocom.tg
+2025-03-10 | valid | R3/LetsEncrypt | 0912 | *.cert.tg
+2023-05-01 | expired | R3/LetsEncrypt | 0044 | portail.cert.tg
+2025-05-22 | valid | R3/LetsEncrypt | 0aa0 | mgmt-legacy.cert.tg
+2025-06-01 | valid | E1/LetsEncrypt | 0b12 | status.togocom.tg
