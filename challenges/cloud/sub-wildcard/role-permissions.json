@@ -1,0 +1,16 @@
+{
+  "RoleName": "ci-deployer",
+  "AttachedPolicy": {
+    "Version": "2012-10-17",
+    "Statement": [
+      {
+        "Sid": "ReadReleaseSecret",
+        "Effect": "Allow",
+        "Action": [
+          "secretsmanager:GetSecretValue"
+        ],
+        "Resource": "arn:aws:secretsmanager:us-east-1:210987654321:secret:prod/release-signing-*"
+      }
+    ]
+  }
+}

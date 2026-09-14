@@ -1,0 +1,11 @@
+{
+  "_comment": "Decoded claims of the OIDC JWT presented by the attacker fork.",
+  "iss": "https://token.actions.githubusercontent.com",
+  "aud": "sts.amazonaws.com",
+  "sub": "repo:kekeli-cloud/media-svc-fork:ref:refs/heads/feature/x",
+  "repository": "kekeli-cloud/media-svc-fork",
+  "repository_owner": "kekeli-cloud",
+  "ref": "refs/heads/feature/x",
+  "workflow": "deploy",
+  "actor": "mallory"
+}

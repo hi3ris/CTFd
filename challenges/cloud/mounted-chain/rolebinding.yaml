@@ -1,0 +1,13 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: media-worker-secret-reader
+  namespace: kekeli
+subjects:
+  - kind: ServiceAccount
+    name: media-worker
+    namespace: kekeli
+roleRef:
+  kind: Role
+  name: secret-reader
+  apiGroup: rbac.authorization.k8s.io

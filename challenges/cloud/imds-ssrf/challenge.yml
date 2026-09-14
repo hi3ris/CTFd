@@ -1,0 +1,46 @@
+name: imds-ssrf
+author: dagbanjaphet
+category: cloud
+description: |-
+  A proxy capture of an SSRF exploit against an EC2-hosted preview service
+  (`ssrf-capture.log`), plus an encrypted operator note recovered from the box
+  (`notes.enc`).
+
+  Read what the attacker pulled out of the instance, then open the note. The
+  flag is in it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{imdsv2_creds_decrypted_the_note}
+hints:
+  - content: >-
+      The capture is an SSRF reaching the instance metadata service at
+      169.254.169.254. It uses IMDSv2 (a token PUT, then GETs with the token
+      header). The final response is the role's credential document.
+    cost: 15
+    key: h1
+  - content: >-
+      Pull the `SecretAccessKey` out of that credential JSON. The note's XOR
+      keystream is SHA256 of that secret access key.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - cloud
+  - aws
+  - ssrf
+  - imds
+  - medium
+files:
+  - ssrf-capture.log
+  - notes.enc
+state: visible
+version: "0.1"

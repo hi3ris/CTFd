@@ -1,0 +1,23 @@
+{
+  "version": 1,
+  "bindings": [
+    {
+      "role": "roles/editor",
+      "members": [
+        "user:ops@kekeli.example"
+      ]
+    },
+    {
+      "role": "roles/storage.objectViewer",
+      "members": [
+        "serviceAccount:ci-helper@kekeli-media-212121.iam.gserviceaccount.com"
+      ]
+    },
+    {
+      "role": "roles/logging.viewer",
+      "members": [
+        "group:sre@kekeli.example"
+      ]
+    }
+  ]
+}
