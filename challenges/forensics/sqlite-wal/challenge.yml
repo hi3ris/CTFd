@@ -1,0 +1,57 @@
+name: sqlite-wal
+author: dagbanjaphet
+category: forensics
+description: |-
+  We seized an application's SQLite database (`app.db`) plus its sidecar file
+  (`app.db-wal`). The secrets table clearly used to hold a recovery token, but
+  when we open the database the token now just says it was redacted by a DLP
+  policy.
+
+  The redaction may be more recent than the data. Recover the recovery token as
+  it was originally stored. That token is your flag.
+
+  Note: you are given BOTH files. Think about what each one represents.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{wr1t3_4h34d_l0g_l34ks_0ld_r0w}
+hints:
+  - content: >-
+      The `-wal` file is a write-ahead log: it holds changes that were committed
+      but not yet folded ("checkpointed") back into the main database file. When
+      you open both together, SQLite replays the log — that is why you see the
+      redaction.
+    cost: 20
+    key: h1
+  - content: >-
+      The redaction lives only in the WAL. The main `app.db` file still holds the
+      page from before the redaction, because it was never checkpointed. Open the
+      main file WITHOUT its `-wal` and read the row.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Copy `app.db` alone into an empty directory (leave `app.db-wal` behind),
+      then `sqlite3 app.db "SELECT * FROM secrets"`. The pre-redaction
+      recovery_token value is the flag.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - forensics
+  - sqlite
+  - wal
+  - hard
+files:
+  - app.db
+  - app.db-wal
+state: visible
+version: "0.1"

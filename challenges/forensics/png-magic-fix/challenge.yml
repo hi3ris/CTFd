@@ -1,0 +1,45 @@
+name: png-magic-fix
+author: dagbanjaphet
+category: forensics
+description: |-
+  A screenshot was pulled from a suspect's machine, but the file (`evidence.png`)
+  will not open in any image viewer. The pixels look intact — only the very start
+  of the file seems wrong.
+
+  Make the file open again and read what the analyst left behind. The recovery
+  note in the image metadata is your flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{png_m4gic_byt3s_r3st0r3d}
+hints:
+  - content: >-
+      A file's first few bytes are its "magic number". Compare the start of this
+      file against a known-good file of the same type and you will see something
+      is missing.
+    cost: 10
+    key: h1
+  - content: >-
+      A PNG must begin with the exact 8-byte signature 89 50 4E 47 0D 0A 1A 0A.
+      Overwrite the first 8 bytes with those values, then look at the file's text
+      chunks (the `tEXt` metadata), not the pixels.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - forensics
+  - file-carving
+  - png
+  - beginner
+files:
+  - evidence.png
+state: visible
+version: "0.1"

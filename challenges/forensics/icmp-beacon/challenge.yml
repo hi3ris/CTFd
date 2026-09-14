@@ -1,0 +1,56 @@
+name: icmp-beacon
+author: dagbanjaphet
+category: forensics
+description: |-
+  During an incident, an analyst noticed a host on the network that "just would
+  not stop pinging". We grabbed the traffic (`icmp.pcap`). Regular monitoring
+  tools saw nothing but harmless ICMP.
+
+  The pings are not as innocent as they look. Recover the message hidden in the
+  traffic.
+
+  Notes:
+    * Ordinary pings to another host are mixed in.
+    * The hidden packets are captured out of order.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{1cmp_p4yl04d_c0v3rt_ch4nn3l}
+hints:
+  - content: >-
+      An ICMP echo request carries a payload that is normally just filler. One
+      of the two pinged hosts is receiving payloads that are not standard filler.
+      Compare the payload bytes between the two destinations.
+    cost: 15
+    key: h1
+  - content: >-
+      For the covert destination, each echo request hides one printable byte at a
+      fixed position inside the payload (offset 8). Order the requests by their
+      ICMP sequence number and read that byte out of each — they spell the flag.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Wireshark filter: `icmp.type == 8 && ip.dst == 192.168.50.200`. Sort by
+      `icmp.seq`, take payload byte index 8 from each packet, concatenate. Echo
+      replies (type 0) are noise.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - forensics
+  - network
+  - pcap
+  - medium
+files:
+  - icmp.pcap
+state: visible
+version: "0.1"
