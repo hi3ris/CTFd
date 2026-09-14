@@ -119,8 +119,9 @@
 	transition:top .9s cubic-bezier(.34,1.2,.5,1);
 }
 .car-lane::before {   /* bande d'asphalte arrondie de la voie */
-	content:""; position:absolute; left:0; right:0; top:6px; bottom:6px; border-radius:12px;
+	content:""; position:absolute; left:0; right:30px; top:6px; bottom:6px; border-radius:12px;
 	background:#141b28; box-shadow:inset 0 0 0 1px rgba(255,255,255,.03); z-index:0;
+	/* s'arrête avant la bande d'arrivée (26px) pour ne pas la recouvrir */
 }
 .car-lane.leader::before { background:linear-gradient(90deg,rgba(249,215,126,.14),#141b28 46%); box-shadow:inset 0 0 0 1px rgba(249,215,126,.28); }
 
@@ -148,8 +149,6 @@
 @keyframes spin { to { transform:rotate(360deg); } }
 @keyframes idlebob { 0%,100%{ transform:translateY(0) rotate(0); } 50%{ transform:translateY(-2px) rotate(-1.5deg); } }
 .car-lane:nth-child(odd) .car { animation-delay:.3s; }
-.car .num { position:absolute; left:0; right:0; top:44%; text-align:center;
-	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.6rem; color:#00000099; z-index:2; }
 .car-name {
 	font-family:'Lato',sans-serif; font-weight:700; font-size:.95rem; color:var(--fg);
 	max-width:180px; overflow:hidden; text-overflow:ellipsis;
@@ -268,7 +267,7 @@ body.bigmode #race { margin-top:1rem; }
 			+ '<circle cx="33" cy="12" r="6" fill="hsl('+h+',72%,52%)"/>'
 			+ '<path d="M28 11 h10 a1 1 0 0 1 0 3 h-10 a1 1 0 0 1 0 -3 z" fill="#0a0f18" opacity=".9"/>'
 			+ '<rect x="52" y="21" width="8" height="3.4" rx="1.5" fill="hsl('+h+',72%,52%)"/>'
-			+ '<span class="num"></span></svg>';
+			+ '</svg>';
 	}
 	function fmt(ms){
 		if (ms<0) ms=0; var s=Math.floor(ms/1000);
@@ -324,16 +323,16 @@ body.bigmode #race { margin-top:1rem; }
 		var laneH = big ? 74 : 58;
 		var top = teams.slice(0, TOPN);
 		var rest = teams.length - top.length;
-		var maxScore = top.length ? top[0].score : 1;
-		var minScore = top.length ? top[top.length-1].score : 0;
-		var range = Math.max(1, maxScore - minScore);
+		var n = top.length;
 		var rows = top.length + (rest>0 ? 1 : 0);
 		track.style.height = Math.max(rows,1)*laneH + 20 + "px";
 		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
 
 		top.forEach(function(t, i){
-			// répartition min-max : dernier près du départ (~8%), leader vers ~70%
-			var xpct = 8 + ((t.score - minScore)/range) * 62;
+			// grille de course : positions étagées par rang (leader devant ~72 %,
+			// dernier près du départ ~12 %). Un changement de rang = kart qui
+			// avance/recule sur la piste, la transition CSS anime le dépassement.
+			var xpct = n > 1 ? (12 + (1 - i/(n-1)) * 60) : 72;
 			var L = lanes[t.account_id];
 			if (!L){
 				var lane = document.createElement("div");
@@ -344,7 +343,7 @@ body.bigmode #race { margin-top:1rem; }
 				track.appendChild(lane);
 				L = lanes[t.account_id] = { lane:lane, wrap:lane.querySelector(".car-wrap"),
 					rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
-					score:lane.querySelector(".car-score"), num:lane.querySelector(".num"), h:h };
+					score:lane.querySelector(".car-score"), h:h };
 			}
 			L.lane.style.top = (i*laneH) + "px";
 			L.lane.className = "car-lane" + (i===0 ? " leader" : "");
@@ -353,7 +352,6 @@ body.bigmode #race { margin-top:1rem; }
 			L.rank.textContent = (i+1);
 			L.name.textContent = t.name;
 			L.score.textContent = t.score;
-			if (L.num) L.num.textContent = (i+1);
 			// boost si le score a monté depuis le dernier poll (mode fun)
 			var was = prevScores[t.account_id];
 			if (was != null && t.score > was && !reduced){
