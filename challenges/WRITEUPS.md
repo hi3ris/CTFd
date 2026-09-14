@@ -85,6 +85,12 @@ Chaque challenge a un dossier `solution/` (à côté de son `challenge.yml`) con
 | `agent-tool-abuse`      | 500 | hard     | 🐳 équipe | [solve.md](ai/agent-tool-abuse/solution/solve.md)        | [solve.py](ai/agent-tool-abuse/solution/solve.py)      |
 | `ai3-tool-abuse`        | 500 | hard     | 🐳 équipe | [README.md](ai/ai3-tool-abuse/solution/README.md)        | [solve.py](ai/ai3-tool-abuse/solution/solve.py)        |
 
+## 👑 Formats spéciaux
+
+| Format                          | Pts               | Type       | Writeup / doc                                                                                     |
+| ------------------------------- | ----------------- | ---------- | ------------------------------------------------------------------------------------------------- |
+| King of the Hill — `The Throne` | par tick (Awards) | 🐳 partagé | [README.md](koth/throne/solution/README.md) · ops : [`deploy/koth-ops.md`](../deploy/koth-ops.md) |
+
 ## 🧩 Misc
 
 | Challenge         | Pts | Diff.  | Type      | Writeup                                              | Solveur                                            |
