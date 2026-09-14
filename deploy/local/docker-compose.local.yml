@@ -169,6 +169,20 @@ services:
       - "127.0.0.1:28900:8080"
     profiles: ["koth"]
 
+  # Colline SSH « root-wars » : entre en SSH (player/player), deviens root, ecris
+  # ton jeton dans /koth/king. CTFd lit le vainqueur via le scorer sur :8081.
+  koth-citadel:
+    build:
+      context: ../../challenges/koth/citadel
+    image: ctf-koth-citadel:latest
+    restart: unless-stopped
+    environment:
+      - SCORER_SECRET=${KOTH_SCORER_SECRET:-local-dev-koth-scorer}
+      - SCORER_PORT=8081
+    ports:
+      - "127.0.0.1:28901:22"
+    profiles: ["koth"]
+
 volumes:
   db_data:
   redis_data:

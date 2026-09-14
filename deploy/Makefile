@@ -431,16 +431,19 @@ local-up-ai: ## [local] Idem + Ollama (CPU) + passerelle IA ; OLLAMA_MODEL=... p
 local-koth: ## [local] Active le King of the Hill : construit la colline, la lance et branche le plugin sur CTFd
 	@KOTH_SCORER_SECRET="$${KOTH_SCORER_SECRET:-local-dev-koth-scorer}"; \
 	 export KOTH_SCORER_SECRET; \
-	 export KOTH_HILLS='[{"id":"koth-throne","name":"The Throne","url":"http://koth-throne:8080","player_url":"http://localhost:28900","points":5}]'; \
+	 export KOTH_HILLS='[{"id":"koth-throne","name":"The Throne","url":"http://koth-throne:8080","player_url":"http://localhost:28900","points":5},{"id":"koth-citadel","name":"The Citadel","url":"http://koth-citadel:8081","player_url":"ssh://player@localhost:28901","points":5}]'; \
 	 docker build -t ctf-koth-throne:latest ../challenges/koth/throne; \
-	 $(LOCAL_COMPOSE) --profile koth up -d koth-throne; \
+	 docker build -t ctf-koth-citadel:latest ../challenges/koth/citadel; \
+	 $(LOCAL_COMPOSE) --profile koth up -d koth-throne koth-citadel; \
 	 $(LOCAL_COMPOSE) up -d ctfd; \
 	 echo; \
-	 echo "King of the Hill actif (tick=$${KOTH_TICK:-15}s)."; \
-	 echo "  - Colline a attaquer             : http://localhost:28900"; \
-	 echo "  - CTFd (menu 'King of the Hill')  : http://localhost:$${CTFD_PORT:-8000}"; \
-	 echo "  - Recupere ton jeton d'equipe sur la page KotH, puis tiens le trone :"; \
-	 echo "      challenges/koth/throne/solution/solve.sh http://localhost:28900 <jeton>"
+	 echo "King of the Hill actif (tick=$${KOTH_TICK:-15}s) - deux collines :"; \
+	 echo "  - The Throne (HTTP)   : http://localhost:28900"; \
+	 echo "  - The Citadel (SSH)   : ssh player@localhost -p 28901   (mot de passe : player)"; \
+	 echo "  - CTFd (menu 'King of the Hill') : http://localhost:$${CTFD_PORT:-8000}"; \
+	 echo "  - Recupere ton jeton d'equipe sur la page KotH, puis tiens une colline :"; \
+	 echo "      challenges/koth/throne/solution/solve.sh  http://localhost:28900 <jeton>"; \
+	 echo "      challenges/koth/citadel/solution/solve.sh localhost 28901 <jeton>"
 
 .PHONY: local-fix-heapnote
 local-fix-heapnote: ## [local] Recompile le binaire heap-note sur glibc 2.31 (Ubuntu 20.04) puis construit son image

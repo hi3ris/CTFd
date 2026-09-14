@@ -21,15 +21,26 @@ cd deploy
 make local-koth
 ```
 
-Ça construit l'image de la colline, la lance (`profil koth`, exposée sur
-`http://localhost:28900`), génère un secret scorer de dev et recrée le conteneur
-CTFd avec `KOTH_HILLS` + `KOTH_SCORER_SECRET` — le plugin s'active alors
-(`KOTH_TICK=15 s` en local). Ouvre ensuite le menu **King of the Hill** dans
-CTFd, récupère le jeton de ton équipe, puis tiens le trône :
+Ça construit et lance **deux collines** (`profil koth`), génère un secret scorer
+de dev et recrée le conteneur CTFd avec `KOTH_HILLS` + `KOTH_SCORER_SECRET` — le
+plugin s'active alors (`KOTH_TICK=15 s` en local) :
+
+- **The Throne** (HTTP) — `http://localhost:28900` : fuite XFF → tenue du trône
+  par re-signature.
+- **The Citadel** (SSH « root-wars ») — `ssh player@localhost -p 28901` (mot de
+  passe `player`) : deviens root, écris ton jeton dans `/koth/king`, tiens-le.
+
+Ouvre le menu **King of the Hill** dans CTFd, récupère le jeton de ton équipe,
+puis tiens une colline :
 
 ```bash
-challenges/koth/throne/solution/solve.sh http://localhost:28900 <ton-jeton>
+challenges/koth/throne/solution/solve.sh  http://localhost:28900 <ton-jeton>
+challenges/koth/citadel/solution/solve.sh localhost 28901 <ton-jeton>   # needs sshpass
 ```
+
+Le plugin score **toutes** les collines de `KOTH_HILLS` en parallèle : une hill
+peut être HTTP (Throne) ou une box SSH root-wars (Citadel), tant qu'elle expose
+un `/king` lisible par le scorer.
 
 Le score de l'équipe doit monter d'un cran de `points` à chaque tick tant que le
 trône est tenu. `make local-down` / `make local-reset` arrêtent aussi la colline.
