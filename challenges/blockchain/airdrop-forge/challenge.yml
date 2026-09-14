@@ -1,0 +1,45 @@
+name: airdrop-forge
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You get a Merkle-root airdrop contract (`MerkleAirdrop.sol`) and
+  `tree.json`: the full list of leaves, the `root`, a high-value target
+  claim, and a sealed bonus `cipher_hex`. Produce what the contract needs
+  to accept the target claim, and open the bonus.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{merkle_proof_forged_offline}
+hints:
+  - content: >-
+      You have every leaf, so you can rebuild the whole tree. What does claim() need besides the address and amount?
+    cost: 15
+    key: h1
+  - content: >-
+      Hash leaves as keccak256(abi.encodePacked(addr, amount)); combine nodes as keccak256 of the sorted pair. Collect the sibling at each level = the proof.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The bonus key is keystream(keccak256(proof[0] ++ proof[1] ++ ...)) for the target's proof in bottom-up order. XOR it into cipher_hex.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - blockchain
+  - evm
+  - merkle
+  - medium
+files:
+  - MerkleAirdrop.sol
+  - tree.json
+state: visible
+version: "0.1"

@@ -1,0 +1,40 @@
+name: calldata-cache
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You captured one transaction's raw calldata (`calldata.txt`) and the
+  target contract's ABI (`abi.json`) plus source (`NotesRegistry.sol`).
+  Decode the call and recover the hidden argument.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{abi_calldata_decoded_by_hand}
+hints:
+  - content: >-
+      The first 4 bytes are the function selector; the rest is ABI-encoded arguments in 32-byte words.
+    cost: 10
+    key: h1
+  - content: >-
+      A dynamic string is stored out-of-line: a head word gives the byte offset to a (length, data) tail. Read the length, then that many bytes, and decode UTF-8.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - blockchain
+  - evm
+  - abi
+  - beginner
+files:
+  - NotesRegistry.sol
+  - calldata.txt
+  - abi.json
+state: visible
+version: "0.1"

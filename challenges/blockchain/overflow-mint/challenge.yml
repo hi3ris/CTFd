@@ -1,0 +1,46 @@
+name: overflow-mint
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You get the Solidity source of a token pre-sale (`MintSale.sol`) and
+  `sale.json` (the on-sale `price`, your wallet `budget_wei`, and a
+  vault `cipher_hex`). Buying `n` tokens costs `n * price` wei; reaching
+  `WIN_TOKENS` unlocks the vault. Your wallet holds only a few wei.
+  Unlock the vault.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{unchecked_mul_wraps_to_zero_cost}
+hints:
+  - content: >-
+      Which Solidity version is this, and what does that imply about arithmetic safety?
+    cost: 15
+    key: h1
+  - content: >-
+      n * price is computed in uint256. Pick n so the product wraps past 2**256 down to a handful of wei you can actually afford.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      price = 2**252 + 1, budget is tiny -> n = 16 costs 16 wei. The vault key is keystream(keccak256) seeded by that n as a 32-byte word; XOR it into cipher_hex.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - blockchain
+  - evm
+  - integer-overflow
+  - medium
+files:
+  - MintSale.sol
+  - sale.json
+state: visible
+version: "0.1"
