@@ -1,0 +1,48 @@
+name: sqlite-union
+author: dagbanjaphet
+category: web
+description: |-
+  A souvenir shop exposes a product search API. You get the handler source and
+  a snapshot of its database (shop.db). Somewhere in that database is a secret
+  the search was never meant to return.
+
+  Endpoint (from the source):
+
+      GET /api/search?q=<text>   -> matching products
+
+  There is no live service. Pull the secret straight out of the shipped
+  database.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{union_select_the_hidden_admin_secret_row}
+hints:
+  - content: >-
+      Look at how the query string is built from the q parameter. It is glued
+      together with no escaping at all.
+    cost: 10
+    key: h1
+  - content: >-
+      The query selects three columns from products. Close the LIKE string and
+      UNION SELECT the same shape of columns from the other table in shop.db.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - web
+  - sqli
+  - sqlite
+  - easy
+files:
+  - app.py
+  - shop.db
+state: visible
+version: "0.1"

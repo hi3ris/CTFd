@@ -1,0 +1,57 @@
+name: reset-token-lcg
+author: dagbanjaphet
+category: web
+description: |-
+  A password-reset service ships as source, plus the server's reset log. Each
+  line records when a reset token was issued -- except the admin's, which was
+  emailed and never logged. Confirming the admin's reset reveals the flag.
+
+  Endpoints (from the source):
+
+      POST /reset/request        -> emails a reset token
+      GET  /reset/confirm?token= -> reveals the flag for the admin token
+
+  No live service. The admin token is not written down anywhere; you must
+  produce it from the shipped files.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{predictable_reset_token_from_seeded_prng}
+hints:
+  - content: >-
+      Tokens are not random. Read how make_token seeds its generator. What
+      single value fully determines a token?
+    cost: 23
+    key: h1
+  - content: >-
+      The generator is an LCG seeded with the whole-second UNIX timestamp of
+      the request. The log gives you exact timestamps -- reproduce a logged
+      guest token to confirm your implementation.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Seed the LCG with the admin line's timestamp to regenerate the admin
+      token, then reproduce /reset/confirm: XOR SEALED_FLAG_HEX with a keystream
+      of sha256("resetseal|" + token).
+    cost: 68
+    key: h3
+    requirements: [h2]
+tags:
+  - web
+  - prng
+  - token-prediction
+  - hard
+files:
+  - app.py
+  - reset_log.txt
+state: visible
+version: "0.1"

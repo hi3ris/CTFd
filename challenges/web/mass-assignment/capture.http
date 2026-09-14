@@ -1,0 +1,15 @@
+# Captured from the mobile app: a normal profile update. Note the server
+# accepted the JSON body wholesale and echoed the merged record.
+
+PATCH /api/me HTTP/1.1
+Host: profile.example.tg
+Authorization: Bearer <kwame-guest-token>
+Content-Type: application/json
+
+{"display": "Kwame A."}
+
+--- response ---
+HTTP/1.1 200 OK
+Content-Type: application/json
+
+{"id": 7, "username": "kwame", "display": "Kwame A.", "email": "kwame@example.tg", "is_admin": false}

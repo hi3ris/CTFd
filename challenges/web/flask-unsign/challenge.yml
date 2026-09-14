@@ -1,0 +1,56 @@
+name: flask-unsign
+author: dagbanjaphet
+category: web
+description: |-
+  A small **Members Panel** ships as source, along with a session cookie
+  captured from a normal signup. The admin panel prints a flag; public signups
+  are always plain members.
+
+  Routes (from the source):
+
+      GET /signup       -> starts a guest session
+      GET /admin/flag   -> admins only; returns the flag
+
+  Nothing is live. Everything you need to reach the admin path is in the files.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{itsdangerous_secret_key_resign_admin_session}
+hints:
+  - content: >-
+      The cookie is a standard Flask session: base64 payload, a timestamp, and
+      a signature, all joined by dots. Its integrity rests entirely on one
+      value defined in the source.
+    cost: 15
+    key: h1
+  - content: >-
+      app.secret_key is hardcoded. With it you can forge any session the app
+      will trust -- decode the cookie, flip role to admin, and re-sign it.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      /admin/flag unseals SEALED_FLAG_HEX with a keystream of
+      sha256(secret_key + "|panel-seal"). Re-sign role=admin, then XOR the
+      sealed bytes back to the flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - web
+  - flask
+  - session
+  - medium
+files:
+  - app.py
+  - session_cookie.txt
+state: visible
+version: "0.1"
