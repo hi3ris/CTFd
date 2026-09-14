@@ -1,0 +1,50 @@
+name: adv-flip
+author: dagbanjaphet
+category: ml
+description: |-
+  `gate.npz` ships a linear gate: weights `w`, bias `b`, and one base input
+  `x0`. The gate scores an input with `s(x) = w . x + b`; it stays LOCKED while
+  `s(x) < 0` and UNLOCKS the moment `s(x) >= 0`. The base input `x0` is currently
+  LOCKED. Find the smallest change to `x0` that just unlocks the gate -- the
+  input you land on is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{min_norm_step_crosses_the_gate}
+hints:
+  - content: >-
+      "Smallest change" means the minimum-norm perturbation that moves the score
+      from negative up to exactly the decision boundary `s(x) = 0`.
+    cost: 25
+    key: h1
+  - content: >-
+      For a linear score, the cheapest step is along `w`. The closed form is
+      `delta = -(s(x0) / (w . w)) * w`, and the adversarial input is
+      `x_adv = x0 + delta`.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      `x_adv` is the flag: round each coordinate to the nearest integer and read
+      the values as ASCII characters.
+    cost: 70
+    key: h3
+    requirements: [h2]
+tags:
+  - ml
+  - adversarial-examples
+  - evasion
+  - hard
+files:
+  - gate.npz
+  - README.md
+state: visible
+version: "0.1"
