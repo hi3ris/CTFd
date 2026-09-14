@@ -1,0 +1,71 @@
+name: poisoned-pipeline
+author: dagbanjaphet
+category: supplychain
+type: team_instance
+description: |
+  **MiniCI — poisoned pipeline.** *(nouvelle catégorie : supply-chain CI/CD)*
+
+  MiniCI est un runner de build partagé : `http://{host}:{port}`. N'importe qui
+  peut soumettre un pipeline et il **s'exécute sur le runner**.
+
+      POST /build
+      {"pipeline":[
+        {"stage":"build","run":"echo building..."},
+        {"stage":"deploy","run":"echo deploying with $DEPLOY_TOKEN"}
+      ]}
+
+  Le secret de déploiement `DEPLOY_TOKEN` (le flag) n'est injecté que dans les
+  étapes de **stage `deploy`**, et le runner **masque** le secret dans les logs.
+  Ce masquage est *toute* la frontière de sécurité — et c'est justement le
+  problème.
+
+    - Une étape `build` ne voit jamais `DEPLOY_TOKEN` (mauvais stage).
+    - Une étape `deploy` qui fait `echo $DEPLOY_TOKEN` reçoit `***` (masqué).
+    - Mais le masque ne redacte que la valeur **littérale** : une étape `deploy`
+      qui **encode** d'abord le secret (`| base64`, `| rev`, `| xxd`…) le fait
+      passer sous le masque. Décodez le log → flag.
+
+  Leçon supply-chain réelle : *masquer un secret dans les logs n'est pas une
+  frontière de sécurité*. Rien n'est téléchargeable ; tout vit dans le runner
+  (qui purge ses propres variables d'env porteuses du flag au démarrage, donc le
+  seul chemin est une étape `deploy` passée sous le masque).
+
+  Instance par équipe : chaque équipe a son runner et son flag.
+
+  Flag format : `NCTF{...}`
+
+  Connexion : `http://{host}:{port}`
+
+# Dynamic scoring (medium).
+value: 350
+extra:
+  docker_image: ctf-poisoned-pipeline:latest
+  internal_port: 8080
+  initial: 350
+  decay: 25
+  minimum: 80
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships. The runner derives it at runtime from
+# the injected CHALLENGE_SECRET (flag body = CHALLENGE_SECRET[:24]; see flag.py)
+# and only ever exposes it as the masked DEPLOY_TOKEN secret. team_hmac validates
+# it on submit.
+flags:
+  - type: team_hmac
+    content: supplychain-poisoned-pipeline
+
+tags:
+  - supplychain
+  - ci-cd
+  - secrets
+  - log-masking
+  - medium
+
+# challenge-id (HMAC / requirements wiring): supplychain-poisoned-pipeline
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile here; must be named ctf-poisoned-pipeline:latest
+# so `deploy/local/build-images.sh` / `make push-images` pick it up.
