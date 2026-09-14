@@ -1,0 +1,44 @@
+name: prefs-vault
+author: dagbanjaphet
+category: mobile
+description: |-
+  A backup of the QuickNotes app includes its SharedPreferences and the
+  decompiled code that reads them. One preference holds an encrypted session
+  token; the app decrypts it locally on every launch.
+
+  Recover the session token. It is the flag. No network or device required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{sh4r3dpr3fs_ar3_n0t_s3cur3}
+hints:
+  - content: >-
+      Look at `shared_prefs/vault_prefs.xml` (the per-install `device_salt` and
+      the base64 `enc_token`) together with `TokenStore.java`, which shows how
+      the token is decrypted at runtime.
+    cost: 15
+    key: h1
+  - content: >-
+      The key is `SHA-256(PEPPER || device_salt)` where PEPPER is a hardcoded
+      constant in TokenStore. The cipher is RC4. Derive the key, RC4-decrypt the
+      base64 `enc_token`.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - insecure-storage
+  - medium
+files:
+  - quicknotes.apk
+state: visible
+version: "0.1"

@@ -1,0 +1,44 @@
+name: strings-goldmine
+author: dagbanjaphet
+category: mobile
+description: |-
+  We pulled `app-release.apk` off a payments handset. Unzip it like any APK and
+  poke around the decompiled sources and resources. One premium feature is
+  unlocked from data shipped inside the app itself.
+
+  Recover the unlock token. It is the flag. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{h4rdc0d3d_k3y_in_str1ngs_xml}
+hints:
+  - content: >-
+      An APK is a ZIP. Look at res/values/strings.xml and the decompiled
+      sources. The token is not stored as plaintext, but everything to rebuild
+      it is.
+    cost: 10
+    key: h1
+  - content: >-
+      strings.xml holds `enc_blob` (base64). BuildConfig.java holds `API_SECRET`.
+      The token is `base64_decode(enc_blob)` XORed with the API_SECRET bytes
+      (key repeats). Un-XOR it.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - hardcoded-secret
+  - beginner
+files:
+  - app-release.apk
+state: visible
+version: "0.1"
