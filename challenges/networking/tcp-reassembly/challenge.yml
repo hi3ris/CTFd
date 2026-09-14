@@ -1,0 +1,55 @@
+name: tcp-reassembly
+author: dagbanjaphet
+category: networking
+description: |-
+  We logged one direction of a TCP conversation as a list of segments
+  (`segments.json`): each has a sequence number, TCP flags, and a hex payload.
+  The segments arrived out of order, some were retransmitted, and the payloads
+  reassemble into a single message.
+
+  Put the byte stream back together in the right order and read the message. It
+  is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{tcp_reassembly_by_absolute_seq_with_wraparound_and_dedup}
+hints:
+  - content: >-
+      Do not sort by arrival order. Each byte's position in the stream is fixed
+      by its absolute sequence number, not by where the segment appears in the
+      file.
+    cost: 20
+    key: h1
+  - content: >-
+      The SYN segment carries the initial sequence number (ISN). Real data
+      starts at ISN+1, so a segment's byte offset into the stream is
+      seq - (ISN + 1). Retransmissions repeat bytes you already have — dedup
+      them.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The ISN is chosen near 2**32, so sequence numbers wrap around. Compute the
+      offset modulo 2**32: offset = (seq - ISN - 1) mod 2**32. Place each
+      segment's bytes at its offset (identical overlaps are fine), then read the
+      contiguous buffer.
+    cost: 60
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - tcp
+  - reassembly
+  - hard
+files:
+  - segments.json
+state: visible
+version: "0.1"

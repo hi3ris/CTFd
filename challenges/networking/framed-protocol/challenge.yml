@@ -1,0 +1,52 @@
+name: framed-protocol
+author: dagbanjaphet
+category: networking
+description: |-
+  We captured the raw byte stream of an in-house application protocol
+  (`stream.hex`, a hex dump). Frames of several kinds are back to back on the
+  wire, some carrying data, some just noise, and a few are corrupted.
+
+  Reverse the frame format, walk the stream, and reconstruct the message the
+  data frames carry. The reconstructed payload is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{custom_framing_len_prefixed_crc_checked_reassembly}
+hints:
+  - content: >-
+      Every frame starts with the same 0xAA sync byte, but you cannot split on
+      0xAA — payloads can contain it too. There is a length field; use it to
+      step from one frame to the next.
+    cost: 15
+    key: h1
+  - content: >-
+      Layout: 0xAA | opcode(1) | seq(1) | length(2, big-endian) | payload
+      (length bytes) | crc(1). The crc is the XOR of every byte from the opcode
+      through the last payload byte. Drop frames whose crc does not match.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Opcode 0x10 is DATA, 0x20 is NOISE (ignore), 0x30 is END (stop). Keep the
+      valid DATA frames, sort by seq, and concatenate their payloads to get the
+      flag bytes.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - protocol
+  - binary-parsing
+  - medium
+files:
+  - stream.hex
+state: visible
+version: "0.1"
