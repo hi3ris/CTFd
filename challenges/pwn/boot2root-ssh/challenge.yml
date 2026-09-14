@@ -1,0 +1,81 @@
+name: boot2root-ssh
+author: dagbanjaphet
+category: pwn
+type: team_instance
+description: |
+  **boot2root-ssh.** Une box Linux complète, un conteneur par équipe. On te
+  donne un accès **SSH** bas-privilège ; à toi de grimper jusqu'à **root** et de
+  lire `/root/flag`.
+
+  Connexion : `ssh ctf@{host} -p {port}`  (mot de passe : `ctf`)
+
+  Depuis le compte `ctf`, exploite les misconfigurations locales de la machine
+  pour devenir root. Le flag vit **uniquement** dans `/root/flag` (owner `root`,
+  mode `400`) : seul root peut le lire, il n'est dans aucune variable
+  d'environnement joignable en `ctf`, et il n'est **pas** dans l'image. Le login
+  root est désactivé — la seule voie est la privesc locale.
+
+  Instance par équipe : chaque équipe a son conteneur et son flag. Bloqué ? Des
+  indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : `NCTF{...}`
+
+# Dynamic scoring (medium).
+value: 400
+extra:
+  docker_image: ctf-boot2root-ssh:latest
+  internal_port: 22
+  initial: 400
+  decay: 25
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships. entrypoint.sh derives it at runtime
+# from the injected CHALLENGE_SECRET (flag body = CHALLENGE_SECRET[:24]; see
+# flag.py) and plants it root-only; team_hmac validates it on submit.
+flags:
+  - type: team_hmac
+    content: pwn-boot2root-ssh
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la privesc n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Premier réflexe une fois connecté en `ctf` : `sudo -l`. Que peux-tu lancer
+      en root sans mot de passe, et quelle particularité d'environnement la règle
+      autorise-t-elle ?
+    cost: 20
+    key: h1
+  - content: >-
+      La règle sudo porte le tag `SETENV` et cible un binaire **dynamiquement
+      lié et non-SUID**. `SETENV` te laisse conserver tes variables d'env sur la
+      commande — dont `LD_PRELOAD`, honoré par l'éditeur de liens pour un binaire
+      non-SUID exécuté en root.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Compile une bibliothèque partagée avec un
+      `__attribute__((constructor))` qui fait `setuid(0)` puis un shell/`cat`,
+      puis lance
+      `sudo LD_PRELOAD=/dev/shm/x.so /usr/local/bin/healthcheck`. Le constructeur
+      s'exécute en root avant `main` → lis `/root/flag`.
+    cost: 60
+    key: h3
+    requirements: [h2]
+
+tags:
+  - pwn
+  - boot2root
+  - linux
+  - ssh
+  - medium
+
+# challenge-id (HMAC / requirements wiring): pwn-boot2root-ssh
+connection_info: "ssh ctf@{host} -p {port}  (mot de passe : ctf ; instance par équipe)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile here; must be named ctf-boot2root-ssh:latest
+# so deploy/local/build-images.sh / make push-images pick it up.
