@@ -3,27 +3,16 @@ author: dagbanjaphet
 category: cloud
 type: team_instance
 description: |
-  **Kékéli Cloud — breach chain.** *(nouvelle catégorie : cloud)*
+  **Kékéli Cloud.** Le service de prévisualisation média de Kékéli Cloud tourne
+  sur `http://{host}:{port}` : donnez-lui une URL, il la récupère **côté
+  serveur** et vous montre le résultat.
 
-  Vous tombez sur le service de prévisualisation média de Kékéli Cloud :
-  `http://{host}:{port}`. Il récupère des URLs **côté serveur**. Enchaînez la
-  compromission de bout en bout, comme une vraie attaque cloud :
+  Objectif : mettre la main sur le secret que garde l'**API d'administration
+  interne** de la plateforme. Rien n'est téléchargeable ; tout ce qu'il faut vit
+  dans le conteneur. À vous d'enchaîner la compromission.
 
-    1. **SSRF** — l'endpoint `/fetch?url=` récupère l'URL que vous lui donnez
-       depuis l'instance applicative. Il bloque quelques littéraux internes
-       évidents, mais pas tout : atteignez le **service de métadonnées interne**
-       de la plateforme (style IMDS), qui n'est joignable que depuis l'app.
-    2. **IMDS** — lisez les **identifiants temporaires** du rôle de l'app
-       (attention : un rôle est un leurre aux creds expirés).
-    3. **Creds volés** — rejouez le `Token` du bon rôle sur l'API d'admin
-       (`GET /api/admin/secrets`, en-tête `X-App-Token`) qui renvoie le flag.
-
-  Le flag n'est renvoyé **que** par `/api/admin/secrets`, et le `Token` qui la
-  déverrouille ne s'obtient **que** par le chemin SSRF → IMDS : utiliser un
-  identifiant correctement volé **est** la condition de victoire. Rien n'est
-  téléchargeable ; tout vit dans le conteneur.
-
-  Instance par équipe : chaque équipe a son conteneur et son flag.
+  Instance par équipe : chaque équipe a son conteneur et son flag. Bloqué ?
+  Des indices sont disponibles (ils coûtent quelques points).
 
   Flag format : `NCTF{...}`
 
@@ -47,11 +36,33 @@ flags:
   - type: team_hmac
     content: cloud-breach-chain
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la vuln n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Le récupérateur d'URL s'exécute SUR l'instance applicative — il peut
+      joindre des services que vous, non. Les plateformes cloud exposent un
+      service de métadonnées d'instance à une adresse interne bien connue.
+    cost: 25
+    key: h1
+  - content: >-
+      La blocklist de /fetch ne rejette que quelques littéraux (127.0.0.1,
+      localhost, ::1). D'autres façons d'écrire « la machine locale » passent
+      (0.0.0.0, IP décimale, …). Servez-vous-en pour atteindre le service de
+      métadonnées (style IMDS) et lire les identifiants du rôle de l'app.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le rôle de l'app expose un `Token` temporaire (attention à un rôle leurre
+      aux creds expirés). Rejouez ce Token en en-tête `X-App-Token` sur
+      `GET /api/admin/secrets` : il renvoie le flag.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 tags:
   - cloud
-  - ssrf
-  - imds
-  - chain
   - scenario
   - medium
 
