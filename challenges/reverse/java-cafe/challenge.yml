@@ -1,0 +1,42 @@
+name: java-cafe
+author: dagbanjaphet
+category: reverse
+description: |-
+  We recovered `Vault.class`, a compiled Java class. Run it with `java Vault
+  <flag>` and it answers "correct" or "nope". The flag text is not in the file.
+
+  Recover the flag it accepts. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{jvm_byt3code_is_readable}
+hints:
+  - content: >-
+      It is JVM bytecode. `javap -c -p Vault.class` (or any Java decompiler)
+      shows the logic. The flag is built at runtime from two string constants in
+      the class, not stored directly.
+    cost: 15
+    key: h1
+  - content: >-
+      One constant is base64, the other is a short key. The flag is
+      `xor(base64_decode(B), key)` with the key repeated. Decode B, XOR with the
+      key, and you get NCTF{...}.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - reverse
+  - java
+  - medium
+files:
+  - Vault.class
+state: visible
+version: "0.1"
