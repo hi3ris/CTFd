@@ -1,0 +1,48 @@
+name: brainfuck-cascade
+author: dagbanjaphet
+category: misc
+description: |-
+  All we recovered is one line of dense ASCII (`cipher.txt`). It decodes to
+  something that is not text -- it is meant to be *run*, not read. Follow it to
+  the end and it will tell you the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{b85_then_brainfuck_all_the_way_down}
+hints:
+  - content: >-
+      The line uses more than the usual base64 alphabet -- roughly 85 distinct
+      printable symbols. Decode it first and look at what falls out.
+    cost: 15
+    key: h1
+  - content: >-
+      After base85-decoding you get a program written only in
+      `+ - < > . , [ ]`. That is Brainfuck. Feed it to any Brainfuck
+      interpreter and read its standard output.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      No input is needed. An 8-bit wrapping cell interpreter is enough; the
+      program just walks one cell up and down and prints each byte. Its output
+      is the flag verbatim.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - misc
+  - encoding
+  - esolang
+  - medium
+files:
+  - cipher.txt
+state: visible
+version: "0.1"

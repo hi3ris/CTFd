@@ -1,0 +1,47 @@
+name: pbkdf2-crack
+author: dagbanjaphet
+category: misc
+description: |-
+  We pulled one account's password record out of a leaked database
+  (`hash.txt`) and a candidate password list found on the same box
+  (`wordlist.txt`). Recover the account's passphrase; the flag is built from it.
+
+  The flag is `NCTF{pbkdf2_<passphrase>}` -- once you know the passphrase you
+  have the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{pbkdf2_sunshine_dragon_42}
+hints:
+  - content: >-
+      The record is a self-describing string with `$`-separated fields: the
+      algorithm, a work factor, a salt, and the derived key. Everything you need
+      to recompute a candidate hash is right there.
+    cost: 10
+    key: h1
+  - content: >-
+      It is PBKDF2-HMAC-SHA256. For each word in the list, run
+      `hashlib.pbkdf2_hmac("sha256", word, salt, iterations)` and compare
+      against the base64 key. The salt and iteration count come straight from
+      the record.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - misc
+  - crypto
+  - password-cracking
+  - easy
+files:
+  - hash.txt
+  - wordlist.txt
+state: visible
+version: "0.1"

@@ -1,0 +1,42 @@
+name: chunk-hunt
+author: dagbanjaphet
+category: misc
+description: |-
+  Someone exported a company badge as a PNG (`badge.png`). The picture itself is
+  unremarkable, but the file carries more than pixels. Take the container apart
+  and reassemble what was stashed inside it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{ancillary_png_chunks_carry_secrets}
+hints:
+  - content: >-
+      A PNG is a signature followed by length-tagged chunks (IHDR, IDAT, IEND,
+      and optional ancillary ones). Enumerate every chunk, not just the ones a
+      viewer renders. Ignore the obvious "Comment".
+    cost: 10
+    key: h1
+  - content: >-
+      Several `tEXt` chunks have keywords like `frgNN`. Each holds a slice of a
+      base85 string, and the slices are stored out of order. Sort by the numeric
+      keyword suffix, concatenate, then base85-decode.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - misc
+  - forensics
+  - png
+  - easy
+files:
+  - badge.png
+state: visible
+version: "0.1"
