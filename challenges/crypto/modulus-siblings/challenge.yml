@@ -1,0 +1,43 @@
+name: modulus-siblings
+author: dagbanjaphet
+category: crypto
+description: |-
+  Two departments encrypted the very same memo for the same recipient, and we
+  captured both ciphertexts in `transcript.json` along with the public
+  parameters they used. Neither ciphertext factors and the modulus is 1024 bits.
+
+  Recover the memo, which is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{one_message_two_coprime_exponents_shared_modulus}
+hints:
+  - content: >-
+      Look closely at the two encryptions: same modulus n, same plaintext, but
+      two different public exponents. You do not need to factor n.
+    cost: 15
+    key: h1
+  - content: >-
+      This is the RSA common-modulus attack. The exponents e1 and e2 are
+      coprime, so extended Euclid gives a, b with a*e1 + b*e2 = 1. Then
+      c1^a * c2^b = m (mod n), using modular inverses for the negative exponent.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - crypto
+  - rsa
+  - common-modulus
+  - medium
+files:
+  - transcript.json
+state: visible
+version: "0.1"

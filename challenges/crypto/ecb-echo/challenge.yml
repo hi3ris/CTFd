@@ -1,0 +1,55 @@
+name: ecb-echo
+author: dagbanjaphet
+category: crypto
+description: |-
+  We tapped a device that encrypts data for us on request and logged everything
+  it did into `oracle_log.json`. Whatever we sent, the device appended its own
+  secret before encrypting, and its secret is the flag.
+
+  The log records the ciphertexts it produced for a range of our inputs. Recover
+  the appended secret from the log alone.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{ecb_leaks_appended_secrets_one_byte_per_query}
+hints:
+  - content: >-
+      The cipher is a block cipher in ECB mode: identical 16-byte plaintext
+      blocks always encrypt to identical ciphertext blocks, and the secret is
+      appended to whatever you send. The `probe` entries (input "A"*k) let you
+      confirm the block size and the secret length.
+    cost: 20
+    key: h1
+  - content: >-
+      This is the byte-at-a-time ECB attack. Send exactly enough filler that the
+      first unknown secret byte lands as the last byte of a block, then compare
+      that block against blocks where you supply a known guess in that last
+      position. The matching guess is the secret byte.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Each entry in `steps` already gives the aligned `target` block for one
+      secret position and a `candidates` map of block -> printable guess. For
+      every step, find the candidate equal to the target; that character is the
+      next secret byte. Concatenate to get the flag.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - crypto
+  - aes
+  - ecb
+  - hard
+files:
+  - oracle_log.json
+state: visible
+version: "0.1"
