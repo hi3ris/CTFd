@@ -1,0 +1,47 @@
+name: state-secret
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  A committed Terraform bundle: the config (`main.tf`), its state file
+  (`terraform.tfstate`), and an encrypted secrets blob (`vault.enc`) that the
+  config produced. The blob decrypts to a single secret.
+
+  Recover it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{tfstate_stores_secrets_in_plaintext_9d21}
+hints:
+  - content: >-
+      Terraform state stores every resource attribute as plaintext JSON — even
+      the ones marked sensitive in HCL. The key that protects the blob is
+      sitting in the state file (mind the decoy provider credential).
+    cost: 25
+    key: h1
+  - content: >-
+      The passphrase is `random_password.vault.result`. The blob is
+      `b"ENC1" + salt(16) + iters(4 big-endian) + ciphertext`; derive
+      `key = PBKDF2-HMAC-SHA256(passphrase, salt, iters)` and XOR the ciphertext
+      with a keystream of `SHA256(key || counter)` for counter 0, 1, 2, ...
+    cost: 45
+    key: h2
+    requirements: [h1]
+tags:
+  - sysadmin
+  - terraform
+  - secrets
+  - hard
+files:
+  - main.tf
+  - terraform.tfstate
+  - vault.enc
+state: visible
+version: "0.1"

@@ -1,0 +1,8 @@
+# settings.py.bak  (auto-saved by the editor, forgot to delete -- OPS-91)
+DEBUG = False
+DB_URL = "postgres://api:api@db:5432/api"
+
+# Long-lived admin API token. Rotate quarterly (we never do).
+ADMIN_API_TOKEN = "a7f3c0de91"
+
+ALLOWED_HOSTS = ["kekeli.internal"]

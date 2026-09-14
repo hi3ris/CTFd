@@ -1,0 +1,28 @@
+name: deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Echo token (masked)
+        run: |
+          echo "using token: $DEPLOY_TOKEN"
+
+      - name: Debug token length
+        run: |
+          echo -n "$DEPLOY_TOKEN" | wc -c
+
+      # BAD: base64 of the secret is NOT masked, GitHub only masks the literal.
+      - name: Debug token (base64)
+        run: |
+          echo -n "$DEPLOY_TOKEN" | base64
+
+      - name: Deploy
+        run: ./deploy.sh

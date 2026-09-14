@@ -1,0 +1,9 @@
+[Unit]
+Description=Run the kekeli report job hourly
+
+[Timer]
+OnCalendar=hourly
+Unit=report@main.service
+
+[Install]
+WantedBy=timers.target

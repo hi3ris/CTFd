@@ -1,0 +1,6 @@
+---
+# group_vars/all.yml -- non-secret project metadata (committed).
+project: kekeli
+deploy_env: staging
+region: eu-west-1
+app_port: 8080

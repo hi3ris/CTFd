@@ -1,0 +1,46 @@
+name: mask-slip
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  A CI pipeline (`.github/workflows/deploy.yml`) and one of its job logs
+  (`run.log`) from a deploy run. The pipeline uses a repository secret. In the
+  log every direct print of that secret shows up as `***`, yet the secret still
+  ended up in the log somewhere.
+
+  Recover the secret.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{ci_secret_masking_is_only_literal_b64}
+hints:
+  - content: >-
+      CI secret masking is a literal find-and-replace on the exact secret
+      string. Any step that transforms the secret before printing it defeats the
+      mask. Look for a step that does more than a plain `echo`.
+    cost: 15
+    key: h1
+  - content: >-
+      One "debug" step pipes the secret through `base64`. GitHub does not
+      recognise the base64 form, so it prints in the clear. Grab that line from
+      `run.log` and base64-decode it.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - sysadmin
+  - ci-cd
+  - secrets
+  - medium
+files:
+  - .github/workflows/deploy.yml
+  - run.log
+state: visible
+version: "0.1"

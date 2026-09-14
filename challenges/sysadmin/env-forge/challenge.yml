@@ -1,0 +1,54 @@
+name: env-forge
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  A developer pushed a deploy bundle for an internal API to a public repo:
+  `docker-compose.yml`, the `.env` it reads, and one server source file
+  (`app/session.py`). The API mints signed session tokens and guards an admin
+  route that returns a flag.
+
+  You have no running service — only these files. Work out how the admin flag is
+  produced and recover it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{hs256_secret_leak_forged_f1925f9caf09}
+hints:
+  - content: >-
+      The whole security of the token scheme rests on one value that should
+      never have been committed. Read every line of the environment file.
+    cost: 15
+    key: h1
+  - content: >-
+      Tokens are HS256 JWTs signed with `APP_JWT_SECRET`. With the secret in
+      hand you can forge any claims you like, but you do not even need a running
+      server: look at how `admin_flag()` in `app/session.py` derives its value.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The flag is `HMAC_SHA256(APP_JWT_SECRET, b"nctf:admin-flag:v1")` hex,
+      first 12 chars, wrapped as `NCTF{hs256_secret_leak_forged_<body>}`.
+      Compute it with the leaked secret.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - sysadmin
+  - secrets
+  - jwt
+  - medium
+files:
+  - .env
+  - docker-compose.yml
+  - app/session.py
+state: visible
+version: "0.1"

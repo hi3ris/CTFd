@@ -1,0 +1,52 @@
+# state-secret — solution
+
+## TL;DR
+
+`terraform.tfstate` stores the `random_password.vault.result` passphrase in
+plaintext (Terraform state is never encrypted at rest by default). That
+passphrase decrypts the shipped `vault.enc` blob to the flag.
+
+## The misconfiguration
+
+Terraform writes the full attribute set of every resource into state as
+plaintext JSON. Attributes marked `sensitive` in HCL are only redacted in CLI
+output — in the state file they are cleartext. Committing `terraform.tfstate`
+(or storing it in an unencrypted backend) therefore leaks every generated
+secret. Here the vault passphrase lives at
+`resources[].instances[].attributes.result`. `main.tf` also carries a decoy
+`aws` `secret_key` that is not the passphrase.
+
+## The blob format
+
+```
+b"ENC1" + salt(16) + iters(4, big-endian) + ciphertext
+key    = PBKDF2-HMAC-SHA256(passphrase, salt, iters)
+stream = SHA256(key || counter)  for counter = 0, 1, 2, ...
+plaintext = ciphertext XOR stream
+```
+
+## Attack
+
+1. Parse `terraform.tfstate`; collect candidate string attributes.
+2. For each candidate, derive the key from the blob's salt/iters and decrypt.
+3. Keep the plaintext that starts with `NCTF{`. The passphrase is
+   `tf-dev-vault-pass-2024`.
+
+## Run
+
+```
+python3 solve.py
+```
+
+Output:
+
+```
+[+] passphrase from tfstate: tf-dev-vault-pass-2024
+[+] FLAG = NCTF{tfstate_stores_secrets_in_plaintext_9d21}
+```
+
+## Files
+
+- `../main.tf`, `../terraform.tfstate`, `../vault.enc` — the leaked bundle.
+- `../src/gen.py` — deterministic builder.
+- `solve.py` — reference solver (stdlib only).
