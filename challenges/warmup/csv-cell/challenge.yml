@@ -1,0 +1,25 @@
+name: csv-cell
+author: dagbanjaphet
+category: warmup
+description: |-
+  `roster.csv` is a small spreadsheet of players. One cell, among all the
+  ordinary notes, holds the flag. Open it and find it.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{hidden_in_one_cell}
+tags:
+  - warmup
+  - misc
+  - csv
+  - beginner
+files:
+  - roster.csv
+state: visible
+version: "0.1"

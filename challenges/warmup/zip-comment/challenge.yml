@@ -1,0 +1,31 @@
+name: zip-comment
+author: dagbanjaphet
+category: warmup
+description: |-
+  `archive.zip` unzips to a single, unhelpful text file. The flag is not
+  in the file -- it is stored somewhere else in the archive. Look closer
+  at the zip itself.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{look_inside_the_zip_comment}
+hints:
+  - content: >-
+      A ZIP archive can carry a free-text *comment* stored at the end of the file. `unzip -z archive.zip` prints it; so does `zipnote` or CyberChef.
+    cost: 10
+    key: h1
+tags:
+  - warmup
+  - forensics
+  - zip
+  - beginner
+files:
+  - archive.zip
+state: visible
+version: "0.1"
