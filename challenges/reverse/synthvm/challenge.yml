@@ -2,36 +2,16 @@ name: synthvm
 author: challenge-team
 category: reverse
 description: |-
-  We pulled a "license core" off a device. It does not check your key with
-  normal code: it ships a bespoke bytecode machine (a register+stack VM, ~80
-  opcodes) and a ~6000-instruction program, and that program is what validates
-  the key.
+  We pulled a "license core", `synthvm`, off a device. Enter the key it accepts
+  and it prints "Access granted"; the key you enter IS the flag. Recover the
+  exact input that passes.
 
-  Two things will trip up an autopilot read of the binary:
-
-    - The opcode dispatch is REMAPPED AT RUNTIME. The bytes in the embedded
-      program are not the internal opcode numbers. An init routine builds a
-      256-entry permutation from a seed and routes every fetched byte through
-      it, so the "switch" you see statically does not line up with the bytes in
-      the program. Recover (or trace) that permutation first.
-
-    - Immediate operands use a home-grown varint. It is not LEB128; work out
-      the encoding before you trust any disassembly.
-
-  There is NO flag string in the binary. The key you enter IS the flag: the
-  program transforms your input through several rounds (a per-byte add-carry, an
-  invented S-box, a byte rotate, and a per-position XOR) and compares the result
-  to an embedded target. When your input matches, it prints "Access granted".
-  Recover the exact input that passes, and that input is the flag.
-
-  Intended path: write a disassembler + tracer for the VM, lift the program,
-  understand the round function, then invert it. grep/strings will not hand you
-  anything. One region of the program is a dead-code decoy that inverts to a
-  plausible-but-wrong key; the control-flow graph refutes it in minutes
-  (nothing branches to it).
+  There is NO flag string in the binary; grep/strings will not hand you anything.
 
   The binary is a stripped x86-64 ELF. No network access is required;
   everything you need is inside the file.
+
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
 
@@ -65,12 +45,40 @@ extra:
 flags:
   - NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}
 
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The key is not checked with ordinary code: the binary ships a bespoke
+      register+stack bytecode machine (~80 opcodes) and a long, fully-unrolled
+      program that validates it. Write a disassembler / tracer for that VM and
+      lift the program.
+    cost: 25
+    key: h1
+  - content: >-
+      Two traps in the lift. (1) The opcode dispatch is REMAPPED AT RUNTIME: an
+      init routine builds a 256-entry permutation with a keyed Fisher-Yates over
+      xorshift32 (seed `0x1F3D5B79`), so program bytes != internal opcodes -- the
+      static switch does not line up until you apply it. (2) Immediates use a
+      home-grown varint whose continuation flag is the LOW bit (not LEB128). Also:
+      an unreferenced dead-code block inverts to a plausible-but-wrong key -- a
+      reachability check refutes it.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The round function (17 rounds) is
+      `out = ROL8( SBOX[(in + carry) & 0xff], rot_r ) ^ c_{r,i}`, with the carry
+      chaining on the OUTPUT byte and `SBOX` a second Fisher-Yates bijection
+      (seed `0xC0FFEE42`). Read `IV_r` / `rot_r` / the XOR constants / target
+      `T[]` out of the instruction stream and invert round 16 -> 0 starting from
+      `T[]`.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 tags:
   - reverse
-  - elf
-  - bytecode-vm
-  - custom-encoding
-  - static-analysis
 
 files:
   - synthvm

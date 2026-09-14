@@ -2,15 +2,13 @@ name: strings-lie
 author: challenge-team
 category: reverse
 description: |-
-  We recovered a tiny "secret vault" binary. Run it and it happily prints a
-  flag right there in the banner. Submit it and... it is rejected.
+  We recovered a tiny "secret vault" binary, `chall`. Run it and it happily
+  prints a flag right there in the banner. Submit it and... it is rejected.
 
-  The obvious string is a decoy. The real flag is never stored as plaintext in
-  the file - the program reconstructs it only after your input passes an
-  arithmetic check. Read the code, not the strings.
+  Recover the real flag. The binary is a static x86-64 ELF; you do not need
+  network access. Everything you need is inside the file.
 
-  The binary is a static x86-64 ELF; you do not need network access. Everything
-  you need is inside the file.
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
 
@@ -29,11 +27,29 @@ extra:
 flags:
   - NCTF{str1ngs_l1e_read_the_c0de}
 
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The flag printed in the banner is a decoy -- grepping strings finds only
+      that one, and it is wrong. The real flag is never stored as plaintext; read
+      what the program actually does with your input.
+    cost: 10
+    key: h1
+  - content: >-
+      `check()` validates your input one byte at a time against an embedded
+      array with an invertible transform,
+      `t = ((p[i] ^ 0x5A) + (i*7 + 3)) & 0xFF`, so the passphrase is uniquely
+      determined: `P[i] = ((target[i] - (i*7 + 3)) & 0xFF) ^ 0x5A`. On success it
+      XOR-decrypts a SECOND array with that passphrase repeated as the key --
+      that decrypted output is the flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+
 tags:
   - reverse
-  - elf
   - beginner
-  - static-analysis
 
 files:
   - chall
