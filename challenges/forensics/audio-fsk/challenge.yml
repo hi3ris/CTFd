@@ -2,28 +2,24 @@ name: "Audio FSK"
 author: "ctf-team"
 category: forensics
 description: |
-  We intercepted a short RF downlink and saved the demodulated baseband to a WAV
-  file. It carries data as **binary FSK** — two audio tones, one per bit — but it
-  does **not** use the textbook Bell-103/Bell-202 tone pairs or standard UART
-  framing, so pointing `minimodem` at it with default settings gets you nothing.
+  Nous avons intercepté une courte liaison descendante RF et enregistré la bande
+  de base démodulée dans un fichier WAV (`transmission.wav`). Elle transporte des
+  données, mais l'émetteur n'utilise pas un paramétrage standard : les outils
+  génériques, pointés dessus avec leurs réglages par défaut, ne donnent rien.
 
-  Read `SIGNAL_BRIEF.md`: it describes the frame layout (preamble → sync word →
-  length → payload → CRC-8) but leaves the physical-layer constants for you to
-  recover from the recording — the two tone frequencies, the baud rate, which
-  tone is `1` vs `0`, and the bit order. The modulator is continuous-phase, and
-  the CRC-8 (polynomial 0x07, over length‖payload) lets you confirm when you have
-  framed it correctly.
+  Lisez `SIGNAL_BRIEF.md` : il décrit la disposition de la trame et vous laisse
+  récupérer les constantes de couche physique depuis l'enregistrement lui-même.
 
-  Demodulate the primary downlink, reassemble the frame, and read the payload.
-  The flag is embedded in the payload text. This is solvable entirely by signal
-  processing — you do not need to listen to the audio.
+  Démodulez la liaison descendante principale, réassemblez la trame et lisez le
+  payload. Le flag est intégré au texte du payload. Tout est résoluble par
+  traitement du signal — inutile d'écouter l'audio.
 
-  Notes:
-    * A second, much fainter tone burst appears later in the recording. It is a
-      standard Bell-202 8N1 link that decodes "too easily" — it is a decoy and
-      does not carry the real flag. The real downlink is CRC-verified.
+  Attention : un leurre bien plus faible apparaît plus tard dans l'enregistrement
+  et se décode « trop facilement ». La vraie liaison, elle, est vérifiable.
 
-  Flag format: NCTF{...}  (lowercase letters, digits and underscores inside).
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{...}  (lettres minuscules, chiffres et underscores).
 
 # This is a STATIC, downloadable forensics artifact: the challenge IS the WAV
 # recording, so the flag is baked into the modulated bitstream. No served
@@ -42,16 +38,41 @@ extra:
 flags:
   - "NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Ne l'écoutez pas — analysez-le. L'information est portée par la manière
+      dont la FRÉQUENCE du son varie dans le temps, pas par son amplitude. Un
+      spectrogramme (ou une FFT de la salve la plus forte) révèle la structure.
+    cost: 25
+    key: h1
+  - content: >-
+      C'est du FSK binaire : deux tonalités, une par bit. Mesurez les deux
+      fréquences ET le débit (bauds) DEPUIS le signal — les valeurs ne sont pas
+      standard, d'où l'échec de `minimodem` par défaut. La trame suit
+      préambule → mot de synchro → longueur → payload → CRC-8, sans bits
+      start/stop UART.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Phase continue, 96 bauds (500 échantillons/symbole @ 48 kHz), mark (bit 1)
+      à 1855 Hz, space (bit 0) à 3145 Hz, MSB-first, mot de synchro `0x9E3A`,
+      CRC-8 (poly 0x07, init 0x00) sur LEN‖payload. Échantillonnez le tiers
+      central de chaque symbole et testez les deux polarités tonalité→bit
+      jusqu'à ce que le CRC valide.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 files:
   - transmission.wav
   - SIGNAL_BRIEF.md
 
 tags:
   - forensics
-  - dsp
-  - fsk
   - audio
-  - signal-processing
   - hard
 
 connection_info: null

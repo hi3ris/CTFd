@@ -4,24 +4,25 @@ category: web
 description: |
   "It's basically a JWT," said no one who read the code.
 
-  **Cousin SSO** issues its own bearer tokens for the operations console.
-  They *look* JWT-ish but they are a homemade format: a token is two parts,
-  `<payload>.<signature>`, there is no header segment, and the signature is
-  **not** an HMAC over `base64(header).base64(payload)`. Stock JWT tooling
-  (and jwt.io) will not parse or verify these -- don't waste time on
-  `alg:none`, key-confusion, or classic JWT tricks.
+  **Cousin SSO** issues bearer tokens for the operations console. Log in with
+  a public account and you get read-only `guest` access. The console only hands
+  back the operations flag once an **admin** performs a console rotation -- so
+  you'll need an `admin` token you were never issued.
 
-  You get read-only `guest` access. The console will only hand back the
-  operations flag once an **admin** actually rotates it. Log in, work out how
-  the token is really signed, forge an `admin` token, and perform the admin
-  action.
+  Auth surface:
+
+      POST /api/login          {"user": "...", "pass": "..."}
+      GET  /api/whoami         verifies a token (no admin needed)
+      POST /api/admin/rotate   admin-only; emits the flag on success
 
   Public demo accounts: `guest`/`guest` and `staff`/`staff`. The `admin`
-  password is not public -- you are not meant to log in as admin, you are
-  meant to forge.
+  password is not public -- you are meant to forge an admin token, not log in
+  as one.
 
   The service is the oracle: nothing here is a downloadable flag. The flag is
   emitted by the server only after the admin-only rotation succeeds.
+
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -43,11 +44,38 @@ extra:
 flags:
   - type: team_hmac
     content: web-jwt-cousin
+
+# Progressive, point-costing hints. The vuln detail lives here, not in the
+# description: it has to be paid for.
+hints:
+  - content: >-
+      It looks JWT-ish, but it isn't a JWT: two segments `<payload>.<sig>`, no
+      header, and the signature is not an HMAC over the base64 segments. Stock
+      JWT tricks (`alg:none`, key confusion, jwt.io) are all dead ends -- the
+      server ignores `alg`. Ask a different question instead: what does the
+      signature actually cover?
+    cost: 10
+    key: h1
+  - content: >-
+      The signature is over a canonical string the server rebuilds from a fixed
+      subset of the claims. Probe one claim at a time against `/api/whoami`
+      (change it, keep the original signature): some changes are rejected, one
+      of them still verifies.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      `role` is outside the signed data (the canonical string is
+      `sub=...;exp=...;v=...`). Take a valid `guest` token, edit the payload
+      JSON to `"role":"admin"`, re-attach the unchanged signature, and POST it
+      to `/api/admin/rotate`.
+    cost: 25
+    key: h3
+    requirements: [h2]
+
 tags:
   - web
-  - auth
-  - jwt
-  - forgery
+  - easy
 
 # challenge-id (for HMAC / requirements wiring): web-jwt-cousin
 # No prerequisites; standalone.

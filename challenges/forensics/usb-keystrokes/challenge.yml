@@ -2,19 +2,21 @@ name: "USB Keystrokes"
 author: "ctf-team"
 category: forensics
 description: |
-  We tapped the USB bus while a colleague logged into the vault terminal and
-  captured the traffic below. Somewhere in that stream is the passphrase they
-  typed on their keyboard.
+  Nous avons mis sur écoute le bus USB pendant qu'un collègue se connectait au
+  terminal du coffre, et capturé le trafic ci-joint (`capture.pcap`). Quelque
+  part dans ce flux se trouve la passphrase qu'il a tapée au clavier.
 
-  The capture is a raw Linux usbmon dump (open it in Wireshark, or parse it
-  yourself). More than one device was plugged in at the time, so not every
-  packet is the keyboard.
+  La capture est un vidage usbmon Linux brut (ouvrez-la dans Wireshark, ou
+  parsez-la vous-même). Plusieurs périphériques étaient branchés à ce moment-là,
+  donc tous les paquets ne proviennent pas du clavier.
 
-  Recover the exact passphrase that was typed and submit it wrapped in the flag
-  format.
+  Récupérez la passphrase exacte qui a été tapée et soumettez-la au format du
+  flag.
 
-  Flag format: NCTF{<passphrase>}  (the passphrase is case-sensitive and
-  contains letters, digits and underscores).
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{<passphrase>}  (la passphrase est sensible à la casse et
+  contient lettres, chiffres et underscores).
 
 # This is a static, downloadable forensics artifact: the challenge IS the pcap,
 # so the flag is baked in. No served component, no per-team HMAC flag.
@@ -30,14 +32,39 @@ extra:
 flags:
   - "NCTF{Bl4ck_H4t_USB_2026}"
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Un clavier reporte l'état des touches par petits paquets sur son endpoint
+      d'interruption (interrupt-IN). Plusieurs périphériques sont sur le bus :
+      commencez par identifier lequel est le clavier (par longueur de rapport et
+      adresse de périphérique).
+    cost: 10
+    key: h1
+  - content: >-
+      Le clavier envoie des rapports de 8 octets (l'autre périphérique, une
+      souris, en fait 4). Dans chaque rapport, l'octet 2 est le keycode (table
+      HID Usage, page clavier 0x07) et l'octet 0 est le bitmap de modificateurs.
+      Ne gardez que les événements `C` (complete) interrupt-IN porteurs de
+      données.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Mappez chaque keycode via la table HID, appliquez Shift depuis l'octet 0
+      (b→B, -→_, 2→@ …) et ignorez les rapports « release » tout-à-zéro. Par
+      exemple :
+      `tshark -Y 'usb.device_address==3 && usb.transfer_type==0x01 && usb.capdata' -e usb.capdata -T fields`.
+    cost: 25
+    key: h3
+    requirements: [h2]
+
 files:
   - capture.pcap
 
 tags:
   - forensics
-  - usb
-  - hid
-  - pcap
   - easy
 
 # No requirements / prerequisite chain for this standalone challenge.

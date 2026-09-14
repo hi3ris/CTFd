@@ -6,12 +6,6 @@ description: |
   `2.31-0ubuntu9.18`). You can `alloc`, `free`, `edit` and `view` up to 16
   fixed-slot notes.
 
-  The bug is a classic **use-after-free**: `free` does not clear the slot, and
-  neither `edit` nor `view` checks whether a slot is still live -- so you can
-  **read** a freed chunk (leak) and **write** into a freed chunk
-  (edit-after-free). tcache is in play; glibc 2.31 predates safe-linking, so
-  tcache forward pointers are stored **un-mangled**.
-
   There is **no downloadable flag**. The binary you get is byte-identical to the
   one the service runs, and it contains no flag. Winning means actually
   **hijacking control flow into `win()`** -- the service verifies that *effect*
@@ -26,6 +20,8 @@ description: |
   By this event's rules a constant baked into a shipped artifact is never a real
   flag -- it is unreachable and reads no environment. Don't submit it; don't
   waste time on it.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Flag format: `NCTF{...}`
 
@@ -47,12 +43,37 @@ extra:
 flags:
   - type: team_hmac
     content: pwn-heap-note
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). La classe de
+# bug n'est PAS nommée dans la description : elle se paie ici.
+hints:
+  - content: >-
+      Testez le cycle de vie d'un slot après `free` : le slot n'est pas remis à
+      zéro, et ni `edit` ni `view` ne vérifient qu'il est encore vivant. Vous
+      pouvez donc **lire** un chunk libéré (fuite) et **écrire** dedans -- un
+      use-after-free.
+    cost: 20
+    key: h1
+  - content: >-
+      Les petites tailles passent par le tcache, et sur glibc 2.31 (avant le
+      safe-linking) le pointeur `fd` d'un chunk libéré est stocké **en clair**.
+      Un edit-after-free sur ce `fd` empoisonne la liste tcache : la prochaine
+      allocation de cette taille vous rend un chunk à **l'adresse de votre
+      choix**.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Fuyez d'abord une adresse libc en lisant le `fd`/`bk` d'un chunk assez gros
+      pour finir en unsorted bin. Puis empoisonnez le tcache pour obtenir une
+      allocation sur un pointeur de fonction (p.ex. `__free_hook`) et écrivez-y
+      l'adresse de `win()` ; déclenchez-le pour détourner le flux d'exécution.
+    cost: 50
+    key: h3
+    requirements: [h2]
+
 tags:
   - pwn
-  - heap
-  - use-after-free
-  - tcache
-  - tcache-poisoning
   - glibc-2.31
 
 files:

@@ -3,7 +3,7 @@ author: ctf-2026
 category: pwn
 type: team_instance
 description: |
-  **format-string-101** -- a classic format-string leak + write, served as
+  **format-string-101** -- a small networked service, served as
   pwn-as-a-service.
 
   Connect over TCP and you get a fresh process with two live, per-connection
@@ -12,13 +12,11 @@ description: |
     - the address of a global `auth` cell (stable across connections), and
     - a random 32-bit `nonce` for THIS connection.
 
-  A single `printf(user_input)` uses your input as the format string. Your goal
-  is to make `auth == nonce`. When the service observes that effect it returns
-  the flag. You get up to 16 input lines per connection: leak the stack to find
-  your argument offset, then write.
+  Your goal is to make `auth == nonce`. When the service observes that effect it
+  returns the flag. You get up to 16 input lines per connection.
 
-  Because the nonce is regenerated every connection, a replayed `%n` payload is
-  worthless -- you must read the printed target and build the write live.
+  Because the nonce is regenerated every connection, a replayed payload is
+  worthless -- you must read the printed values and build your write live.
 
   The downloadable `chall` binary is for offline analysis only. It contains **no
   flag**: the per-team flag lives solely in the running service's environment
@@ -26,6 +24,8 @@ description: |
   not give you a flag.
 
   Provided files: `chall` (x86-64 ELF), `chall.c` (source).
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Connect:  `nc <host> <port>`
 
@@ -51,6 +51,32 @@ flags:
   - type: team_hmac
     content: pwn-format-string-101
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). La classe de
+# bug n'est PAS nommée dans la description : elle se paie ici.
+hints:
+  - content: >-
+      Regardez comment le programme affiche votre saisie : elle est passée
+      directement à `printf` comme **chaîne de format**, sans `"%s"`. C'est une
+      vulnérabilité de type format-string.
+    cost: 10
+    key: h1
+  - content: >-
+      Des spécificateurs comme `%p`/`%x` divulguent la pile : envoyez-en une
+      série pour repérer à quel **offset** d'argument votre propre saisie
+      apparaît. Le spécificateur `%n` écrit, à l'adresse pointée par cet
+      argument, le nombre d'octets déjà affichés.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Lisez l'adresse de `auth` et le `nonce` du bandeau. Placez l'adresse de
+      `auth` dans votre saisie (à l'offset trouvé), contrôlez la largeur
+      d'affichage pour totaliser `nonce` octets, puis écrivez avec `%n` (`%hn`
+      pour 16 bits) pour poser `auth == nonce`.
+    cost: 20
+    key: h3
+    requirements: [h2]
+
 # Handout: the binary for offline analysis plus its source. Neither contains a
 # flag -- the per-team flag lives only in the running service's environment.
 files:
@@ -58,9 +84,6 @@ files:
   - chall.c
 tags:
   - pwn
-  - format-string
-  - printf
-  - leak-and-write
   - beginner
 
 # Prerequisite chain: none. This is a standalone challenge.

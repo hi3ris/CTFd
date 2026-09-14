@@ -17,17 +17,13 @@ description: |
   returns confidences and nothing else -- the record is never in a response and
   never in a downloadable artifact.
 
-  You are given the scoring model **white-box** (the embedding and the exact
-  code the oracle runs) -- everything except the memorised record itself. The
-  metric and model are common to every team; only the memorised record and the
-  flag are per-team, so a record read off someone else's instance is useless.
+  You are given the scoring model **white-box** (`model.py` and `weights.npz` in
+  the handout: the embedding and the exact code the oracle runs) -- everything
+  except the memorised record itself. The model is common to every team; only the
+  memorised record and the flag are per-team, so a record read off someone else's
+  instance is useless.
 
-  Notes:
-  - The confidence is a **similarity**, not a per-attribute readout. Probing one
-    attribute at a time does **not** hand back that attribute's value -- the
-    oracle mixes all attributes of the record together.
-  - The confidences are exact (no noise); the recovery is a clean closed-form
-    inversion once you see what the oracle is actually leaking.
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -52,6 +48,33 @@ extra:
 flags:
   - type: team_hmac
     content: ml-model-inversion
+
+# Progressive hints (chained unlock, growing cost). The inversion technique is
+# NOT in the description -- it is paid for here.
+hints:
+  - content: >-
+      `/query` returns exact confidences (no noise), and the SEALED confidence is
+      a smooth two-class output. Turn it back into a raw score: invert the
+      softmax/sigmoid so you read the underlying logit instead of a probability.
+    cost: 25
+    key: h1
+  - content: >-
+      That logit is **linear in the sealed record**. Subtract a baseline probe
+      (all-zeros) to cancel the bias, then probe one coordinate at a time
+      (`p = 255*e_i`) to read a vector. But watch out: the confidence is a
+      **similarity** through the metric, not a per-attribute readout -- the
+      coordinate response is not that attribute's value.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The vector you read is `u = M*(r/255)` with `M = E^T E` from `weights.npz`
+      (symmetric, **not** diagonal). Solve the linear system: `r = 255 * M^-1 * u`,
+      round to bytes, clip to 0..255. Baseline + 24 unit-direction probes (25
+      queries) recover it exactly; assuming the identity metric fails by ~200.
+    cost: 75
+    key: h3
+    requirements: [h2]
 
 # Handout artifacts delivered to players (white-box: the embedding weights and
 # the exact scoring code, minus the memorised record). No flag and no record are

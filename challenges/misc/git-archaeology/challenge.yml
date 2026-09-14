@@ -12,18 +12,16 @@ category: "misc"
 type: "dynamic"
 
 description: |-
-  Our intern force-pushed away a mistake. "It's gone," they said. Nothing is
-  ever *gone* in git.
+  Our intern force-pushed away a mistake. "It's gone," they said.
 
   You're handed a snapshot of the `logparse-cli` repository (the full working
   tree **and** its `.git` directory). At some point a real production
-  credential was committed and then "removed" - but the branch history you see
-  with `git log` is clean. The secret is still in there somewhere.
-
-  Recover the leaked credential.
+  credential was committed and then "removed." Recover the leaked credential.
 
   There is one obviously-fake placeholder token in the repo to ignore; the real
   one is the upload_token that was scrubbed from the analytics config.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Flag format: NCTF{...}
 
@@ -41,10 +39,31 @@ files:
 flags:
   - "NCTF{d4ngling_c0mmit_lives_in_ref10g}"
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant).
+hints:
+  - content: >-
+      `git log`, et même `git log --all`, ne montrent qu'un historique propre :
+      la « suppression » n'a rien effacé, elle a seulement déplacé un pointeur de
+      branche. Le commit fautif vit toujours dans `.git`.
+    cost: 10
+    key: h1
+  - content: >-
+      Ce qui ne parcourt que les références rate le commit détaché. Le journal
+      des références (`git reflog`) et `git fsck --lost-found` listent justement
+      les commits « dangling », plus atteignables depuis aucune branche.
+    cost: 10
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Récupérez le hash du commit détaché via `git reflog` ou `git fsck`, puis
+      lisez la config d'origine : `git show <commit>:config.ini` ->
+      `upload_token = NCTF{...}`.
+    cost: 15
+    key: h3
+    requirements: [h2]
+
 tags:
   - misc
-  - forensics
-  - git
   - easy
 
 state: visible

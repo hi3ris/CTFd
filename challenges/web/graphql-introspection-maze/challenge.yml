@@ -3,26 +3,18 @@ author: ctf-2026
 category: web
 description: |
   **Atlas Ops** exposes a single GraphQL endpoint at `POST /graphql`
-  (JSON body `{"query": "...", "variables": {...}}`). Introspection is
-  **disabled** on this deployment: `__schema` / `__type` are rejected, there
-  is no GraphiQL, and a schema dump gets you nothing. Don't waste attempts on
-  introspection tooling.
+  (JSON body `{"query": "...", "variables": {...}}`). You start as an
+  unprivileged `OBSERVER`; the public data (try `{ announcements { title body } }`)
+  is your way in.
 
-  The schema is still *there* -- you just can't read it directly. The server's
-  validation errors are talkative: unknown fields come back with
-  "Did you mean ...?" suggestions, and missing required arguments name their
-  type. Walk that oracle to map the graph.
+  Somewhere in the API is a privileged operation that can reassign your
+  session's clearance. Reach it and drive your own session to **ROOT**: the
+  server verifies that effect server-side, and only then will
+  `controlPlane { flag }` return anything.
 
-  Somewhere in the `Mutation` type is an operation that was never meant to be
-  reachable, and it is not access-controlled -- only hidden. Ids in this API
-  are an opaque custom scalar (`NodeRef`); the reference you need to call that
-  mutation is **never returned by any field**, so you will have to understand
-  the scalar's encoding well enough to construct it yourself from the
-  references you *can* read.
+  Nothing here is a downloadable flag -- the running service is the oracle.
 
-  Nothing here is a downloadable flag. The running service is the oracle: it
-  verifies a privileged **effect** (your session actually gaining ROOT
-  clearance) and only then will `controlPlane { flag }` return anything.
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -44,11 +36,41 @@ extra:
 flags:
   - type: team_hmac
     content: web-graphql-introspection-maze
+
+# Progressive, point-costing hints. The vuln detail lives here, not in the
+# description: it has to be paid for.
+hints:
+  - content: >-
+      The schema isn't directly readable (no introspection, no GraphiQL), but
+      you don't need it to be -- the server tells you more than it means to
+      whenever a query is slightly wrong. Get a field name a little off and
+      read the reply carefully.
+    cost: 25
+    key: h1
+  - content: >-
+      Those "Did you mean ...?" suggestions and required-argument errors are an
+      oracle: walk it (seed your guesses from the public announcements) to a
+      hidden, un-access-controlled mutation that reassigns clearance. Its ids
+      are a custom scalar, `NodeRef`, and the reference it wants is never
+      returned by any field -- you'll have to build it.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The mutation is `redeemWarrant(warrant: NodeRef!): ControlPlane`. A
+      `NodeRef` decodes as `NR1_<base64url>` of 5 bytes: kind, ordinal
+      (little-endian), version `0x01`, then an additive checksum
+      `(sum + 0x5A) & 0xFF`. Forge one whose kind byte is the WARRANT kind
+      (not the `0x21`/`0x22` you can read -- brute the single byte; it's
+      `0x2A`). Redeeming it flips your session to ROOT, then
+      `controlPlane { flag }` returns.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 tags:
   - web
-  - graphql
-  - introspection
-  - api
+  - hard
 
 # challenge-id (for HMAC / requirements wiring): web-graphql-introspection-maze
 # No prerequisites; standalone.

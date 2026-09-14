@@ -2,21 +2,9 @@ name: maze-vm
 author: challenge-team
 category: reverse
 description: |-
-  We recovered a small self-contained "gate" binary. It refuses to explain
-  itself: instead of checking your passphrase with ordinary code, it carries an
-  embedded program for a machine of its own and runs that program to decide
-  whether you are let in. Feed it the one input it accepts and it hands you the
-  flag; feed it anything else and it just says "Denied."
-
-  A few things frustrate a casual read of the file:
-
-    - The embedded program is not stored as-is. It is scrambled and only
-      unpacked in memory as the binary starts, so what you see at rest in the
-      file is not what actually executes. Reproduce the unpacking first.
-
-    - The machine does not use a normal instruction decoder you can pattern-match
-      against a compiler's output. Work out how it fetches and dispatches its
-      own instructions, and what each one does, before you trust any listing.
+  We recovered a small self-contained "gate" binary, `chall`. It refuses to
+  explain itself: feed it the one input it accepts and it hands you the flag;
+  feed it anything else and it just says "Denied."
 
   There is NO flag string and NO passphrase string in the binary: only enough
   to recognize the correct input once it reaches the gate. The accepted input
@@ -25,6 +13,8 @@ description: |-
 
   The artifact is a native x86-64 Linux ELF. No network access is required;
   everything you need is inside the file.
+
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
 
@@ -61,10 +51,37 @@ extra:
 flags:
   - NCTF{m4ze_vm_thr34d3d}
 
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The validation is not ordinary compiled code: the binary carries an
+      embedded program plus an interpreter that runs it to decide. Work out how
+      that machine fetches and dispatches its own instructions (a threaded /
+      computed-goto loop) and what each opcode does before you trust any listing.
+    cost: 25
+    key: h1
+  - content: >-
+      The embedded program is stored scrambled and only unpacked in memory at
+      startup, so the bytes at rest are not the bytes that run. Reproduce the
+      unpacking first: a rolling-XOR keystream,
+      `key = seed; plain = o ^ key; key = (key*mul + o) mod 256`. The blob is
+      prefixed with the magic `MZVMv1`.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Every arithmetic step is per-byte (add / modular-multiply / xor / rotate)
+      and the ONLY cross-byte mixing is one whole-array byte permutation -- so
+      each output byte depends on exactly one input byte. Reimplement the VM as
+      an oracle and brute-force each of the 16 input positions (16 x 256 evals)
+      until its output byte matches the embedded target.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 tags:
   - reverse
-  - elf
-  - static-analysis
   - hard
 
 files:

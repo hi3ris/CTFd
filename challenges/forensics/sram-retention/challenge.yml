@@ -2,31 +2,28 @@ name: "SRAM Retention"
 author: "ctf-team"
 category: forensics
 description: |
-  We yanked a memory dump off a dead **Aetheris AE-32** microcontroller after a
-  brown-out. Firmware stashed a key in the chip's SRAM "vault", but the AE-32
-  register file is **banked**: the banks are physically scattered across the die,
-  so in the dump they show up out of order and non-contiguous, buried in decayed
-  retention noise. Worse, the key isn't stored in one place — the controller
-  smears it across the banks.
+  Nous avons extrait un vidage mémoire d'un microcontrôleur **Aetheris AE-32**
+  mort après une chute de tension. Le firmware avait planqué une clé dans le
+  « coffre » SRAM de la puce, mais dans le vidage la clé est éparpillée et noyée
+  dans le bruit de rétention — elle n'est pas stockée d'un seul tenant.
 
-  We recovered a partial datasheet (`AE32_SRAM_datasheet.md`). It tells you how to
-  find the header, walk the bank base table, locate each bank, and de-interleave
-  the vault. Read it carefully — a couple of the fields do not mean what you'd
-  first assume (where the bank offsets are measured from, and what the header
-  checksum actually covers).
+  Nous avons récupéré une fiche technique partielle (`AE32_SRAM_datasheet.md`).
+  Elle explique comment interpréter le format. Lisez-la attentivement : quelques
+  champs ne signifient pas ce qu'on croirait au premier abord.
 
-  `samples/` holds several dumps in the same format with their decoded contents in
-  `samples/KNOWN.txt`, so you can validate your parser before you point it at the
-  real image.
+  `samples/` contient plusieurs vidages au même format, avec leur contenu décodé
+  dans `samples/KNOWN.txt`, pour valider votre parseur avant de le lancer sur la
+  vraie image.
 
-  Recover the key from `retention.dump`. It is already in flag format.
+  Récupérez la clé depuis `retention.dump`. Elle est déjà au format du flag.
 
-  Notes:
-    * `strings` will hand you something that looks like a flag. It isn't — it's
-      loose bytes sitting in the retention noise, not inside any tagged bank. The
-      real vault is only ever assembled by the datasheet's interleave rule.
+  Notes :
+    * `strings` vous tendra quelque chose qui ressemble à un flag. Ce n'en est
+      pas un : la vraie clé ne s'obtient qu'en suivant la fiche technique.
 
-  Flag format: NCTF{...}  (lowercase letters and underscores inside).
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{...}  (lettres minuscules et underscores).
 
 # STATIC, downloadable forensics artifact: the challenge IS the memory dump plus
 # its invented datasheet, so the flag is baked into the captured bytes. No served
@@ -45,6 +42,32 @@ extra:
 flags:
   - "NCTF{sram_retention_bank_interleave}"
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Tout est dans `AE32_SRAM_datasheet.md` — mais il faut le lire finement. La
+      clé n'est pas contiguë : le registre est réparti en bancs. Validez d'abord
+      votre parseur sur `samples/` (résultats attendus dans `KNOWN.txt`).
+    cost: 20
+    key: h1
+  - content: >-
+      Parsez l'en-tête de 8 octets, puis la table de bases de bancs (u16 LE).
+      Deux champs piègent : les offsets de bancs sont mesurés depuis la FIN du
+      fichier (`phys = taille - entrée`), et le checksum d'en-tête ne couvre que
+      l'en-tête (7 octets), pas tout le fichier. Chaque banc commence par le tag
+      `BNK` + identifiant.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      La clé est entrelacée en round-robin : l'octet `k` se trouve dans le banc
+      logique `k % NBANKS`, slot `j = k // NBANKS`, à l'offset intra-banc
+      `4 + j*STRIDE`. Dé-entrelacez dans cet ordre pour reconstruire le flag.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
 files:
   - retention.dump
   - AE32_SRAM_datasheet.md
@@ -58,10 +81,6 @@ files:
 
 tags:
   - forensics
-  - memory
-  - sram
-  - embedded
-  - reverse-engineering
   - medium
 
 connection_info: null

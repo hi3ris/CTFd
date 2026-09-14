@@ -8,9 +8,9 @@ description: |
   The gate opens **only** for `GRANTED`.
 
   You are given the classifier weights (white-box) and a badge that scans as
-  `DENIED`. Craft a badge that the gate reads as **GRANTED** while staying
-  within **L-inf epsilon = 8** (raw 0..255 pixel levels) of the DENIED badge --
-  a bounded adversarial example -- then submit it to the live instance.
+  `DENIED`. Get the gate to read a badge as **GRANTED** while keeping every
+  pixel within **8 levels** (raw 0..255) of the DENIED badge -- i.e.
+  `max|badge - DENIED| <= 8` -- then submit it to the live instance.
 
   The service is the oracle. `POST /submit` **verifies the effect, not a
   payload shape**: it decodes your packet, checks `max|badge - DENIED| <= 8`,
@@ -20,14 +20,13 @@ description: |
 
   Submissions are wrapped in an invented container, **QGP1** (not PNG/NPY/DER).
   The instance serves a small corpus of `.gatepkt` samples plus two decoded
-  `.npy` files under `/assets/` and the codec/model source in the handout;
-  infer the exact wire rules from that evidence.
+  `.npy` files under `/assets/`, and the codec/model source ship in the handout;
+  work out the exact wire format from that evidence.
 
-  Notes:
-  - Target GRANTED **specifically**. A single untargeted step tends to flip the
-    badge to the nearest wrong class (STAFF), which the gate still refuses.
-  - The epsilon bound is checked on the decoded **integer** pixel plane, so an
-    attack that only works in float space before rounding will be rejected.
+  Handout files include `gatemodel.py`, `weights.npz`, the DENIED badge
+  (`denied_badge.gatepkt` / `.npy`) and the labelled sample corpus.
+
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -55,6 +54,35 @@ flags:
   - type: team_hmac
     content: ml-adversarial-gate
 
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The classifier is white-box and nearly linear in the tiny pixel budget
+      around the DENIED badge. Its own gradient tells you which pixels to nudge:
+      `gatemodel.py` even exposes the analytic gradient of a class logit w.r.t.
+      the raw pixels. Ascend it.
+    cost: 25
+    key: h1
+  - content: >-
+      Aim at GRANTED **specifically** -- ascend `logit[GRANTED]`. A single
+      untargeted step increases the loss toward the *nearest* boundary, which is
+      the STAFF decoy, and the gate still refuses that. Iterate (PGD-style),
+      re-clipping every step to `denied +/- 8`.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The epsilon check is on the decoded **integer** pixel plane: project to
+      `uint8` *inside* the loop and keep a margin, or a float attack that is
+      "just inside" before rounding gets rejected. Then encode the result as
+      QGP1 -- from the samples vs. their `.npy`: rows stored bottom-to-top when
+      `flags & 1`, `hdr_sum` checksums the header only, and the count field
+      counts records (== nrows), each record `[len=ncols][ncols bytes]`.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 # Handout artifacts delivered to players (white-box: weights + DENIED badge in
 # both the invented QGP1 .gatepkt container and decoded .npy, plus the codec and
 # model source and a small labelled sample corpus). No flag is present in any of
@@ -75,9 +103,6 @@ files:
   - handout/samples/badge_05.gatepkt
 tags:
   - ml
-  - adversarial-examples
-  - pgd
-  - evasion
   - hard
 
 connection_info: http://{host}:8080/

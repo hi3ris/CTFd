@@ -15,11 +15,10 @@ description: |
 
     1. Find and exploit the web service to get **code execution as an
        unprivileged service account**.
-    2. From there, work through the machine's **local misconfigurations** to
-       move up to more privileged accounts and finally to **root**. This is a
-       multi-stage local privilege-escalation chain -- expect to pivot through
-       more than one account and to combine more than one weakness. Enumerate:
-       SUID binaries and file **capabilities** both matter here.
+    2. From there, work through the machine's local misconfigurations to move up
+       to more privileged accounts and finally to **root**. This is a multi-stage
+       local privilege-escalation chain -- expect to pivot through more than one
+       account and to combine more than one weakness. Enumerate.
     3. As root, read `/root/flag`.
 
   The flag lives **only** in `/root/flag`, owned by `root` and mode `400`: it is
@@ -31,6 +30,8 @@ description: |
 
   Per-team instance: each team gets its own container and its own flag, so
   nothing you find can be replayed against another team.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Flag format: `NCTF{...}`
 
@@ -56,6 +57,33 @@ flags:
   - type: team_hmac
     content: pwn-boot2root-webapp
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la chaîne n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Le corps de la note que vous prévisualisez est rendu **comme un gabarit**
+      côté serveur : ce que vous saisissez EST le template. Une injection de
+      gabarit (`{{ ... }}`) qui atteint les globals du moteur vous donne une
+      exécution de code comme compte de service.
+    cost: 25
+    key: h1
+  - content: >-
+      Cherchez un binaire SUID (`find / -perm -4000 -type f 2>/dev/null`). Il
+      concatène l'un de ses arguments dans une commande shell sans le nettoyer :
+      un argument du type `x; votre_commande #` exécute votre commande sous le
+      compte propriétaire du SUID (le `#` neutralise la fin de la ligne).
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Une **capability** de fichier est le dernier maillon
+      (`getcap -r / 2>/dev/null`). Un interpréteur porte `cap_setuid+ep` mais
+      n'est exécutable que par le compte de l'étape 2. Depuis ce compte :
+      `setuid(0)` puis lisez `/root/flag`.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 # No handout: this is a black-box boot2root. Nothing is shipped to the player;
 # the whole challenge lives in the running container. (No `files:` on purpose --
 # shipping the image contents would reveal the intended chain.)
@@ -64,8 +92,6 @@ tags:
   - pwn
   - boot2root
   - linux
-  - ssti
-  - capabilities
   - hard
 
 # challenge-id (for HMAC / requirements wiring): pwn-boot2root-webapp

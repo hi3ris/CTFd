@@ -9,17 +9,18 @@ description: |
   not intend.
 
   Connect and you get a banner and a handful of verbs. A partial protocol note
-  and a captured normal session are provided as a handout. The note documents
-  how `CFG <n>` is *supposed* to work; it does not document how it actually
-  behaves at the edges. That gap is the challenge.
+  and a captured normal session are provided as a handout -- enough to learn the
+  documented behaviour and to notice where reality departs from the spec.
 
   This is a **server-side oracle**: nothing you download contains the flag. The
   service verifies an *effect* -- that a particular hidden state has been reached
   -- and only then emits the flag. Reading the handout alone will not give you a
-  flag; you have to drive the socket and find the edge.
+  flag; you have to drive the socket.
 
   Provided files (handout): `PROTOCOL.md` (partial spec), `session.log` (a
   normal, benign transcript).
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Connect:  `nc <host> <port>`
 
@@ -44,12 +45,36 @@ extra:
 flags:
   - type: team_hmac
     content: misc-proto-fuzz
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la vuln n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Le flag ne tombe qu'une fois un état caché atteint. La voie « privilège »
+      évidente (`SU`) et le « canal 7 » suggéré par `STAT` sont des leurres :
+      concentrez-vous sur la commande de maintenance et sur ce qui l'arme.
+    cost: 20
+    key: h1
+  - content: >-
+      Comparez le spec au `session.log` : une commande de configuration consomme
+      UNE ligne de plus que le nombre qu'elle annonce. C'est un off-by-one sur le
+      champ de longueur -- la boucle de lecture écrit un cran trop loin, au-delà
+      des canaux documentés.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le canal de maintenance se trouve juste après les canaux documentés
+      (index 3). `n` est plafonné à 3, donc seule la valeur limite `CFG 3` fait
+      mordre l'off-by-one sur cet index : envoyez `CFG 3` puis QUATRE lignes
+      d'entrée, la 4e non nulle. Le canal s'arme et `DUMP` renvoie le flag.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
 tags:
   - misc
-  - protocol
-  - fuzzing
-  - off-by-one
-  - network
+  - medium
 
 # Prerequisite chain: none. This is a standalone challenge.
 # (If wired into a chain, prereqs are set by challenge ID at import time via a

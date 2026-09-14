@@ -30,6 +30,8 @@ description: |
   Per-team instance: each team gets its own container and its own flag, so
   nothing you find can be replayed against another team.
 
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
   Flag format: `NCTF{...}`
 
   Connect:  `http://{host}:{port}`
@@ -53,6 +55,32 @@ extra:
 flags:
   - type: team_hmac
     content: pwn-boot2root-linux
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la chaîne n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Le service réseau prend un paramètre qu'il concatène dans une commande shell
+      exécutée côté serveur, sans le nettoyer. Un `;`, un `|` ou un `$()` dans ce
+      paramètre vous donne une exécution de commande comme compte de service.
+    cost: 25
+    key: h1
+  - content: >-
+      Cherchez un binaire SUID (`find / -perm -4000 -type f 2>/dev/null`). Il
+      appelle un utilitaire par **nom relatif** (sans chemin absolu) et ne nettoie
+      pas `$PATH`. Placez un exécutable du même nom en tête de votre `$PATH` :
+      il tourne sous le compte propriétaire du SUID.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Ce nouveau compte a une règle `sudo -n` (voir `sudo -l`) sur `tar` avec un
+      `*` en fin de commande. Le joker permet d'injecter des options : GTFOBins
+      `tar --checkpoint=1 --checkpoint-action=exec=...` exécute votre commande en
+      root. Lisez `/root/flag`.
+    cost: 75
+    key: h3
+    requirements: [h2]
 
 # No handout: this is a black-box boot2root. Nothing is shipped to the player;
 # the whole challenge lives in the running container. (No `files:` on purpose --

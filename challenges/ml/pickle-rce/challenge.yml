@@ -7,20 +7,10 @@ description: |
   loaded object. The serialization format is a plain Python **pickle** -- the
   same thing `joblib`, `sklearn` and `torch.save` write under the hood.
 
-  Loading attacker-controlled pickles is the classic remote-code-execution
-  primitive (`__reduce__`). The registry knows this, so it loads inside a
-  **restricted unpickler** that refuses to import dangerous modules
-  (`os`, `subprocess`, `sys`, `builtins`, `importlib`, ...). When it refuses a
-  class it tells you exactly which module tripped the guard -- probe it to learn
-  the guard's shape. The guard is a *denylist*, and it only ever looks at the
-  classes named by GLOBAL opcodes; it does not constrain what an already-allowed
-  callable does, nor how many callables you chain on the pickle stack.
-
   There is **no downloadable flag**. This team's flag is written to a file on
   the service host (`/flag`) at container start and is never part of any normal
   response. The registry will not read it for you. The only way it comes back is
-  if the object your pickle deserializes to *is* the flag -- i.e. you executed
-  code during unpickling and made the loaded value read that file. The service
+  if the object the registry loads from your upload *is* the flag. The service
   returns `repr(loaded_object)`; it does not inspect or expect any particular
   payload shape. It verifies the effect, then hands you whatever your object is.
 
@@ -29,11 +19,13 @@ description: |
       `model`. Returns JSON with `model_summary` (a repr) or a `rejected` /
       `error` reason.
 
-  Handout: a short API note plus a benign example `.pkl` so you can see the
-  round-trip and the exact rejection-message format before you weaponize it.
+  Handout: a short API note plus a benign example `.pkl` (`example_model.pkl`)
+  so you can see the round-trip and the exact rejection-message format.
 
   Decoy: the host has a stale `/flag.decoy` placeholder from an old fixture. It
   is not a flag -- read it once and you will see. Don't submit it.
+
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -56,12 +48,38 @@ extra:
 flags:
   - type: team_hmac
     content: ml-pickle-rce
+
+# Progressive hints (chained unlock, growing cost). The exploitation technique
+# is NOT in the description -- it is paid for here.
+hints:
+  - content: >-
+      Loading a serialized object can do more than rebuild data -- a crafted
+      payload can make the *loading itself* run code. The obvious attempt is
+      refused, but the rejection message tells you exactly what tripped the
+      guard. Probe it.
+    cost: 20
+    key: h1
+  - content: >-
+      The loader runs inside a restricted unpickler with a **denylist**
+      (`os`, `subprocess`, `sys`, `builtins`, `importlib`, ... plus one-shot file
+      readers). It only checks the classes named by GLOBAL opcodes -- it does
+      **not** constrain what an already-allowed callable does, nor how many
+      callables you chain on the stack. Enumerate what survives.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      `REDUCE` invokes *any* callable already on the stack. Chain two survivors
+      -- e.g. `codecs.open("/flag")` (or `io.open`) and
+      `operator.methodcaller("read")` -- so the loaded object becomes the
+      contents of `/flag`. Hand-assemble the multi-`REDUCE` pickle at the opcode
+      level (`pickle`/`pickletools` will not emit this shape for you).
+    cost: 55
+    key: h3
+    requirements: [h2]
+
 tags:
   - ml
-  - pickle
-  - deserialization
-  - rce
-  - sandbox-escape
   - web
 
 # challenge-id (for HMAC / requirements wiring): ml-pickle-rce

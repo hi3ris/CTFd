@@ -9,25 +9,14 @@ description: |
   Connect over TCP. Each connection prints a fresh 8-bit **landing key** and
   then reads your payload into a 64-byte stack buffer with a `read()` of
   `0x200` bytes -- a clean linear overflow. There is no `system()` call you can
-  reach and no gift function: you must build a ROP chain that performs the
-  `execve` syscall and pops a shell in the live service.
+  reach and no gift function: your objective is to pop a shell in the live
+  service and read the flag.
 
-  Two things make it more than a copy-paste static ROP:
-
-    1. **No "/bin/sh".** The fully static image contains no such string, so you
-       must stage one yourself (e.g. ROP a `read` into a fixed .bss buffer,
-       then `execve` that buffer).
-
-    2. **Per-connection transform.** Before your bytes land on the stack the
-       program adds the printed landing key K to every byte, modulo 256:
-       `stack[i] = (input[i] + K) mod 256`. K is regenerated every connection,
-       so a hard-coded chain is worthless -- read K from the banner and
-       pre-image your chain live. This is why replay does nothing.
-
-  The name is a hint: modern glibc (>= 2.34) dropped the classic
-  `__libc_csu_init` "universal gadget", so this binary ships an equivalent
-  argument-marshalling gadget. Using it is the intended, clean way to set the
-  three syscall argument registers.
+  **Per-connection transform.** Before your bytes land on the stack the program
+  adds the printed landing key K to every byte, modulo 256:
+  `stack[i] = (input[i] + K) mod 256`. K is regenerated every connection, so a
+  hard-coded payload is worthless -- read K from the banner and pre-image your
+  bytes live. This is why replay does nothing.
 
   The flag is **NOT** in the binary. It exists only in the running service
   (per-team, in the process environment and a runtime-only file) and is
@@ -37,6 +26,8 @@ description: |
   under a minute (nothing calls it, and the real flag is per-team/server-issued).
 
   Provided files: `chall` (x86-64 ELF, static, not stripped), `chall.c` (source).
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Connect:  `nc <host> <port>`
 
@@ -62,6 +53,33 @@ flags:
   - type: team_hmac
     content: pwn-ret2csu-ish
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). La technique
+# n'est PAS détaillée dans la description : elle se paie ici.
+hints:
+  - content: >-
+      Pas de canari + débordement linéaire = vous contrôlez la pile de retour,
+      donc le flux via une chaîne de gadgets (ROP). Comme il n'y a pas de
+      `system()`, visez directement l'appel système `execve` : `rax=59`,
+      `rdi` = pointeur vers `"/bin/sh"`, `rsi=rdx=0`, puis `syscall`.
+    cost: 25
+    key: h1
+  - content: >-
+      Le binaire est entièrement statique et ne contient **aucune** chaîne
+      `"/bin/sh"`. Mettez-la en scène vous-même : ROP un `read()` qui écrit
+      `"/bin/sh\0"` dans une adresse `.bss` fixe (le no-PIE rend les adresses
+      stables), puis pointez `rdi` dessus.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Pour charger proprement les trois registres d'arguments, servez-vous du
+      gadget de marshalling d'arguments façon `__libc_csu_init` embarqué dans le
+      binaire (l'indice est dans le nom). N'oubliez pas de pré-imager CHAQUE octet
+      de la chaîne via la transformation de la clé K avant l'envoi.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 # Handout: the static, not-stripped binary for offline analysis plus its source.
 # The real flag is per-team and server-issued; the binary carries only a single
 # unreachable decoy NCTF{...} string (refutable in under a minute).
@@ -70,11 +88,6 @@ files:
   - chall.c
 tags:
   - pwn
-  - rop
-  - ret2csu
-  - static
-  - no-pie
-  - execve
   - hard
 
 # Prerequisite chain: none. This is a standalone challenge.

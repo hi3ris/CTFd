@@ -3,20 +3,18 @@ author: dagbanjaphet
 category: ai
 description: |
   **HelixDesk** is Nimbus Robotics' internal support assistant. Someone
-  exported one of its chat transcripts to JSON and shared it in the wrong
-  channel.
+  exported one of its chat transcripts to JSON and shared the handout
+  `transcript.json` in the wrong channel.
 
-  In the chat itself the assistant politely refuses to reveal its own system
-  prompt. But the export tool was less discreet: it serialized the *entire*
-  runtime configuration -- system prompt included -- into a metadata field of
-  the file. That leaked prompt contains an internal "audit-handoff token" the
-  assistant was told never to disclose.
-
-  The token is only lightly protected: it is the flag, reversed and then
-  base64-encoded. Recover it.
+  In the visible conversation the assistant politely refuses to reveal anything
+  sensitive. But an export is more than the words that were on screen. Somewhere
+  in that file sits an internal "audit-handoff token" the assistant was told
+  never to disclose -- and it is the flag, only lightly obfuscated. Recover it.
 
   This is Level 0 of the AI track: zero inference, no live model, no service.
   Everything you need is in the single handout `transcript.json`.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
 
   Flag format: `NCTF{...}`
 
@@ -35,10 +33,31 @@ extra:
 flags:
   - NCTF{sy5t3m_pr0mpt_r3v34l3d}
 
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la vuln n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      La conversation visible n'est pas tout : un export sérialise aussi la
+      configuration d'exécution. Regardez au-delà de `conversation.messages` —
+      fouillez les champs de métadonnées du JSON.
+    cost: 10
+    key: h1
+  - content: >-
+      Le prompt système fuité (dans `metadata.runtime_config.system_prompt`)
+      contient DEUX jetons base64. L'un est marqué DEPRECATED / ROTATED OUT :
+      ignorez-le. Prenez le jeton « current ».
+    cost: 10
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le bon jeton est du base64. Décodez-le : vous obtenez le flag écrit à
+      l'envers. Inversez la chaîne pour lire `NCTF{...}`.
+    cost: 15
+    key: h3
+    requirements: [h2]
+
 tags:
   - ai
-  - prompt-leak
-  - encoding
   - beginner
 
 files:

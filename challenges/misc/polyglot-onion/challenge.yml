@@ -31,6 +31,8 @@ description: |-
 
   Peel it all the way down. The center is waiting.
 
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
   Flag format: NCTF{...}
 
 value: 250
@@ -46,6 +48,30 @@ files:
 
 flags:
   - "NCTF{magic_byt3s_unm4sk_3v3ry_l4y3r}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant).
+hints:
+  - content: >-
+      Chaque couche est un fichier valide qui ne dit rien de la suivante : ce
+      sont la structure et les octets de signature (« magic bytes ») en tête de
+      chaque bloc qui trahissent le format. À chaque étape : identifiez,
+      extrayez, recommencez.
+    cost: 15
+    key: h1
+  - content: >-
+      L'image est un PNG complet, mais des octets continuent APRÈS le chunk
+      `IEND` : découpez cette traîne. Vous y trouverez une archive (signature
+      `PK`) dont l'unique membre est du texte encadré `<~ ... ~>` (Ascii85).
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Après l'Ascii85, suivez les magic bytes couche par couche : `1f 8b` =
+      gzip, `BZh` = bzip2, puis `ustar` (offset 257) = archive tar. Décompressez
+      dans cet ordre et extrayez le membre du tar : le flag est au centre.
+    cost: 40
+    key: h3
+    requirements: [h2]
 
 tags:
   - misc

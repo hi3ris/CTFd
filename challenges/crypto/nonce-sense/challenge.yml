@@ -15,8 +15,7 @@ description: |
   as `z = int(sha256(msg)) mod n` (secp256k1 group order `n`). Recover the
   device's **private key `d`**.
 
-  There is one obvious-looking shortcut in the capture. Be sure it actually
-  holds before you trust it.
+  Stuck? Hints are available (they cost a few points).
 
   **Flag:** compute the private key `d`, format it as a 64-character lowercase
   hex string with `"%064x" % d`, and the flag is
@@ -41,12 +40,39 @@ extra:
 flags:
   - NCTF{1b147fde539c254a8e9bc83bb0b5516d}
 
+# Progressive hints (chained unlock, increasing cost). The vulnerability detail
+# lives here, not in the description.
+hints:
+  - content: >-
+      The weakness is in the nonces k, not the messages. The broken RNG produces
+      *biased* nonces -- each k is far smaller than the group order. Many
+      signatures plus partially-known nonces is the textbook Hidden Number
+      Problem. And beware a decoy: two signatures that look like a reused nonce
+      are not -- always verify a candidate d against Q before trusting it.
+    cost: 10
+    key: h1
+  - content: >-
+      Every nonce has its most-significant byte forced to zero, i.e.
+      0 < k < 2**248. From s = k^-1 (z + r*d) mod n, write k = a + t*d mod n with
+      a = s^-1*z and t = s^-1*r; small k across many sigs is HNP, solved by
+      lattice reduction (LLL). The two signatures sharing an r are k and n-k
+      (same x-coordinate, not reuse): they are full-range, unbiased, and must be
+      dropped.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Pick a reference signature to eliminate d (d = (k0 - a0)*t0^-1), giving
+      k_i = c_i*k0 + e_i mod n. Recenter each k by 2**247 and build the Kannan
+      embedding lattice with K = 2**247, LLL-reduce, and for each short row read
+      k_i, then d = (k_i - a_i)*t_i^-1 mod n; accept the d with d*G = Q. Use ~40+
+      biased signatures for margin.
+    cost: 25
+    key: h3
+    requirements: [h2]
+
 tags:
   - crypto
-  - ecdsa
-  - lattice
-  - hnp
-  - nonce
 
 # Files handed to players. Only capture.json is distributed; the solution/
 # directory (writeup, solver, generator) is NOT shipped.

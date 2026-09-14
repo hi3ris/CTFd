@@ -8,20 +8,17 @@ description: |
 
       GET /fetch?url=https://example.com/logo.png
 
-  It refuses to fetch obvious internal/loopback targets... for some definition
-  of "obvious". The proxy runs on the app tier, which can reach an internal
-  loopback service mesh that you cannot reach directly.
+  The proxy runs on the app tier, which can reach an internal loopback service
+  mesh that you cannot reach directly. Somewhere on that mesh an internal admin
+  endpoint mints a **deploy token**. The server only hands that token to callers
+  that reach the endpoint from inside the app tier -- i.e. *through the proxy*.
+  Read what the app tier exposes about itself, get the proxy to hit the right
+  internal endpoint, and the response comes back to you.
 
-  Somewhere on that mesh an internal admin endpoint mints a **deploy token**.
-  The server only hands that token to callers that reach the endpoint from
-  inside the app tier -- i.e. *through the proxy*. Read what the app tier
-  exposes about itself, get the proxy to hit the right internal endpoint, and
-  the response comes back to you.
+  The flag is emitted only when the internal admin endpoint is actually reached
+  server-side -- it is not in any file you can download.
 
-  Note: the link-local cloud-metadata address answers, but it is a legacy
-  **mirror** -- its credentials are stale and authenticate nothing. The flag is
-  never emitted by metadata creds; it is emitted only when the internal admin
-  ping is actually reached server-side.
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -44,11 +41,37 @@ extra:
 flags:
   - type: team_hmac
     content: web-ssrf-metadata-decoy
+
+# Progressive, point-costing hints. The vuln detail lives here, not in the
+# description: it has to be paid for.
+hints:
+  - content: >-
+      `/fetch` will retrieve whatever URL you hand it, from the server's network
+      position -- reach the internal mesh through it. The obvious link-local
+      cloud target answers, but it's a deliberate dead end: its creds are stale
+      and the flag never comes from there. Look for a less obvious internal
+      service.
+    cost: 20
+    key: h1
+  - content: >-
+      Read `/robots.txt`: it names an internal registry on an odd port (9137)
+      and points at an admin endpoint that issues the token. Both are app-tier
+      only, reachable through the proxy.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The loopback blocklist only rejects the literal `127.0.0.1` / `localhost`
+      / `::1`. Use an alternate loopback encoding (`127.0.0.2`, `127.1`, decimal
+      `2130706434`, hex `0x7f000002`) to reach port 9137: fetch `/` to read the
+      registry, then `/admin/ping` to mint the flag.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
 tags:
   - web
-  - ssrf
-  - metadata
-  - cloud
+  - medium
 
 # challenge-id (for HMAC / requirements wiring): web-ssrf-metadata-decoy
 # Prerequisite chain: none. Standalone challenge.

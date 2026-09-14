@@ -27,6 +27,8 @@ description: |
   download, and reading the source alone will not give it to you. Nothing here
   requires winning a timing race; the setup is deterministic.
 
+  Stuck? Hints are available (they cost a few points).
+
   Flag format: `NCTF{...}`
 
 # Dynamic scoring (hard).
@@ -48,9 +50,38 @@ extra:
 flags:
   - type: team_hmac
     content: web-smuggle-gap
+
+# Progressive, point-costing hints. The vuln detail lives here, not in the
+# description: it has to be paid for.
+hints:
+  - content: >-
+      The edge and the internal app are two separate HTTP parsers sharing one
+      keep-alive connection, and they don't have to agree on where a request
+      ends. The edge only authorises what it can see -- so hide something it
+      can't.
+    cost: 25
+    key: h1
+  - content: >-
+      Make the two tiers disagree on body length. Send an allowed
+      `POST /submit` that carries BOTH `Transfer-Encoding: chunked` and
+      `Content-Length`: the edge sizes bodies by `Content-Length` only, while
+      the app honours chunked and ignores `Content-Length`.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Classic CL/TE desync. Body = `0\r\n\r\n` (an empty chunk -- ends the POST
+      for the app) followed by a full `GET /internal/flag HTTP/1.1\r\nHost: ...`
+      request; set `Content-Length` to the exact byte count of everything after
+      the blank line. The edge forwards it all as one body; the app parses the
+      trailing bytes as a second request and serves the flag in the second
+      response.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
 tags:
   - web
-  - http
   - hard
 
 # challenge-id (for HMAC / requirements wiring): web-smuggle-gap

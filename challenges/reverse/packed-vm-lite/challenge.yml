@@ -2,24 +2,18 @@ name: packed-vm-lite
 author: challenge-team
 category: reverse
 description: |-
-  We pulled a small license checker off an embedded device. Instead of checking
-  your serial with normal code, it ships a tiny custom bytecode program and an
-  interpreter (~30 opcodes, a register+stack machine) that runs it. The bytecode
-  is what actually validates the serial.
-
-  There is no flag string in the binary. When you enter the serial the VM
-  accepts, the program prints the flag as NCTF{ + <your serial> + }, rebuilt from
-  your input - so you must recover the exact 24-character serial the interpreter
-  accepts. grep/strings will not hand it to you.
-
-  Reverse the opcode dispatch table, understand what the loop does to each
-  serial byte (hint: a variable rotate, a per-index key, and feedback from the
-  previous byte), then invert it.
+  We pulled a small license checker, `vmcheck`, off an embedded device. When you
+  enter the serial it accepts, the program prints the flag as
+  NCTF{ + <your serial> + }, rebuilt from your input - so you must recover the
+  exact 24-character serial it accepts. There is no flag string in the binary;
+  grep/strings will not hand it to you.
 
   The serial is exactly 24 characters. Flag format: NCTF{...}
 
   The binary is a stripped x86-64 ELF; everything you need is inside the file.
   No network access required.
+
+  Stuck? Hints are available (they cost a few points).
 
 # Static downloadable reverse challenge: the artifact IS the challenge and it
 # carries the flag logic locally (explicitly allowed by the guardrails for RE).
@@ -43,11 +37,37 @@ extra:
 flags:
   - NCTF{vm_bytec0de_1s_n0t_h4rd!}
 
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The serial is not checked with normal code: the binary embeds a small
+      program and an interpreter (a register+stack machine, ~30 opcodes) that
+      runs it. Recover the opcode dispatch table first -- what each handler does
+      to the stack/registers and the program counter.
+    cost: 20
+    key: h1
+  - content: >-
+      The loop transforms each serial byte with a variable rotate, a per-index
+      key table, and feedback from the previous byte, then compares to an
+      embedded target table. Gotchas that punish skimming: jump operands are
+      ABSOLUTE program offsets, the rotate amount is taken off the stack (not an
+      immediate), and the feedback chains on the RAW serial byte (not the
+      transformed value). Two opcodes (RORV, NOT) exist but are never used.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Lift `KEY[]` and `TARGET[]` from `.rodata` and invert left-to-right, with
+      `prev` seeded to `0x5A`:
+      `amt = (i*3+1)&7; t = (TARGET[i] - prev) & 0xFF; t ^= KEY[i];
+      serial[i] = rotr8(t, amt); prev = serial[i]`.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
 tags:
   - reverse
-  - elf
-  - bytecode-vm
-  - static-analysis
 
 files:
   - vmcheck

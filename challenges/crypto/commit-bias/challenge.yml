@@ -11,18 +11,15 @@ description: |
   We captured one table's session in `ledger.coinvault`: 48 fully opened rounds,
   followed by a final **vault** round that the dealer **sealed and funded but
   never opened**. The vault's payout blob is XOR-sealed under a key derived from
-  that un-opened draw -- so if the game is truly fair, the vault is unrecoverable
-  and the sealed value is anyone's guess.
-
-  Is it, though? A commitment only binds the dealer to a draw it has already
-  chosen; it says nothing about how those draws are chosen in the first place.
-  The opened rounds are all in the ledger.
+  that un-opened draw. If the game is truly fair, the vault is unrecoverable and
+  the sealed value is anyone's guess.
 
   Recover the sealed vault draw, unseal the payout blob, and read the flag.
   `SPEC.md` documents the file format (and the exact commitment / sealing
   construction) -- everything you need to parse the ledger and to *check* a
-  candidate vault draw against its published commitment. The rest is in the
-  numbers.
+  candidate vault draw against its published commitment.
+
+  Stuck? Hints are available (they cost a few points).
 
   Flag format: `NCTF{...}`
 
@@ -42,9 +39,37 @@ extra:
 flags:
   - NCTF{c0mmit_r3v34l_but_th3_dr4ws_w3re_l1n34rly_l1nk3d}
 
+# Progressive hints (chained unlock, increasing cost). The vulnerability detail
+# lives here, not in the description.
+hints:
+  - content: >-
+      The commitments are a distraction: they only bind the dealer to draws it
+      has already chosen, not to how those draws are generated. The weakness is
+      in the draw *generation*. The 48 "independent" opened draws are not
+      independent -- once you have enough of them, the un-opened vault draw is
+      already determined.
+    cost: 15
+    key: h1
+  - content: >-
+      The draw stream is the output of a fixed order-k **linear recurrence over
+      F_p** with secret coefficients (Y_r = c_1*Y_{r-1} + ... + c_k*Y_{r-k} mod
+      p). Recover that recurrence from the opened draws -- Berlekamp-Massey over
+      F_p does it with only ~2k samples.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Run Berlekamp-Massey on the 48 opened draws to get the coefficients
+      (order 7), confirm they reproduce every opened draw, then iterate one step
+      past round 47 to get Y_vault. Verify it against the published vault
+      commitment `SHA256(Y_vault || 48)[:16]`, then key = SHA256(Y_vault_bytes),
+      generate the SHA-256 counter-mode keystream and XOR it with the CT.
+    cost: 45
+    key: h3
+    requirements: [h2]
+
 tags:
   - crypto
-  - custom-format
   - medium
 
 # Files handed to players. Only the ledger export and its parse spec are
