@@ -1,0 +1,48 @@
+name: semiprime-sweep
+author: dagbanjaphet
+category: ppc
+description: |-
+  `semiprimes.txt` starts with a `CIPHER` blob and then lists several dozen
+  integers, each the product of exactly two primes. Something about each number
+  contributes one byte of the key that unlocks the cipher.
+
+  Break the numbers down, build the key, read the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{trial_division_splits_each_semiprime}
+hints:
+  - content: >-
+      Each number is small enough that its smaller prime factor is below
+      1,000,000. Trial division up to the square root finds it immediately.
+    cost: 15
+    key: h1
+  - content: >-
+      For each line take the smaller prime factor modulo 256; that sequence of
+      bytes is the keystream.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      XOR the keystream against the CIPHER bytes (line order matches byte
+      order) to recover the flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - number-theory
+  - factorization
+  - medium
+files:
+  - semiprimes.txt
+state: visible
+version: "0.1"

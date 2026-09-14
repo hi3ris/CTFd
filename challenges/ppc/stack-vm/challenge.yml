@@ -1,0 +1,51 @@
+name: stack-vm
+author: dagbanjaphet
+category: ppc
+description: |-
+  `program.txt` is source code for a tiny made-up machine: one instruction per
+  line, a handful of opcodes, and a `.data` section. The header comment in the
+  solver is not provided -- you must infer the semantics from the opcode names
+  and structure. Execute the program faithfully; what it prints is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{tiny_stack_vm_prints_this_flag}
+hints:
+  - content: >-
+      It is a stack machine with a flat integer memory. PUSH/POP/DUP touch the
+      stack; ADD/SUB/MUL/MOD pop two operands and push the result; LOAD/STORE
+      move values to and from memory; EMIT prints one byte; JMP/JZ branch to
+      labels; HALT stops.
+    cost: 15
+    key: h1
+  - content: >-
+      Watch the operand order. STORE pops the address first, then the value.
+      LOAD pops an address and pushes memory[address]. Binary ops pop B then A
+      and push (A op B). `.data BASE v0 v1 ...` preloads memory[BASE+i] = vi.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The code is a loop over the data cells computing EMIT((data[i]*37+91) mod
+      256), so the raw data bytes are not the flag -- you must actually run the
+      arithmetic. Implement the interpreter and print its output.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - parsing
+  - virtual-machine
+  - medium
+files:
+  - program.txt
+state: visible
+version: "0.1"

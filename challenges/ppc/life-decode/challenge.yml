@@ -1,0 +1,50 @@
+name: life-decode
+author: dagbanjaphet
+category: ppc
+description: |-
+  `grid.txt` gives a board size and a step count, a `CIPHER` blob, and an
+  initial black-and-white grid. The grid evolves by a well-known local rule.
+  Evolve it exactly the stated number of steps; the final board is the key that
+  unlocks the cipher.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{conway_life_evolves_to_this_state}
+hints:
+  - content: >-
+      The rule is Conway's Game of Life: a live cell survives with 2 or 3 live
+      neighbours, a dead cell is born with exactly 3. The board is finite and
+      cells outside it count as dead.
+    cost: 22
+    key: h1
+  - content: >-
+      Step the whole board the given number of generations (header is
+      `W H GENERATIONS`), computing every cell from the previous generation
+      simultaneously.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Flatten the final board row-major into a string of '0'/'1', build a
+      SHA-256 keystream from it (append a 4-byte block counter, concatenate
+      digests), and XOR it against the CIPHER bytes.
+    cost: 68
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - simulation
+  - cellular-automaton
+  - hard
+files:
+  - grid.txt
+state: visible
+version: "0.1"

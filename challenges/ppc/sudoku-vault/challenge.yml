@@ -1,0 +1,48 @@
+name: sudoku-vault
+author: dagbanjaphet
+category: ppc
+description: |-
+  `puzzle.txt` holds a `CIPHER` blob and a 9x9 Sudoku grid (0 marks an empty
+  cell). The puzzle has exactly one valid completion, and that completed grid is
+  the key that unlocks the cipher.
+
+  Solve the puzzle, build the key, read the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{backtracking_sudoku_is_unique_here}
+hints:
+  - content: >-
+      Solve the Sudoku with backtracking. Picking the empty cell with the fewest
+      candidates each time (minimum-remaining-values) makes it finish instantly.
+    cost: 22
+    key: h1
+  - content: >-
+      The solution is unique, so any correct solver yields the same completed
+      grid. Flatten it row-major into an 81-digit string.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Take SHA-256 of that 81-digit string (re-hash to extend if needed) and XOR
+      it against the CIPHER bytes to recover the flag.
+    cost: 68
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - constraint-solving
+  - backtracking
+  - hard
+files:
+  - puzzle.txt
+state: visible
+version: "0.1"
