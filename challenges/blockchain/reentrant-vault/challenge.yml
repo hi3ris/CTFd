@@ -1,0 +1,68 @@
+name: reentrant-vault
+author: dagbanjaphet
+category: blockchain
+type: team_instance
+description: |
+  **Reentrant Vault.** *(nouvelle catégorie : blockchain / EVM)*
+
+  Une instance EVM privée par équipe. Le launcher vous donne tout ce qu'il faut
+  sur `GET /` : l'URL RPC (le JSON-RPC est **proxifié sur cette même URL** en
+  POST), le `chainId`, une **clé privée de joueur déjà financée**, et l'adresse
+  du contrat **Vault**.
+
+  Le `Vault` accepte des dépôts en ETH et laisse chacun retirer son solde — mais
+  `withdraw()` **envoie l'ETH avant de remettre le solde à zéro** : un contrat
+  qui ré-entre dans `withdraw()` depuis son `receive()` est repayé encore et
+  encore (checks-effects-interactions violé). Le vault est **abondé par les
+  dépôts d'autres utilisateurs**, donc le vider vous fait partir avec bien plus
+  que votre mise.
+
+  Objectif : **drainer le Vault jusqu'à 0**. Quand son solde on-chain atteint
+  zéro, `GET /flag` renvoie le flag de votre équipe. Le flag n'est **ni**
+  on-chain **ni** dans le RPC : c'est l'**effet** (vault vidé) qui déclenche sa
+  révélation.
+
+  Points de départ : déployez votre contrat d'attaque avec la clé fournie
+  (web3/foundry pointant sur l'URL RPC), appelez-le avec un petit dépôt, ré-entrez
+  jusqu'à vider le vault, puis `GET /flag`.
+
+  Instance par équipe : chaîne, contrat et flag isolés.
+
+  Flag format : `NCTF{...}`
+
+  Connexion : `http://{host}:{port}`  (RPC en POST · `GET /` pour les infos)
+
+# Dynamic scoring (hard).
+value: 450
+extra:
+  docker_image: ctf-reentrant-vault:latest
+  internal_port: 8080
+  initial: 450
+  decay: 20
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships. The launcher derives it from the
+# injected CHALLENGE_SECRET (flag body = CHALLENGE_SECRET[:24]; see flag.py) and
+# reveals it from /flag only when the vault is drained. team_hmac validates it.
+flags:
+  - type: team_hmac
+    content: blockchain-reentrant-vault
+
+tags:
+  - blockchain
+  - evm
+  - solidity
+  - reentrancy
+  - smart-contract
+  - hard
+
+# challenge-id (HMAC / requirements wiring): blockchain-reentrant-vault
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile here; must be named ctf-reentrant-vault:latest
+# so `deploy/local/build-images.sh` / `make push-images` pick it up. The image
+# bundles anvil (Foundry) + web3 + solc 0.8.20.

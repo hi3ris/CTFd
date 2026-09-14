@@ -1,21 +1,37 @@
 # Writeups — NCTF25
 
-Index des solutions officielles des **38 challenges** (22 servis en conteneur Docker par équipe 🐳, 16 statiques).
+Index des solutions officielles des **41 challenges** (25 servis en conteneur Docker par équipe 🐳, 16 statiques), plus les formats spéciaux (King of the Hill).
 
-Chaque challenge a un dossier `solution/` (à côté de son `challenge.yml`) contenant le **writeup** (`README.md`, parfois `solve.md`) et un **solveur automatisé** (`solve.py` ou `solve.sh`). Les liens ci-dessous sont relatifs à ce fichier.
+Chaque challenge a un dossier `solution/` (à côté de son `challenge.yml`) contenant le **writeup** (`README.md`, parfois `solve.md`) et un **solveur automatisé** (`solve.py` ou `solve.sh`). Les liens sont relatifs à ce fichier.
 
 > ⚠️ Contenu spoiler : ne pas exposer ce dossier aux participants pendant l'épreuve.
 
 ## Sommaire
 
+- **☁️ Cloud** — 1 challenges
+- **⛓️ Blockchain / EVM** — 1 challenges
 - **🌐 Web** — 5 challenges
 - **💥 Pwn** — 6 challenges
 - **🔁 Reverse** — 4 challenges
 - **🔎 Forensics** — 5 challenges
 - **🔐 Crypto** — 5 challenges
+- **🔗 Supply-chain CI/CD** — 1 challenges
 - **🤖 ML Security** — 3 challenges
 - **🧠 AI / LLM** — 5 challenges
 - **🧩 Misc** — 5 challenges
+- **👑 Formats spéciaux** — King of the Hill
+
+## ☁️ Cloud
+
+| Challenge      | Pts | Diff.  | Type      | Writeup                                            | Solveur                                          |
+| -------------- | --- | ------ | --------- | -------------------------------------------------- | ------------------------------------------------ |
+| `breach-chain` | 450 | medium | 🐳 équipe | [README.md](cloud/breach-chain/solution/README.md) | [solve.py](cloud/breach-chain/solution/solve.py) |
+
+## ⛓️ Blockchain / EVM
+
+| Challenge         | Pts | Diff. | Type      | Writeup                                                    | Solveur                                                  |
+| ----------------- | --- | ----- | --------- | ---------------------------------------------------------- | -------------------------------------------------------- |
+| `reentrant-vault` | 450 | hard  | 🐳 équipe | [README.md](blockchain/reentrant-vault/solution/README.md) | [solve.py](blockchain/reentrant-vault/solution/solve.py) |
 
 ## 🌐 Web
 
@@ -67,6 +83,12 @@ Chaque challenge a un dossier `solution/` (à côté de son `challenge.yml`) con
 | `tlv-vault`           | 350 | —      | statique  | [README.md](crypto/tlv-vault/solution/README.md)           | [solve.py](crypto/tlv-vault/solution/solve.py)           |
 | `lcg-casino`          | 500 | —      | 🐳 équipe | [README.md](crypto/lcg-casino/solution/README.md)          | [solve.py](crypto/lcg-casino/solution/solve.py)          |
 
+## 🔗 Supply-chain CI/CD
+
+| Challenge           | Pts | Diff.  | Type      | Writeup                                                       | Solveur                                                     |
+| ------------------- | --- | ------ | --------- | ------------------------------------------------------------- | ----------------------------------------------------------- |
+| `poisoned-pipeline` | 350 | medium | 🐳 équipe | [README.md](supplychain/poisoned-pipeline/solution/README.md) | [solve.py](supplychain/poisoned-pipeline/solution/solve.py) |
+
 ## 🤖 ML Security
 
 | Challenge          | Pts | Diff. | Type      | Writeup                                             | Solveur                                           |
@@ -85,12 +107,6 @@ Chaque challenge a un dossier `solution/` (à côté de son `challenge.yml`) con
 | `agent-tool-abuse`      | 500 | hard     | 🐳 équipe | [solve.md](ai/agent-tool-abuse/solution/solve.md)        | [solve.py](ai/agent-tool-abuse/solution/solve.py)      |
 | `ai3-tool-abuse`        | 500 | hard     | 🐳 équipe | [README.md](ai/ai3-tool-abuse/solution/README.md)        | [solve.py](ai/ai3-tool-abuse/solution/solve.py)        |
 
-## 👑 Formats spéciaux
-
-| Format                          | Pts               | Type       | Writeup / doc                                                                                     |
-| ------------------------------- | ----------------- | ---------- | ------------------------------------------------------------------------------------------------- |
-| King of the Hill — `The Throne` | par tick (Awards) | 🐳 partagé | [README.md](koth/throne/solution/README.md) · ops : [`deploy/koth-ops.md`](../deploy/koth-ops.md) |
-
 ## 🧩 Misc
 
 | Challenge         | Pts | Diff.  | Type      | Writeup                                              | Solveur                                            |
@@ -100,3 +116,9 @@ Chaque challenge a un dossier `solution/` (à côté de son `challenge.yml`) con
 | `Heartbeat`       | 300 | medium | statique  | [README.md](misc/timing-channel/solution/README.md)  | [solve.py](misc/timing-channel/solution/solve.py)  |
 | `proto-fuzz`      | 350 | —      | 🐳 équipe | [README.md](misc/proto-fuzz/solution/README.md)      | [solve.py](misc/proto-fuzz/solution/solve.py)      |
 | `esolang-jail`    | 400 | medium | 🐳 équipe | [README.md](misc/esolang-jail/solution/README.md)    | [solve.py](misc/esolang-jail/solution/solve.py)    |
+
+## 👑 Formats spéciaux
+
+| Format                          | Pts               | Type       | Writeup / doc                                                                                     |
+| ------------------------------- | ----------------- | ---------- | ------------------------------------------------------------------------------------------------- |
+| King of the Hill — `The Throne` | par tick (Awards) | 🐳 partagé | [README.md](koth/throne/solution/README.md) · ops : [`deploy/koth-ops.md`](../deploy/koth-ops.md) |

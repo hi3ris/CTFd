@@ -31,12 +31,14 @@ Statut légende : `[ ]` à faire · `[~]` en cours · `[x]` fait.
       host pivot, technique anti-forensics) validées par oracle. Réutilise les
       artefacts de DIGITAL-FORENSICS-CTF-LAB. Innovation ★★★ · effort moyen.
 
-- [ ] **Smart-contract / EVM** _(nouvelle catégorie)_
+- [x] **Smart-contract / EVM** — fait : `challenges/blockchain/reentrant-vault/`
+      (Vault reentrant + anvil/oracle par équipe). _(nouvelle catégorie)_
       Un `anvil` (Foundry) par équipe, bug reentrancy / logique, objectif
       « vider le vault ». Auto-contenu, très prisé, catégorie absente.
       Innovation ★★ · effort moyen.
 
-- [ ] **Supply-chain CI/CD** _(nouvelle catégorie, très moderne)_
+- [x] **Supply-chain CI/CD** — fait : `challenges/supplychain/poisoned-pipeline/`
+      (MiniCI, bypass du masquage de secret). _(nouvelle catégorie)_
       Gitea + runner par équipe : injection d'un workflow malveillant /
       empoisonnement d'un cache de build pour lire un secret. Colle au stack
       Docker/Terraform. Innovation ★★★ · effort élevé.
@@ -45,7 +47,8 @@ Statut légende : `[ ]` à faire · `[~]` en cours · `[x]` fait.
       Image portant des instructions cachées qu'un modèle de vision exécute
       (prompt-injection par canal image). Innovation ★★★ · effort moyen.
 
-- [ ] **Kill-chain réaliste multi-catégories** _(format scénario)_
+- [x] **Kill-chain réaliste multi-catégories** — fait :
+      `challenges/cloud/breach-chain/` (SSRF → IMDS → creds volés). _(scénario)_
       Chaîne `web (SSRF) → cloud (IMDS) → creds → AI (exfil via agent)`, chaque
       étape débloque la suivante via les prérequis CTFd (déjà OK en mode équipe).
       Assemble des briques déjà maîtrisées. Innovation ★★ · effort moyen.
