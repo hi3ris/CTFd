@@ -432,7 +432,8 @@ local-koth: ## [local] Active le King of the Hill : construit la colline, la lan
 	@KOTH_SCORER_SECRET="$${KOTH_SCORER_SECRET:-local-dev-koth-scorer}"; \
 	 export KOTH_SCORER_SECRET; \
 	 export KOTH_HILLS='[{"id":"koth-throne","name":"The Throne","url":"http://koth-throne:8080","player_url":"http://localhost:28900","points":5}]'; \
-	 $(LOCAL_COMPOSE) --profile koth up -d --build koth-throne; \
+	 docker build -t ctf-koth-throne:latest ../challenges/koth/throne; \
+	 $(LOCAL_COMPOSE) --profile koth up -d koth-throne; \
 	 $(LOCAL_COMPOSE) up -d ctfd; \
 	 echo; \
 	 echo "King of the Hill actif (tick=$${KOTH_TICK:-15}s)."; \
