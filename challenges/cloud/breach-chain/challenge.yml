@@ -1,0 +1,65 @@
+name: breach-chain
+author: dagbanjaphet
+category: cloud
+type: team_instance
+description: |
+  **Kékéli Cloud — breach chain.** *(nouvelle catégorie : cloud)*
+
+  Vous tombez sur le service de prévisualisation média de Kékéli Cloud :
+  `http://{host}:{port}`. Il récupère des URLs **côté serveur**. Enchaînez la
+  compromission de bout en bout, comme une vraie attaque cloud :
+
+    1. **SSRF** — l'endpoint `/fetch?url=` récupère l'URL que vous lui donnez
+       depuis l'instance applicative. Il bloque quelques littéraux internes
+       évidents, mais pas tout : atteignez le **service de métadonnées interne**
+       de la plateforme (style IMDS), qui n'est joignable que depuis l'app.
+    2. **IMDS** — lisez les **identifiants temporaires** du rôle de l'app
+       (attention : un rôle est un leurre aux creds expirés).
+    3. **Creds volés** — rejouez le `Token` du bon rôle sur l'API d'admin
+       (`GET /api/admin/secrets`, en-tête `X-App-Token`) qui renvoie le flag.
+
+  Le flag n'est renvoyé **que** par `/api/admin/secrets`, et le `Token` qui la
+  déverrouille ne s'obtient **que** par le chemin SSRF → IMDS : utiliser un
+  identifiant correctement volé **est** la condition de victoire. Rien n'est
+  téléchargeable ; tout vit dans le conteneur.
+
+  Instance par équipe : chaque équipe a son conteneur et son flag.
+
+  Flag format : `NCTF{...}`
+
+  Connexion : `http://{host}:{port}`
+
+# Dynamic scoring (medium-hard).
+value: 450
+extra:
+  docker_image: ctf-breach-chain:latest
+  internal_port: 8080
+  initial: 450
+  decay: 25
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships here. The container derives it at
+# runtime from the injected CHALLENGE_SECRET (flag body = CHALLENGE_SECRET[:24];
+# see flag.py) and returns it only from /api/admin/secrets once the stolen
+# app-role Token is presented. The team_hmac flag class validates it on submit.
+flags:
+  - type: team_hmac
+    content: cloud-breach-chain
+
+tags:
+  - cloud
+  - ssrf
+  - imds
+  - chain
+  - scenario
+  - medium
+
+# challenge-id (HMAC / requirements wiring): cloud-breach-chain
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile here; must be named ctf-breach-chain:latest
+# so `deploy/local/build-images.sh` / `make push-images` pick it up.
