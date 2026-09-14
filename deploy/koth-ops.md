@@ -12,6 +12,29 @@ Le KotH est composé de deux morceaux :
 Aucune table SQL nouvelle, aucune migration : le scoring passe par les `Awards`
 du cœur de CTFd.
 
+## Test en local (une commande)
+
+Sur une machine avec Docker, après `make local-up` (+ `make local-seed`) :
+
+```bash
+cd deploy
+make local-koth
+```
+
+Ça construit l'image de la colline, la lance (`profil koth`, exposée sur
+`http://localhost:28900`), génère un secret scorer de dev et recrée le conteneur
+CTFd avec `KOTH_HILLS` + `KOTH_SCORER_SECRET` — le plugin s'active alors
+(`KOTH_TICK=15 s` en local). Ouvre ensuite le menu **King of the Hill** dans
+CTFd, récupère le jeton de ton équipe, puis tiens le trône :
+
+```bash
+challenges/koth/throne/solution/solve.sh http://localhost:28900 <ton-jeton>
+```
+
+Le score de l'équipe doit monter d'un cran de `points` à chaque tick tant que le
+trône est tenu. `make local-down` / `make local-reset` arrêtent aussi la colline.
+Le reste de ce document décrit le déploiement **arène** (prod).
+
 ## Secrets (trois, séparés)
 
 | Secret               | Où                          | Rôle                                                         |

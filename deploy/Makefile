@@ -427,6 +427,20 @@ local-up-ai: ## [local] Idem + Ollama (CPU) + passerelle IA ; OLLAMA_MODEL=... p
 	$(LOCAL_COMPOSE) --profile ai up -d
 	@echo; echo "Le modele se telecharge en arriere-plan : make local-logs"
 
+.PHONY: local-koth
+local-koth: ## [local] Active le King of the Hill : construit la colline, la lance et branche le plugin sur CTFd
+	@KOTH_SCORER_SECRET="$${KOTH_SCORER_SECRET:-local-dev-koth-scorer}"; \
+	 export KOTH_SCORER_SECRET; \
+	 export KOTH_HILLS='[{"id":"koth-throne","name":"The Throne","url":"http://koth-throne:8080","player_url":"http://localhost:28900","points":5}]'; \
+	 $(LOCAL_COMPOSE) --profile koth up -d --build koth-throne; \
+	 $(LOCAL_COMPOSE) up -d ctfd; \
+	 echo; \
+	 echo "King of the Hill actif (tick=$${KOTH_TICK:-15}s)."; \
+	 echo "  - Colline a attaquer             : http://localhost:28900"; \
+	 echo "  - CTFd (menu 'King of the Hill')  : http://localhost:$${CTFD_PORT:-8000}"; \
+	 echo "  - Recupere ton jeton d'equipe sur la page KotH, puis tiens le trone :"; \
+	 echo "      challenges/koth/throne/solution/solve.sh http://localhost:28900 <jeton>"
+
 .PHONY: local-fix-heapnote
 local-fix-heapnote: ## [local] Recompile le binaire heap-note sur glibc 2.31 (Ubuntu 20.04) puis construit son image
 	../challenges/pwn/heap-note/rebuild-binary.sh
@@ -459,13 +473,13 @@ local-race-clear: ## [local] Retire les ecuries de demo du scoreboard
 
 .PHONY: local-logs
 local-logs: ## [local] Logs de la stack locale
-	$(LOCAL_COMPOSE) --profile ai logs -f --tail=100
+	$(LOCAL_COMPOSE) --profile ai --profile koth logs -f --tail=100
 
 .PHONY: local-down
 local-down: ## [local] Arrete la stack (base et uploads conserves)
-	$(LOCAL_COMPOSE) --profile ai down
+	$(LOCAL_COMPOSE) --profile ai --profile koth down
 
 .PHONY: local-reset
 local-reset: ## [local] Arrete ET efface tout : base, uploads, modele Ollama, instances
-	$(LOCAL_COMPOSE) --profile ai down -v
+	$(LOCAL_COMPOSE) --profile ai --profile koth down -v
 	-docker ps -aq --filter label=ctfd.instancer=1 | xargs -r docker rm -f

@@ -53,6 +53,13 @@ services:
       - AI_PROXY_URL=${AI_PROXY_URL:-http://host.docker.internal:8600}
       - INSTANCER_OLLAMA_MODEL=${OLLAMA_MODEL:-}
       - OLLAMA_URL=${OLLAMA_URL:-http://ollama:11434}
+      # --- King of the Hill (optionnel) : `make local-koth` ---------------
+      # Vides par defaut => plugin koth inactif (aucun scoring). `make local-koth`
+      # les renseigne et recree ctfd pour activer le scorer. KOTH_GLOBAL_SECRET
+      # non defini => le plugin reprend CTF_TEAM_FLAG_SECRET ci-dessus.
+      - KOTH_SCORER_SECRET=${KOTH_SCORER_SECRET:-}
+      - KOTH_HILLS=${KOTH_HILLS:-}
+      - KOTH_TICK=${KOTH_TICK:-15}
     volumes:
       - ctfd_uploads:/var/uploads
       - ctfd_logs:/var/log/CTFd
@@ -146,6 +153,21 @@ services:
     depends_on:
       - ollama
     profiles: ["ai"]
+
+  # --- King of the Hill (optionnel) : `make local-koth` -----------------------
+  # Une SEULE colline partagee que toutes les equipes attaquent. CTFd la joint en
+  # interne via http://koth-throne:8080 ; l'operateur l'attaque via localhost:28900.
+  koth-throne:
+    build:
+      context: ../../challenges/koth/throne
+    image: ctf-koth-throne:latest
+    restart: unless-stopped
+    environment:
+      - SCORER_SECRET=${KOTH_SCORER_SECRET:-local-dev-koth-scorer}
+      - SKEW=45
+    ports:
+      - "127.0.0.1:28900:8080"
+    profiles: ["koth"]
 
 volumes:
   db_data:
