@@ -1,0 +1,40 @@
+name: png-text-chunk
+author: dagbanjaphet
+category: stego
+description: |-
+  Someone shared this `sunset.png` with a suspiciously chatty set of properties.
+  The picture itself is unremarkable. Read the metadata and pull out the flag.
+
+  One of the fields is a harmless decoy. Flag format: NCTF{...}
+
+  Stuck? Hints are available (they cost a few points).
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{text_chunk_carries_secrets}
+hints:
+  - content: >-
+      A PNG can carry arbitrary textual metadata. Dump the file's text records
+      (for example with `exiftool` or by reading the chunks). There is more than
+      one; only one matters.
+    cost: 10
+    key: h1
+  - content: >-
+      The interesting field is not human-readable — it is base64. Base64-decode
+      each text value; the one that decodes to `NCTF{...}` is your flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - stego
+  - metadata
+  - png
+  - easy
+files:
+  - sunset.png
+state: visible
+version: "0.1"

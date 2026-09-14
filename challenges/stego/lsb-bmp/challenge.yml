@@ -1,0 +1,42 @@
+name: lsb-bmp
+author: dagbanjaphet
+category: stego
+description: |-
+  A friend mailed us this bitmap postcard and swears there is more to it than a
+  bland gradient. We see only colour. You download `postcard.bmp` — recover the
+  message hidden in it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{lsb_blue_channel_whispers}
+hints:
+  - content: >-
+      The pixels look almost right but not quite. Compare a pixel value to what
+      a clean gradient would give — the change is tiny and lives in one colour
+      channel.
+    cost: 10
+    key: h1
+  - content: >-
+      It is classic least-significant-bit steganography. Read the low bit of the
+      blue byte of each pixel (BMP is stored bottom-up, BGR, rows padded to 4
+      bytes), pack 8 bits per byte MSB-first, and stop at the NUL terminator.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - stego
+  - lsb
+  - bmp
+  - beginner
+files:
+  - postcard.bmp
+state: visible
+version: "0.1"
