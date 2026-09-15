@@ -86,3 +86,23 @@ Classés par note croissante (les plus urgents en tête).
 ## Conclusion
 
 Le lot est **globalement solide** (moyenne 4.13/5, 88% en keep direct, seulement 2 à retirer). Les correctifs prioritaires avant le J-1 : (a) **servir** les épreuves web dont l'exploit n'a de sens qu'en ligne, (b) **re-tiérer** les épreuves sur-cotées, (c) **documenter/standardiser** les schémas de chiffrement maison. La couverture par catégorie est large (19 catégories) et l'équilibre présélection/finale est exploitable tel quel.
+
+## Corrections appliquées (post-audit)
+
+Toutes les corrections de l'audit ont été appliquées et re-vérifiées (chaque solveur re-testé contre l'artefact livré).
+
+**2 cut (retirés) :**
+
+- `web/xxe-local` — flag livré en clair, à reconstruire en instance servie.
+- `cloud/mounted-chain` — doublon de `sysadmin/rbac-reveal`.
+
+**6 re-tiérages (scoring aligné sur l'effort réel) :** `cloud/imds-ssrf`, `forensics/icmp-beacon`, `mobile/native-xor`, `osint/ct-log-pivot`, `web/jwt-forge`, `web/flask-unsign` → easy.
+
+**16 reseals / documentations / régénérations :**
+
+- Anti-triche (flag rendu non-`grep`-able, technique redevenue nécessaire) : `forensics/png-magic-fix` (zTXt compressé), `forensics/zip-carve` (membre DEFLATE), `forensics/sqlite-wal` (token base64+XOR, ->medium), `osint/entity-graph` (flag dérivé par HMAC du chemin BFS, ->easy), `web/sqlite-union` / `web/ssti-jinja` / `web/mass-assignment` (scellés — technique porteuse hors-ligne), `sysadmin/mask-slip` (fuite hex, ->beginner), `sysadmin/rotate-root` (token dérivé, non livré, ->medium), `cloud/sub-wildcard` (5 tokens, politique porteuse, ->easy), `supplychain/lockfile-integrity-drift` (flag XOR après le membre gzip), `crypto/ecb-echo` (map de candidats retirée, vraie attaque byte-à-byte, ->medium).
+- Solvabilité / crypto standardisée : `osint/cred-reuse` (conteneur openssl AES-256-CBC), `osint/device-backup-geo` (convention de clé embarquée dans le backup), `sysadmin/state-secret` (script `encrypt.py` documenté livré), `sysadmin/vault-reuse` (vrai `$ANSIBLE_VAULT` AES256).
+
+**1 laissé (choix opérationnel) :** `ai/agent-tool-abuse` — quasi-doublon de `ai3-tool-abuse` ; les deux sont valides (servis), l'organisateur en programme un seul par manche. Pas un défaut de code.
+
+**État final : 203 challenges** (205 − 2 cut), tous solvables et re-vérifiés.

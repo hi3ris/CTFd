@@ -1,6 +1,6 @@
 # Index des writeups — NCTF
 
-**205 challenges** répartis sur **19 catégories**. Chaque challenge servi/statique a son writeup dans son dossier `solution/`.
+**203 challenges** répartis sur **19 catégories**. Chaque challenge servi/statique a son writeup dans son dossier `solution/`.
 
 > Les collines King-of-the-Hill (`challenges/koth/`) sont scorées par le plugin `koth` (Awards) et ne figurent pas dans ce tableau jeopardy ; voir `deploy/koth-ops.md`.
 
@@ -36,18 +36,17 @@
 | `reentrant-vault` | 450 | team_instance | [writeup](blockchain/reentrant-vault/solution/) | Reentrant Vault. (nouvelle catégorie : blockchain / EVM)             |
 | `replay-signer`   | 450 | dynamic       | [writeup](blockchain/replay-signer/solution/)   | You captured two withdrawal requests signed by the same treasury key |
 
-## cloud (9)
+## cloud (8)
 
 | challenge         | pts | type          | writeup                                    | résumé                                                                      |
 | ----------------- | --- | ------------- | ------------------------------------------ | --------------------------------------------------------------------------- |
 | `breach-chain`    | 450 | team_instance | [writeup](cloud/breach-chain/solution/)    | Kékéli Cloud. Le service de prévisualisation média de Kékéli Cloud tourne   |
 | `gcp-token-scope` | 300 | dynamic       | [writeup](cloud/gcp-token-scope/solution/) | A leaked GCP service-account key (sa-key.json) for a CI helper, the project |
-| `imds-ssrf`       | 300 | dynamic       | [writeup](cloud/imds-ssrf/solution/)       | A proxy capture of an SSRF exploit against an EC2-hosted preview service    |
+| `imds-ssrf`       | 150 | dynamic       | [writeup](cloud/imds-ssrf/solution/)       | A proxy capture of an SSRF exploit against an EC2-hosted preview service    |
 | `leaky-prefix`    | 100 | dynamic       | [writeup](cloud/leaky-prefix/solution/)    | A snapshot of the kekeli-media-prod S3 bucket: its live bucket policy       |
-| `mounted-chain`   | 150 | dynamic       | [writeup](cloud/mounted-chain/solution/)   | A dump of the kekeli Kubernetes namespace: a ServiceAccount, a Role, a      |
 | `passrole-ladder` | 450 | dynamic       | [writeup](cloud/passrole-ladder/solution/) | An IAM dump from an AWS account: users (iam-users.json), roles              |
 | `sas-forge`       | 450 | dynamic       | [writeup](cloud/sas-forge/solution/)       | An Azure Storage account key leaked into a backup (leaked-account-key.txt), |
-| `sub-wildcard`    | 300 | dynamic       | [writeup](cloud/sub-wildcard/solution/)    | The ci-deployer IAM role trusts GitHub Actions via OIDC. You have its trust |
+| `sub-wildcard`    | 150 | dynamic       | [writeup](cloud/sub-wildcard/solution/)    | The ci-deployer IAM role trusts GitHub Actions via OIDC. You have its trust |
 | `trail-of-keys`   | 300 | dynamic       | [writeup](cloud/trail-of-keys/solution/)   | A CloudTrail export (cloudtrail.json) from one busy hour on the             |
 
 ## crypto (13)
@@ -56,7 +55,7 @@
 | --------------------- | --- | ------------- | ----------------------------------------------- | ----------------------------------------------------------------------------- |
 | `affine-relay`        | 100 | dynamic       | [writeup](crypto/affine-relay/solution/)        | We intercepted a single scrambled memo, cipher.txt. The courier ran every     |
 | `commit-bias`         | 300 | dynamic       | [writeup](crypto/commit-bias/solution/)         | The CoinVault table runs a "provably fair" coin-flip game. Every round the    |
-| `ecb-echo`            | 450 | dynamic       | [writeup](crypto/ecb-echo/solution/)            | We tapped a device that encrypts data for us on request and logged everything |
+| `ecb-echo`            | 300 | dynamic       | [writeup](crypto/ecb-echo/solution/)            | We tapped a device that encrypts data for us on request and logged everything |
 | `fermat-twins`        | 150 | dynamic       | [writeup](crypto/fermat-twins/solution/)        | A 1024-bit RSA public key pubkey.pem and a hex ciphertext ciphertext.txt.     |
 | `glue-and-extend`     | 450 | dynamic       | [writeup](crypto/glue-and-extend/solution/)     | A gateway seals payloads under a key derived from a shared secret and the     |
 | `keystream-reuse`     | 300 | dynamic       | [writeup](crypto/keystream-reuse/solution/)     | messages.txt holds 25 intercepted ciphertexts, one hex string per line. They  |
@@ -80,10 +79,10 @@
 | `auth-timeline`    | 150 | dynamic | [writeup](forensics/auth-timeline/solution/)    | A public-facing server was compromised overnight. All we salvaged before the   |
 | `gzip-tar-nest`    | 150 | dynamic | [writeup](forensics/gzip-tar-nest/solution/)    | A "parcel" (parcel.tar.gz) was intercepted leaving the network. It looks       |
 | `http-body-exfil`  | 300 | dynamic | [writeup](forensics/http-body-exfil/solution/)  | A workstation kept "phoning home" to a metrics endpoint that our asset         |
-| `icmp-beacon`      | 300 | dynamic | [writeup](forensics/icmp-beacon/solution/)      | During an incident, an analyst noticed a host on the network that "just would  |
+| `icmp-beacon`      | 150 | dynamic | [writeup](forensics/icmp-beacon/solution/)      | During an incident, an analyst noticed a host on the network that "just would  |
 | `mem-struct`       | 300 | dynamic | [writeup](forensics/mem-struct/solution/)       | We captured a raw memory dump (memdump.bin) from a process that was holding a  |
 | `png-magic-fix`    | 100 | dynamic | [writeup](forensics/png-magic-fix/solution/)    | A screenshot was pulled from a suspect's machine, but the file (evidence.png)  |
-| `sqlite-wal`       | 450 | dynamic | [writeup](forensics/sqlite-wal/solution/)       | We seized an application's SQLite database (app.db) plus its sidecar file      |
+| `sqlite-wal`       | 300 | dynamic | [writeup](forensics/sqlite-wal/solution/)       | We seized an application's SQLite database (app.db) plus its sidecar file      |
 | `zip-carve`        | 150 | dynamic | [writeup](forensics/zip-carve/solution/)        | We recovered a ZIP archive (archive.zip) from a departing employee's USB       |
 
 ## hardware (8)
@@ -139,7 +138,7 @@
 | -------------------- | --- | ------- | ---------------------------------------------- | ---------------------------------------------------------------------------- |
 | `deeplink-guard`     | 300 | dynamic | [writeup](mobile/deeplink-guard/solution/)     | VaultApp.ipa registers a custom URL scheme and unlocks a "grant" screen only |
 | `keystore-alias`     | 450 | dynamic | [writeup](mobile/keystore-alias/solution/)     | entvault.apk ships a custom keystore blob (assets/vault.keystore) holding    |
-| `native-xor`         | 450 | dynamic | [writeup](mobile/native-xor/solution/)         | nativegame.apk validates its flag in a bundled native library. We recovered  |
+| `native-xor`         | 150 | dynamic | [writeup](mobile/native-xor/solution/)         | nativegame.apk validates its flag in a bundled native library. We recovered  |
 | `obfuscated-strings` | 150 | dynamic | [writeup](mobile/obfuscated-strings/solution/) | app.apk from the StashBox app builds a license string at runtime instead of  |
 | `prefs-vault`        | 300 | dynamic | [writeup](mobile/prefs-vault/solution/)        | A backup of the QuickNotes app includes its SharedPreferences and the        |
 | `root-gate`          | 150 | dynamic | [writeup](mobile/root-gate/solution/)          | securebank.apk refuses to show its unlock code on rooted devices. We do not  |
@@ -165,10 +164,10 @@
 | challenge            | pts | type    | writeup                                       | résumé                                                                        |
 | -------------------- | --- | ------- | --------------------------------------------- | ----------------------------------------------------------------------------- |
 | `cred-reuse`         | 300 | dynamic | [writeup](osint/cred-reuse/solution/)         | Un forum communautaire togolais a été piraté et sa base de comptes            |
-| `ct-log-pivot`       | 450 | dynamic | [writeup](osint/ct-log-pivot/solution/)       | Reconnaissance sur le domaine cert.tg. On vous remet la zone DNS publique     |
+| `ct-log-pivot`       | 150 | dynamic | [writeup](osint/ct-log-pivot/solution/)       | Reconnaissance sur le domaine cert.tg. On vous remet la zone DNS publique     |
 | `device-backup-geo`  | 450 | dynamic | [writeup](osint/device-backup-geo/solution/)  | Saisie d'un téléphone : la sauvegarde exportée contient plusieurs bases       |
 | `doc-metadata`       | 150 | dynamic | [writeup](osint/doc-metadata/solution/)       | Six communiqués « officiels » (.docx) ont fuité. Ils sont tous signés         |
-| `entity-graph`       | 300 | dynamic | [writeup](osint/entity-graph/solution/)       | Le CERT.tg a exporté son graphe d'enquête sur la fuite de données de la       |
+| `entity-graph`       | 150 | dynamic | [writeup](osint/entity-graph/solution/)       | Le CERT.tg a exporté son graphe d'enquête sur la fuite de données de la       |
 | `exif-triangulation` | 300 | dynamic | [writeup](osint/exif-triangulation/solution/) | Quatre guetteurs ont photographié la même cible depuis des points différents. |
 | `social-export`      | 150 | dynamic | [writeup](osint/social-export/solution/)      | Deux exports de comptes ont été saisis chez un suspect : un export Telegram   |
 | `wayback-diff`       | 300 | dynamic | [writeup](osint/wayback-diff/solution/)       | Voici cinq captures archivées de la page d'accueil d'un portail, prises à des |
@@ -257,9 +256,9 @@
 | -------------- | --- | ------- | ------------------------------------------ | --------------------------------------------------------------------------- |
 | `alias-slip`   | 150 | dynamic | [writeup](sysadmin/alias-slip/solution/)   | A snapshot of a small nginx-served site: the site config nginx.conf and the |
 | `env-forge`    | 300 | dynamic | [writeup](sysadmin/env-forge/solution/)    | A developer pushed a deploy bundle for an internal API to a public repo:    |
-| `mask-slip`    | 300 | dynamic | [writeup](sysadmin/mask-slip/solution/)    | A CI pipeline (.github/workflows/deploy.yml) and one of its job logs        |
+| `mask-slip`    | 100 | dynamic | [writeup](sysadmin/mask-slip/solution/)    | A CI pipeline (.github/workflows/deploy.yml) and one of its job logs        |
 | `rbac-reveal`  | 100 | dynamic | [writeup](sysadmin/rbac-reveal/solution/)  | A Kubernetes manifest bundle: an RBAC Role/RoleBinding (rbac.yaml), a       |
-| `rotate-root`  | 450 | dynamic | [writeup](sysadmin/rotate-root/solution/)  | An ops bundle from a host (mirrored under fs/): a cron job, a logrotate     |
+| `rotate-root`  | 200 | dynamic | [writeup](sysadmin/rotate-root/solution/)  | An ops bundle from a host (mirrored under fs/): a cron job, a logrotate     |
 | `state-secret` | 450 | dynamic | [writeup](sysadmin/state-secret/solution/) | A committed Terraform bundle: the config (main.tf), its state file          |
 | `unit-eval`    | 300 | dynamic | [writeup](sysadmin/unit-eval/solution/)    | A snapshot of a systemd-driven report job: a template unit                  |
 | `vault-reuse`  | 450 | dynamic | [writeup](sysadmin/vault-reuse/solution/)  | An Ansible project snapshot: ansible.cfg, inventory.ini, group_vars/        |
@@ -285,15 +284,15 @@
 | `vigenere-known-key` | 50  | dynamic | [writeup](warmup/vigenere-known-key/solution/) | cipher.txt was enciphered with a Vigenere cipher. The key is not a    |
 | `zip-comment`        | 50  | dynamic | [writeup](warmup/zip-comment/solution/)        | archive.zip unzips to a single, unhelpful text file. The flag is not  |
 
-## web (14)
+## web (13)
 
 | challenge                    | pts | type          | writeup                                             | résumé                                                                        |
 | ---------------------------- | --- | ------------- | --------------------------------------------------- | ----------------------------------------------------------------------------- |
-| `flask-unsign`               | 300 | dynamic       | [writeup](web/flask-unsign/solution/)               | A small Members Panel ships as source, along with a session cookie            |
+| `flask-unsign`               | 150 | dynamic       | [writeup](web/flask-unsign/solution/)               | A small Members Panel ships as source, along with a session cookie            |
 | `graphql-introspection-maze` | 500 | team_instance | [writeup](web/graphql-introspection-maze/solution/) | Atlas Ops exposes a single GraphQL endpoint at POST /graphql                  |
 | `jwt-cousin`                 | 150 | team_instance | [writeup](web/jwt-cousin/solution/)                 | "It's basically a JWT," said no one who read the code.                        |
-| `jwt-forge`                  | 450 | dynamic       | [writeup](web/jwt-forge/solution/)                  | You have the full source of an internal Ops Console plus a leaked config      |
-| `mass-assignment`            | 300 | dynamic       | [writeup](web/mass-assignment/solution/)            | A profile service ships as source, plus the user store and a captured request |
+| `jwt-forge`                  | 150 | dynamic       | [writeup](web/jwt-forge/solution/)                  | You have the full source of an internal Ops Console plus a leaked config      |
+| `mass-assignment`            | 150 | dynamic       | [writeup](web/mass-assignment/solution/)            | A profile service ships as source, plus the user store and a captured request |
 | `path-traversal-archive`     | 150 | dynamic       | [writeup](web/path-traversal-archive/solution/)     | An "Asset CDN" serves files from its public web root. You get the handler     |
 | `php-unserialize`            | 300 | dynamic       | [writeup](web/php-unserialize/solution/)            | A legacy PHP portal ships as source, along with a session cookie captured     |
 | `race-the-coupon`            | 400 | team_instance | [writeup](web/race-the-coupon/solution/)            | NimbusPay store wallet exposes a small JSON API. Every account starts         |
@@ -302,4 +301,3 @@
 | `sqlite-union`               | 150 | dynamic       | [writeup](web/sqlite-union/solution/)               | A souvenir shop exposes a product search API. You get the handler source and  |
 | `ssrf-metadata-decoy`        | 350 | team_instance | [writeup](web/ssrf-metadata-decoy/solution/)        | imgproxy is a company image-fetch proxy: give it a URL and it fetches the     |
 | `ssti-jinja`                 | 300 | dynamic       | [writeup](web/ssti-jinja/solution/)                 | A greeting-card service ships as source, with a captured normal request. It   |
-| `xxe-local`                  | 300 | dynamic       | [writeup](web/xxe-local/solution/)                  | An invoice-ingest endpoint parses uploaded XML. You get the parser source, a  |
