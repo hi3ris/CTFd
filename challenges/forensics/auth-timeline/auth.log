@@ -1,0 +1,102 @@
+Mar 11 09:31:33 web01 sshd[6520]: Failed password for invalid user root from 85.242.94.226 port 50173 ssh2
+Mar 11 09:32:16 web01 sshd[17038]: Failed password for postgres from 111.64.18.133 port 46542 ssh2
+Mar 11 09:32:57 web01 sshd[4017]: Failed password for root from 38.12.87.4 port 48987 ssh2
+Mar 11 09:34:18 web01 sshd[15905]: Failed password for postgres from 108.140.199.40 port 43203 ssh2
+Mar 11 09:35:34 web01 sshd[1943]: Failed password for invalid user test from 84.235.250.61 port 30195 ssh2
+Mar 11 09:35:42 web01 sshd[7489]: Failed password for root from 168.84.40.189 port 46358 ssh2
+Mar 11 09:37:41 web01 sshd[20373]: Failed password for deploy from 71.121.221.122 port 33928 ssh2
+Mar 11 09:37:38 web01 sshd[5234]: Failed password for deploy from 51.29.175.63 port 45233 ssh2
+Mar 11 09:39:52 web01 sshd[26659]: Failed password for invalid user root from 49.33.70.169 port 48229 ssh2
+Mar 11 09:39:40 web01 sshd[13631]: Failed password for invalid user deploy from 83.233.26.59 port 51389 ssh2
+Mar 11 09:39:41 web01 sshd[16773]: Failed password for admin from 170.5.200.204 port 32992 ssh2
+Mar 11 09:41:13 web01 sshd[17022]: Failed password for git from 52.184.201.2 port 45456 ssh2
+Mar 11 09:41:21 web01 sshd[19088]: Failed password for invalid user oracle from 147.177.170.232 port 30919 ssh2
+Mar 11 09:43:00 web01 sshd[6917]: Failed password for invalid user root from 81.173.175.63 port 58576 ssh2
+Mar 11 09:45:11 web01 sshd[23674]: Failed password for invalid user admin from 169.239.4.156 port 38934 ssh2
+Mar 11 09:47:23 web01 sshd[18763]: Failed password for invalid user ubuntu from 185.41.21.201 port 45410 ssh2
+Mar 11 09:49:38 web01 sshd[13016]: Failed password for invalid user oracle from 208.11.67.34 port 36449 ssh2
+Mar 11 09:50:11 web01 sshd[22667]: Failed password for invalid user ubuntu from 125.84.141.222 port 45905 ssh2
+Mar 11 09:52:20 web01 sshd[29082]: Failed password for oracle from 23.254.178.10 port 30060 ssh2
+Mar 11 09:54:13 web01 sshd[19237]: Failed password for invalid user git from 165.52.230.188 port 36245 ssh2
+Mar 11 09:56:35 web01 sshd[19962]: Failed password for invalid user deploy from 102.188.155.180 port 48871 ssh2
+Mar 11 09:57:15 web01 sshd[19228]: Failed password for admin from 112.233.253.186 port 44235 ssh2
+Mar 11 09:58:00 web01 sshd[19097]: Failed password for postgres from 146.170.166.126 port 33103 ssh2
+Mar 11 09:59:21 web01 sshd[14513]: Failed password for invalid user postgres from 49.213.202.17 port 54379 ssh2
+Mar 11 10:00:42 web01 sshd[17478]: Failed password for oracle from 196.154.198.195 port 34114 ssh2
+Mar 11 10:02:10 web01 sshd[10909]: Failed password for oracle from 105.11.241.19 port 43047 ssh2
+Mar 11 10:02:43 web01 sshd[6069]: Failed password for invalid user admin from 84.104.171.27 port 36490 ssh2
+Mar 11 10:04:33 web01 sshd[24240]: Failed password for ubuntu from 166.3.69.222 port 48981 ssh2
+Mar 11 10:05:44 web01 sshd[14366]: Failed password for oracle from 162.226.227.187 port 34864 ssh2
+Mar 11 10:06:46 web01 sshd[26628]: Failed password for deploy from 84.69.80.118 port 56084 ssh2
+Mar 11 10:07:38 web01 sshd[5501]: Failed password for invalid user admin from 37.180.76.31 port 31705 ssh2
+Mar 11 10:09:23 web01 sshd[16099]: Failed password for deploy from 149.215.251.227 port 37993 ssh2
+Mar 11 10:09:24 web01 sshd[11638]: Failed password for invalid user postgres from 201.154.246.27 port 45988 ssh2
+Mar 11 10:10:31 web01 sshd[12181]: Failed password for oracle from 11.245.35.148 port 54674 ssh2
+Mar 11 10:11:43 web01 sshd[27907]: Failed password for invalid user deploy from 24.55.16.147 port 54168 ssh2
+Mar 11 10:12:51 web01 sshd[3669]: Failed password for invalid user root from 92.204.161.3 port 59805 ssh2
+Mar 11 10:14:33 web01 sshd[16816]: Failed password for ubuntu from 149.215.242.146 port 46478 ssh2
+Mar 11 10:15:00 web01 sshd[18764]: Failed password for root from 110.196.107.244 port 32056 ssh2
+Mar 11 10:17:19 web01 sshd[26707]: Failed password for test from 25.52.225.147 port 53088 ssh2
+Mar 11 10:19:21 web01 sshd[13135]: Failed password for invalid user git from 37.49.60.89 port 39929 ssh2
+Mar 11 10:21:18 web01 sshd[29687]: Accepted publickey for deploy from 74.158.217.42 port 47065 ssh2
+Mar 11 10:22:31 web01 audit[29687]: USER_CMD uid=0 cmd="echo c3lzdGVtY3RsIHJlc3RhcnQgbmdpbng= | base64 -d"
+Mar 11 10:23:59 web01 sshd[5938]: Accepted publickey for ubuntu from 13.64.210.51 port 41907 ssh2
+Mar 11 10:24:05 web01 audit[5938]: USER_CMD uid=0 cmd="echo dGFpbCAtbiAyMDAgL3Zhci9sb2cvc3lzbG9n | base64 -d"
+Mar 11 10:25:48 web01 sshd[2487]: Accepted publickey for git from 106.55.98.139 port 38303 ssh2
+Mar 11 10:26:11 web01 audit[2487]: USER_CMD uid=0 cmd="echo Z2l0IHB1bGwgLS1mZi1vbmx5IG9yaWdpbiBtYWlu | base64 -d"
+Mar 11 10:28:36 web01 sshd[11183]: Failed password for root from 203.0.113.45 port 40656 ssh2
+Mar 11 10:28:20 web01 sshd[19622]: Failed password for admin from 203.0.113.45 port 40906 ssh2
+Mar 11 10:29:23 web01 sshd[17098]: Failed password for admin from 203.0.113.45 port 40721 ssh2
+Mar 11 10:29:44 web01 sshd[18261]: Failed password for admin from 203.0.113.45 port 40344 ssh2
+Mar 11 10:30:05 web01 sshd[6821]: Failed password for root from 203.0.113.45 port 40385 ssh2
+Mar 11 10:31:16 web01 sshd[11856]: Failed password for admin from 203.0.113.45 port 40505 ssh2
+Mar 11 10:32:35 web01 sshd[4393]: Failed password for admin from 203.0.113.45 port 40109 ssh2
+Mar 11 10:33:14 web01 sshd[27047]: Failed password for root from 203.0.113.45 port 40843 ssh2
+Mar 11 10:34:22 web01 sshd[20789]: Failed password for admin from 203.0.113.45 port 40356 ssh2
+Mar 11 10:35:34 web01 sshd[9499]: Failed password for root from 203.0.113.45 port 40578 ssh2
+Mar 11 10:35:25 web01 sshd[20668]: Failed password for root from 203.0.113.45 port 40079 ssh2
+Mar 11 10:35:59 web01 sshd[18136]: Failed password for root from 203.0.113.45 port 40683 ssh2
+Mar 11 10:36:34 web01 sshd[28007]: Failed password for root from 203.0.113.45 port 40201 ssh2
+Mar 11 10:37:08 web01 sshd[8815]: Failed password for root from 203.0.113.45 port 40175 ssh2
+Mar 11 10:38:20 web01 sshd[2334]: Failed password for root from 203.0.113.45 port 40055 ssh2
+Mar 11 10:39:23 web01 sshd[19159]: Failed password for root from 203.0.113.45 port 40218 ssh2
+Mar 11 10:40:31 web01 sshd[14264]: Failed password for root from 203.0.113.45 port 40847 ssh2
+Mar 11 10:41:55 web01 sshd[28199]: Failed password for root from 203.0.113.45 port 40363 ssh2
+Mar 11 10:42:44 web01 sshd[1559]: Failed password for root from 203.0.113.45 port 40845 ssh2
+Mar 11 10:42:40 web01 sshd[1722]: Failed password for root from 203.0.113.45 port 40593 ssh2
+Mar 11 10:42:25 web01 sshd[20737]: Failed password for admin from 203.0.113.45 port 40629 ssh2
+Mar 11 10:42:42 web01 sshd[27814]: Failed password for root from 203.0.113.45 port 40991 ssh2
+Mar 11 10:42:19 web01 sshd[3297]: Failed password for admin from 203.0.113.45 port 40312 ssh2
+Mar 11 10:42:29 web01 sshd[3757]: Failed password for root from 203.0.113.45 port 40132 ssh2
+Mar 11 10:42:29 web01 sshd[22957]: Failed password for root from 203.0.113.45 port 40844 ssh2
+Mar 11 10:43:49 web01 sshd[13301]: Failed password for root from 203.0.113.45 port 40437 ssh2
+Mar 11 10:43:47 web01 sshd[12301]: Failed password for root from 203.0.113.45 port 40503 ssh2
+Mar 11 10:43:52 web01 sshd[11581]: Failed password for admin from 203.0.113.45 port 40331 ssh2
+Mar 11 10:44:42 web01 sshd[25605]: Accepted password for root from 203.0.113.45 port 41200 ssh2
+Mar 11 10:45:22 web01 sshd[25605]: pam_unix(sshd:session): session opened for user root by (uid=0)
+Mar 11 10:46:10 web01 audit[25605]: USER_CMD uid=0 cmd="echo ZmxhZz1OQ1RGe2JydXQzZjByYzNfdGgzbl9zdWNjM3NzXzBuX3IwMHR9 | base64 -d > /root/.ok"
+Mar 11 10:46:22 web01 sshd[27096]: Failed password for invalid user root from 172.12.112.143 port 35996 ssh2
+Mar 11 10:46:35 web01 sshd[26248]: Failed password for invalid user postgres from 74.236.234.228 port 49946 ssh2
+Mar 11 10:48:30 web01 sshd[13257]: Failed password for invalid user postgres from 153.232.61.179 port 33679 ssh2
+Mar 11 10:48:14 web01 sshd[17064]: Failed password for invalid user root from 164.153.30.189 port 32011 ssh2
+Mar 11 10:49:47 web01 sshd[5224]: Failed password for invalid user admin from 100.188.22.207 port 30399 ssh2
+Mar 11 10:50:34 web01 sshd[27912]: Failed password for invalid user postgres from 151.47.98.142 port 47296 ssh2
+Mar 11 10:52:38 web01 sshd[25812]: Failed password for git from 88.250.161.159 port 42072 ssh2
+Mar 11 10:54:10 web01 sshd[22336]: Failed password for postgres from 139.10.215.217 port 48223 ssh2
+Mar 11 10:55:24 web01 sshd[29924]: Failed password for postgres from 55.145.163.145 port 35806 ssh2
+Mar 11 10:56:13 web01 sshd[22703]: Failed password for invalid user oracle from 51.162.90.106 port 31424 ssh2
+Mar 11 10:58:09 web01 sshd[18367]: Failed password for admin from 100.30.232.44 port 58838 ssh2
+Mar 11 11:00:04 web01 sshd[5097]: Failed password for invalid user deploy from 192.110.117.128 port 59004 ssh2
+Mar 11 11:01:35 web01 sshd[18494]: Failed password for git from 147.66.234.43 port 41771 ssh2
+Mar 11 11:01:35 web01 sshd[1711]: Failed password for invalid user ubuntu from 91.78.106.125 port 43720 ssh2
+Mar 11 11:02:06 web01 sshd[23206]: Failed password for test from 98.244.138.112 port 41567 ssh2
+Mar 11 11:04:13 web01 sshd[10686]: Failed password for oracle from 70.74.70.80 port 40051 ssh2
+Mar 11 11:06:39 web01 sshd[28968]: Failed password for invalid user deploy from 179.15.200.95 port 55187 ssh2
+Mar 11 11:07:12 web01 sshd[29445]: Failed password for ubuntu from 206.108.111.140 port 40109 ssh2
+Mar 11 11:07:24 web01 sshd[7866]: Failed password for invalid user ubuntu from 126.117.109.36 port 48079 ssh2
+Mar 11 11:09:13 web01 sshd[17368]: Failed password for invalid user git from 148.196.233.118 port 55418 ssh2
+Mar 11 11:10:47 web01 sshd[9654]: Failed password for invalid user ubuntu from 46.253.17.122 port 45655 ssh2
+Mar 11 11:10:25 web01 sshd[3804]: Failed password for invalid user test from 23.209.21.130 port 32056 ssh2
+Mar 11 11:12:31 web01 sshd[2440]: Failed password for admin from 50.42.31.62 port 58708 ssh2
+Mar 11 11:12:23 web01 sshd[22505]: Failed password for git from 135.227.152.157 port 57081 ssh2
+Mar 11 11:12:29 web01 sshd[8919]: Failed password for git from 207.57.191.193 port 53544 ssh2

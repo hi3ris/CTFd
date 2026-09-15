@@ -95,9 +95,13 @@ deploy/front/.env
 deploy/.env
 challenges/**/.build.log
 
-# Challenge handouts are deliverables, whatever their extension (*.so, *.log
-# above would otherwise silently drop them from the repo and break both the
-# Docker build and the ctfcli import on a fresh clone).
-!challenges/**/handout/**
-# ...but never bytecode caches inside them.
-challenges/**/handout/**/__pycache__/
+# Challenge artifacts are deliverables wherever they live in the challenge
+# directory (they sit at the challenge root, not only under handout/). The
+# global *.log/*.db/*.zip/*.py[cod]/*.so/... ignores above would otherwise
+# silently drop them from the repo and break the ctfcli import + Docker build
+# on a fresh clone.
+!challenges/**
+# ...but never caches, build logs, or temp files inside challenges.
+challenges/**/__pycache__/
+challenges/**/.build.log
+challenges/**/_tmp_*
