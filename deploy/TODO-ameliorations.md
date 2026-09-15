@@ -220,15 +220,16 @@ regardera.
       `CTFd/themes/admin/vite.config.js` (chemin déterministe du plugin, son défaut depuis
       la v26) + bundles admin reconstruits (5 builds locaux identiques ; pages admin,
       CodeMirror, modales Bootstrap et echarts vérifiés avec Playwright).
-      _Reste : constater 3 pushs verts d'affilée._
+      _3 pushs verts d'affilée constatés le 15/09._
 - [x] 🤖 **`tests/users/test_challenges.py::test_challenge_kpm_limit_no_freeze`** (fait :
       toute la rafale + la soumission finale sous un seul `freeze_time`, 5 runs verts) :
       `assert "…59 seconds" == "…60 seconds"` — course entre l'horloge du rate-limit et
       celle du test. Correctif minimal et honnête : figer l'horloge (`freezegun`, déjà
       utilisé dans ce fichier) autour de la soumission, **pas** une assertion tolérante ;
       garder le test, ne jamais le `skip`.
-- [ ] 🤖 Retirer les deux mentions « flake documenté » du commentaire de PR #1 une fois
-      3 runs verts d'affilée.
+- [x] 🤖 Retirer les deux mentions « flake documenté » du commentaire de PR #1 une fois
+      3 runs verts d'affilée — fait le 15/09 : Theme Verification verte sur `9456e73`,
+      `4e5bb78`, `3328c9c` ; commentaire de clôture posté sur la PR avec la cause réelle.
 
 **Définition de « fait ».** 3 pushs consécutifs entièrement verts sur les 8 jobs, sans
 re-run manuel.
