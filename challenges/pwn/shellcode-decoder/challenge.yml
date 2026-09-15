@@ -1,0 +1,51 @@
+name: shellcode-decoder
+author: dagbanjaphet
+category: pwn
+description: |-
+  You are given a single x86-64 Linux binary, `chall`. It prints a couple of
+  addresses, then reads bytes from you and runs them directly. There is an
+  encoded flag inside the process, but XORing the file on disk will not reveal
+  it.
+
+  Make the program hand you the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{rwx_shellcode_decoded_the_section}
+hints:
+  - content: >-
+      The buffer your input is read into is executable, and the program jumps to
+      it. You get to run arbitrary machine code.
+    cost: 15
+    key: h1
+  - content: >-
+      The flag bytes are masked with a random value each run, and the matching
+      decode byte lives in a global that is only set at runtime — so you cannot
+      just XOR the file. You must read that global from inside the process.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Write shellcode that reads `dkey` and the `enc` array (fixed no-PIE
+      addresses, also printed by the program), XORs each byte, and writes the
+      result to stdout with the write syscall.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - pwn
+  - shellcode
+  - rwx
+  - medium
+files:
+  - chall
+state: visible
+version: "0.1"

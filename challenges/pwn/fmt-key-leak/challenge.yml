@@ -1,0 +1,49 @@
+name: fmt-key-leak
+author: dagbanjaphet
+category: pwn
+description: |-
+  You are given a single x86-64 Linux binary, `chall`. It echoes a line you type
+  and then challenges you to prove you saw a secret value that changes every run.
+  Guess wrong and it just says "nope".
+
+  Recover the secret and read what the program prints when you get it right.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{format_leak_stack_key_recovered}
+hints:
+  - content: >-
+      Pay attention to how the program echoes your first line. What happens if
+      your input contains percent signs?
+    cost: 15
+    key: h1
+  - content: >-
+      Your line is handed straight to printf as the format string. Use `%p` /
+      `%lx` conversions to dump stack slots; the per-run secret is one of them.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Scan with `%N$lx` to locate the 64-bit cookie (offset 25 on the shipped
+      build), then type it back in decimal at the verification prompt. Do the
+      leak and the reply in the same run — the value is randomised each time.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - pwn
+  - format-string
+  - info-leak
+  - medium
+files:
+  - chall
+state: visible
+version: "0.1"
