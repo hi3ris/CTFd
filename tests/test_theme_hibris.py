@@ -172,3 +172,37 @@ def test_scoreboard_race_keeps_the_table_and_announces_for_screen_readers():
         ):
             assert needle in html, needle
     destroy_ctfd(app)
+
+
+def test_register_has_reglement_checkbox_and_university_dropdown():
+    """Inscription : case « j'accepte le règlement » obligatoire liée à /tos, et
+    le champ user « Université » rendu en liste déroulante (socle + Autre / N/A),
+    pas en champ libre."""
+    from CTFd.models import UserFields
+
+    app = create_ctfd(enable_plugins=True, setup=False)
+    app = setup_ctfd(app, user_mode="teams", ctf_theme="hibris", ctf_name="NCTF26")
+    with app.app_context():
+        from CTFd.models import db
+
+        db.session.add(
+            UserFields(
+                name="Université",
+                field_type="text",
+                description="Ton établissement",
+                required=True,
+                public=True,
+                editable=True,
+            )
+        )
+        db.session.commit()
+        with app.test_client() as c:
+            html = c.get("/register").get_data(as_text=True)
+        # ToS: a required checkbox linking to the règlement page
+        assert 'id="accept-reglement"' in html and "required" in html
+        assert 'href="/tos"' in html and "règlement" in html
+        # Université: a select (not a bare text input) with the list + catch-all
+        assert '<select name="fields[' in html
+        assert "Université de Lomé (UL)" in html
+        assert "Autre / N/A" in html
+    destroy_ctfd(app)

@@ -12,7 +12,18 @@
                 {% endif %}
             {% endif %}
 
-            {{ field(class="form-control") }}
+            {% if "universit" in (field.label.text | default("") | lower) %}
+                {# Champ « Université » : liste déroulante (options dans
+                   components/universites_options.html), pas un champ libre. #}
+                <select name="{{ field.name }}" id="{{ field.id }}" class="form-control"
+                        {% if field.flags.required %}required{% endif %}>
+                    <option value="">— choisir votre université —</option>
+                    {% set _uni_selected = field.data %}
+                    {% include "components/universites_options.html" %}
+                </select>
+            {% else %}
+                {{ field(class="form-control") }}
+            {% endif %}
 
             {% if show_descriptions %}
                 {% if field.description %}

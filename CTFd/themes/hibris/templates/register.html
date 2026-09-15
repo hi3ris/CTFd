@@ -51,23 +51,25 @@
 
 				{{ render_extra_fields(form.extra) }}
 
+				<div class="form-group pt-3">
+					<div class="form-check">
+						<input class="form-check-input" type="checkbox" id="accept-reglement" name="accept_reglement" required>
+						<label class="form-check-label" for="accept-reglement">
+							J'ai lu et j'accepte le
+							<a href="{{ request.script_root }}/tos" rel="noopener" target="_blank"><b>règlement</b></a>
+							de NCTF26.
+						</label>
+					</div>
+					<small class="form-text text-muted">
+						La case doit être cochée pour créer votre compte.
+					</small>
+				</div>
+
 				<div class="row pt-3">
 					<div class="col-md-12">
 						{{ form.submit(class="btn btn-md btn-primary btn-outlined float-right") }}
 					</div>
 				</div>
-
-				{% if Configs.tos_or_privacy %}
-				<div class="row pt-3">
-					<div class="col-md-12 text-center">
-						<small class="text-muted text-center">
-							By registering, you agree to the
-							<a href="{{ Configs.privacy_link }}" rel="noopener" target="_blank">privacy policy</a>
-							and <a href="{{ Configs.tos_link }}" rel="noopener" target="_blank">terms of service</a>
-						</small>
-					</div>
-				</div>
-				{% endif %}
 			</form>
 			{% endwith %}
 		</div>

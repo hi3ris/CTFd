@@ -239,6 +239,29 @@ def install_challenges(url, token, only, already):
     return ok, ko, skip
 
 
+def ensure_university_field(s, url):
+    """Champ user 'Université' (requis) affiché à l'inscription. Le thème hibris
+    le rend en liste déroulante (components/universites_options.html). Idempotent."""
+    fields = s.get(url + "/api/v1/configs/fields?type=user").json().get("data", [])
+    if any("universit" in (f.get("name") or "").lower() for f in fields):
+        log("   champ 'Université' déjà présent")
+        return
+    r = s.post(
+        url + "/api/v1/configs/fields",
+        json={
+            "type": "user",
+            "field_type": "text",
+            "name": "Université",
+            "description": "Votre établissement d'enseignement supérieur (ou « Autre / N/A »).",
+            "required": True,
+            "public": True,
+            "editable": True,
+        },
+    )
+    r.raise_for_status()
+    log("   champ 'Université' créé (requis, liste déroulante à l'inscription)")
+
+
 def ensure_player(s, url):
     users = {
         u["name"]: u for u in s.get(url + "/api/v1/users?view=admin").json()["data"]
@@ -290,6 +313,8 @@ def main():
     log(">> config")
     set_configs(s, url)
     set_home(s, url)
+    log(">> champ inscription")
+    ensure_university_field(s, url)
     log(">> equipe de test")
     ensure_player(s, url)
     if a.no_challenges:

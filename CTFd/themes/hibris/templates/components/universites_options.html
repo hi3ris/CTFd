@@ -1,0 +1,31 @@
+{#
+  Liste déroulante « Université » de l'inscription NCTF26.
+
+  À REMPLACER par la liste officielle des établissements d'enseignement
+  supérieur du Togo (edusup.gouv.tg, rentrée 2025-2026). Le PDF officiel fourni
+  est un scan (aucune couche texte), non extractible automatiquement — la liste
+  ci-dessous est un socle partiel à compléter à la main.
+
+  Règles : une entrée par ligne dans UNIVERSITES ; garder « Autre / N/A » en
+  dernier. C'est le SEUL endroit à éditer ; après modification, redémarrer CTFd
+  (c'est un template, aucun rebuild d'assets nécessaire).
+
+  La variable `_uni_selected` (valeur actuelle) est fournie par le formulaire.
+#}
+{% set UNIVERSITES = [
+  "Université de Lomé (UL)",
+  "Université de Kara (UK)",
+  "Institut Africain d'Informatique (IAI-Togo)",
+  "École Nationale d'Administration (ENA)",
+  "ESGIS — École Supérieure de Gestion, d'Informatique et des Sciences",
+  "UCAO-UUT — Université Catholique de l'Afrique de l'Ouest (Togo)",
+  "Université BK (BK University)",
+  "ESA — École Supérieure des Affaires",
+  "IPNET Institute",
+  "ISICA",
+  "HETEC",
+  "Autre / N/A"
+] %}
+{% for u in UNIVERSITES %}
+<option value="{{ u }}"{% if _uni_selected == u %} selected{% endif %}>{{ u }}</option>
+{% endfor %}
