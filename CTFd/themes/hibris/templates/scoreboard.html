@@ -16,6 +16,14 @@
 		<button type="button" class="rsw-btn" data-view="table" role="tab" aria-selected="false">Table</button>
 	</div>
 
+	<!-- Bandeau « scores gelés » : affiché par le script quand on dépasse l'instant
+	     de freeze (le classement public est figé jusqu'à la fin). -->
+	<div id="sb-frozen" class="sb-frozen" role="status" hidden>
+		<span class="ice" aria-hidden="true">❄</span> Scores <b>gelés</b> — le classement
+		public est figé jusqu'à la fin de l'épreuve. Continuez à jouer, chaque flag
+		compte&nbsp;!
+	</div>
+
 	<!-- La piste (remplie par le script plus bas). Cachée tant que le JS n'a pas
 	     confirmé qu'il a des données : sans JS, on voit directement la table. -->
 	<div id="race" class="race" hidden aria-hidden="true"></div>
@@ -218,6 +226,17 @@
 	padding:2.5rem 1rem; }
 .race .yourcar { position:absolute; left:0; right:0; }
 
+/* Bandeau « scores gelés » (ice-blue, aligné sur .rc-clock.frozen) */
+.sb-frozen {
+	display:flex; align-items:center; gap:.55rem; flex-wrap:wrap;
+	margin:.2rem 0 1rem; padding:.7rem 1rem; border-radius:8px;
+	font-family:'JetBrains Mono',monospace; font-size:.86rem; color:#dbe7ff;
+	background:linear-gradient(90deg, rgba(127,178,255,.14), rgba(127,178,255,.05));
+	border:1px solid #3a5b8f; box-shadow:0 0 18px rgba(127,178,255,.10);
+}
+.sb-frozen b { color:#fff; }
+.sb-frozen .ice { color:#7fb2ff; font-size:1.05rem; }
+
 /* Mode vidéoprojecteur : /scoreboard?big=1 */
 .race.big { --lane-h:74px; }
 .race.big .car { width:88px; height:56px; }
@@ -253,6 +272,9 @@ body.bigmode #race { margin-top:1rem; }
 	var URLROOT = (window.init && init.urlRoot) || "";
 	var START = window.init && init.start ? Number(init.start) * 1000 : null;
 	var END   = window.init && init.end   ? Number(init.end)   * 1000 : null;
+	var FREEZE = window.init && init.freeze ? Number(init.freeze) * 1000 : null;
+	var frozenBanner = document.getElementById("sb-frozen");
+	function isFrozen(now){ return !!(FREEZE && now >= FREEZE); }
 	var TOPN = 12;
 	var POLL_MS = 12000;
 	var big = /[?&]big=1/.test(location.search);
@@ -308,7 +330,7 @@ body.bigmode #race { margin-top:1rem; }
 
 	function renderClock(now){
 		var ph = phase(now);
-		clockEl.className = "rc-clock" + (ph==="live"?" live":ph==="done"?" done":"");
+		clockEl.className = "rc-clock" + (ph==="live"?" live":ph==="done"?" done":"") + (isFrozen(now)?" frozen":"");
 		if (ph==="pre"){ clockEl.innerHTML = "DÉPART DANS <b>"+fmt(START-now)+"</b>"; }
 		else if (ph==="live"){ clockEl.innerHTML = END ? "TEMPS RESTANT <b>"+fmt(END-now)+"</b>" : "EN COURSE"; }
 		else { clockEl.innerHTML = "ARRIVÉE — course terminée"; }
@@ -413,7 +435,11 @@ body.bigmode #race { margin-top:1rem; }
 		setTimeout(function(){ box.remove(); }, 5000);
 	}
 
-	function tick(){ renderClock(Date.now()); }
+	function tick(){
+		var now = Date.now();
+		renderClock(now);
+		if (frozenBanner) frozenBanner.hidden = !isFrozen(now);
+	}
 
 	function refresh(){
 		fetch(URLROOT + "/api/v1/scoreboard", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
