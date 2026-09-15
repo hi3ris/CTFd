@@ -174,7 +174,12 @@ def announce_once():
             ANNOUNCED_KEY, {s["challenge_id"]: s["solve_id"] for s in fresh}, timeout=0
         )
         return []
-    new = [s for s in fresh if s["challenge_id"] not in seen]
+    # A challenge is "new" when its first solve is not the one we announced:
+    # never seen, or the announced solve was deleted since (a cheater removed
+    # by an admin, the load-test accounts purged) and another team now owns
+    # the first blood. Comparing solve ids instead of challenge membership
+    # keeps the announcement honest after such deletions.
+    new = [s for s in fresh if seen.get(s["challenge_id"]) != s["solve_id"]]
     if not new:
         return []
     bonus = bonus_points()

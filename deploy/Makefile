@@ -434,7 +434,7 @@ LOCAL_PY     ?= $(if $(wildcard local/.venv/bin/python),local/.venv/bin/python,p
 .PHONY: local-venv
 local-venv: ## [local] Cree local/.venv avec ctfcli + requests (Kali/Debian : pip systeme verrouille)
 	python3 -m venv local/.venv
-	local/.venv/bin/pip install -q --upgrade pip ctfcli requests
+	local/.venv/bin/pip install -q --upgrade pip ctfcli requests pyyaml cmarkgfm
 	@echo "OK : les cibles local-* utilisent desormais local/.venv automatiquement"
 
 # Les images sont construites avec `docker build` (pas `compose build`) : ce
@@ -498,6 +498,43 @@ PREFLIGHT_ARGS = --env-stdin --phase $(PHASE) --expect-challenges $(EXPECT) --ex
 local-preflight: ## [local] Check-list de prod sur la stack locale (attendu : FAIL sur les secrets de dev)
 	$(LOCAL_COMPOSE) exec -T ctfd printenv | \
 	  CTFD_URL=http://localhost:$${CTFD_PORT:-8000} $(LOCAL_PY) scripts/preflight.py $(PREFLIGHT_ARGS)
+
+# --- Test de charge (k6) : voir loadtest/README.md --------------------------
+# Un seul binaire : k6 (K6=/chemin/k6 si hors du PATH). Comptes de charge
+# lt-0001.. crees par loadtest/seed.py, JAMAIS sur la base de l'epreuve (le
+# seed refuse une plateforme qui porte deja des equipes reelles).
+K6       ?= k6
+VUS      ?= 300
+LT_DIR    = loadtest
+LT_ARGS   = -e ACCOUNTS=$(LT_DIR)/out/accounts.json -e OUT=$(LT_DIR)/out --summary-trend-stats="avg,p(95),max,count"
+
+.PHONY: loadtest
+loadtest: ## Test de charge sur le front de repetition : URL=https://... VUS=300 (5 min montee, 15 min plateau)
+	@test -n "$(URL)" || { echo "URL manquante (ex: URL=https://ctf.exemple.tg)"; exit 2; }
+	@command -v $(K6) >/dev/null || { echo "k6 introuvable : https://grafana.com/docs/k6/latest/set-up/install/ (ou K6=/chemin/k6)"; exit 2; }
+	$(LOCAL_PY) $(LT_DIR)/seed.py --url $(URL) --teams $$(( $(VUS) + 3 )) --allow-remote
+	$(K6) run $(LT_ARGS) -e URL=$(URL) -e VUS=$(VUS) $(LT_DIR)/scenarios.js
+	@echo "Rapport : $(LT_DIR)/out/scenarios-summary.html  ->  noter le run dans infra-audit.md, puis make loadtest-purge + restore"
+
+.PHONY: loadtest-instancer
+loadtest-instancer: ## Instancier sous charge sur le front de repetition : URL=... VUS=50 (10 min)
+	@test -n "$(URL)" || { echo "URL manquante"; exit 2; }
+	@test -f $(LT_DIR)/out/accounts.json || $(LOCAL_PY) $(LT_DIR)/seed.py --url $(URL) --teams $$(( $(VUS) + 3 )) --allow-remote
+	$(K6) run $(LT_ARGS) -e URL=$(URL) -e VUS=$${IVUS:-50} $(LT_DIR)/instancer.js
+
+.PHONY: loadtest-purge
+loadtest-purge: ## Supprime les equipes de charge lt-* (URL=...) et recalcule les valeurs dynamiques ; puis make restore
+	@test -n "$(URL)" || { echo "URL manquante"; exit 2; }
+	$(LOCAL_PY) $(LT_DIR)/seed.py --url $(URL) --purge --allow-remote
+	@echo "Restaurer maintenant le dump pris AVANT le test : make restore FILE=backups/..."
+
+.PHONY: local-loadtest
+local-loadtest: ## [local] Smoke du test de charge sur la stack locale : 100 VU, 20 s + 40 s + 10 s
+	@command -v $(K6) >/dev/null || { echo "k6 introuvable : https://grafana.com/docs/k6/latest/set-up/install/ (ou K6=/chemin/k6)"; exit 2; }
+	$(LOCAL_PY) $(LT_DIR)/seed.py --url http://localhost:$${CTFD_PORT:-8000} --teams $$(( $${VUS:-100} + 3 ))
+	$(K6) run $(LT_ARGS) -e URL=http://localhost:$${CTFD_PORT:-8000} -e SMOKE=1 -e VUS=$${VUS:-100} $(LT_DIR)/scenarios.js
+	-$(K6) run $(LT_ARGS) -e URL=http://localhost:$${CTFD_PORT:-8000} -e SMOKE=1 -e VUS=3 $(LT_DIR)/instancer.js
+	@echo "Rapports : $(LT_DIR)/out/*-summary.html   (purge : $(LOCAL_PY) $(LT_DIR)/seed.py --purge)"
 
 .PHONY: local-playtest
 local-playtest: ## [local] Spawn -> solveur -> soumission, pour chaque challenge (ARGS="--only web/jwt-cousin")

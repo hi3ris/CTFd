@@ -122,7 +122,9 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 
 ### Test de charge (300) 🤖
 
-- [ ] Basculer temporairement `make phase-preselection`, lancer un test de charge (login + scoreboard + recalcul scoring) à **300 connexions** → relever le point de rupture, ajuster `WORKERS`/taille d'instance. Puis `make phase-setup` (ou `season-down`) pour ne pas payer.
+- [ ] Basculer temporairement `make phase-preselection`, puis, **avant de poser les fenêtres** (`/attempt` et `/spawn` répondent 403 hors `start`/`end`) : `make backup`, puis `make loadtest URL=https://…` (300 équipes `lt-*` simulées : login, challenges, 1 flag juste + 3 faux / 20 s, scoreboard 12 s, KotH 10 s ; 5 min de montée, 15 min de plateau) et `make loadtest-instancer URL=…` (50 équipes / 10 min). Verdict VERT/ROUGE en fin de run, rapport `deploy/loadtest/out/*-summary.html` (seuils : p95 < 800 ms, 0 % de 5xx, flags justes 100 %, 429 observé). Outil : `deploy/loadtest/README.md`.
+- [ ] Avec les chiffres : figer `WORKERS`, la taille du front (ROADMAP « Savings Plan / taille du front ») et `POLL_MS` du scoreboard si le front souffre ; noter le run dans `infra-audit.md` (section « Test de charge »).
+- [ ] Après le test : `make loadtest-purge URL=…` puis **`make restore FILE=…`** du dump pris avant (les solves de charge ont fait décroître les valeurs dynamiques et pris les first bloods). Puis `make phase-setup` (ou `season-down`) pour ne pas payer.
 
 ### Répétition générale 🧑🤖
 
@@ -310,15 +312,16 @@ make season-down            # si pas déjà détruit
 
 ## Annexe — carte des commandes
 
-| Commande                                                  | Rôle                                                |
-| --------------------------------------------------------- | --------------------------------------------------- |
-| `make init` / `make state-bootstrap`                      | init Terraform / état distant S3+DynamoDB           |
-| `make check-gpu-quota`                                    | quota GPU (à lancer **maintenant**)                 |
-| `make phase-setup / -preselection / -final / season-down` | leviers de coût                                     |
-| `make wait-front / wait-arena`                            | attente provisionnement                             |
-| `make deploy / tls-init / link`                           | déploiement CTFd / HTTPS / liaison front↔arena↔IA |
-| `make check-arena / push-images`                          | images de challenge sur l'arena                     |
-| `make backup / restore FILE=... / archive`                | sauvegarde vérifiée / restauration / archive S3     |
-| `make logs / gpu / cost`                                  | supervision                                         |
-| `make ssh-front / ssh-arena / ssh-ai`                     | shells                                              |
-| `make destroy`                                            | détruit l'EC2 (le bucket d'archives survit)         |
+| Commande                                                      | Rôle                                                              |
+| ------------------------------------------------------------- | ----------------------------------------------------------------- |
+| `make init` / `make state-bootstrap`                          | init Terraform / état distant S3+DynamoDB                         |
+| `make check-gpu-quota`                                        | quota GPU (à lancer **maintenant**)                               |
+| `make phase-setup / -preselection / -final / season-down`     | leviers de coût                                                   |
+| `make wait-front / wait-arena`                                | attente provisionnement                                           |
+| `make deploy / tls-init / link`                               | déploiement CTFd / HTTPS / liaison front↔arena↔IA               |
+| `make check-arena / push-images`                              | images de challenge sur l'arena                                   |
+| `make backup / restore FILE=... / archive`                    | sauvegarde vérifiée / restauration / archive S3                   |
+| `make loadtest URL=... / loadtest-instancer / loadtest-purge` | test de charge k6 (300 équipes simulées) / instancier / nettoyage |
+| `make logs / gpu / cost`                                      | supervision                                                       |
+| `make ssh-front / ssh-arena / ssh-ai`                         | shells                                                            |
+| `make destroy`                                                | détruit l'EC2 (le bucket d'archives survit)                       |

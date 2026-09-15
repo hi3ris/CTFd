@@ -15,7 +15,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 | 1   | Détecteur de partage de flags ✅         | 🔴 haute | S      | présélection (23/10) | —         |
 | 2   | `make preflight` (check-list de prod) ✅ | 🔴 haute | S      | J-7 (16/10)          | —         |
 | 5   | Réparer les 2 flakes CI ✅               | 🟠 moy.  | S      | dès maintenant       | —         |
-| 3   | Test de charge à 300 (outil k6)          | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
+| 3   | Test de charge à 300 (outil k6) ✅ outil | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
 | 4   | Sauvegardes automatiques ✅ + répétition | 🟠 moy.  | S      | J-7 (16/10)          | —         |
 | 6   | First bloods (notif + ticker) ✅         | 🟡 spect | M      | finale (29/10)       | —         |
 | 7   | Tableau de bord ops ✅                   | 🟡 spect | M      | finale (29/10)       | 3, 6      |
@@ -113,7 +113,7 @@ _Reste : la passe sur la vraie stack locale (Docker) — vérifié ici contre un
 
 ---
 
-## 3. Test de charge à 300 (outil) 🔴 — prévu au Lot 5, pas encore construit
+## 3. Test de charge à 300 (outil) 🔴 — outil construit, run de répétition à faire
 
 **Pourquoi.** `ROADMAP.md` (Lot 5) et `RUNBOOK.md §2` prévoient « test de charge à
 300 connexions » mais l'outil n'existe pas. On découvre les limites **avant** le
@@ -121,26 +121,40 @@ vendredi 00 h 00, pas pendant.
 
 **Périmètre.** `deploy/loadtest/` (k6, un seul binaire, scripts JS versionnés).
 
-- [ ] 🤖 `scenarios.js` — un VU = une équipe : login → liste des challenges → ouverture
-      de 5 challenges → 3 soumissions fausses (rate-limit attendu) → 1 juste → scoreboard
-      toutes les 12 s → `/plugins/koth/api/state` toutes les 10 s. Montée 0 → 300 VU sur
-      5 min, plateau 15 min, descente.
-- [ ] 🤖 `instancer.js` — 50 équipes spawnent/killent une instance servie en 10 min
-      (borne réaliste : 26 servis, pas tous en même temps).
-- [ ] 🤖 Seuils : `p95 < 800 ms` sur challenges/scoreboard, `0 %` d'erreurs 5xx,
-      soumissions correctes = 100 % acceptées.
-- [ ] 🤖 Cibles Make : `local-loadtest` (stack locale, 100 VU, smoke) et `loadtest`
-      (`URL=…`, 300 VU, la vraie). Comptes de charge créés/purgés par un seed dédié
-      (`--loadtest-teams 300`), jamais sur la base réelle de l'épreuve.
-- [ ] 🤖 Rapport : HTML k6 + tableau des 5 endpoints les plus lents ; note dans
-      `deploy/infra-audit.md`.
+- [x] 🤖 `scenarios.js` — un VU = une équipe : login → liste des challenges → ouverture
+      de 5 challenges → 1 flag **juste puis** 3 faux (sur d'autres challenges) → scoreboard
+      toutes les 12 s → `/plugins/koth/api/state` toutes les 10 s, boucle de 20 s. Montée
+      0 → 300 VU sur 5 min, plateau 15 min, descente 1 min. _Écart assumé_ : le juste part
+      avant les faux et la boucle fait 20 s, parce que CTFd refuse **toute** soumission
+      (429) dès 10 échecs dans la minute glissante — à « 3 faux / 12 s » les flags justes
+      seraient rejetés par construction. Le rate-limit est exercé par un scénario
+      `spammer` dédié (3 VU) qui doit recevoir un 429 (seuil `ratelimit_seen`).
+- [x] 🤖 `instancer.js` — 50 équipes spawnent/killent une instance servie en 10 min
+      (démarrage étalé au hasard, attente `running` ≤ 90 s, tenue 45 s, `destroy`).
+- [x] 🤖 Seuils : `p95 < 800 ms` sur challenges/scoreboard, `0 %` d'erreurs 5xx,
+      soumissions correctes = 100 % acceptées, + `login_ok`, `ratelimit_seen`, et un run
+      sans requête n'est jamais VERT ; instancier : `spawn` ≥ 95 %, `running` en p95 < 60 s.
+- [x] 🤖 Cibles Make : `local-loadtest` (stack locale, 100 VU, smoke), `loadtest`
+      (`URL=…`, 300 VU, la vraie), `loadtest-instancer`, `loadtest-purge`. Comptes
+      `lt-0001…` créés/purgés par `deploy/loadtest/seed.py --teams N` / `--purge`, qui
+      **refuse** une URL non locale sans `--allow-remote`, une plateforme portant > 20
+      équipes réelles (= l'épreuve) et un `start` dans le futur (403 sur `/attempt`).
+      Le purge recalcule les valeurs dynamiques ; le plugin firstblood compare désormais
+      les ids de solve, donc un first blood pris par la charge puis purgé est rejoué au
+      vrai premier solve. Restaurer le dump d'avant test reste la voie propre (RUNBOOK §2).
+- [x] 🤖 Rapport : `out/*-summary.html` + JSON, verdict VERT/ROUGE, endpoints triés par
+      p95 (les 5 plus lents en rouge), sans import réseau ; section « Test de charge »
+      à remplir dans `deploy/infra-audit.md`.
 - [ ] 🧑 **Ce qu'on règle avec les chiffres** : nb de workers gunicorn, pool DB, taille du
       front (cf. ROADMAP « Décider Savings Plan / taille du front »), `POLL_MS` du
       scoreboard si le front souffre.
 
 **Définition de « fait ».** Un run à 300 VU sur le front de répétition avec tous les
 seuils verts, rapport archivé, et la taille d'instance du front **figée** à partir de ce
-résultat.
+résultat. _Exécuté ici_ : fumée des deux scripts à 5 VU contre un serveur de test
+(login, 100 % des flags justes acceptés, 429 reçu par `spammer`, rapport généré, purge
+vérifiée) — **pas** un chiffre de capacité ; `instancer.js` n'a pu que constater
+l'instancier inactif (ROUGE attendu sans arena). Le run à 300 reste à faire au Lot 5.
 
 ---
 

@@ -156,3 +156,26 @@ def test_recent_feed_reads_solves_not_the_loop():
         assert [d["challenge"] for d in j["data"]] == ["osint-1"]
         assert j["data"][0]["account_id"] == a["id"]
     destroy_ctfd(app)
+
+
+def test_deleted_first_solve_hands_the_blood_to_the_next_team(monkeypatch):
+    """Purged load-test accounts (or a removed cheater): the announced solve
+    disappears, so the next first solve must be announced, not swallowed."""
+    monkeypatch.delenv("FIRSTBLOOD_BONUS", raising=False)
+    app = _app()
+    with app.app_context():
+        from CTFd.models import Solves, db
+
+        a, b, _ = _teams(db)
+        c1 = gen_challenge(db, name="heap-note", category="pwn").id
+        _seed()
+        s1 = gen_solve(db, a["user"], a["id"], c1)
+        assert [p["name"] for p in fb.announce_once()] == ["alpha"]
+        Solves.query.filter_by(id=s1.id).delete()
+        db.session.commit()
+        assert fb.announce_once() == []  # nobody solved it any more: silence
+        gen_solve(db, b["user"], b["id"], c1)
+        assert [p["name"] for p in fb.announce_once()] == ["bravo"]
+        assert Notifications.query.count() == 2
+        assert fb.announce_once() == []
+    destroy_ctfd(app)

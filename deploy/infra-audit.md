@@ -23,3 +23,18 @@ Convention : ✅ corrigé dans ce commit · 🕓 différé (documenté).
 | 12  | minor       | `Makefile` (link)                                     | Jeton frp + mot de passe admin passés sur l'argv de `sudo` → journalisés en clair dans auth.log de l'arène.                                                      | 🕓 **différé** : le correctif (secrets via stdin) touche la recette `link` = « Risque #1 » frpc, non testable hors infra live. À appliquer **et tester** à la répétition (Lot 5). Impact réel faible : nécessite déjà root sur l'arène pour lire auth.log. |
 
 **Non confirmés / faux positifs** : le premier passage a aussi soulevé des pistes réfutées à la vérification (réseau/SG jugé conforme : aucun port ouvert à tort, Ollama reste front-only ; IMDSv2 et IAM lecture-seule OK). Zéro finding « incertain » restant.
+
+## Test de charge (chantier 3) — à remplir après le run sur le front de répétition
+
+Outil : `deploy/loadtest/` (k6, `make loadtest URL=… VUS=300`, voir son README).
+Chaque run laisse `deploy/loadtest/out/scenarios-summary.html` ; reporter ici les
+chiffres qui **décident** de la taille du front et de `WORKERS`.
+
+| Date | Front (type, `WORKERS`) | VUs | req/s | p95 challenges | p95 scoreboard | 5xx | flags justes | 429 vus | Verdict | Décision |
+| ---- | ----------------------- | --- | ----- | -------------- | -------------- | --- | ------------ | ------- | ------- | -------- |
+| _—_  | _t4g.medium, 4_         | 300 | _—_   | _—_            | _—_            | _—_ | _—_          | _—_     | _—_     | _—_      |
+
+Le seul run exécuté à ce jour est la **fumée** des scripts (5 VU contre un serveur
+de test SQLite mono-processus, 15 septembre) : elle prouve le déroulé (login, 100 %
+des flags justes acceptés, 429 reçu par le scénario `spammer`, rapport généré),
+**pas** la capacité. Aucun chiffre de cette fumée ne doit servir au dimensionnement.
