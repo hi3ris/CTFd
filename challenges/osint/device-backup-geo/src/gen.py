@@ -1,7 +1,8 @@
 """Generate a phone "device backup" made of SQLite databases.
 
 Artifacts (under backup/):
-  * messages.sqlite  sms table + an encrypted self-note (notes table)
+  * messages.sqlite  sms table, an encrypted self-note (notes table), and an
+                     app_config table documenting how that note is locked
   * location.sqlite  GPS fix history (ts epoch, lat, lon, accuracy)
   * celltower.sqlite  serving-cell log (corroborating flavour)
   * photos.sqlite    geotagged photos (one is a decoy in another town)
@@ -56,6 +57,7 @@ def build_messages() -> None:
     con.executescript(
         "CREATE TABLE sms(ts INTEGER, sender TEXT, body TEXT);"
         "CREATE TABLE notes(id INTEGER PRIMARY KEY, cipher BLOB);"
+        "CREATE TABLE app_config(key TEXT, value TEXT);"
     )
     sms = [
         (RDV_TS - 86400, "+22890114477", "salut, on se voit demain?"),
@@ -68,6 +70,24 @@ def build_messages() -> None:
         (RDV_TS + 7200, "+22890114477", "c'etait bien. efface la note."),
     ]
     con.executemany("INSERT INTO sms VALUES (?,?,?)", sms)
+
+    # The note-taking app records HOW the secure note is locked. This makes the
+    # scheme derivable from the shipped backup (no paid hint needed): the key is
+    # the rendezvous GPS point formatted "lat,lon" to 6 decimals, and the blob is
+    # a sha256-CTR keystream XOR.
+    config = [
+        ("securenote.locked", "1"),
+        (
+            "securenote.key_source",
+            "point GPS du rendez-vous, format lat,lon a 6 decimales "
+            '("{lat:.6f},{lon:.6f}")',
+        ),
+        (
+            "securenote.cipher",
+            "XOR keystream = concat(sha256(key || counter_be32)), counter=0,1,2,...",
+        ),
+    ]
+    con.executemany("INSERT INTO app_config VALUES (?,?)", config)
 
     note = f"note perso: point de chute confirme. token={FLAG}".encode()
     key = geo_key(RDV_LAT, RDV_LON)

@@ -6,7 +6,7 @@ p1,phone,msisdn,+22890114477,
 dev1,device,imei,356938035643809,
 w1,wallet,btc,1KossiViAgbeko9xQwErTyUiOpAsDfGh,
 dom1,domain,registered,mining-togo.tg,
-person_true,person,identity,Kossivi Agbeko,NCTF{maltego_pivot_kossivi_agbeko_unmasked}
+person_true,person,identity,Kossivi Agbeko,identite operateur confirmee (dossier scelle)
 h_ghost,handle,ghost228,ghost228@social,
 person_decoy1,person,identity,Yao Mensah,NCTF{wrong_pivot_speculative_link}
 person_decoy2,person,identity,Ama Dede,not the operator

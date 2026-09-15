@@ -1,8 +1,12 @@
 #!/usr/bin/env python3
 """Traverse the entity graph along VERIFIED links only, from the seed persona,
-and read the flag off the single reachable PERSON node."""
+reconstruct the pivot path to the single reachable PERSON node, and DERIVE the
+flag from that path. The flag is not stored in the CSVs -- you must actually
+traverse the verified graph to compute it."""
 
 import csv
+import hashlib
+import hmac
 import os
 from collections import defaultdict, deque
 
@@ -33,21 +37,31 @@ def main() -> None:
                 adj[row["src"]].append(row["dst"])
                 adj[row["dst"]].append(row["src"])
 
-    seen = {SEED}
+    parent = {SEED: None}
     q = deque([SEED])
-    persons = []
     while q:
         cur = q.popleft()
-        if nodes[cur]["type"] == "person":
-            persons.append(cur)
         for nxt in adj[cur]:
-            if nxt not in seen:
-                seen.add(nxt)
+            if nxt not in parent:
+                parent[nxt] = cur
                 q.append(nxt)
 
+    persons = [n for n in parent if nodes[n]["type"] == "person"]
     assert len(persons) == 1, f"expected 1 person, got {persons}"
-    flag = nodes[persons[0]]["note"]
-    print(flag)
+    target = persons[0]
+
+    # reconstruct the ordered verified path seed -> target
+    path = []
+    node = target
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+    path.reverse()
+
+    material = "|".join(nodes[n]["value"] for n in path).encode()
+    key = nodes[target]["label"].encode()
+    body = hmac.new(key, material, hashlib.sha256).hexdigest()[:24]
+    print(f"NCTF{{{body}}}")
 
 
 if __name__ == "__main__":

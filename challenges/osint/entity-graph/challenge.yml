@@ -7,20 +7,21 @@ description: |-
   `z3ro_237` a revendiqué la fuite ; il faut l'attribuer à une personne réelle.
 
   Le graphe contient à la fois des liens confirmés par l'analyste et de simples
-  hypothèses. Retrouvez la seule identité réellement rattachée au persona et
-  lisez la note du dossier : elle contient le flag.
+  hypothèses. Retrouvez la seule identité réellement rattachée au persona en ne
+  suivant que les liens vérifiés. Le flag n'est pas écrit dans le dossier : il se
+  DÉRIVE du chemin de pivot lui-même (voir writeup).
 
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 300
+value: 150
 type: dynamic
 extra:
-  initial: 300
-  decay: 25
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
-  - NCTF{maltego_pivot_kossivi_agbeko_unmasked}
+  - NCTF{79dcf5d4d250f13b9940549a}
 hints:
   - content: >-
       La colonne `relation` de `edges.csv` distingue les vrais pivots des
@@ -37,7 +38,10 @@ hints:
   - content: >-
       Partez du nœud `z3ro_237`, faites un parcours en largeur en ne franchissant
       que les arêtes vérifiées (traitées comme non orientées). Un seul nœud de
-      type `person` est atteignable : sa note est le flag.
+      type `person` est atteignable. Le flag se dérive du pivot : HMAC-SHA256
+      (clé = le `label` de la personne démasquée) sur la chaîne des `value` des
+      nœuds traversés depuis la graine, jointe par `|` ; prenez les 24 premiers
+      hexadigits : `NCTF{<hex>}`.
     cost: 45
     key: h3
     requirements: [h2]
@@ -45,7 +49,7 @@ tags:
   - osint
   - graph-pivot
   - link-analysis
-  - medium
+  - easy
 files:
   - nodes.csv
   - edges.csv

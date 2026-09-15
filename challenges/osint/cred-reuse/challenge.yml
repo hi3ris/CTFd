@@ -36,9 +36,10 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      `admin_portal.enc` est chiffré par un flux XOR dont la clé dérive du mot de
-      passe réutilisé : keystream = concat(sha256(pass || counter_be32)).
-      Déchiffrez et lisez la ligne « jeton de secours ».
+      `admin_portal.enc` est un conteneur OpenSSL standard (en-tête `Salted__`,
+      `openssl enc -aes-256-cbc -pbkdf2`) chiffré avec le mot de passe réutilisé.
+      Déchiffrez avec `openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:<mdp>` et
+      lisez la ligne « jeton de secours ».
     cost: 45
     key: h3
     requirements: [h2]

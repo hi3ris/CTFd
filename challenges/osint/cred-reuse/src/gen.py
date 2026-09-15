@@ -4,17 +4,20 @@ Artifacts:
   * dump.txt        leaked "email:sha1(password)" pairs from a low-value forum
   * wordlist.txt    candidate passwords (rockyou-style) to crack the hashes
   * services.csv    which email is registered on which service
-  * admin_portal.enc a note encrypted with the reused password's key
+  * admin_portal.enc a note encrypted with the reused password
 
 Pivot: crack the hashes, find the single email registered on BOTH the breached
 forum and the admin-portal (password reuse), then decrypt admin_portal.enc with
-that password. The keystream is a stdlib sha256-CTR construction.
+that password. The container is a STANDARD OpenSSL blob
+(`openssl enc -aes-256-cbc -pbkdf2`, the "Salted__" format) so the recovered
+password opens it with off-the-shelf tooling and no custom scheme to guess.
 
 Run:  python3 gen.py
 """
 
 import hashlib
 import os
+import subprocess
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -56,19 +59,23 @@ NOISE = ["qwerty", "admin", "welcome", "monkey", "abc123", "trustno1", "master"]
 REUSED_PASSWORD = "Lome228!"
 
 
-def keystream(password: str, n: int) -> bytes:
-    out = bytearray()
-    counter = 0
-    while len(out) < n:
-        out += hashlib.sha256(password.encode() + counter.to_bytes(4, "big")).digest()
-        counter += 1
-    return bytes(out[:n])
-
-
-def encrypt(plaintext: str, password: str) -> bytes:
-    pt = plaintext.encode()
-    ks = keystream(password, len(pt))
-    return bytes(a ^ b for a, b in zip(pt, ks))
+def encrypt(plaintext: str, password: str, out_path: str) -> None:
+    """Encrypt with the standard OpenSSL AES-256-CBC + PBKDF2 container."""
+    subprocess.run(
+        [
+            "openssl",
+            "enc",
+            "-aes-256-cbc",
+            "-pbkdf2",
+            "-salt",
+            "-pass",
+            f"pass:{password}",
+            "-out",
+            out_path,
+        ],
+        input=plaintext.encode(),
+        check=True,
+    )
 
 
 def main() -> None:
@@ -91,8 +98,7 @@ def main() -> None:
         "compte: afi.doe (droits elevated)\n"
         f"jeton de secours: {FLAG}\n"
     )
-    with open(os.path.join(ROOT, "admin_portal.enc"), "wb") as fh:
-        fh.write(encrypt(note, REUSED_PASSWORD))
+    encrypt(note, REUSED_PASSWORD, os.path.join(ROOT, "admin_portal.enc"))
 
     print("wrote dump.txt, wordlist.txt, services.csv, admin_portal.enc")
 

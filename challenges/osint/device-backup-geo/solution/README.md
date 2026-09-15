@@ -22,10 +22,12 @@ decoys.
 2. In `location.sqlite`, select the `locations` row whose `ts` equals that epoch:
    `lat=6.130419, lon=1.222954` (Grand Marché, Lomé). `celltower.sqlite`
    corroborates the tower change at that time.
-3. Build the key string `"6.130419,1.222954"` (`{lat:.6f},{lon:.6f}`).
-4. The `notes` table holds a XOR-encrypted blob. Keystream is
-   `sha256(key || counter_be32)` concatenated. Decrypt and read
-   `token=NCTF{...}`.
+3. The `app_config` table in `messages.sqlite` documents the lock scheme:
+   the key is the rendezvous GPS point formatted `"{lat:.6f},{lon:.6f}"` and the
+   blob is a `sha256(key || counter_be32)` keystream XOR. So build the key string
+   `"6.130419,1.222954"`.
+4. The `notes` table holds the XOR-encrypted blob. Rebuild the keystream and
+   decrypt, then read `token=NCTF{...}`.
 
 Run `python3 solution/solve.py` to reproduce.
 

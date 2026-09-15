@@ -3,17 +3,23 @@
 The graph mixes VERIFIED links (shared email, phone, device, wallet, domain
 registration, confirmed alias) with SPECULATIVE links (mentions, follows,
 similar-name guesses). Pivoting only along verified links from the seed persona
-reaches exactly one real PERSON node, whose `note` holds the flag. Speculative
-links lead to decoy identities.
+reaches exactly one real PERSON node.
+
+The flag is NOT stored in nodes.csv. It is DERIVED from the verified pivot: an
+HMAC keyed by the unmasked person's label over the ordered chain of node values
+you cross to reach it. You therefore have to actually traverse the verified
+graph (and pick the right person) to produce it -- grepping the CSVs yields only
+the speculative decoy's fake flag.
 
 Run from anywhere:  python3 gen.py
 Outputs nodes.csv and edges.csv one directory up (the challenge root).
 """
 
 import csv
+import hashlib
+import hmac
 import os
-
-FLAG = "NCTF{maltego_pivot_kossivi_agbeko_unmasked}"
+from collections import defaultdict, deque
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -32,7 +38,7 @@ NODES = [
         "person",
         "identity",
         "Kossivi Agbeko",
-        FLAG,
+        "identite operateur confirmee (dossier scelle)",
     ),
     # --- decoy cluster (reachable only via speculative edges) ---
     ("h_ghost", "handle", "ghost228", "ghost228@social", ""),
@@ -81,6 +87,47 @@ EDGES = [
     ("h_noise1", "person_noise", "follows"),
 ]
 
+SEED = "h_seed"
+
+
+def derive_flag(nodes: dict, edges: list) -> str:
+    """Recover the flag by pivoting the verified graph, exactly as a solver must.
+
+    BFS from the seed over verified (undirected) edges, reconstruct the ordered
+    path to the single reachable person, then HMAC that person's label over the
+    chain of node values crossed on the way. Nothing here reads a stored flag.
+    """
+    adj = defaultdict(list)
+    for src, dst, rel in edges:
+        if rel in VERIFIED:
+            adj[src].append(dst)
+            adj[dst].append(src)
+
+    parent = {SEED: None}
+    q = deque([SEED])
+    while q:
+        cur = q.popleft()
+        for nxt in adj[cur]:
+            if nxt not in parent:
+                parent[nxt] = cur
+                q.append(nxt)
+
+    persons = [n for n in parent if nodes[n]["type"] == "person"]
+    assert len(persons) == 1, f"expected 1 person, got {persons}"
+    target = persons[0]
+
+    path = []
+    node = target
+    while node is not None:
+        path.append(node)
+        node = parent[node]
+    path.reverse()
+
+    material = "|".join(nodes[n]["value"] for n in path).encode()
+    key = nodes[target]["label"].encode()
+    body = hmac.new(key, material, hashlib.sha256).hexdigest()[:24]
+    return f"NCTF{{{body}}}"
+
 
 def main() -> None:
     with open(os.path.join(ROOT, "nodes.csv"), "w", newline="") as fh:
@@ -93,8 +140,12 @@ def main() -> None:
         w.writerow(["src", "dst", "relation"])
         w.writerows(EDGES)
 
+    nodes = {
+        n[0]: dict(zip(["id", "type", "label", "value", "note"], n)) for n in NODES
+    }
     print("wrote nodes.csv and edges.csv")
     print("verified relations:", sorted(VERIFIED))
+    print("derived flag:", derive_flag(nodes, EDGES))
 
 
 if __name__ == "__main__":

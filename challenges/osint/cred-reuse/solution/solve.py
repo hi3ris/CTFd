@@ -1,22 +1,34 @@
 #!/usr/bin/env python3
 """Crack the forum hashes with the wordlist, find the email reused on the
-admin-portal, and decrypt admin_portal.enc with that password."""
+admin-portal, and decrypt admin_portal.enc (a standard OpenSSL AES-256-CBC
+PBKDF2 container) with that password."""
 
 import csv
 import hashlib
 import os
+import subprocess
 from collections import defaultdict
 
 ROOT = os.path.join(os.path.dirname(os.path.abspath(__file__)), "..")
 
 
-def keystream(password: str, n: int) -> bytes:
-    out = bytearray()
-    counter = 0
-    while len(out) < n:
-        out += hashlib.sha256(password.encode() + counter.to_bytes(4, "big")).digest()
-        counter += 1
-    return bytes(out[:n])
+def openssl_decrypt(path: str, password: str) -> str:
+    out = subprocess.run(
+        [
+            "openssl",
+            "enc",
+            "-d",
+            "-aes-256-cbc",
+            "-pbkdf2",
+            "-pass",
+            f"pass:{password}",
+            "-in",
+            path,
+        ],
+        capture_output=True,
+        check=True,
+    )
+    return out.stdout.decode()
 
 
 def main() -> None:
@@ -38,8 +50,7 @@ def main() -> None:
     reused_email = next(e for e in cracked if {"forum", "admin-portal"} <= services[e])
     password = cracked[reused_email]
 
-    ct = open(os.path.join(ROOT, "admin_portal.enc"), "rb").read()
-    pt = bytes(a ^ b for a, b in zip(ct, keystream(password, len(ct)))).decode()
+    pt = openssl_decrypt(os.path.join(ROOT, "admin_portal.enc"), password)
     flag = next(line.split(": ", 1)[1] for line in pt.splitlines() if "jeton" in line)
     print(flag)
 

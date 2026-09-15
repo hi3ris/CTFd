@@ -12,7 +12,7 @@ admin note.
 ## Technique
 
 Offline hash cracking (SHA-1 vs wordlist) + credential-reuse pivot across a
-service registry + a sha256-CTR keystream decrypt.
+service registry + a standard OpenSSL AES-256-CBC (PBKDF2) decrypt.
 
 ## Step by step
 
@@ -22,10 +22,11 @@ service registry + a sha256-CTR keystream decrypt.
    `admin-portal`: `afi.doe@webmail.tg`, password `Lome228!`. (`root.admin@cert.tg`
    is on the admin-portal but not in the forum breach, so it cannot be cracked —
    a dead end.)
-3. `admin_portal.enc` is XOR-encrypted with a keystream derived from the reused
-   password: `keystream = sha256(pass || counter_be32)` concatenated over
-   `counter = 0,1,2,...`.
-4. Decrypt and read the `jeton de secours` line — the flag.
+3. `admin_portal.enc` is a standard OpenSSL container (it begins with the
+   `Salted__` magic, `openssl enc -aes-256-cbc -pbkdf2`). Decrypt it with the
+   reused password:
+   `openssl enc -d -aes-256-cbc -pbkdf2 -pass pass:'Lome228!' -in admin_portal.enc`.
+4. Read the `jeton de secours` line — the flag.
 
 Run `python3 solution/solve.py` to reproduce.
 
