@@ -308,8 +308,11 @@
         .btn:hover::after { animation: shine .7s ease; }
         @keyframes shine { to { left: 170%; } }
 
-        /* Allumage : léger fondu du contenu */
-        main { animation: powerOn .5s ease both; }
+        /* Allumage : léger fondu du contenu. Fill-mode `backwards`, jamais `both`
+           ou `forwards` : un transform qui persiste sur <main> en fait le référentiel
+           des position:fixed qu'il contient (fenêtre de challenge, alertes ezq) —
+           après un défilement, la fenêtre s'ouvrait hors écran, voile bloquant. */
+        main { animation: powerOn .5s ease backwards; }
         @keyframes powerOn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
         /* Dossiers de mission : le plateau /challenges en fiches classifiées */

@@ -115,3 +115,20 @@ def test_plugins_register_their_types():
         assert "team_instance" in CHALLENGE_CLASSES
         assert "team_hmac" in FLAG_CLASSES
     destroy_ctfd(app)
+
+
+def test_main_keeps_no_transform_after_its_entry_animation():
+    """A transform left on <main> makes it the containing block of every
+    position:fixed descendant: the challenge modal and ezq alerts then open
+    relative to the top of <main>, i.e. off-screen once the player has
+    scrolled down the 19 categories, with the backdrop blocking the page.
+    Only `backwards` fill-mode leaves no transform behind."""
+    import pathlib
+
+    base = pathlib.Path("CTFd/themes/hibris/templates/base.html").read_text()
+    import re
+
+    m = re.search(r"main\s*\{\s*animation:\s*powerOn[^;}]*", base)
+    assert m, "the powerOn animation on <main> moved; update this test"
+    assert "backwards" in m.group(0)
+    assert "both" not in m.group(0) and "forwards" not in m.group(0)
