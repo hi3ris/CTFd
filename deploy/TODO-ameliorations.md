@@ -14,7 +14,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 | --- | ---------------------------------------- | -------- | ------ | -------------------- | --------- |
 | 1   | Détecteur de partage de flags ✅         | 🔴 haute | S      | présélection (23/10) | —         |
 | 2   | `make preflight` (check-list de prod) ✅ | 🔴 haute | S      | J-7 (16/10)          | —         |
-| 5   | Réparer les 2 flakes CI                  | 🟠 moy.  | S      | dès maintenant       | —         |
+| 5   | Réparer les 2 flakes CI ✅               | 🟠 moy.  | S      | dès maintenant       | —         |
 | 3   | Test de charge à 300 (outil k6)          | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
 | 4   | Sauvegardes automatiques + répétition    | 🟠 moy.  | S      | J-7 (16/10)          | —         |
 | 6   | First bloods (notif + ticker)            | 🟡 spect | M      | finale (29/10)       | —         |
@@ -179,15 +179,17 @@ chronométrée est documentée.
 tout le monde à ignorer le rouge — le jour où ce sera un vrai problème, personne ne
 regardera.
 
-- [ ] 🤖 **Theme Verification** (`.github/workflows/lint.yml`, job « Theme Verification ») :
-      la build vite réussit mais `git diff --exit-code` échoue car les bundles pré-construits
-      `CTFd/themes/{admin,core}/static/` ont été générés avec une autre version de
-      rollup. Deux options, en choisir une :
-  - (a) régénérer les bundles **avec la chaîne exacte de la CI** (`yarn --cwd
-CTFd/themes/admin build`, même lockfile) et les committer ;
-  - (b) **épingler** la version de node/yarn de la CI à celle qui a produit les bundles.
-    Vérifier ensuite sur 3 pushs consécutifs.
-- [ ] 🤖 **`tests/users/test_challenges.py::test_challenge_kpm_limit_no_freeze`** :
+- [x] 🤖 **Theme Verification** (`.github/workflows/verify-themes.yml`) — cause trouvée
+      dans les logs : `yarn install --non-interactive` **sans** `--frozen-lockfile`
+      résolvait parfois un chunk codemirror (`htmlmixed`) différent, d'où un
+      `configs-*.js` au hash changeant et un diff sur `manifest.json` ; la build locale
+      avec lockfile figé reproduit les bundles committés à l'octet près. Correctif = celui
+      de l'amont (CTFd #3073 / #3082) : `--frozen-lockfile`, cache yarn, `.node-version`
+      (20.19), et `verify` = `vite build && git add -N -- static && git diff --exit-code -- static`
+      (le diff porte sur `static/` seulement et voit aussi les nouveaux fichiers).
+      _Reste : constater 3 pushs verts d'affilée._
+- [x] 🤖 **`tests/users/test_challenges.py::test_challenge_kpm_limit_no_freeze`** (fait :
+      toute la rafale + la soumission finale sous un seul `freeze_time`, 5 runs verts) :
       `assert "…59 seconds" == "…60 seconds"` — course entre l'horloge du rate-limit et
       celle du test. Correctif minimal et honnête : figer l'horloge (`freezegun`, déjà
       utilisé dans ce fichier) autour de la soumission, **pas** une assertion tolérante ;

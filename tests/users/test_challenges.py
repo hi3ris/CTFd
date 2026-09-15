@@ -555,18 +555,22 @@ def test_challenge_kpm_limit_no_freeze():
         chal_id = chal.id
 
         gen_flag(app.db, challenge_id=chal.id, content="flag")
-        for _ in range(11):
-            with client.session_transaction():
-                data = {"submission": "notflag", "challenge_id": chal_id}
-            client.post("/api/v1/challenges/attempt", json=data)
+        # The countdown is computed from the OLDEST recent fail ("60 - seconds
+        # elapsed since it"), so the burst and the final submission must share
+        # one instant: a second boundary crossed between the first wrong
+        # submission and the last request would yield "59 seconds".
+        with freeze_time(datetime.utcnow()):
+            for _ in range(11):
+                with client.session_transaction():
+                    data = {"submission": "notflag", "challenge_id": chal_id}
+                client.post("/api/v1/challenges/attempt", json=data)
 
-        wrong_keys = Fails.query.count()
-        ratelimiteds = Ratelimiteds.query.count()
-        assert wrong_keys == 10
-        assert ratelimiteds == 1
+            wrong_keys = Fails.query.count()
+            ratelimiteds = Ratelimiteds.query.count()
+            assert wrong_keys == 10
+            assert ratelimiteds == 1
 
-        # We just want a consistent flag response countdown
-        with freeze_time(timedelta(seconds=0)):
+            # We just want a consistent flag response countdown
             data = {"submission": "flag", "challenge_id": chal_id}
             r = client.post("/api/v1/challenges/attempt", json=data)
             assert r.status_code == 429
