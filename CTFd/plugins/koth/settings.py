@@ -24,7 +24,10 @@ Environment:
                            "points":5}]
                          `url` is how CTFd reaches the hill internally;
                          `player_url` (optional) is what players connect to;
-                         `points` is awarded per tick to the current holder.
+                         `points` is awarded per tick to the current holder;
+                         `scorer_secret` (optional) overrides KOTH_SCORER_SECRET
+                         for that hill only, so a rooted Citadel cannot read the
+                         secret that also guards the Throne's /king.
 
     KOTH_TICK            seconds between scoring passes (default 30).
     KOTH_FRESH_WINDOW    only award if the current claim's timestamp is within
@@ -102,6 +105,8 @@ def hills() -> list:
                 "url": url,
                 "player_url": str(h.get("player_url", "")).strip().rstrip("/") or url,
                 "points": points,
+                "scorer_secret": str(h.get("scorer_secret", "")).strip()
+                or scorer_secret(),
             }
         )
     return out
