@@ -18,10 +18,10 @@ of `generate.py`.
 
 ## Why there is no Dockerfile / flag.py HMAC path
 
-* Not served: the answer lives entirely inside the captured packets, so there is
+- Not served: the answer lives entirely inside the captured packets, so there is
   nothing for a per-team oracle to verify. Per the guardrails, a static flag in
   `challenge.yml` is the correct choice for a pure downloadable forensics
   artifact.
-* `../flag.py` still ships the standard `HMAC_SHA256(TEAM_SECRET, id)[:24]` helper
+- `../flag.py` still ships the standard `HMAC_SHA256(TEAM_SECRET, id)[:24]` helper
   for tooling uniformity, and documents how a served variant would regenerate the
   note.
