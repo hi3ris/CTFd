@@ -19,6 +19,30 @@
 		<button id="ac-rebuild" class="btn btn-outline-danger btn-sm" type="button" title="Rejoue tout l'historique des mauvais flags (après rotation du secret ou ajout d'un flag team_hmac)">Recalculer tout</button>
 	</form>
 	<div id="ac-table"><p class="text-muted">Chargement…</p></div>
+
+	<hr class="my-5">
+	<h2>Validations synchrones (flags statiques)</h2>
+	<p class="text-muted">
+		Pour les challenges dont le flag est le même pour tout le monde, le seul signal est
+		<b>circonstanciel</b> : deux équipes qui valident les mêmes challenges à quelques
+		secondes d'écart, plusieurs fois, ou qui soumettent depuis la <b>même IP</b>.
+		Chaque validation synchrone pèse <code>1 / nb de solveurs</code> du challenge : un
+		warm-up validé par 40 équipes dans la même minute ne compte pour rien. Rapport pour
+		le jury, après coup — jamais une sanction automatique.
+	</p>
+	<form class="form-inline mb-3" onsubmit="return false">
+		<label class="mr-2">Fenêtre</label>
+		<select id="sy-window" class="form-control form-control-sm mr-3">
+			<option value="60">60 s</option><option value="120">2 min</option>
+			<option value="300" selected>5 min</option><option value="900">15 min</option>
+		</select>
+		<label class="mr-2">Min. synchrones</label>
+		<select id="sy-min" class="form-control form-control-sm mr-3">
+			<option value="2">2</option><option value="3" selected>3</option><option value="5">5</option>
+		</select>
+		<a id="sy-csv" class="btn btn-outline-secondary btn-sm" href="#">Export CSV</a>
+	</form>
+	<div id="sy-table"><p class="text-muted">Chargement…</p></div>
 </div>
 {% endblock %}
 
@@ -97,6 +121,49 @@
 	document.getElementById("ac-rebuild").addEventListener("click", function(){ load(true); });
 	load(false);
 	setInterval(function(){ if(!document.hidden) load(false); }, 10000);
+
+	// --- validations synchrones ---------------------------------------------
+	var SYNC = URLROOT + "/plugins/anticheat/api/sync";
+	var syTable = document.getElementById("sy-table");
+	var syWindow = document.getElementById("sy-window");
+	var syMin = document.getElementById("sy-min");
+	var syCsv = document.getElementById("sy-csv");
+	function syParams(){ return "?window=" + syWindow.value + "&min=" + syMin.value; }
+	function loadSync(){
+		syCsv.href = SYNC + syParams() + "&format=csv";
+		fetch(SYNC + syParams(), {credentials:"same-origin", headers:{"Accept":"application/json"}})
+			.then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+			.then(function(j){
+				var rows = j.data.pairs || [];
+				if(!rows.length){ syTable.innerHTML = '<div class="alert alert-success">Aucune paire suspecte avec ces réglages.</div>'; return; }
+				syTable.innerHTML = '<table class="table table-sm table-hover"><thead><tr>'
+					+ '<th>Score</th><th>Équipe A</th><th>Équipe B</th><th class="text-right">Synchrones / communs</th>'
+					+ '<th class="text-right">Écart médian</th><th>Qui valide en 1er</th><th>IP communes</th><th>Détail</th>'
+					+ '</tr></thead><tbody>'
+					+ rows.map(function(r){
+						var detail = r.events.slice(0, 6).map(function(e){
+							return esc(e.challenge) + ' <span class="text-muted">(' + e.dt + ' s, ' + e.solvers + ' solveurs)</span>';
+						}).join('<br>') + (r.events.length > 6 ? '<br><span class="text-muted">… +' + (r.events.length - 6) + '</span>' : '');
+						var strong = r.score >= 0.5 || r.shared_ips.length;
+						return '<tr' + (strong ? ' class="table-danger"' : '') + '>'
+							+ '<td><b>' + r.score.toFixed(2) + '</b></td>'
+							+ '<td>' + esc(r.a) + ' <span class="text-muted">#' + r.a_id + '</span></td>'
+							+ '<td>' + esc(r.b) + ' <span class="text-muted">#' + r.b_id + '</span></td>'
+							+ '<td class="text-right">' + r.n_sync + ' / ' + r.n_common + '</td>'
+							+ '<td class="text-right">' + (r.median_dt == null ? '—' : r.median_dt + ' s') + '</td>'
+							+ '<td>A ' + r.a_first + ' · B ' + r.b_first + '</td>'
+							+ '<td>' + (r.shared_ips.length ? '<code>' + r.shared_ips.map(esc).join('</code> <code>') + '</code>' : '—') + '</td>'
+							+ '<td class="small">' + detail + '</td>'
+							+ '</tr>';
+					}).join('')
+					+ '</tbody></table>';
+			})
+			.catch(function(e){ syTable.innerHTML = '<div class="alert alert-danger">Erreur : ' + esc(e.message) + '</div>'; });
+	}
+	syWindow.addEventListener("change", loadSync);
+	syMin.addEventListener("change", loadSync);
+	loadSync();
+	setInterval(function(){ if(!document.hidden) loadSync(); }, 60000);
 })();
 </script>
 {% endblock %}

@@ -149,7 +149,7 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
       _Save_. Bloc autonome (styles préfixés `.nctf-*`, mêmes couleurs/polices que le thème,
       titre `NCTF26` + glitch). Ajuster dates, chiffres et liens si besoin. Objectif : un
       participant ne doit pas deviner que c'est du CTFd.
-- [ ] **Règlement** publié AVANT l'ouverture des inscriptions (§6 garde-fous).
+- [ ] **Règlement** publié AVANT l'ouverture des inscriptions (§6 garde-fous). L'extrait « intégrité » (partage de flags = disqualification des deux équipes, les journaux font foi) est dans `deploy/reglement.md` : `make reglement-publish URL=… CTFD_TOKEN=…` le pousse dans la page `/tos` que l'inscription référence ; `make local-seed` le fait sur la stack locale.
 
 ---
 
@@ -227,6 +227,7 @@ Diagnostic d'abord : `make cost` (qu'est-ce qui tourne ?), `make logs`, `make ss
 2. **Ne rien bannir à chaud.** Exporter le CSV (bouton) et l'archiver avec l'horodatage ; appliquer le barème du règlement (avertissement au 1ᵉʳ, décision jury au 2ᵉ). Sanction = action manuelle dans Admin → Teams (`banned`), jamais le plugin.
 3. Faux positifs connus : aucun par construction (un flag `team_hmac` d'une autre équipe ne s'invente pas). Si un même compte apparaît des deux côtés, c'est une équipe recomposée : rebâtir l'index avec **Recalculer tout** après tout changement d'équipe ou rotation de `CTF_TEAM_FLAG_SECRET`.
 4. Réponse aux joueurs : uniquement par le canal officiel, jamais via une notification CTFd (globale).
+5. **Flags statiques (177 épreuves, même flag pour tous)** : aucun incident possible par construction. Le signal est la section **Validations synchrones** de la même page : paires d'équipes qui valident les mêmes épreuves à quelques secondes d'écart, plusieurs fois, pondérées par la rareté de l'épreuve (`1 / nb de solveurs`), et adresses IP communes. C'est circonstanciel : **rapport pour le jury après coup**, jamais une sanction à chaud. Une ligne rouge = score ≥ 0,5 ou IP commune ; regarder qui valide en premier (l'équipe « source ») et l'écart médian.
 
 **Disque plein (« no space left »)**
 
@@ -306,6 +307,7 @@ make season-down            # si pas déjà détruit
 
 - [ ] 🤖 Writeups officiels : `make writeups-prepare URL=… TOKEN=…` **avant** la clôture (pages en brouillon, 404 pour les joueurs, relecture admin possible via l'API), puis à la clôture `make writeups-publish URL=… TOKEN=…` — refusé tant que `end` n'est pas passé (`FORCE=1` pour passer outre, en connaissance de cause). `/writeups` = index (menu) + une page par catégorie ; flags réels masqués, solveurs jamais publiés. `make archive` embarque la même version en HTML statique (`site/<phase>/writeups/`).
 - [ ] 🧑 Décider avant : writeups **complets** ou seulement les catégories jouées (`WRITEUPS_ARGS="--categories web,pwn"`) ; le crédit `author:` du challenge.yml est repris tel quel.
+- [ ] 🤖🧑 **Rapport anti-triche** : `make anticheat-report URL=… CTFD_TOKEN=…` avant `season-down` (les rapports lisent la base vivante) → `deploy/reports/<horodatage>/` : `incidents.csv` (flags `team_hmac` d'une autre équipe, preuve directe), `sync.csv` + `sync.json` (validations synchrones et IP communes, circonstanciel), empreintes SHA-256. Archiver le dossier avec le dump de clôture ; le jury statue sur ces pièces, après audition des équipes (règlement §3 et §5).
 - [ ] 🧑 Rapport de clôture (agrégé, sans accusation nominative depuis la scène).
 - [ ] 🤖 Exploiter les logs de charge pour dimensionner l'édition suivante.
 
@@ -313,17 +315,18 @@ make season-down            # si pas déjà détruit
 
 ## Annexe — carte des commandes
 
-| Commande                                                      | Rôle                                                              |
-| ------------------------------------------------------------- | ----------------------------------------------------------------- |
-| `make init` / `make state-bootstrap`                          | init Terraform / état distant S3+DynamoDB                         |
-| `make check-gpu-quota`                                        | quota GPU (à lancer **maintenant**)                               |
-| `make phase-setup / -preselection / -final / season-down`     | leviers de coût                                                   |
-| `make wait-front / wait-arena`                                | attente provisionnement                                           |
-| `make deploy / tls-init / link`                               | déploiement CTFd / HTTPS / liaison front↔arena↔IA               |
-| `make check-arena / push-images`                              | images de challenge sur l'arena                                   |
-| `make backup / restore FILE=... / archive`                    | sauvegarde vérifiée / restauration / archive S3                   |
-| `make writeups-prepare / writeups-publish URL=... TOKEN=...`  | writeups en brouillon / publiés à la clôture                      |
-| `make loadtest URL=... / loadtest-instancer / loadtest-purge` | test de charge k6 (300 équipes simulées) / instancier / nettoyage |
-| `make logs / gpu / cost`                                      | supervision                                                       |
-| `make ssh-front / ssh-arena / ssh-ai`                         | shells                                                            |
-| `make destroy`                                                | détruit l'EC2 (le bucket d'archives survit)                       |
+| Commande                                                           | Rôle                                                              |
+| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
+| `make init` / `make state-bootstrap`                               | init Terraform / état distant S3+DynamoDB                         |
+| `make check-gpu-quota`                                             | quota GPU (à lancer **maintenant**)                               |
+| `make phase-setup / -preselection / -final / season-down`          | leviers de coût                                                   |
+| `make wait-front / wait-arena`                                     | attente provisionnement                                           |
+| `make deploy / tls-init / link`                                    | déploiement CTFd / HTTPS / liaison front↔arena↔IA               |
+| `make check-arena / push-images`                                   | images de challenge sur l'arena                                   |
+| `make backup / restore FILE=... / archive`                         | sauvegarde vérifiée / restauration / archive S3                   |
+| `make writeups-prepare / writeups-publish URL=... TOKEN=...`       | writeups en brouillon / publiés à la clôture                      |
+| `make reglement-publish / anticheat-report URL=... CTFD_TOKEN=...` | règlement dans `/tos` / rapports anti-triche pour le jury         |
+| `make loadtest URL=... / loadtest-instancer / loadtest-purge`      | test de charge k6 (300 équipes simulées) / instancier / nettoyage |
+| `make logs / gpu / cost`                                           | supervision                                                       |
+| `make ssh-front / ssh-arena / ssh-ai`                              | shells                                                            |
+| `make destroy`                                                     | détruit l'EC2 (le bucket d'archives survit)                       |

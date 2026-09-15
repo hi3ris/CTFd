@@ -41,6 +41,7 @@ CTF_BIN = (
 )
 CHALLENGES = ROOT / "challenges"
 HERO = ROOT / "deploy" / "theme-home-hero.html"
+REGLEMENT = ROOT / "deploy" / "reglement.md"
 
 ADMIN = {"name": "admin", "email": "admin@nctf.local", "password": "admin"}
 PLAYER = {"name": "playtest", "email": "playtest@nctf.local", "password": "playtest"}
@@ -171,6 +172,9 @@ def set_configs(s, url):
         v = os.environ.get(env)
         if v:
             cfg[key] = v
+    if REGLEMENT.exists():
+        # Reglement -> page /tos (Markdown), referencee par l'inscription.
+        cfg["tos_text"] = REGLEMENT.read_text(encoding="utf-8")
     r = s.patch(url + "/api/v1/configs", json=cfg)
     r.raise_for_status()
     applied = [k for k in ("start", "end", "freeze") if k in cfg]

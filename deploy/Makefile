@@ -375,6 +375,27 @@ archive: ## Fige le scoreboard de la phase dans S3, en page autonome
 
 TOKEN ?= $(CTFD_TOKEN)
 
+.PHONY: reglement-publish
+reglement-publish: ## Publie deploy/reglement.md dans la page /tos de la plateforme : URL=https://... CTFD_TOKEN=...
+	@test -n "$(URL)" -a -n "$$CTFD_TOKEN" || { echo "URL et CTFD_TOKEN (jeton API admin) requis"; exit 2; }
+	@python3 -c 'import json,sys; print(json.dumps({"tos_text": open("reglement.md", encoding="utf-8").read()}))' \
+	  | curl -sf -H "Authorization: Token $$CTFD_TOKEN" -H "Content-Type: application/json" \
+	      -X PATCH "$(URL)/api/v1/configs" -d @- >/dev/null \
+	  && echo "Reglement publie : $(URL)/tos" || { echo "ECHEC de la publication"; exit 1; }
+
+.PHONY: anticheat-report
+anticheat-report: ## Exporte les deux rapports anti-triche (incidents team_hmac + validations synchrones) : URL=... CTFD_TOKEN=... [WINDOW=300 MIN=3]
+	@test -n "$(URL)" -a -n "$$CTFD_TOKEN" || { echo "URL et CTFD_TOKEN (jeton API admin) requis"; exit 2; }
+	@D=reports/$$(date -u +%Y%m%dT%H%MZ); mkdir -p $$D; \
+	 H="Authorization: Token $$CTFD_TOKEN"; J="Content-Type: application/json"; \
+	 curl -sf -H "$$H" -H "$$J" "$(URL)/plugins/anticheat/api/incidents?format=csv" -o $$D/incidents.csv \
+	   || { echo "ECHEC : incidents"; exit 1; }; \
+	 curl -sf -H "$$H" -H "$$J" "$(URL)/plugins/anticheat/api/sync?format=csv&window=$${WINDOW:-300}&min=$${MIN:-3}" -o $$D/sync.csv \
+	   || { echo "ECHEC : validations synchrones"; exit 1; }; \
+	 curl -sf -H "$$H" -H "$$J" "$(URL)/plugins/anticheat/api/sync?window=$${WINDOW:-300}&min=$${MIN:-3}" -o $$D/sync.json; \
+	 sha256sum $$D/*.csv $$D/*.json > $$D/SHA256SUMS; \
+	 echo "Rapports dans $$D ($$(($$(wc -l < $$D/incidents.csv)-1)) incidents, $$(($$(wc -l < $$D/sync.csv)-1)) paires) ; empreintes dans SHA256SUMS -- a archiver avec le dump de cloture"
+
 .PHONY: writeups-prepare
 writeups-prepare: ## Cree/met a jour les pages writeups en BROUILLON (404 joueurs) : URL=https://... TOKEN=<jeton admin>
 	@test -n "$(URL)" -a -n "$(TOKEN)" || { echo "URL et TOKEN (jeton API admin) requis"; exit 2; }

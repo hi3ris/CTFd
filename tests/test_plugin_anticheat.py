@@ -286,3 +286,109 @@ def test_no_hmac_flags_means_no_incidents_and_cursor_moves():
         st = anticheat.incidents()
         assert st["incidents"] == [] and st["cursor"] > 0
     destroy_ctfd(app)
+
+
+# --------------------------------------------------------------------------
+# Synchronous solves (static flags)
+# --------------------------------------------------------------------------
+def _sync_fixture(db):
+    """alpha and bravo validate four challenges 20-40 s apart and share an IP;
+    charlie solves alone; twelve extra teams all solve the warm-up in the same
+    minute (a coincidence that must weigh almost nothing)."""
+    import datetime
+
+    from tests.helpers import gen_solve
+
+    def solve_at(uid, tid, cid, when):
+        s = gen_solve(db, uid, tid, cid)  # the helper stamps utcnow(): overwrite
+        s.date = when
+        db.session.commit()
+
+    t0 = datetime.datetime(2026, 10, 24, 10, 0, 0)
+    teams = {}
+    for name in ("alpha", "bravo", "charlie"):
+        t = gen_team(db, name=name, email=f"{name}@x.com")
+        teams[name] = (t.id, t.members[0].id, t.members[0].name)
+    warm = gen_challenge(db, name="warmup", category="warmup").id
+    chals = [gen_challenge(db, name=f"c{i}", category="web").id for i in range(1, 4)]
+    extras = []
+    for i in range(12):
+        t = gen_team(db, name=f"x{i}", email=f"x{i}@x.com")
+        extras.append((t.id, t.members[0].id))
+    a, b, c = teams["alpha"], teams["bravo"], teams["charlie"]
+    # warm-up: everybody within one minute
+    for k, (tid, uid) in enumerate([(a[0], a[1]), (b[0], b[1]), (c[0], c[1])] + extras):
+        solve_at(uid, tid, warm, t0 + datetime.timedelta(seconds=3 * k))
+    # c1..c3: alpha first, bravo 20/30/40 s later; charlie two hours later on c1
+    for i, cid in enumerate(chals):
+        solve_at(a[1], a[0], cid, t0 + datetime.timedelta(minutes=10 * (i + 1)))
+        solve_at(
+            b[1],
+            b[0],
+            cid,
+            t0 + datetime.timedelta(minutes=10 * (i + 1), seconds=20 + 10 * i),
+        )
+    solve_at(c[1], c[0], chals[0], t0 + datetime.timedelta(hours=2))
+    # shared IP between alpha and bravo (a wrong submission from the same box)
+    gen_fail(db, a[1], a[0], chals[0], ip="41.207.1.9", provided="NCTF{nope}")
+    gen_fail(db, b[1], b[0], chals[0], ip="41.207.1.9", provided="NCTF{nope}")
+    gen_fail(db, c[1], c[0], chals[0], ip="41.207.7.7", provided="NCTF{nope}")
+    return {"a": a, "b": b, "c": c, "warm": warm, "chals": chals}
+
+
+def test_sync_pairs_weights_rarity_and_shared_ip():
+    app = _teams_app()
+    with app.app_context():
+        from CTFd.models import db
+
+        _sync_fixture(db)
+        rows = anticheat.sync_pairs(window=300, min_sync=3)
+        assert len(rows) == 1, [(r["a"], r["b"], r["n_sync"]) for r in rows]
+        r = rows[0]
+        assert {r["a"], r["b"]} == {"alpha", "bravo"}
+        assert r["n_sync"] == 4 and r["n_common"] == 4
+        assert r["shared_ips"] == ["41.207.1.9"]
+        # warm-up (15 solvers) weighs 1/15; c1 has 3 solvers, c2 and c3 only 2
+        assert abs(r["score"] - (1 / 15 + 1 / 3 + 1 / 2 + 1 / 2)) < 1e-3
+        assert r["a_first"] + r["b_first"] == 4
+        first = "alpha" if r["a"] == "alpha" else "bravo"
+        assert (r["a_first"] if first == "alpha" else r["b_first"]) == 4
+        assert [e["challenge"] for e in r["events"]][0] == "warmup"  # sorted by dt
+        assert r["median_dt"] == 30  # dts 3, 20, 30, 40
+
+        # tight window: only the warm-up is synchronous (3 s), but the shared IP
+        # keeps the pair in the report; the twelve extras never appear
+        rows = anticheat.sync_pairs(window=10, min_sync=3)
+        assert [(r["n_sync"], r["shared_ips"]) for r in rows] == [(1, ["41.207.1.9"])]
+        # very demanding: nothing but the IP pair
+        rows = anticheat.sync_pairs(window=300, min_sync=10)
+        assert len(rows) == 1 and rows[0]["shared_ips"]
+    destroy_ctfd(app)
+
+
+def test_sync_api_admin_only_json_and_csv():
+    app = _teams_app()
+    with app.app_context():
+        from CTFd.models import db
+
+        f = _sync_fixture(db)
+        player = login_as_user(app, name=f["c"][2], password="password")
+        json_h = {"Content-Type": "application/json"}
+        assert (
+            player.get("/plugins/anticheat/api/sync", headers=json_h).status_code == 403
+        )
+        admin = login_as_user(app, name="admin", password="password")
+        r = admin.get("/plugins/anticheat/api/sync?window=300&min=3")
+        assert r.status_code == 200
+        d = r.get_json()["data"]
+        assert d["window"] == 300 and d["min"] == 3 and d["count"] == 1
+        assert d["pairs"][0]["events"][0]["solvers"] == 15
+        r = admin.get("/plugins/anticheat/api/sync?format=csv&window=garbage")
+        assert r.status_code == 200 and r.mimetype == "text/csv"
+        lines = r.get_data(as_text=True).splitlines()
+        assert lines[0].startswith("a_id,a,b_id,b,n_common,n_sync,score")
+        assert len(lines) == 2 and "41.207.1.9" in lines[1] and "warmup#" in lines[1]
+        # the admin page carries the section
+        page = admin.get("/plugins/anticheat/admin").get_data(as_text=True)
+        assert "Validations synchrones" in page and "/api/sync" in page
+    destroy_ctfd(app)

@@ -25,6 +25,14 @@ Design choices (deliberate):
   * It signals, it never sanctions. Banning stays a human decision (règlement).
   * Hidden/banned accounts are part of the owner index (a "retired" team's flag
     circulating is still sharing) and flagged as such in the incident.
+
+Second signal, for the 177 challenges whose flag is the same for everyone
+(`sync_pairs`): two accounts that validate the same challenges within a short
+window, again and again, and/or submit from the same IP. Unlike a team_hmac
+incident this is circumstantial -- easy challenges get solved by many teams at
+the same minute -- so each synchronous solve is weighted by the rarity of the
+challenge (1 / number of solvers) and the report is meant for the jury after
+the fact, not for a live ban.
 """
 
 import csv
@@ -34,7 +42,7 @@ import logging
 from flask import Blueprint, Response, jsonify, render_template, request
 
 from CTFd.cache import cache
-from CTFd.models import Challenges, Fails, Flags
+from CTFd.models import Challenges, Fails, Flags, Solves, Submissions
 from CTFd.plugins import register_admin_plugin_menu_bar
 from CTFd.plugins.team_hmac_flag import expected_flag
 from CTFd.utils.config import is_teams_mode
@@ -235,6 +243,174 @@ def api_incidents():
                 "total": len(state["incidents"]),
                 "count": len(rows),
                 "incidents": rows,
+            },
+        }
+    )
+
+
+# --------------------------------------------------------------------------
+# Synchronous solves (static flags): circumstantial, for the jury
+# --------------------------------------------------------------------------
+SYNC_WINDOW = 300  # seconds between two validations to count as "synchronous"
+SYNC_MIN = 3  # synchronous validations before a pair is reported
+
+
+def _account_col():
+    return Solves.team_id if is_teams_mode() else Solves.user_id
+
+
+def sync_pairs(window=SYNC_WINDOW, min_sync=SYNC_MIN):
+    """Pairs of accounts that validated the same challenges within `window`
+    seconds at least `min_sync` times, or that share a submission IP.
+
+    Returns rows sorted by score, each:
+      {a_id, a, b_id, b, n_common, n_sync, score, median_dt, a_first, b_first,
+       shared_ips, events: [{challenge_id, challenge, dt, first, solvers}]}
+    `score` = sum over synchronous validations of 1 / solvers(challenge): ten
+    teams validating the warm-up in the same minute weigh nothing, two teams
+    alone on a 450-point challenge 40 s apart weigh a lot.
+    """
+    acct_col = _account_col()
+    names = {a["id"]: a for a in accounts()}
+    chal_names = dict(
+        Challenges.query.with_entities(Challenges.id, Challenges.name).all()
+    )
+    solves = (
+        Solves.query.with_entities(
+            Solves.challenge_id, acct_col, Solves.date, Solves.ip
+        )
+        .filter(acct_col.isnot(None))
+        .order_by(Solves.challenge_id, Solves.date)
+        .all()
+    )
+    ips = {}
+    sub_col = Submissions.team_id if is_teams_mode() else Submissions.user_id
+    for row in (
+        Submissions.query.with_entities(sub_col, Submissions.ip)
+        .filter(sub_col.isnot(None), Submissions.ip.isnot(None))
+        .distinct()
+        .all()
+    ):
+        if row[1] not in ("", "127.0.0.1"):
+            ips.setdefault(row[0], set()).add(row[1])
+
+    by_chal = {}
+    solved_by = {}
+    for cid, aid, date, _ip in solves:
+        by_chal.setdefault(cid, []).append((date, aid))
+        solved_by.setdefault(aid, set()).add(cid)
+
+    pairs = {}
+    for cid, lst in by_chal.items():
+        n = len(lst)
+        for i in range(n):
+            d_i, a_i = lst[i]
+            for j in range(i + 1, n):
+                d_j, a_j = lst[j]
+                dt = (d_j - d_i).total_seconds()
+                if dt > window:
+                    break  # sorted by date: nothing later is closer
+                if a_i == a_j:
+                    continue
+                key = (min(a_i, a_j), max(a_i, a_j))
+                pairs.setdefault(key, []).append(
+                    {
+                        "challenge_id": cid,
+                        "challenge": chal_names.get(cid, "?"),
+                        "dt": int(dt),
+                        "first": a_i,
+                        "solvers": n,
+                    }
+                )
+
+    keys = set(pairs)
+    for a in ips:
+        for b in ips:
+            if a < b and ips[a] & ips[b]:
+                keys.add((a, b))
+
+    out = []
+    for a, b in keys:
+        ev = sorted(pairs.get((a, b), []), key=lambda e: e["dt"])
+        shared = sorted(ips.get(a, set()) & ips.get(b, set()))
+        if len(ev) < min_sync and not shared:
+            continue
+        dts = [e["dt"] for e in ev]
+        out.append(
+            {
+                "a_id": a,
+                "a": names.get(a, {}).get("name", "?"),
+                "b_id": b,
+                "b": names.get(b, {}).get("name", "?"),
+                "n_common": len(solved_by.get(a, set()) & solved_by.get(b, set())),
+                "n_sync": len(ev),
+                "score": round(sum(1.0 / e["solvers"] for e in ev), 3),
+                "median_dt": sorted(dts)[len(dts) // 2] if dts else None,
+                "a_first": sum(1 for e in ev if e["first"] == a),
+                "b_first": sum(1 for e in ev if e["first"] == b),
+                "shared_ips": shared,
+                "events": ev,
+            }
+        )
+    out.sort(key=lambda r: (-r["score"], -len(r["shared_ips"]), -r["n_sync"]))
+    return out
+
+
+_SYNC_CSV_COLUMNS = (
+    "a_id",
+    "a",
+    "b_id",
+    "b",
+    "n_common",
+    "n_sync",
+    "score",
+    "median_dt",
+    "a_first",
+    "b_first",
+    "shared_ips",
+    "events",
+)
+
+
+def _sync_csv(rows):
+    buf = io.StringIO()
+    w = csv.writer(buf)
+    w.writerow(_SYNC_CSV_COLUMNS)
+    for r in rows:
+        flat = dict(r)
+        flat["shared_ips"] = " ".join(r["shared_ips"])
+        flat["events"] = "; ".join(
+            f"{e['challenge']}#{e['challenge_id']} dt={e['dt']}s first={e['first']} solvers={e['solvers']}"
+            for e in r["events"]
+        )
+        w.writerow(_csv_cell(flat[k]) for k in _SYNC_CSV_COLUMNS)
+    return buf.getvalue()
+
+
+@bp.route("/api/sync")
+@admins_only
+def api_sync():
+    try:
+        window = max(1, int(request.args.get("window", SYNC_WINDOW)))
+        min_sync = max(1, int(request.args.get("min", SYNC_MIN)))
+    except ValueError:
+        window, min_sync = SYNC_WINDOW, SYNC_MIN
+    rows = sync_pairs(window=window, min_sync=min_sync)
+    if request.args.get("format") == "csv":
+        return Response(
+            _sync_csv(rows),
+            mimetype="text/csv",
+            headers={"Content-Disposition": "attachment; filename=anticheat-sync.csv"},
+        )
+    return jsonify(
+        {
+            "success": True,
+            "data": {
+                "mode": "teams" if is_teams_mode() else "users",
+                "window": window,
+                "min": min_sync,
+                "count": len(rows),
+                "pairs": rows,
             },
         }
     )
