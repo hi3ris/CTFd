@@ -1,0 +1,54 @@
+name: dependency-confusion
+author: dagbanjaphet
+category: supplychain
+description: |-
+  Notre chaîne de build a récupéré le paquet interne `acme-telemetry` — mais
+  deux registres le publient. On vous donne les métadonnées des deux registres
+  (`registry-internal.json`, `registry-public.json`) et toutes les archives
+  `.tgz` correspondantes.
+
+  Reproduisez ce que l'installeur a réellement téléchargé, inspectez cette
+  archive et récupérez le flag qui y est dissimulé.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{d3p_c0nfusion_higher_version_wins_a1f7}
+hints:
+  - content: >-
+      Un installeur de paquets ne prend pas forcément le registre que vous
+      croyez : quand un même nom existe à plusieurs endroits, la résolution suit
+      une règle simple sur les numéros de version.
+    cost: 15
+    key: h1
+  - content: >-
+      La version la plus haute gagne, où qu'elle soit publiée. Ici c'est la
+      publique. Ouvrez SON archive et regardez `scripts` dans le `package.json`.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le `postinstall` exécute `Buffer.from('...','base64')`. Décodez cette
+      chaîne base64 : la commande d'exfiltration contient le flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - supplychain
+  - dependency-confusion
+  - npm
+  - medium
+files:
+  - registry-internal.json
+  - registry-public.json
+  - acme-telemetry-1.2.3.tgz
+  - acme-telemetry-9.9.9.tgz
+state: visible
+version: "0.1"

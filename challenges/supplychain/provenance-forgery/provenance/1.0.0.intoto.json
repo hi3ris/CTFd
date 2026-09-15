@@ -1,0 +1,26 @@
+{
+  "_type": "https://in-toto.io/Statement/v1",
+  "predicateType": "https://slsa.dev/provenance/v1",
+  "subject": [
+    {
+      "name": "acme-app-1.0.0.tgz",
+      "digest": {
+        "sha256": "128d67a6ed5fd0d929a8937e232f2b34e561b561aeb22e2f208f5a6dce91d8ea"
+      }
+    }
+  ],
+  "predicate": {
+    "buildDefinition": {
+      "buildType": "acme/npm@v1"
+    },
+    "runDetails": {
+      "builder": {
+        "id": "acme-ci"
+      }
+    }
+  },
+  "signature": {
+    "keyid": "acme-ci-2024",
+    "sig": "cd001369d75ed0a5635e4cc6310d83f4effd4181e3dfcc6d2ed17d653e737b78"
+  }
+}

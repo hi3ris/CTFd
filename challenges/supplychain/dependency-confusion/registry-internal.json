@@ -1,0 +1,19 @@
+{
+  "name": "acme-telemetry",
+  "dist-tags": {
+    "latest": "1.2.3"
+  },
+  "versions": {
+    "1.2.1": {
+      "version": "1.2.1"
+    },
+    "1.2.3": {
+      "version": "1.2.3",
+      "dist": {
+        "tarball": "https://npm.internal.acme.corp/acme-telemetry/-/acme-telemetry-1.2.3.tgz",
+        "shasum": "d0f41fb612f7d597934f24c0244c123c39fdb00f"
+      }
+    }
+  },
+  "_registry": "https://npm.internal.acme.corp"
+}
