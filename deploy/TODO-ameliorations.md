@@ -10,16 +10,16 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 
 ## Ordre recommandé
 
-| #   | Chantier                              | Priorité | Effort | À livrer avant       | Dépend de |
-| --- | ------------------------------------- | -------- | ------ | -------------------- | --------- |
-| 1   | Détecteur de partage de flags ✅      | 🔴 haute | S      | présélection (23/10) | —         |
-| 2   | `make preflight` (check-list de prod) | 🔴 haute | S      | J-7 (16/10)          | —         |
-| 5   | Réparer les 2 flakes CI               | 🟠 moy.  | S      | dès maintenant       | —         |
-| 3   | Test de charge à 300 (outil k6)       | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
-| 4   | Sauvegardes automatiques + répétition | 🟠 moy.  | S      | J-7 (16/10)          | —         |
-| 6   | First bloods (notif + ticker)         | 🟡 spect | M      | finale (29/10)       | —         |
-| 7   | Tableau de bord ops                   | 🟡 spect | M      | finale (29/10)       | 3, 6      |
-| 8   | Page writeups à la clôture            | 🟢 basse | S      | clôture (30/10)      | —         |
+| #   | Chantier                                 | Priorité | Effort | À livrer avant       | Dépend de |
+| --- | ---------------------------------------- | -------- | ------ | -------------------- | --------- |
+| 1   | Détecteur de partage de flags ✅         | 🔴 haute | S      | présélection (23/10) | —         |
+| 2   | `make preflight` (check-list de prod) ✅ | 🔴 haute | S      | J-7 (16/10)          | —         |
+| 5   | Réparer les 2 flakes CI                  | 🟠 moy.  | S      | dès maintenant       | —         |
+| 3   | Test de charge à 300 (outil k6)          | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
+| 4   | Sauvegardes automatiques + répétition    | 🟠 moy.  | S      | J-7 (16/10)          | —         |
+| 6   | First bloods (notif + ticker)            | 🟡 spect | M      | finale (29/10)       | —         |
+| 7   | Tableau de bord ops                      | 🟡 spect | M      | finale (29/10)       | 3, 6      |
+| 8   | Page writeups à la clôture               | 🟢 basse | S      | clôture (30/10)      | —         |
 
 Effort : S = ½ à 1 journée · M = 1 à 3 jours. Commencer par **1 + 2** (plus grand
 effet pour le moins d'effort, zéro impact sur l'expérience joueur), puis **5**
@@ -78,35 +78,38 @@ _Reste : la décision de politique 🧑 et la vérification sur la stack locale 
 plus bête et la plus fréquente.
 
 **Périmètre.** Script `deploy/scripts/preflight.py` (Python, `requests`, lisible par
-un humain) + cible `preflight` dans `deploy/Makefile` (`URL=https://… TOKEN=…`).
+un humain) + cibles `preflight` (front, `CTFD_TOKEN=… PHASE=…`) et `local-preflight`
+dans `deploy/Makefile`. Livré le 15/09 ; tests `tests/test_preflight.py` (évaluateurs purs).
 
-- [ ] 🤖 **Secrets** (lus depuis l'env du conteneur CTFd, jamais affichés) :
+- [x] 🤖 **Secrets** (lus depuis l'env du conteneur CTFd, jamais affichés) :
   - `CTF_TEAM_FLAG_SECRET` posé, ≠ `test-secret`, ≥ 32 hex ;
   - `KOTH_SCORER_SECRET` ≠ `local-dev-koth-scorer` si `KOTH_HILLS` est posé ;
   - `SECRET_KEY` CTFd non vide ; mot de passe DB ≠ `ctfd` ; Redis protégé.
-- [ ] 🤖 **Fenêtres** (via `/api/v1/configs`) : `start` < `freeze` < `end`, tous posés,
+- [x] 🤖 **Fenêtres** (via `/api/v1/configs`) : `start` < `freeze` < `end`, tous posés,
       cohérents avec `event-windows.env.example` (présélection 72 h / finale 24 h),
       `freeze` = dernière heure. Refus si `start` est dans le passé de plus de 1 h sans
       `--allow-running`.
-- [ ] 🤖 **Identité & inscriptions** : `ctf_name == NCTF26`, `user_mode == teams`,
+- [x] 🤖 **Identité & inscriptions** : `ctf_name == NCTF26`, `user_mode == teams`,
       `team_size` attendu, visibilité inscriptions/scores/comptes conforme à la phase
       (présélection : inscriptions ouvertes ; finale : fermées), vérification e-mail.
-- [ ] 🤖 **Contenu** : 203 challenges installés (`/api/v1/challenges` admin), 0 challenge
+- [x] 🤖 **Contenu** : 203 challenges installés (`/api/v1/challenges` admin), 0 challenge
       en `state: hidden` non voulu, 19 catégories, aucun flag `static` contenant
       `NCTF{test` ; les 26 servis ont leur image `ctf-*` présente sur l'arena
       (`make check-arena`).
-- [ ] 🤖 **Services** : `/plugins/koth/api/admin` → chaque colline `online` ;
-      passerelle IA joignable ; instancier opérationnel (spawn/kill d'une instance
-      témoin, cf. RUNBOOK §2).
-- [ ] 🤖 **Thème/pages** : page `/` contient `nctf-intro` ; `HTML_SANITIZATION` désactivée
+- [~] 🤖 **Services** : `/plugins/koth/api/admin` → chaque colline `online` ✅ ;
+  passerelle IA et instancier (spawn/kill d'une instance témoin) restent des lignes
+  `MANUAL` du rapport (RUNBOOK §2) — un spawn n'est pas « lecture seule ».
+- [x] 🤖 **Thème/pages** : page `/` contient `nctf-intro` ; `HTML_SANITIZATION` désactivée
       (sinon l'intro et le bloc `<style>` disparaissent) — **avertissement**, pas refus.
-- [ ] 🤖 Sortie : tableau `OK / WARN / FAIL` par ligne, code retour ≠ 0 sur tout FAIL.
-- [ ] 🤖 Brancher dans `RUNBOOK.md §3` (J-7) et `§7` (finale) : « `make preflight`
+- [x] 🤖 Sortie : tableau `OK / WARN / FAIL` par ligne, code retour ≠ 0 sur tout FAIL.
+- [x] 🤖 Brancher dans `RUNBOOK.md §3` (J-7) et `§7` (finale) : « `make preflight`
       doit être vert avant `make phase-*` ».
 
-**Définition de « fait ».** Sur la stack locale seedée, `make preflight` sort FAIL sur
-les secrets de dev et les fenêtres vides ; après `make local-seed` avec
+**Définition de « fait ».** Sur la stack locale seedée, `make local-preflight` sort FAIL
+sur les secrets de dev et les fenêtres vides ; après `make local-seed` avec
 `event-windows.env.example`, tout passe sauf les WARN attendus.
+_Reste : la passe sur la vraie stack locale (Docker) — vérifié ici contre un CTFd de test
+(sqlite) : FAIL sur secrets/fenêtres/contenu, puis vert une fois configuré._
 
 ---
 

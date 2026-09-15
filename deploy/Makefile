@@ -366,6 +366,13 @@ push-images: ## Envoie les images de challenge dans S3 (lues depuis l'arena au p
 	@echo "Images publiees. Elles seront chargees au prochain demarrage de l'arena."
 
 .PHONY: logs
+.PHONY: preflight
+preflight: ## Check-list de prod sur le front : PHASE=preselection|finale, CTFD_TOKEN=<jeton admin>. Doit etre vert avant make phase-*
+	@test -n "$$CTFD_TOKEN" || { echo "CTFD_TOKEN manquant (jeton API admin : Settings > Access Tokens)"; exit 2; }
+	@URL="$${URL:-https://$$($(FRONT_SSH) 'cd /opt/ctfd/CTFd && . deploy/front/.env && echo $$CTF_DOMAIN')}"; \
+	 $(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ctfd printenv' | \
+	 CTFD_URL="$$URL" $(LOCAL_PY) scripts/preflight.py $(PREFLIGHT_ARGS)
+
 logs: ## Suit les logs du front
 	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) logs -f --tail=100'
 
@@ -461,6 +468,18 @@ local-seed: ## [local] Setup NCTF25 + theme hibris + accueil + 36 challenges + e
 .PHONY: local-smoke
 local-smoke: ## [local] Verifie pages, theme, assets, API, chaine IA
 	$(LOCAL_PY) local/smoke.py
+
+# Check-list de mise en prod (lecture seule). PHASE=preselection|finale ;
+# EXPECT=203 challenges ; l'env du conteneur CTFd est lu sur stdin et JAMAIS affiche.
+PHASE  ?= none
+EXPECT ?= 203
+CATS   ?= 19
+PREFLIGHT_ARGS = --env-stdin --phase $(PHASE) --expect-challenges $(EXPECT) --expect-categories $(CATS) $(PREFLIGHT_EXTRA)
+
+.PHONY: local-preflight
+local-preflight: ## [local] Check-list de prod sur la stack locale (attendu : FAIL sur les secrets de dev)
+	$(LOCAL_COMPOSE) exec -T ctfd printenv | \
+	  CTFD_URL=http://localhost:$${CTFD_PORT:-8000} $(LOCAL_PY) scripts/preflight.py $(PREFLIGHT_ARGS)
 
 .PHONY: local-playtest
 local-playtest: ## [local] Spawn -> solveur -> soumission, pour chaque challenge (ARGS="--only web/jwt-cousin")

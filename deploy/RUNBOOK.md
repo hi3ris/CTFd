@@ -160,8 +160,12 @@ make wait-arena             # arena + IA prêts (télécharge le modèle Ollama)
 make link                   # relie tout, vérifie arena + IA
 make deploy && make tls-init # si le front a été recréé
 make check-arena            # images de challenge présentes
+CTFD_TOKEN=… make preflight PHASE=preselection   # check-list : DOIT être vert (0 FAIL)
 ```
 
+- [ ] 🧑 `make preflight PHASE=preselection` vert (secrets, fenêtres 72 h, 203 challenges,
+      19 catégories, collines KotH en ligne). Un FAIL = on ne bascule pas. Les WARN se
+      lisent une par une ; les 3 lignes `MANUAL` (instancier, IA, images) se font à la main.
 - [ ] 🧑 Repointer le DNS si l'IP a changé ; vérifier HTTPS.
 - [ ] 🧑 Ouvrir les inscriptions.
 - [ ] 🧑 Dernier `season`-test : un compte réel résout un challenge de chaque type.
@@ -252,8 +256,11 @@ make phase-final            # taille réduite (~50 joueurs)
 make wait-front && make wait-arena && make link
 make deploy && make tls-init
 make check-arena
+CTFD_TOKEN=… make preflight PHASE=finale         # fenêtre 24 h, inscriptions fermées
 ```
 
+- [ ] 🧑 `make preflight PHASE=finale` vert après `finale-window.sh --apply` (fenêtre 24 h,
+      `registration_visibility=private`, KotH finale à `points=5`).
 - [ ] 🧑 Si sur site : réseau contrôlé, egress liste blanche, machines/VLAN, téléphones en caisse.
 - [ ] 🧑 **Classement repart de zéro** (présélection à 0 %).
 - [ ] 🧑 Défense devant jury (poids additif faible ≤ 10 %, jamais un gate).
