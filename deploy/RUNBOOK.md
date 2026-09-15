@@ -181,6 +181,7 @@ Cadence pendant l'épreuve :
 | automatique (15 min)     | _timer `ctfd-backup`_ | dump **vérifié** → `s3://…/backups/auto/` ; uploads + export natif 1×/h ; état sur la page **Ops** |
 | toutes les ~2 h          | `make backup-status`  | « dernier dump OK : il y a < 15 min » — sinon `make backup-now` puis `make logs`                   |
 | avant toute manipulation | `make backup`         | dump **vérifié** manuel (gzip -t + table users) envoyé sur S3, conservé sans expiration            |
+| en continu (écran 2)     | page admin **Ops**    | `/plugins/ops/admin` : tout vert (DB, Redis, dernier dump < 15 min, reaper, collines, 5xx = 0)     |
 | en continu (2ᵉ terminal) | `make logs`           | pas d'erreur 5xx en rafale                                                                         |
 | si piste IA active       | `make gpu`            | file Ollama non saturée en permanence                                                              |
 | au moindre doute         | `make cost`           | rappel de ce qui est facturé                                                                       |

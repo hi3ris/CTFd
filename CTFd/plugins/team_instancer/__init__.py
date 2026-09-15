@@ -17,6 +17,7 @@ import time
 
 from flask import Blueprint, request
 
+from CTFd.cache import cache
 from CTFd.models import Challenges, Flags, Solves, db
 from CTFd.plugins import register_plugin_assets_directory
 from CTFd.plugins.challenges import CHALLENGE_CLASSES, BaseChallenge
@@ -411,6 +412,8 @@ _REAPER_LOCK_PATH = (
 def _reap_once(app):
     with app.app_context():
         now = datetime.datetime.utcnow()
+        # Heartbeat read by the Ops admin page ("reaper OK" when recent).
+        cache.set("instancer:last_reap", time.time(), timeout=3600)
         cutoff = now - datetime.timedelta(seconds=settings.INSTANCE_TTL)
         expired = TeamInstance.query.filter(TeamInstance.start_time < cutoff).all()
         for inst in expired:

@@ -18,7 +18,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 | 3   | Test de charge à 300 (outil k6)          | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
 | 4   | Sauvegardes automatiques ✅ + répétition | 🟠 moy.  | S      | J-7 (16/10)          | —         |
 | 6   | First bloods (notif + ticker) ✅         | 🟡 spect | M      | finale (29/10)       | —         |
-| 7   | Tableau de bord ops                      | 🟡 spect | M      | finale (29/10)       | 3, 6      |
+| 7   | Tableau de bord ops ✅                   | 🟡 spect | M      | finale (29/10)       | 3, 6      |
 | 8   | Page writeups à la clôture               | 🟢 basse | S      | clôture (30/10)      | —         |
 
 Effort : S = ½ à 1 journée · M = 1 à 3 jours. Commencer par **1 + 2** (plus grand
@@ -260,21 +260,29 @@ la page KotH admin et l'admin CTFd. Une seule page, rafraîchie toutes les 5 s, 
 voir en 3 secondes si quelque chose brûle.
 
 **Périmètre.** Plugin `CTFd/plugins/ops/`, page admin **Ops** (patron `koth/admin.html`).
+Livré le 15/09 ; tests `tests/test_plugin_ops.py`.
 
-- [ ] 🤖 **Instancier** : instances vivantes / capacité (plage 28000-28500 = 501),
-      par équipe, âge, reaper OK, dernières erreurs de spawn.
-- [ ] 🤖 **Collines** : réutiliser `/plugins/koth/api/admin` (en ligne, tenant, plafond).
-- [ ] 🤖 **Soumissions** : débit/min sur l'heure (bonnes / mauvaises), 5 challenges les
-      plus tentés, taux d'erreur 5xx (depuis les logs gunicorn ou un compteur cache).
-- [ ] 🤖 **Joueurs** : connectés (sessions actives), équipes ayant ≥ 1 solve.
-- [ ] 🤖 **Santé** : DB (ping + taille), Redis (ping), dernier backup (chantier 4),
-      dernier first blood (chantier 6), état `ctftime()/paused/freeze`.
-- [ ] 🤖 Aucune action destructive sur la page : lecture seule, comme la page KotH.
-- [ ] 🤖 Endpoint `GET /plugins/ops/api/status` (`@admins_only`) pour un affichage
+- [x] 🤖 **Instancier** : instances vivantes / capacité (pool de ports frp), par équipe,
+      plus ancienne vs TTL, reaper OK (battement `instancer:last_reap` ajouté dans
+      `_reap_once`), instances en erreur.
+- [x] 🤖 **Collines** : réutiliser `/plugins/koth/api/admin` (en ligne, tenant, plafond).
+- [x] 🤖 **Soumissions** : débit/min sur l'heure (bonnes / mauvaises / limitées), 5 challenges
+      les plus tentés. **5xx** : compteur cache alimenté par un `after_request` — donc
+      « 5xx Flask » seulement : un timeout gunicorn ou une exception jamais transformée en
+      réponse n'est pas vu (les logs gunicorn restent la référence, `make logs`).
+- [x] 🤖 **Joueurs** : « actifs 15 min » = ont agi (soumission, connexion, nouvelle IP :
+      c'est ce que `Tracking` enregistre, pas chaque GET), équipes ayant ≥ 1 solve.
+- [x] 🤖 **Santé** : DB (ping + taille), Redis (ping), dernier backup (chantier 4, rouge si > 30 min pendant l'épreuve), dernier first blood (chantier 6), incidents anti-triche
+      (chantier 1, lecture du cache seulement), état `ctftime()/paused/freeze`.
+- [x] 🤖 Aucune action destructive sur la page : lecture seule, comme la page KotH.
+- [x] 🤖 Endpoint `GET /plugins/ops/api/status` (`@admins_only`) pour un affichage
       sur écran secondaire.
 
 **Définition de « fait ».** Pendant `make local-loadtest`, la page montre le débit monter,
 les instances apparaître et rien ne dépasse 1 s de rendu.
+_État : page rendue et vérifiée (Playwright, 7 cartes, rendu ~30 ms sur un CTFd de test) ;
+le test unitaire borne le rendu à 1 s. La passe sous charge dépend du chantier 3 (k6),
+pas encore construit._
 
 ---
 
