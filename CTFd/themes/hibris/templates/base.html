@@ -152,12 +152,12 @@
         .form-control:focus { border-color: var(--yellow); box-shadow: 0 0 0 .15rem rgba(255,206,0,0.22);
             background-color: #060a12; color: var(--fg); }
 
-        /* Footer: black with a tricolour top edge */
+        /* Footer : noir, liseré sobre. Le tricolore vit sur le ruban d'état
+           (.hud-bar::before, animé) juste en dessous — un seul suffit. */
         .footer {
             background-color: #00030a;
             color: var(--muted);
-            border-top: 3px solid transparent;
-            border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+            border-top: 1px solid var(--line);
             padding: 1rem 0;
             font-family: 'JetBrains Mono', monospace;
             font-size: .82rem;
