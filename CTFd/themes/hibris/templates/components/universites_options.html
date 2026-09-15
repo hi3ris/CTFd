@@ -1,31 +1,119 @@
 {#
   Liste déroulante « Université » de l'inscription NCTF26.
 
-  À REMPLACER par la liste officielle des établissements d'enseignement
-  supérieur du Togo (edusup.gouv.tg, rentrée 2025-2026). Le PDF officiel fourni
-  est un scan (aucune couche texte), non extractible automatiquement — la liste
-  ci-dessous est un socle partiel à compléter à la main.
+  Liste officielle des établissements d'enseignement supérieur reconnus par le
+  Ministère de l'Enseignement Supérieur et de la Recherche du Togo pour l'année
+  académique 2025-2026 (source : edusup.gouv.tg, arrêté du 30 septembre 2025).
 
-  Règles : une entrée par ligne dans UNIVERSITES ; garder « Autre / N/A » en
-  dernier. C'est le SEUL endroit à éditer ; après modification, redémarrer CTFd
-  (c'est un template, aucun rebuild d'assets nécessaire).
-
-  La variable `_uni_selected` (valeur actuelle) est fournie par le formulaire.
+  Pour mettre à jour : éditer PUBLICS / PRIVES ci-dessous, garder « Autre / N/A »
+  en dernier, puis redémarrer CTFd (template, aucun rebuild d'assets). C'est le
+  SEUL endroit à éditer. `_uni_selected` (valeur actuelle) est fourni par le
+  formulaire.
 #}
-{% set UNIVERSITES = [
+{% set UNI_PUBLICS = [
   "Université de Lomé (UL)",
   "Université de Kara (UK)",
-  "Institut Africain d'Informatique (IAI-Togo)",
-  "École Nationale d'Administration (ENA)",
-  "ESGIS — École Supérieure de Gestion, d'Informatique et des Sciences",
-  "UCAO-UUT — Université Catholique de l'Afrique de l'Ouest (Togo)",
-  "Université BK (BK University)",
-  "ESA — École Supérieure des Affaires",
-  "IPNET Institute",
-  "ISICA",
-  "HETEC",
-  "Autre / N/A"
+  "Centre international de recherche et d'étude de langues – village du Bénin (CIREL-VB)",
+  "École Nationale Supérieure (ENS) d'Atakpamé",
 ] %}
-{% for u in UNIVERSITES %}
-<option value="{{ u }}"{% if _uni_selected == u %} selected{% endif %}>{{ u }}</option>
-{% endfor %}
+{% set UNI_PRIVES = [
+  "Centre de Formation Bancaire du Togo (CFBT)",
+  "Carrefour Informatique et Bureautique – Institut des Nouvelles Technologies Appliquées (CIB-INTA)",
+  "Centre de Perfectionnement aux Techniques Économiques et Commerciales (CPTEC)",
+  "Centre Informatique de Formation et d'Orientation Professionnelle (CIFOP)",
+  "Centre Omnithérapeutique Africain (COA)",
+  "École de Finance",
+  "École des Cadres",
+  "École des Hautes Études de Sciences et Technologies (HEST)",
+  "École Maritime du Togo (EMARITO)",
+  "École supérieure des arts et sciences du numérique (ESASN)",
+  "École Supérieure d'Administration et de Gestion Notre Dame de l'Église (ESAG-NDE)",
+  "École Supérieure d'Audit et de Management (ESAM)",
+  "École Supérieure d'Informatique et de Gestion (ESIG GLOBAL SUCCESS)",
+  "École Supérieure d'Informatique, de Business et d'Administration (ESIBA)",
+  "École Supérieure de Commerce et de l'Économie Numérique (ESCEN)",
+  "École Supérieure de Formation Professionnelle (CFP ANCILA)",
+  "École Supérieure de Gestion, d'Informatique et des Sciences (ESGIS)",
+  "École Supérieure de Management (ESMA)",
+  "École Supérieure de Technologie, du Cinéma et de l'Audiovisuel (ESTECA)",
+  "École Supérieure des Affaires (ESA-Agoè et ESA-Super Taco)",
+  "École Supérieure des Études Cinématographiques (ESEC)",
+  "École Supérieure des Ponts et Chaussées (ESPC)",
+  "École Supérieure des Sciences Économiques, de Gestion et de la Statistique Dr DJOKA",
+  "École supérieure des techniques appliquées aux bâtiments (ESTABAT)",
+  "École Supérieure des Techniques et Arts de la Communication (ESTAC)",
+  "École Supérieure du Tourisme et d'Hôtellerie Stella Matutina (ESTH-SM)",
+  "École supérieure de formation professionnelle (ESFP-FIMAC)",
+  "Faculté de Théologie des Assemblées de Dieu (FATAD)",
+  "FORMATEC",
+  "Haute Technologie d'Informatique et Bureautique Atlantis (HTIB-ATLANTIS)",
+  "Hôtel École Avenida",
+  "Hôtel École la Savoureuse (HES)",
+  "Institut Africain d'Administration et d'Études Commerciales (IAEC)",
+  "Institut Africain de Développement Sanitaire et Social (IADSS)",
+  "Institut Africain des Sciences, des Technologies et des Métiers (IASTM)",
+  "Institut Africain Le Leadership",
+  "Institut de Formation et de Recherche pour le Développement Durable (IFORDD)",
+  "Institut de Formation Technique Supérieure (IFTS)",
+  "Institut de Mathématique, des Sciences et Technologies (IMaST)",
+  "Institut de Recherche et de Formation en Développement local (IRFODEL-CENTRE)",
+  "Institut de technologie IPNET IT",
+  "Institut du Génie Biomédical de Lomé (IGEB)",
+  "Institut Polytechnique DEFITECH",
+  "Institut Polytechnique des Bâtiments et des Travaux Publics (IPBTP)",
+  "Institut supérieur « LA MAÎTRISE »",
+  "Institut supérieur « LE TECHNOCRATE »",
+  "Institut supérieur Agata Carelli (ISAC)",
+  "Institut supérieur d'Administration, des Sciences Économiques et de Gestion (ISAGES)",
+  "Institut supérieur de Droit et d'Interprétariat (ISDI)",
+  "Institut supérieur de Management Adonaï (ISM ADONAI)",
+  "Institut supérieur de Management et de Développement (ISMAD)",
+  "Haute école de technologies et de management des Lacs (HETML)",
+  "Institut supérieur de technologies et de management (ISTM)",
+  "Institut supérieur des langues et des affaires (ISLA)",
+  "Institut supérieur des sciences économiques et commerciales (ISSEC-KOUVAHEY)",
+  "Institut supérieur Don Bosco",
+  "Institut supérieur privé de management (IPM)",
+  "Institut Universitaire « LUCAS University College »",
+  "Institut Universitaire Global Wealth",
+  "Institut UPSILON Collège de Paris Supérieur",
+  "Institut des technologies avancées (JUMAU ITA)",
+  "Institut supérieur de Bâtiment Ayin'a (ISBA)",
+  "Lomé Business School (LBS)",
+  "Social and Inclusive Business Institute of Togo (SIBI-Togo)",
+  "Institut des Hautes Études des Relations Internationales et Stratégiques (IHERIS)",
+  "École supérieure des arts de la mode et des arts plastiques (ESAMOD)",
+  "Université Catholique de l'Afrique de l'Ouest – Unité universitaire du Togo (UCAO-UUT)",
+  "American Institute of Commonwealth-Togo (AIC-Togo)",
+  "Heritage International University Institute (HIUI)",
+  "Institut Universitaire Nobel (IUN)",
+  "École Supérieure d'Esthétique Appliquée Pharm-A-Peau (ESEA-Q'LS)",
+  "École supérieure de l'aéronautique et des technologies-Togo (ESAT-Togo)",
+  "École des Micro-Entrepreneurs du Centre (EMC-Sokodé)",
+  "École supérieure de Communication et de Gestion (ESCG-Tsévié)",
+  "École supérieure des affaires (ESA-Kara)",
+  "École supérieure des Ponts et Chaussées (ESPC-Kara)",
+  "Institut supérieur de Management Mgr BAKPESSI (Kara)",
+  "Knowbridge University Institute (Sokodé)",
+  "Institute of Strategy and Leadership (ISL)",
+  "Hôtel École Concordia",
+  "International School of Technology and Business (ISTB)",
+  "Institut de Formation aux Métiers de la Sécurité Sociale (IFOMESS-Kara)",
+  "Institut de Formation aux Normes et Technologies de l'Informatique (IFNTI-Sokodé)",
+  "Institut des Sciences Technologies et Arts (ISTA-Kara)",
+  "Institut supérieur de Management Adonaï (ISM ADONAI-Kara)",
+  "L'Institut Consortium Saint John Révélation",
+  "École supérieure d'ingénieurs d'Aného (ESIA)",
+  "École supérieure le Miel de Kpové-Zion",
+  "Univers du leadership international de XOESE (Univers XOESE)",
+  "Centre de formation supérieure SartenMode (CFS-SartenMode)",
+  "École supérieure de relations internationales et de diplomatie (ESRID)",
+  "Global University School of Science and Technology (GUST)",
+] %}
+<optgroup label="Établissements publics">
+{% for u in UNI_PUBLICS %}<option value="{{ u }}"{% if _uni_selected == u %} selected{% endif %}>{{ u }}</option>
+{% endfor %}</optgroup>
+<optgroup label="Établissements privés">
+{% for u in UNI_PRIVES %}<option value="{{ u }}"{% if _uni_selected == u %} selected{% endif %}>{{ u }}</option>
+{% endfor %}</optgroup>
+<option value="Autre / N/A"{% if _uni_selected == "Autre / N/A" %} selected{% endif %}>Autre / N/A</option>
