@@ -86,9 +86,40 @@
     font-family: 'JetBrains Mono', monospace; font-size: .68rem;
     letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: .35rem;
   }
+
+  /* --- Séquence de boot : la console « s'allume » puis révèle le hero --- */
+  .nctf-boot {
+    position: absolute; inset: 0; z-index: 6; background: #05070d;
+    display: flex; flex-direction: column; justify-content: center; gap: .4rem;
+    padding: 0 clamp(1rem, 7%, 5rem); text-align: left;
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    font-size: clamp(.72rem, 1.7vw, .95rem); color: #c7cfda; letter-spacing: .4px;
+    animation: bootOff .6s ease 3.4s forwards;
+  }
+  .nctf-boot .ln { opacity: 0; transform: translateX(-6px); animation: bootLn .35s ease forwards; }
+  .nctf-boot .l1 { animation-delay: .2s; }  .nctf-boot .l2 { animation-delay: .9s; }
+  .nctf-boot .l3 { animation-delay: 1.5s; } .nctf-boot .l4 { animation-delay: 2.1s; }
+  .nctf-boot .l5 { animation-delay: 2.7s; }
+  .nctf-boot .p  { color: var(--green-b); }
+  .nctf-boot .ok { color: var(--green-b); }
+  .nctf-boot .on { color: var(--yellow); font-weight: 700; }
+  .nctf-boot .cur { display: inline-block; width: .55ch; height: 1em; vertical-align: -.12em;
+    background: var(--yellow); margin-left: .1ch; animation: bootCur 1s steps(1) infinite; }
+  @keyframes bootLn  { to { opacity: 1; transform: none; } }
+  @keyframes bootCur { 50% { opacity: 0; } }
+  @keyframes bootOff { to { opacity: 0; visibility: hidden; } }
+  @media (prefers-reduced-motion: reduce) { .nctf-boot { display: none !important; } }
 </style>
 
 <div class="nctf-hero">
+  <div class="nctf-boot" aria-hidden="true">
+    <div class="ln l1"><span class="p">&gt;</span> nctf.core :: initialisation du terminal…</div>
+    <div class="ln l2"><span class="p">&gt;</span> authentification opérateur ………… <span class="ok">[ ok ]</span></div>
+    <div class="ln l3"><span class="p">&gt;</span> liaison arène chiffrée (AES-256) …… <span class="ok">[ ok ]</span></div>
+    <div class="ln l4"><span class="p">&gt;</span> synchronisation des 19 secteurs …… <span class="ok">[ ok ]</span></div>
+    <div class="ln l5"><span class="p">&gt;</span> console cyberdéfense ……………… <span class="on">EN LIGNE</span><span class="cur">&nbsp;</span></div>
+  </div>
+
   <p class="eyebrow">// ctf national &middot; édition 2026</p>
   <h1>NCTF<span class="dot">26</span></h1>
   <p class="lead">

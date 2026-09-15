@@ -306,6 +306,31 @@
         main { animation: powerOn .5s ease both; }
         @keyframes powerOn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
 
+        /* Dossiers de mission : le plateau /challenges en fiches classifiées */
+        #challenges-board { counter-reset: msn; }
+        .category-header h3 {
+            font-family: 'JetBrains Mono', monospace !important; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 3px; font-size: .95rem; color: #d6dde6;
+        }
+        .category-header h3::before { content: "// "; color: var(--yellow); }
+        .challenge-button {
+            counter-increment: msn;
+            border-left: 3px solid rgba(255,206,0,.5) !important;
+            background-image:
+                linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px) !important;
+            background-size: 22px 22px !important;
+        }
+        .challenge-button::before {
+            content: "MSN " counter(msn, decimal-leading-zero);
+            position: absolute; top: 6px; right: 9px; z-index: 2;
+            font-family: 'JetBrains Mono', monospace; font-size: .58rem; letter-spacing: 1px;
+            color: var(--muted); opacity: .85;
+        }
+        .challenge-button:hover { border-left-color: var(--yellow) !important; }
+        .solved .challenge-button, .challenge-button.solved-challenge { border-left-color: var(--green-b) !important; }
+        .challenge-button .corner-button-check { color: var(--green-b); filter: drop-shadow(0 0 6px rgba(23,176,107,.6)); }
+
         @media (prefers-reduced-motion: reduce) {
             body::before, .hud-bar::before, .hud-bar .dot,
             .challenge-button:hover::after, .btn:hover::after, main { animation: none; }
