@@ -8,6 +8,10 @@ Document de suivi vivant. On coche les cases au fur et à mesure.
 - **Légende propriétaire** : 🧑 = vous (décision / action humaine) · 🤖 = moi (Claude, build)
 - **Convention** : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[!]` bloquant / délai critique
 
+> **Chantiers transverses (équité, fiabilité, spectacle)** : voir
+> [`TODO-ameliorations.md`](TODO-ameliorations.md) — détecteur de partage de flags,
+> `make preflight`, test de charge, sauvegardes auto, flakes CI, first bloods, ops, writeups.
+
 > Règle d'or issue de `anti-llm-guardrails.md` : la présélection **filtre**, la finale
 > **décide**. Le risque réel est, dans l'ordre : effondrement de l'infra ≫ compromission
 > de la plateforme ≫ quelqu'un utilise un LLM. La feuille de route est priorisée ainsi.
