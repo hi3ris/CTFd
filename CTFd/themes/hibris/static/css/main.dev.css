@@ -11130,31 +11130,3 @@ blockquote {
     margin-left: -1.5em;
     font-size: 50%
 }
-body {
-  background-color: #0f172a !important; /* Fond sombre */
-  background-image: 
-    linear-gradient(rgba(255,255,255,0.03) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255,255,255,0.03) 1px, transparent 1px);
-  background-size: 40px 40px;
-  color: #f1f5f9; /* Texte clair */
-}
-
-a, .btn, .nav-link {
-  transition: color 0.3s, box-shadow 0.3s;
-}
-
-a:hover, .btn:hover, .nav-link:hover {
-  color: #38bdf8;
-  box-shadow: 0 0 5px #38bdf8;
-}
-
-body, h1, h2, h3, h4, h5, h6 {
-  font-family: 'Inter', sans-serif;
-}
-
-:root {
-  --primary: #38bdf8; /* Bleu clair */
-  --secondary: #64748b;
-  --background-dark: #0f172a;
-  --text-light: #f1f5f9;
-}

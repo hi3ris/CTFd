@@ -150,3 +150,20 @@ Deux passes indépendantes (modèle **fable**) : **sécurité** (XSS/injection, 
 - **Rebuild des bundles** : `static/js` est un build figé ; toute correction dans `assets/js` ne s'applique qu'après reconstruction du thème.
 
 > Rappel CI : le thème hibris n'est pas couvert par « Theme Verification » (qui ne vérifie qu'admin+core) et les `.html` sont dans `.prettierignore` — cet audit est purement qualité/sécurité, sans garde-fou CI.
+
+## Corrections appliquées
+
+Correctifs à effet immédiat (aucun rebuild requis) — les 4 HIGH + contrastes + XSS admin :
+
+- **HIGH icônes** — `base.html` lie désormais `css/fonts.css` (avant `main.css`) → FontAwesome + webfonts chargés.
+- **HIGH connection_info** — bloc `{% block connection_info %}` restauré dans `challenge.html` (après la description) → le `nc host port` / la chaîne SSH des challenges servis s'affiche à nouveau.
+- **HIGH scoreboard vide** — `scoreboard.html` : ajout d'un `{% else %}` (« Aucun score pour le moment ») sur la table serveur, `.race .waiting { position:static }`, et le JETON JS ne cache plus la table quand `teams.length===0` et rend un message d'attente lisible (hauteur auto, `lanes` réinitialisé). Inline JS re-validé (`node --check`).
+- **HIGH palette parasite** — bloc de queue (`#0f172a !important`, `#38bdf8`, police `Inter`, `:root`) retiré de `main.dev.css` (le `main.min.css` de prod était déjà propre → dev aligné sur prod).
+- **MEDIUM contraste** — bouton `.challenge-submit` re-stylé (rouge haute-lisibilité) ; les tuiles résolues ciblent désormais `.solved` **et** `.solved-challenge` (le JS applique les deux).
+- **MEDIUM XSS (admin)** — `challenges.js` : nom et catégorie de challenge injectés via `$("<p>").text(...)` / `$("<h3>").text(...)` au lieu de HTML brut ; corrigé dans la **source ET les bundles servis** (`challenges.min.js`, `challenges.dev.js`), `node --check` OK.
+- **LOW i18n** — `<html lang="fr">`.
+
+**Reportés (nécessitent un rebuild de thème ou touchent un bundle partagé) :**
+
+- **MEDIUM toast notification** (`ezq.js` + `events.js`) : `data.title`/`data.content` rendus en HTML brut. Correctif dans le bundle `core` partagé (rayon d'action large) → à traiter lors d'un rebuild du thème. **Mitigation d'ici là :** activer `html_sanitization` (Admin > Config).
+- Divers LOW/INFO (auto-hébergement des polices, beacon Mailchimp du setup, contrastes dark-mode Bootstrap résiduels, `init.teamId` pour la surbrillance de sa propre équipe) — cosmétiques, non bloquants.

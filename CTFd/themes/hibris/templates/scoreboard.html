@@ -49,6 +49,14 @@
 			</table>
 		</div>
 	</div>
+	{% else %}
+	<div id="scoreboard" class="row">
+		<div class="col-md-12">
+			<p class="text-center text-muted" style="padding:2.5rem 1rem;">
+				Aucun score pour le moment — la grille se remplit au premier flag validé.
+			</p>
+		</div>
+	</div>
 	{% endif %}
 	{% endcache %}
 	</div>
@@ -206,7 +214,7 @@
 	animation:fall linear forwards; }
 @keyframes fall { to { transform:translateY(115%) rotate(540deg); opacity:1; } }
 
-.race .waiting { text-align:center; color:var(--muted); font-family:'JetBrains Mono',monospace;
+.race .waiting { position:static; text-align:center; color:var(--muted); font-family:'JetBrains Mono',monospace;
 	padding:2.5rem 1rem; }
 .race .yourcar { position:absolute; left:0; right:0; }
 
@@ -412,13 +420,22 @@ body.bigmode #race { margin-top:1rem; }
 			.then(function(r){ return r.ok ? r.json() : null; })
 			.then(function(j){
 				if (!j || !j.success || !Array.isArray(j.data)) return;
-				// première donnée valide -> on montre la course, on cache la table
+				var teams = j.data.map(function(d){ return {account_id:d.account_id, name:d.name, score:Number(d.score)||0}; });
+				if (!teams.length){
+					// pas encore de score : on GARDE la table (état vide serveur) et on
+					// rend un message d'attente lisible dans la piste (hauteur auto,
+					// waiting en position:static — sinon .track > * l'écrase à ~24px).
+					lanes = {};
+					track.style.height = "";
+					track.innerHTML = '<div class="startline"></div><div class="finishline"></div>'
+						+ '<div class="waiting">En attente des premiers scores…</div>';
+					return;
+				}
+				// on a des scores -> on révèle la course et on cache la table
 				if (mount.hasAttribute("hidden")){
 					mount.hidden=false; mount.setAttribute("aria-hidden","false");
 					if (tableBox && !big) tableBox.hidden=true;
 				}
-				var teams = j.data.map(function(d){ return {account_id:d.account_id, name:d.name, score:Number(d.score)||0}; });
-				if (!teams.length){ track.innerHTML='<div class="waiting">En attente des premiers scores…</div>'; return; }
 				layout(teams); podium(teams);
 			})
 			.catch(function(){ /* on garde la table en repli */ });

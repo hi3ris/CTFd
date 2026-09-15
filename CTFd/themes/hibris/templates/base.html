@@ -1,5 +1,5 @@
 <!DOCTYPE html>
-<html>
+<html lang="fr">
 <head>
     <title>{{ Configs.ctf_name }}</title>
     <meta charset="utf-8">
@@ -13,6 +13,8 @@
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tourney:wght@600;800&family=Lato:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
 
+    <!-- FontAwesome + offline webfonts (icons must load before the component styles) -->
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/fonts.css') }}">
     <!-- base component styles -->
     <link rel="stylesheet" href="{{ url_for('views.themes', path='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('views.themes', path='css/core.css') }}">
@@ -91,6 +93,14 @@
         .btn-secondary, .btn-info { background-color: var(--green); border-color: var(--green); color: #fff; }
         .btn-secondary:hover, .btn-info:hover { transform: translateY(-2px); filter: brightness(1.12); }
         .btn-warning { background-color: var(--yellow); border-color: var(--yellow); color: #1a1400; }
+        /* Flag submit button (modal): high-contrast red, not the low-contrast default */
+        .challenge-submit {
+            background-color: var(--red); border: 1px solid var(--red); color: #fff;
+            font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: .4px;
+            border-radius: var(--radius); padding: .375rem 1rem; width: 100%;
+            transition: filter .12s ease, transform .12s ease;
+        }
+        .challenge-submit:hover, .challenge-submit:focus { filter: brightness(1.08); transform: translateY(-1px); }
 
         /* Panels / cards / challenge tiles */
         .card, .modal-content, .jumbotron, .challenge-button, .challenge {
@@ -112,11 +122,14 @@
         .challenge .challenge-value, .challenge-button .challenge-value,
         .badge, .score, .place { font-family: 'JetBrains Mono', monospace; }
 
-        /* Solved = Togo green, terminal-style badge (echoes the vitrine) */
-        .solved, .solved .challenge-button { background-color: rgba(23,176,107,0.08) !important; }
-        .solved .challenge-button, .challenge.solved { border-top-color: var(--green-b) !important; }
+        /* Solved = Togo green, terminal-style badge (echoes the vitrine).
+           The board JS marks solved tiles with .solved-challenge; keep both selectors in sync. */
+        .solved, .solved .challenge-button,
+        .solved-challenge, .challenge-button.solved-challenge { background-color: rgba(23,176,107,0.08) !important; }
+        .solved .challenge-button, .challenge.solved,
+        .solved-challenge, .challenge-button.solved-challenge { border-top-color: var(--green-b) !important; }
         .badge { border: 1px solid #2b3a4d; }
-        .solved .badge { background-color: rgba(23,176,107,0.35); border-color: var(--green-b); color: #fff; }
+        .solved .badge, .solved-challenge .badge { background-color: rgba(23,176,107,0.35); border-color: var(--green-b); color: #fff; }
 
         /* Tables / scoreboard */
         table { color: var(--fg); }
