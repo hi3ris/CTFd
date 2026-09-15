@@ -102,12 +102,12 @@ def do_setup(url):
         "account_visibility": "public",
         "score_visibility": "public",
         "registration_visibility": "public",
-        # Fenêtre de compétition (epoch secondes, GMT/Lomé). Vide par défaut =>
-        # local toujours ouvert (le playtest n'est pas verrouillé). En arène,
-        # passer CTF_START/CTF_END. Présélection : ven 23 oct 00:00 -> dim 25 oct
-        # 23:59 GMT = CTF_START=1792713600 CTF_END=1792972740.
-        "start": os.environ.get("CTF_START", ""),
-        "end": os.environ.get("CTF_END", ""),
+        # La fenêtre (start / end / freeze) est appliquée par set_configs() via
+        # CTF_START / CTF_END / CTF_FREEZE : idempotent, ça marche aussi sur une
+        # instance déjà installée (bascule présélection -> finale sans reset).
+        # Voir deploy/event-windows.env.example. Vide ici => local reste ouvert.
+        "start": "",
+        "end": "",
         "team_size": os.environ.get("CTF_TEAM_SIZE", ""),
         "nonce": nonce_of(r.text),
     }
@@ -159,10 +159,23 @@ def set_home(s, url):
 
 
 def set_configs(s, url):
-    r = s.patch(
-        url + "/api/v1/configs", json={"ctf_theme": "hibris", "user_mode": "teams"}
-    )
+    cfg = {"ctf_theme": "hibris", "user_mode": "teams"}
+    # Fenêtre de compétition + gel du scoreboard depuis l'environnement (epoch
+    # secondes, GMT/Lomé). Absents => inchangés (le local reste ouvert). Valeurs
+    # présélection / finale : voir deploy/event-windows.env.example.
+    for key, env in (
+        ("start", "CTF_START"),
+        ("end", "CTF_END"),
+        ("freeze", "CTF_FREEZE"),
+    ):
+        v = os.environ.get(env)
+        if v:
+            cfg[key] = v
+    r = s.patch(url + "/api/v1/configs", json=cfg)
     r.raise_for_status()
+    applied = [k for k in ("start", "end", "freeze") if k in cfg]
+    if applied:
+        log("   config: " + ", ".join(f"{k}={cfg[k]}" for k in applied))
 
 
 def installed_names(s, url):
