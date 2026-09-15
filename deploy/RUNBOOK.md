@@ -19,7 +19,10 @@ Toutes les commandes se lancent **depuis `deploy/`** sauf mention contraire.
 > clôture) et lance le `make` correspondant, en te demandant l'URL et le jeton
 > admin au besoin. `./nctf --dry-run` montre les commandes sans les exécuter.
 > Pour la fenêtre de présélection : `make presel-window` (ajoute `APPLY=1` pour
-> l'appliquer), ou `deploy/preselection-window.sh --apply`.
+> l'appliquer ; sur la prod, `URL=https://… CTFD_TOKEN=…` en plus — le seed
+> n'utilise admin/admin que sur la stack locale), ou
+> `deploy/preselection-window.sh --apply`. Le seed pose aussi `/tos` et le
+> champ « Université » ; `make preflight` refuse s'ils manquent.
 
 - [ ] 🧑 AWS CLI configurée (`aws sts get-caller-identity` répond), profil avec droits EC2/S3/IAM/DynamoDB/ServiceQuotas.
 - [ ] 🧑 `terraform` ≥ 1.6, `ssh`, `jq` installés sur le poste.

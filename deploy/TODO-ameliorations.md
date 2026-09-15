@@ -86,7 +86,7 @@ dans `deploy/Makefile`. Livré le 15/09 ; tests `tests/test_preflight.py` (éval
   - `KOTH_SCORER_SECRET` ≠ `local-dev-koth-scorer` si `KOTH_HILLS` est posé ;
   - `SECRET_KEY` CTFd non vide ; mot de passe DB ≠ `ctfd` ; Redis protégé.
 - [x] 🤖 **Fenêtres** (via `/api/v1/configs`) : `start` < `freeze` < `end`, tous posés,
-      cohérents avec `event-windows.env.example` (présélection 72 h / finale 24 h),
+      cohérents avec `event-windows.env.example` (présélection 53 h / finale 24 h),
       `freeze` = dernière heure. Refus si `start` est dans le passé de plus de 1 h sans
       `--allow-running`.
 - [x] 🤖 **Identité & inscriptions** : `ctf_name == NCTF26`, `user_mode == teams`,
@@ -161,7 +161,7 @@ l'instancier inactif (ROUGE attendu sans arena). Le run à 300 reste à faire au
 ## 4. Sauvegardes automatiques + répétition de restauration 🟠
 
 **Pourquoi.** `make backup` (dump **vérifié** → S3) et `make restore` existent déjà.
-Le trou : pendant 72 h, `RUNBOOK §4` dit « `make backup` régulièrement » — donc
+Le trou : pendant 53 h, `RUNBOOK §4` dit « `make backup` régulièrement » — donc
 **manuel**, donc oublié à 4 h du matin. Et la restauration n'a jamais été répétée sur
 une base **de la taille de l'épreuve**.
 

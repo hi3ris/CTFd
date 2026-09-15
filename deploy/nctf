@@ -126,6 +126,7 @@ do_event() {
  30) Preflight présélection       (make preflight PHASE=preselection)
  31) Preflight finale             (make preflight PHASE=finale)
  32) Publier le règlement (/tos)  (make reglement-publish)
+ 39) Poser la fenêtre présél.     (make presel-window APPLY=1 : 23 oct 19h -> 26 oct 00h)
  33) Sauvegarde vérifiée          (make backup)
  34) État des sauvegardes         (make backup-status)
  35) Rapport anti-triche (CSV)    (make anticheat-report)
@@ -139,6 +140,9 @@ MENU
       30) need_url; need_token; run "preflight présélection" make preflight PHASE=preselection URL="$URL" CTFD_TOKEN="$TOKEN" ;;
       31) need_url; need_token; run "preflight finale" make preflight PHASE=finale URL="$URL" CTFD_TOKEN="$TOKEN" ;;
       32) need_url; need_token; run "règlement -> /tos" make reglement-publish URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      39) need_url; need_token; run "fenêtre (affichage)" make presel-window \
+            && confirm "Applique cette fenêtre sur $URL" \
+            && run "fenêtre présélection" make presel-window APPLY=1 URL="$URL" CTFD_TOKEN="$TOKEN" ;;
       33) run "backup" make backup ;;
       34) run "backup-status" make backup-status ;;
       35) need_url; need_token; run "rapport anti-triche" make anticheat-report URL="$URL" CTFD_TOKEN="$TOKEN" ;;

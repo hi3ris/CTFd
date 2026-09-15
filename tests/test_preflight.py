@@ -179,6 +179,36 @@ def test_identity_per_phase():
     )
 
 
+def test_registration_needs_reglement_and_university_field():
+    cfg = {"tos_text": "# Reglement"}
+    uni = [{"name": "Université", "required": True}]
+    assert all(
+        r.status == pf.OK for r in pf.check_registration(cfg, uni, "preselection")
+    )
+    st = statuses(pf.check_registration({"tos_text": " "}, uni, "preselection"))
+    assert st["reglement"] == pf.FAIL
+    assert (
+        statuses(pf.check_registration({"tos_url": "https://x"}, uni, "preselection"))[
+            "reglement"
+        ]
+        == pf.OK
+    )
+    assert (
+        statuses(pf.check_registration(cfg, [], "preselection"))["universite"]
+        == pf.FAIL
+    )
+    assert (
+        statuses(
+            pf.check_registration(
+                cfg, [{"name": "Université", "required": False}], "preselection"
+            )
+        )["universite"]
+        == pf.FAIL
+    )
+    # finale : inscriptions fermees, simple avertissement
+    assert statuses(pf.check_registration({}, [], "finale"))["reglement"] == pf.WARN
+
+
 def test_content_counts_flags_and_test_values():
     chals = [
         {"id": 1, "name": "A", "category": "web", "state": "visible"},

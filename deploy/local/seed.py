@@ -16,6 +16,10 @@ Etapes :
 
 Pre-requis sur la machine : pip install ctfcli requests
 Identifiants crees : admin / admin (compte admin), playtest / playtest (joueur).
+
+Hors stack locale (bascule de fenetre sur la prod : `make presel-window APPLY=1
+URL=https://...`), s'authentifier par CTFD_TOKEN (jeton API admin) ou par
+CTFD_ADMIN_USER / CTFD_ADMIN_PASS -- jamais en argument de ligne de commande.
 """
 import argparse
 import glob
@@ -91,7 +95,7 @@ def do_setup(url):
         return
     data = {
         "ctf_name": "NCTF26",
-        "ctf_description": "NCTF26 — CTF national de cybersécurité du Togo, organisé par le CERT.tg. Présélection en ligne du 23 au 25 octobre (72 h, non-stop), finale à Lomé 29–30 octobre.",
+        "ctf_description": "NCTF26 — CTF national de cybersécurité du Togo, organisé par le CERT.tg. Présélection en ligne du vendredi 23 octobre 19:00 au lundi 26 octobre 00:00 (53 h, non-stop), finale à Lomé 29–30 octobre.",
         "user_mode": "teams",
         "name": ADMIN["name"],
         "email": ADMIN["email"],
@@ -120,12 +124,21 @@ def do_setup(url):
 
 def admin_session(url):
     s = requests.Session()
+    token = os.environ.get("CTFD_TOKEN")
+    if token:
+        # Prod : CTFd n'honore le jeton qu'avec Content-Type: application/json.
+        s.headers["Authorization"] = "Token " + token
+        s.headers["Content-Type"] = "application/json"
+        r = s.get(url + "/api/v1/configs")
+        if r.status_code != 200:
+            raise SystemExit("CTFD_TOKEN refuse (jeton non admin ?)")
+        return s
     r = s.get(url + "/login")
     r = s.post(
         url + "/login",
         data={
-            "name": ADMIN["name"],
-            "password": ADMIN["password"],
+            "name": os.environ.get("CTFD_ADMIN_USER", ADMIN["name"]),
+            "password": os.environ.get("CTFD_ADMIN_PASS", ADMIN["password"]),
             "nonce": nonce_of(r.text),
         },
         allow_redirects=False,
@@ -137,6 +150,8 @@ def admin_session(url):
 
 
 def api_token(s, url):
+    if os.environ.get("CTFD_TOKEN"):
+        return os.environ["CTFD_TOKEN"]
     r = s.post(url + "/api/v1/tokens", json={"description": "seed local"})
     r.raise_for_status()
     return r.json()["data"]["value"]

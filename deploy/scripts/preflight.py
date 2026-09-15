@@ -292,6 +292,32 @@ def check_identity(configs, phase, team_size=None):
     return out
 
 
+def check_registration(configs, user_fields, phase):
+    """Ce que l'inscription exige : le reglement derriere /tos (case « j'accepte »
+    obligatoire du theme) et le champ user « Universite » requis (liste deroulante)."""
+    S = "inscription"
+    out = []
+    level = FAIL if phase == "preselection" else WARN
+    if configs.get("tos_url") or (configs.get("tos_text") or "").strip():
+        out.append(Result(OK, S, "reglement", "/tos sert le reglement"))
+    else:
+        out.append(
+            Result(level, S, "reglement", "tos_text vide : make reglement-publish")
+        )
+    uni = [
+        f for f in (user_fields or []) if "universit" in (f.get("name") or "").lower()
+    ]
+    if not uni:
+        out.append(
+            Result(level, S, "universite", "champ user absent (make local-seed)")
+        )
+    elif not uni[0].get("required"):
+        out.append(Result(level, S, "universite", "champ present mais facultatif"))
+    else:
+        out.append(Result(OK, S, "universite", "champ requis"))
+    return out
+
+
 def check_content(challenges, flags, expect_challenges=None, expect_categories=None):
     S = "contenu"
     out = []
@@ -576,7 +602,7 @@ def _get(s, url, path, ok=(200,), required=False):
 
 
 def collect(url):
-    """Renvoie (configs, challenges, flags, koth_state, home_html)."""
+    """Renvoie (configs, user_fields, challenges, flags, koth_state, home_html)."""
     import requests
 
     try:
@@ -589,6 +615,8 @@ def collect(url):
     if r.status_code != 200:
         raise SystemExit("/api/v1/configs -> HTTP %d" % r.status_code)
     configs = {c["key"]: c["value"] for c in r.json()["data"]}
+    r = _get(s, url, "/api/v1/configs/fields?type=user")
+    user_fields = r.json()["data"] if r is not None else []
     challenges = _get(s, url, "/api/v1/challenges?view=admin", required=True).json()[
         "data"
     ]
@@ -606,7 +634,7 @@ def collect(url):
     koth = r.json() if r is not None else None
     r = requests.get(url + "/", timeout=20)
     home = r.text if r.status_code == 200 else None
-    return configs, challenges, flags, koth, home
+    return configs, user_fields, challenges, flags, koth, home
 
 
 def main(argv=None):
@@ -633,7 +661,7 @@ def main(argv=None):
 
     env = parse_env(sys.stdin.read()) if a.env_stdin else None
     try:
-        configs, challenges, flags, koth, home = collect(url)
+        configs, user_fields, challenges, flags, koth, home = collect(url)
     except SystemExit as e:
         print("[FAIL] %s" % e, file=sys.stderr)
         return 2
@@ -642,6 +670,7 @@ def main(argv=None):
     results += check_secrets(env)
     results += check_windows(configs, a.phase, allow_running=a.allow_running)
     results += check_identity(configs, a.phase, a.team_size)
+    results += check_registration(configs, user_fields, a.phase)
     results += check_content(
         challenges, flags, a.expect_challenges, a.expect_categories
     )
