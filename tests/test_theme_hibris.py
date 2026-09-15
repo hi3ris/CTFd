@@ -30,7 +30,7 @@ def _app():
     for fn in (env_asset_url_default, asset_cache_url_default):
         if fn not in app.url_default_functions.get(None, []):
             app.url_defaults(fn)
-    return setup_ctfd(app, ctf_name="NCTF25", user_mode="teams", ctf_theme="hibris")
+    return setup_ctfd(app, ctf_name="NCTF26", user_mode="teams", ctf_theme="hibris")
 
 
 def test_public_pages_render_with_hibris_branding():

@@ -1,4 +1,4 @@
-# TODO — épreuves innovantes candidates (NCTF25)
+# TODO — épreuves innovantes candidates (NCTF26)
 
 Backlog d'idées d'épreuves « originales » proposées, **à sélectionner après la
 création du King-of-the-Hill** (KotH, en cours). Chaque idée note ce qui la rend

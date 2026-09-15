@@ -282,7 +282,7 @@ _PAGE_HTML = r"""<!doctype html>
 </style></head>
 <body><div class="wrap">
   <h1>👑 King of the Hill</h1>
-  <div class="sub">Tenez la colline &middot; NCTF25</div>
+  <div class="sub">Tenez la colline &middot; NCTF26</div>
   <div id="hills"><p class="muted">Chargement…</p></div>
   <p class="muted" style="font-size:.78rem">
     Le classement se met à jour tout seul. Les points de KotH s'ajoutent à votre

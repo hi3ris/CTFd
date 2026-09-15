@@ -45,7 +45,7 @@ AWS, et vous voyez exactement ce que verront les participants :
 cd deploy
 make local-up               # CTFd + MariaDB + Redis  ->  http://localhost:8000
 make local-build-images     # les images ctf-* des 20 challenges servis
-make local-seed             # setup NCTF25, mode équipes, thème hibris, accueil, 36 challenges
+make local-seed             # setup NCTF26, mode équipes, thème hibris, accueil, 36 challenges
 make local-smoke            # pages, thème, assets, API, chaîne IA verrouillée
 make local-playtest         # spawn -> solveur de référence -> soumission, challenge par challenge
 ```
@@ -145,7 +145,7 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
       par défaut elle trahit CTFd. Coller le bloc `deploy/theme-home-hero.html` dans
       _Admin → Pages → page « / » (route vide/index) → éditeur → bouton `</>` (HTML)_, puis
       _Save_. Bloc autonome (styles préfixés `.nctf-*`, mêmes couleurs/polices que le thème,
-      titre `NCTF25` + glitch). Ajuster dates, chiffres et liens si besoin. Objectif : un
+      titre `NCTF26` + glitch). Ajuster dates, chiffres et liens si besoin. Objectif : un
       participant ne doit pas deviner que c'est du CTFd.
 - [ ] **Règlement** publié AVANT l'ouverture des inscriptions (§6 garde-fous).
 

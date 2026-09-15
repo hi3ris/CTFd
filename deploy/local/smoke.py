@@ -87,7 +87,7 @@ def main():
         "Powered by <strong>Hibris</strong>" in home
         and "https://ramses.dagban.tg/" in home,
     )
-    check("accueil : hero NCTF25 en place (CMS remplace)", 'class="nctf-hero"' in home)
+    check("accueil : hero NCTF26 en place (CMS remplace)", 'class="nctf-hero"' in home)
     check("aucune trace 'ctfd.io' sur l'accueil", "ctfd.io" not in home.lower())
     check("aucune trace 'Powered by CTFd'", "Powered by CTFd" not in home)
     e404 = body["/nope-404"]

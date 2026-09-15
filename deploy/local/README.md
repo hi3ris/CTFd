@@ -15,7 +15,7 @@ Pre-requis : Docker (avec Compose v2), Python 3.10+, `pip install ctfcli request
 cd deploy
 make local-up               # CTFd + MariaDB + Redis  ->  http://localhost:8000
 make local-build-images     # les 20 images ctf-* des challenges servis
-make local-seed             # setup (NCTF25, equipes, theme hibris), accueil, 36 challenges
+make local-seed             # setup (NCTF26, equipes, theme hibris), accueil, 36 challenges
 make local-smoke            # pages, theme, assets, API, prerequis de la chaine IA
 make local-playtest         # spawn -> solveur de reference -> soumission, pour chacun
 ```
