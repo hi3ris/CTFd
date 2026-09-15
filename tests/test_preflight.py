@@ -15,7 +15,11 @@ _spec.loader.exec_module(pf)
 
 GOOD_HEX = "a" * 64
 NOW = 1_792_000_000  # 2026-10-14
-PRESEL = {"start": "1792782000", "freeze": "1792969200", "end": "1792972800"}  # ven 19h -> lun 00h (53 h)
+PRESEL = {
+    "start": "1792782000",
+    "freeze": "1792969200",
+    "end": "1792972800",
+}  # ven 19h -> lun 00h (53 h)
 
 
 def by_name(results):
