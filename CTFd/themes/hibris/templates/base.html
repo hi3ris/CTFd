@@ -253,8 +253,10 @@
         .hud-frame .bl { bottom:0; left:0; border-right:0; border-top:0; }
         .hud-frame .br { bottom:0; right:0; border-left:0; border-top:0; }
 
-        /* Ruban d'état : barre console fixée en bas */
-        body { padding-bottom: 34px; }
+        /* Ruban d'état : barre console fixée en bas. On réserve la hauteur de la
+           barre (30px) + une marge confortable pour que le footer ne la touche pas. */
+        body { padding-bottom: 56px; }
+        .footer { margin-bottom: 8px; }
         .hud-bar {
             position: fixed; left:0; right:0; bottom:0; z-index: 60; height: 30px;
             display: flex; align-items: center; gap: 1.1rem; padding: 0 .9rem; overflow: hidden;
