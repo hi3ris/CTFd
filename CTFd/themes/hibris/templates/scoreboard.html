@@ -248,6 +248,16 @@
 }
 .race .rc-clock.live { animation:clockLive 1.8s ease-in-out infinite; }
 @keyframes clockLive { 50% { box-shadow:0 0 24px rgba(23,176,107,.3); } }
+/* Pastille « tient une colline » (King of the Hill) sur le kart concerné */
+.car-wrap .koth-hill {
+	display:inline-flex; align-items:center; gap:.3rem; margin-left:.5rem;
+	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.66rem; letter-spacing:.5px;
+	text-transform:uppercase; color:#3a2a00; white-space:nowrap;
+	background:linear-gradient(180deg,#ffe27a,var(--yellow)); border-radius:999px; padding:.12rem .5rem;
+	box-shadow:0 0 14px -3px rgba(255,206,0,.6);
+}
+.car-wrap .koth-hill::before { content:"👑"; font-size:.72rem; }
+@media (max-width:640px){ .car-wrap .koth-hill span { display:none; } }
 @media (prefers-reduced-motion: reduce) {
 	.track::after, .car-lane.leader .rank::after, .car-lane.leader::before, .race .rc-clock.live { animation:none; }
 }
@@ -318,6 +328,7 @@ body.bigmode #race { margin-top:1rem; }
 
 	var prevScores = {};   // account_id -> score, pour détecter les nouveaux solves
 	var started = false;
+	var kothBy = {};       // account_id -> nom de la colline tenue (badge KotH)
 
 	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
 	function hue(name){ var h=0; name=String(name||""); for(var i=0;i<name.length;i++){h=(h*31+name.charCodeAt(i))>>>0;} return h%360; }
@@ -405,11 +416,12 @@ body.bigmode #race { margin-top:1rem; }
 				lane.className = "car-lane";
 				var h = hue(t.name);
 				lane.innerHTML = '<span class="rank"></span><div class="car-wrap">'
-					+ kartSVG(h) + '<span class="car-name"></span> <span class="car-score"></span></div>';
+					+ kartSVG(h) + '<span class="car-name"></span> <span class="car-score"></span>'
+					+ '<span class="koth-hill" hidden></span></div>';
 				track.appendChild(lane);
 				L = lanes[t.account_id] = { lane:lane, wrap:lane.querySelector(".car-wrap"),
 					rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
-					score:lane.querySelector(".car-score"), h:h };
+					score:lane.querySelector(".car-score"), koth:lane.querySelector(".koth-hill"), h:h };
 			}
 			L.lane.style.top = (i*laneH) + "px";
 			L.lane.className = "car-lane" + (i===0 ? " leader" : "");
@@ -418,6 +430,7 @@ body.bigmode #race { margin-top:1rem; }
 			L.rank.textContent = (i+1);
 			L.name.textContent = t.name;
 			L.score.textContent = t.score;
+			if (L.koth){ var hh = kothBy[t.account_id]; if (hh){ L.koth.hidden=false; L.koth.innerHTML='<span>'+esc(hh)+'</span>'; } else { L.koth.hidden=true; L.koth.textContent=''; } }
 			// boost si le score a monté depuis le dernier poll (mode fun)
 			var was = prevScores[t.account_id];
 			if (was != null && t.score > was && !reduced){
@@ -471,6 +484,29 @@ body.bigmode #race { margin-top:1rem; }
 		setTimeout(function(){ box.remove(); }, 5000);
 	}
 
+	function applyKothBadges(){
+		Object.keys(lanes).forEach(function(id){
+			var L=lanes[id]; if(!L||!L.koth) return;
+			var hh=kothBy[id];
+			if(hh){ L.koth.hidden=false; L.koth.innerHTML='<span>'+esc(hh)+'</span>'; }
+			else { L.koth.hidden=true; L.koth.textContent=''; }
+		});
+	}
+	function refreshKoth(){
+		// Qui tient une colline (King of the Hill). Endpoint public, vide sous gel.
+		// 403/404/absent => aucun badge (le KotH peut ne pas être configuré).
+		fetch(URLROOT + "/plugins/koth/api/holders", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				var next={};
+				if (j && j.success && Array.isArray(j.data)){
+					j.data.forEach(function(d){ if(d && d.account_id!=null){ next[d.account_id]=d.hill; } });
+				}
+				kothBy=next; applyKothBadges();
+			})
+			.catch(function(){ /* pas de KotH : aucun badge */ });
+	}
+
 	function tick(){
 		var now = Date.now();
 		renderClock(now);
@@ -516,11 +552,12 @@ body.bigmode #race { margin-top:1rem; }
 	document.addEventListener("keydown", function(e){ if(e.key==="f" && !/input|textarea/i.test((e.target.tagName||""))){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); } });
 
 	// horloge chaque seconde ; scores toutes les 12s ; pause si onglet caché
-	tick(); refresh();
+	tick(); refresh(); refreshKoth();
 	var clockTimer=setInterval(tick,1000), pollTimer=setInterval(refresh,POLL_MS);
+	var kothTimer=setInterval(refreshKoth,POLL_MS);
 	document.addEventListener("visibilitychange", function(){
 		if (document.hidden){ clearInterval(pollTimer); pollTimer=null; }
-		else if (!pollTimer){ refresh(); pollTimer=setInterval(refresh,POLL_MS); }
+		else if (!pollTimer){ refresh(); refreshKoth(); pollTimer=setInterval(refresh,POLL_MS); }
 	});
 })();
 </script>
