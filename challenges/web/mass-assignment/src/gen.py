@@ -1,11 +1,18 @@
 #!/usr/bin/env python3
-"""Producer for mass-assignment artifacts (users.json + sealed flag)."""
+"""Producer for mass-assignment artifacts (users.json + sealed flag).
+
+The flag is sealed with a key derived from the privileged mass-assignment body
+(the canonical JSON of {"is_admin": true, "role": "admin"}), so only crafting
+that exact request yields the key offline.
+"""
 
 import hashlib
 import json
 
 FLAG = "NCTF{mass_assignment_promoted_me_to_admin_role}"
-ADMIN_SEAL_KEY = b"profile-svc-admin-seal-2026"
+
+# The privileged assignment a solver must craft; its canonical JSON is the key.
+PRIVILEGED_ASSIGNMENT = {"is_admin": True, "role": "admin"}
 
 
 def keystream(key: bytes, n: int) -> bytes:
@@ -18,12 +25,10 @@ def keystream(key: bytes, n: int) -> bytes:
 
 
 def main() -> None:
-    ct = bytes(
-        a ^ b
-        for a, b in zip(
-            FLAG.encode(), keystream(hashlib.sha256(ADMIN_SEAL_KEY).digest(), len(FLAG))
-        )
-    )
+    canonical = json.dumps(PRIVILEGED_ASSIGNMENT, sort_keys=True, separators=(",", ":"))
+    key = hashlib.sha256(canonical.encode()).digest()
+    ct = bytes(a ^ b for a, b in zip(FLAG.encode(), keystream(key, len(FLAG))))
+    print("canonical assignment =", canonical)
     print("SEALED_FLAG_HEX =", ct.hex())
     store = {
         "users": [
@@ -32,6 +37,7 @@ def main() -> None:
                 "username": "kwame",
                 "display": "Kwame",
                 "email": "kwame@example.tg",
+                "role": "member",
                 "is_admin": False,
             }
         ]

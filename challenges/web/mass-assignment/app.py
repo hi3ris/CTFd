@@ -3,6 +3,11 @@
 PATCH /api/me merges the request JSON straight into the stored user record with
 no field allowlist. GET /api/me/flag returns the flag to admins. A captured
 benign update (capture.http) is shipped, along with the user store.
+
+The flag is sealed with a key derived from the *privileged* mass-assignment
+body itself -- the canonical JSON of the exact fields that make an admin. Only
+crafting that request (both `is_admin: true` and `role: "admin"`) yields the
+key; there is no standalone constant seal key.
 """
 
 import hashlib
@@ -12,11 +17,16 @@ from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
-ADMIN_SEAL_KEY = b"profile-svc-admin-seal-2026"
+# flag XOR keystream(sha256(canonical privileged assignment)), where the
+# canonical assignment is json.dumps({"is_admin": true, "role": "admin"},
+# sort_keys=True, separators=(",", ":")).  The key lives nowhere as a constant.
 SEALED_FLAG_HEX = (
-    "4c6e7c8fadd91f899ff01d83c464215efd80ce6c86f4f903cb0a1c8c"
-    "081a3e85bbf4d8a95b5c4a1558e9c32b23fd4d"
+    "24ff70ea1563ed56edb2627858375155823e988ec41095290d47ffe5"
+    "58a0a6f95b13638d0f9ad89d770d0bba280adb"
 )
+
+# Fields that define an admin; their values on the record form the seal key.
+ADMIN_ASSIGNMENT = ("is_admin", "role")
 
 CURRENT_USER_ID = 7
 
@@ -47,10 +57,13 @@ def update_me():
 @app.get("/api/me/flag")
 def me_flag():
     user = load_user()
-    if not user.get("is_admin"):
+    if not (user.get("is_admin") is True and user.get("role") == "admin"):
         return jsonify(error="admins only"), 403
+    # Derive the seal key from the privileged assignment now on the record.
+    assignment = {k: user[k] for k in ADMIN_ASSIGNMENT}
+    canonical = json.dumps(assignment, sort_keys=True, separators=(",", ":"))
+    key = hashlib.sha256(canonical.encode()).digest()
     ct = bytes.fromhex(SEALED_FLAG_HEX)
-    key = hashlib.sha256(ADMIN_SEAL_KEY).digest()
     ks = _keystream(key, len(ct))
     return jsonify(flag=bytes(a ^ b for a, b in zip(ct, ks)).decode())
 

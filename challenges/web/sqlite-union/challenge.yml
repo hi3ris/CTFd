@@ -32,10 +32,18 @@ hints:
     key: h1
   - content: >-
       The query selects three columns from products. Close the LIKE string and
-      UNION SELECT the same shape of columns from the other table in shop.db.
+      UNION SELECT the same shape of columns from the hidden secrets table.
     cost: 15
     key: h2
     requirements: [h1]
+  - content: >-
+      The secret is not stored in the clear. The secrets row keeps the flag as
+      cipher (hex of flag XOR a repeating key) plus the key in a separate xkey
+      column -- pull both, then XOR bytes.fromhex(cipher) with the repeating
+      xkey to decode.
+    cost: 20
+    key: h3
+    requirements: [h2]
 tags:
   - web
   - sqli

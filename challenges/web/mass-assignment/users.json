@@ -5,6 +5,7 @@
       "username": "kwame",
       "display": "Kwame",
       "email": "kwame@example.tg",
+      "role": "member",
       "is_admin": false
     }
   ]

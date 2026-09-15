@@ -32,8 +32,10 @@ hints:
     cost: 15
     key: h1
   - content: >-
-      This is Jinja2 SSTI. The render environment exposes a `vault` global.
-      Supply a name like {{ vault.reveal() }} and read what the card becomes.
+      This is Jinja2 SSTI. The render environment exposes a `config` global.
+      Supply a name like {{ config }} and read what the card becomes -- the
+      rendered card string is the key that unseals the shipped flag blob
+      (XOR with keystream(sha256(rendered)); see app.py unseal()).
     cost: 30
     key: h2
     requirements: [h1]
