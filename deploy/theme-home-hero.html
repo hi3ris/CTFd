@@ -36,10 +36,7 @@
     --link:#f9d77e; --muted:#9aa4b2; --line:#1c2431;
     position: relative; margin: -1rem 0 2.5rem; padding: 3.4rem 1.25rem 3rem;
     text-align: center; overflow: hidden; border-radius: 12px;
-    background:
-      radial-gradient(760px 340px at 50% -18%, rgba(210,16,52,0.16), transparent 68%),
-      radial-gradient(620px 320px at 100% 120%, rgba(0,106,78,0.14), transparent 64%),
-      #05070d;
+    background: #05070d;
     border: 1px solid var(--line);
     border-top: 4px solid transparent;
     border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
@@ -54,16 +51,20 @@
     text-transform: uppercase; letter-spacing: 3px; line-height: .98;
     font-size: clamp(2.6rem, 8vw, 5.2rem); margin: 0; color: #fff;
     position: relative; display: inline-block;
-    animation: nctfGlitch 8s steps(1) infinite;
   }
   .nctf-hero h1 .dot { color: var(--red); }
-  @keyframes nctfGlitch {
-    0%, 96%, 100% { text-shadow: none; transform: none; }
-    96.5% { text-shadow: -2px 0 var(--red), 2px 0 var(--green-b); transform: translate3d(1px,0,0); }
-    97.2% { text-shadow: 2px 0 var(--yellow), -2px 0 var(--red); transform: translate3d(-1px,0,0); }
-    97.9% { text-shadow: none; transform: none; }
+  /* photo de fond (NCTF_INTRO.images.bg) : sujet à droite, fondu vers le noir à
+     gauche pour garder le texte lisible ; posée par le script, rien sans fichier */
+  .nctf-hero .bg, .nctf-intro .bg {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-position: right center; background-size: cover; background-repeat: no-repeat;
   }
-  @media (prefers-reduced-motion: reduce) { .nctf-hero h1 { animation: none; } }
+  .nctf-hero .bg::after, .nctf-intro .bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, #05070d 30%, rgba(5,7,13,.72) 62%, rgba(5,7,13,.28) 100%),
+                linear-gradient(180deg, rgba(5,7,13,.35), rgba(5,7,13,0) 30%, rgba(5,7,13,0) 70%, rgba(5,7,13,.6));
+  }
+  .nctf-hero > *:not(.bg) { position: relative; z-index: 1; }
   .nctf-hero .lead {
     font-family: 'Lato', system-ui, sans-serif; color: #d6dde6;
     font-size: clamp(1rem, 2.4vw, 1.22rem); line-height: 1.6;
@@ -122,22 +123,9 @@
     --muted:#9aa4b2; --line:#1c2431;
   }
   .nctf-intro[hidden] { display: none !important; }
-  /* grille + halos + balayage : la « console » qui s'allume */
-  .nctf-intro::before {
-    content: ""; position: absolute; inset: -2px; pointer-events: none; opacity: .5;
-    background:
-      linear-gradient(rgba(127,178,255,.05) 1px, transparent 1px) 0 0 / 100% 46px,
-      linear-gradient(90deg, rgba(127,178,255,.05) 1px, transparent 1px) 0 0 / 46px 100%,
-      radial-gradient(900px 420px at 50% -10%, rgba(210,16,52,.14), transparent 70%),
-      radial-gradient(700px 380px at 10% 110%, rgba(0,106,78,.14), transparent 68%);
-    animation: introGrid 14s linear infinite;
-  }
-  @keyframes introGrid { to { background-position: 0 46px, 46px 0, 0 0, 0 0; } }
-  .nctf-intro::after {
-    content: ""; position: absolute; inset: 0; pointer-events: none; z-index: 3;
-    background: repeating-linear-gradient(180deg, rgba(0,0,0,.28) 0 1px, transparent 1px 3px);
-    mix-blend-mode: multiply; opacity: .5;
-  }
+  /* fond : la photo (NCTF_INTRO.images.bg) avec un fondu vers le noir à gauche —
+     pas de grille animée ni de balayage « écran cathodique » */
+  .nctf-intro .top, .nctf-intro .stage, .nctf-intro .prog, .nctf-intro .hint { position: relative; z-index: 2; }
   .nctf-intro.out { animation: introOut .55s ease forwards; }
   @keyframes introOut { to { opacity: 0; visibility: hidden; transform: scale(1.03); } }
 
@@ -184,6 +172,13 @@
   .nctf-intro .boot .ln .on { color: var(--yellow); font-weight: 700; white-space: nowrap; }
   @keyframes introLn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
 
+  /* — logos (NCTF_INTRO.images) — */
+  /* le mot-symbole CERT.tg est noir sur transparent : on le pose sur un cartouche blanc */
+  .nctf-intro .top .bd img { height: 22px; width: auto; display: block; background: #fff; padding: 3px 8px; border-radius: 6px; box-sizing: content-box; }
+  .nctf-intro .logo { display: block; margin: 0 auto 1.2rem; height: clamp(96px, 20vh, 190px); width: auto; }
+  .nctf-intro .sc.on .logo { animation: introBig .7s ease both; }
+  .nctf-hero .logo { display: block; margin: 0 auto 1rem; height: clamp(80px, 14vw, 140px); width: auto; }
+
   /* — scène TITRE — */
   .nctf-intro .big {
     font-family: 'Tourney', system-ui, sans-serif; font-weight: 800; color: #fff;
@@ -192,7 +187,7 @@
   }
   .nctf-intro .big .dot { color: var(--red); }
   .nctf-intro .sc.on .big { animation: introBig .7s cubic-bezier(.2,.9,.3,1.3) both; }
-  @keyframes introBig { from { opacity: 0; transform: scale(.86); filter: blur(6px); } to { opacity: 1; transform: none; filter: none; } }
+  @keyframes introBig { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
   .nctf-intro .sub {
     margin-top: 1.4rem; font-size: clamp(.76rem, 2vw, 1rem);
     letter-spacing: 4px; text-transform: uppercase; color: var(--muted);
@@ -217,7 +212,6 @@
   .nctf-intro .stats .n {
     font-family: 'Tourney', system-ui, sans-serif; font-weight: 800; color: #fff;
     font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1;
-    text-shadow: 0 0 28px rgba(255,206,0,.25);
   }
   .nctf-intro .stats .l { margin-top: .6rem; font-size: .68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
 
@@ -276,6 +270,7 @@
 
 <!-- ===================== CINÉMATIQUE (remplie par le script) ================ -->
 <div class="nctf-intro" id="nctf-intro" hidden role="dialog" aria-label="Introduction NCTF26">
+  <div class="bg" data-bg aria-hidden="true"></div>
   <div class="top">
     <span class="bd" data-bd>NCTF26</span>
     <span class="sep">// séquence d'introduction</span>
@@ -289,6 +284,8 @@
 
 <!-- ============================== HERO ===================================== -->
 <div class="nctf-hero">
+  <div class="bg" data-bg aria-hidden="true"></div>
+  <img class="logo" data-logo alt="" hidden>
   <p class="eyebrow">// ctf national &middot; édition 2026</p>
   <h1>NCTF<span class="dot">26</span></h1>
   <p class="lead">
@@ -339,6 +336,14 @@
     mode: "once",      // "once" (1 fois/navigateur) | "always" | "off"
     version: 1,        // incrémenter pour la re-montrer à tout le monde
     speed: 1,          // 1 = normal · 0.7 = plus rapide · 1.5 = plus lent
+
+    /* --- images (CTFd/themes/hibris/static/img/nctf/, voir son README) ---
+       Tout est optionnel : fichier absent = texte de repli, fond noir.     */
+    images: {
+      bg:   "/themes/hibris/static/img/nctf/intro-bg.jpg",   // la fille, visage en binaire
+      logo: "/themes/hibris/static/img/nctf/logo-ctf.png",   // Capture the Flag + drapeaux
+      cert: "/themes/hibris/static/img/nctf/logo-cert.png"   // CERT.tg}<
+    },
 
     /* --- identité ----------------------------------------------------- */
     brand: "NCTF",
@@ -393,12 +398,27 @@
      ====================================================================== */
   var root = document.getElementById("nctf-intro");
   if (!root) return;
+  (function applyImages(){
+    var im = NCTF_INTRO.images || {};
+    var hero = document.querySelector(".nctf-hero");
+    function bg(el, url){ if (el && url){ var probe = new Image(); probe.onload = function(){ el.style.backgroundImage = "url('" + url + "')"; }; probe.src = url; } }
+    bg(root.querySelector("[data-bg]"), im.bg);
+    bg(hero && hero.querySelector("[data-bg]"), im.bg);
+    var heroLogo = hero && hero.querySelector("[data-logo]");
+    if (heroLogo && im.logo){ heroLogo.onload = function(){ heroLogo.hidden = false; }; heroLogo.src = im.logo; }
+    var bd = root.querySelector("[data-bd]");
+    if (bd && im.cert){ var i = new Image(); i.alt = "CERT.tg"; i.onload = function(){ bd.textContent = ""; bd.appendChild(i); }; i.src = im.cert; }
+  })();
   var stage = root.querySelector("[data-stage]");
   var progEl = root.querySelector("[data-prog]");
   var CFG = NCTF_INTRO;
   var KEY = "nctf-intro-seen-v" + CFG.version;
   var timers = [], playing = false, raf = 0;
 
+  function logoTag(){
+    var u = (CFG.images || {}).logo;
+    return u ? '<img class="logo" src="' + esc(u) + '" alt="" onerror="this.remove()">' : "";
+  }
   function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
   function ms(x) { return Math.max(0, Math.round(x * (Number(CFG.speed) || 1))); }
   function reduced() { return window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; }
@@ -417,7 +437,7 @@
       }).join("") + '</div>' });
 
     s.push({ d: 2000, html:
-      '<h2 class="big">' + esc(CFG.brand) + '<span class="dot">' + esc(CFG.brandDot) + '</span></h2>'
+      logoTag() + '<h2 class="big">' + esc(CFG.brand) + '<span class="dot">' + esc(CFG.brandDot) + '</span></h2>'
       + '<div class="rule"></div>'
       + '<p class="sub">' + esc(CFG.tagline) + '</p>' });
 
@@ -445,7 +465,7 @@
         }).join("") + '</div>' });
 
     s.push({ d: 1900, html:
-      '<h2 class="go">' + esc(CFG.goText) + '</h2>'
+      logoTag() + '<h2 class="go">' + esc(CFG.goText) + '</h2>'
       + '<div class="rule"></div>'
       + '<p class="flagfmt">' + esc(CFG.flagLabel) + ' &nbsp;<code>' + esc(CFG.flagFormat) + '</code></p>' });
 
