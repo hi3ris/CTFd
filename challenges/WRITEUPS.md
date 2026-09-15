@@ -182,7 +182,7 @@
 | `knapsack-locker`  | 300 | dynamic | [writeup](ppc/knapsack-locker/solution/)  | items.txt gives a capacity, a list of items (each with a weight and a      |
 | `life-decode`      | 450 | dynamic | [writeup](ppc/life-decode/solution/)      | grid.txt gives a board size and a step count, a CIPHER blob, and an        |
 | `semiprime-sweep`  | 300 | dynamic | [writeup](ppc/semiprime-sweep/solution/)  | semiprimes.txt starts with a CIPHER blob and then lists several dozen      |
-| `stack-vm`         | 300 | dynamic | [writeup](ppc/stack-vm/solution/)         | program.txt is source code for a tiny made-up machine: one instruction per |
+| `stack-machine`    | 300 | dynamic | [writeup](ppc/stack-machine/solution/)    | program.txt is source code for a tiny made-up machine: one instruction per |
 | `sudoku-vault`     | 450 | dynamic | [writeup](ppc/sudoku-vault/solution/)     | puzzle.txt holds a CIPHER blob and a 9x9 Sudoku grid (0 marks an empty     |
 | `z-locator`        | 150 | dynamic | [writeup](ppc/z-locator/solution/)        | data.txt has a short pattern on line 1 and a large blob of text on line 2. |
 
