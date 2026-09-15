@@ -36,6 +36,22 @@ import threading
 import time
 
 import requests
+
+
+def _describe(e):
+    """'HTTPError' alone hides the cause; surface status + upstream text (Ollama:
+    "model 'x' not found, try pulling it first"; gateway: 401/429/503)."""
+    r = getattr(e, "response", None)
+    if r is None:
+        return e.__class__.__name__
+    detail = ""
+    try:
+        detail = (r.json().get("error") or "")[:160]
+    except Exception:
+        detail = (r.text or "")[:160]
+    return f"HTTP {r.status_code}" + (f": {detail}" if detail else "")
+
+
 from flask import Flask, request, jsonify, Response
 
 import flag as flagmod
@@ -249,7 +265,7 @@ def chat():
     try:
         reply = call_ollama(messages)
     except requests.exceptions.RequestException as e:
-        return jsonify(error=f"model backend unavailable: {e.__class__.__name__}"), 502
+        return jsonify(error=f"model backend unavailable: {_describe(e)}"), 502
 
     _append(sid, "assistant", reply)
     return jsonify(reply=reply)

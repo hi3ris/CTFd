@@ -53,6 +53,20 @@ class ModelError(Exception):
     pass
 
 
+def _describe(e):
+    """'HTTPError' alone hides the cause; surface status + upstream text (Ollama:
+    "model 'x' not found, try pulling it first"; gateway: 401/429/503)."""
+    r = getattr(e, "response", None)
+    if r is None:
+        return e.__class__.__name__
+    detail = ""
+    try:
+        detail = (r.json().get("error") or "")[:160]
+    except Exception:
+        detail = (r.text or "")[:160]
+    return f"HTTP {r.status_code}" + (f": {detail}" if detail else "")
+
+
 def chat(messages, tools):
     if BACKEND == "stub":
         return _stub_chat(messages, tools)
@@ -79,7 +93,7 @@ def _ollama_chat(messages, tools):
         )
         r.raise_for_status()
     except requests.exceptions.RequestException as e:
-        raise ModelError(f"model backend unavailable: {e.__class__.__name__}")
+        raise ModelError(f"model backend unavailable: {_describe(e)}")
     data = r.json()
     msg = data.get("message", {}) or {}
     tcs = []
