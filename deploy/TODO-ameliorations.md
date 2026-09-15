@@ -192,14 +192,20 @@ statut testés hors Docker. **Non exécuté ici** : la passe « 8 dumps en 2 h �
 tout le monde à ignorer le rouge — le jour où ce sera un vrai problème, personne ne
 regardera.
 
-- [x] 🤖 **Theme Verification** (`.github/workflows/verify-themes.yml`) — cause trouvée
-      dans les logs : `yarn install --non-interactive` **sans** `--frozen-lockfile`
-      résolvait parfois un chunk codemirror (`htmlmixed`) différent, d'où un
-      `configs-*.js` au hash changeant et un diff sur `manifest.json` ; la build locale
-      avec lockfile figé reproduit les bundles committés à l'octet près. Correctif = celui
-      de l'amont (CTFd #3073 / #3082) : `--frozen-lockfile`, cache yarn, `.node-version`
-      (20.19), et `verify` = `vite build && git add -N -- static && git diff --exit-code -- static`
-      (le diff porte sur `static/` seulement et voit aussi les nouveaux fichiers).
+- [x] 🤖 **Theme Verification** (`.github/workflows/verify-themes.yml`) — deux
+      correctifs. (1) Le workflow faisait `yarn install` **sans** `--frozen-lockfile` :
+      aligné sur l'amont (CTFd #3073 / #3082) — lockfile figé, cache yarn, `.node-version`
+      (20.19), et `verify` qui diffe `static/` en voyant aussi les nouveaux fichiers.
+      Utile, mais **pas la cause** : un run rouge et un run vert ont restauré la même clé
+      de cache yarn avec le même Node. (2) La vraie cause, lue en reconstruisant le chunk
+      depuis le log : le plugin commonjs de vite en mode `auto` décidait d'envelopper
+      `codemirror` (importé en ESM par `configs.js` / `editor.js` **et** `require()` par
+      ses modes) selon la transformation qui finissait la première — `htmlmixed-*.js`
+      changeait de ~50 octets et donc de hash, et `configs`, `editor`, `manifest.json`
+      avec lui. Correctif : `strictRequires: true` dans `build.commonjsOptions` de
+      `CTFd/themes/admin/vite.config.js` (chemin déterministe du plugin, son défaut depuis
+      la v26) + bundles admin reconstruits (5 builds locaux identiques ; pages admin,
+      CodeMirror, modales Bootstrap et echarts vérifiés avec Playwright).
       _Reste : constater 3 pushs verts d'affilée._
 - [x] 🤖 **`tests/users/test_challenges.py::test_challenge_kpm_limit_no_freeze`** (fait :
       toute la rafale + la soumission finale sous un seul `freeze_time`, 5 runs verts) :
