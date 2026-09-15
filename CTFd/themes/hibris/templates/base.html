@@ -220,6 +220,97 @@
         @media (prefers-reduced-motion: reduce) { .term-body .caret { animation: none; } }
         .term-code { font-size: 2.6rem; font-weight: 800; font-family: 'Tourney', system-ui, sans-serif;
             letter-spacing: 2px; margin: 0 0 .2rem; color: var(--fg); }
+
+        /* ================================================================
+           NCTF26 — « Console de cyberdéfense » : chrome cinématique.
+           Profondeur (grille animée + scanlines + vignette), cadre HUD,
+           ruban d'état live. Tout est coupé sous prefers-reduced-motion.
+           ================================================================ */
+        /* Profondeur : grille qui dérive + scanlines + vignette */
+        body::before {
+            content: ""; position: fixed; inset: -46px; z-index: -2; pointer-events: none; opacity: .6;
+            background:
+                linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0/46px 46px,
+                linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0/46px 46px;
+            -webkit-mask-image: radial-gradient(1200px 720px at 50% 6%, #000 45%, transparent 100%);
+                    mask-image: radial-gradient(1200px 720px at 50% 6%, #000 45%, transparent 100%);
+            animation: hudGrid 26s linear infinite;
+        }
+        body::after {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.05) 2px 3px),
+                radial-gradient(130% 120% at 50% 28%, transparent 55%, rgba(0,0,0,.6) 100%);
+        }
+        @keyframes hudGrid { to { background-position: 46px 46px, 46px 46px; } }
+
+        /* Cadre HUD : crochets d'angle */
+        .hud-frame { position: fixed; inset: 10px; z-index: 50; pointer-events: none; }
+        .hud-frame i { position: absolute; width: 26px; height: 26px;
+            border: 2px solid rgba(255,206,0,.5); filter: drop-shadow(0 0 6px rgba(255,206,0,.22)); }
+        .hud-frame .tl { top:0; left:0; border-right:0; border-bottom:0; }
+        .hud-frame .tr { top:0; right:0; border-left:0; border-bottom:0; }
+        .hud-frame .bl { bottom:0; left:0; border-right:0; border-top:0; }
+        .hud-frame .br { bottom:0; right:0; border-left:0; border-top:0; }
+
+        /* Ruban d'état : barre console fixée en bas */
+        body { padding-bottom: 34px; }
+        .hud-bar {
+            position: fixed; left:0; right:0; bottom:0; z-index: 60; height: 30px;
+            display: flex; align-items: center; gap: 1.1rem; padding: 0 .9rem; overflow: hidden;
+            font-family: 'JetBrains Mono', monospace; font-size: .72rem; letter-spacing: .6px;
+            color: #c7cfda; background: rgba(0,3,10,.92); border-top: 1px solid var(--line);
+            backdrop-filter: blur(6px);
+        }
+        .hud-bar::before {
+            content: ""; position: absolute; left:0; right:0; top:0; height: 2px;
+            background: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%);
+            background-size: 200% 100%; animation: hudSweep 6s linear infinite;
+        }
+        @keyframes hudSweep { to { background-position: 200% 0; } }
+        .hud-bar .seg { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+        .hud-bar .k { color: var(--muted); } .hud-bar .v { color: #fff; }
+        .hud-bar .brand { color: var(--yellow); font-weight: 700; }
+        .hud-bar .grow { flex: 1; }
+        .hud-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-b);
+            box-shadow: 0 0 8px var(--green-b); animation: hudPulse 1.8s ease-in-out infinite; }
+        .hud-bar.frozen .dot { background: #7fb2ff; box-shadow: 0 0 8px #7fb2ff; }
+        @keyframes hudPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+        @media (max-width: 640px) { .hud-bar .hide-sm { display: none; } }
+
+        /* Néon maîtrisé sur les titres */
+        h1, .h1, .navbar-brand { text-shadow: 0 0 18px rgba(210,16,52,.18); }
+
+        /* Tuiles de challenge = « dossiers de mission » (sweep de décryptage) */
+        .challenge-button { position: relative; overflow: hidden; }
+        .challenge-button::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+            background: linear-gradient(115deg, transparent 30%, rgba(255,206,0,.14) 50%, transparent 70%);
+            transform: translateX(-120%);
+        }
+        .challenge-button:hover::after { opacity: 1; animation: decrypt 1.1s ease; }
+        @keyframes decrypt { to { transform: translateX(120%); } }
+        .solved .challenge-button, .challenge-button.solved-challenge {
+            box-shadow: 0 0 0 1px var(--green-b), 0 0 22px rgba(23,176,107,.28) !important;
+        }
+
+        /* Boutons : éclat au survol */
+        .btn { position: relative; overflow: hidden; }
+        .btn::after { content: ""; position: absolute; top:0; left:-140%; width: 55%; height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent);
+            transform: skewX(-18deg); }
+        .btn:hover::after { animation: shine .7s ease; }
+        @keyframes shine { to { left: 170%; } }
+
+        /* Allumage : léger fondu du contenu */
+        main { animation: powerOn .5s ease both; }
+        @keyframes powerOn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+        @media (prefers-reduced-motion: reduce) {
+            body::before, .hud-bar::before, .hud-bar .dot,
+            .challenge-button:hover::after, .btn:hover::after, main { animation: none; }
+            main { opacity: 1; transform: none; }
+        }
     </style>
 
     <script type="text/javascript">
@@ -239,6 +330,8 @@
 </head>
 <body>
 
+    <div class="hud-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+
     {% include "components/navbar.html" %}
 
     <main role="main">
@@ -257,6 +350,51 @@
             </a>
         </div>
     </footer>
+
+    <!-- Ruban d'état « console » : phase + compte à rebours live (ouverture -> gel -> clôture) -->
+    <div class="hud-bar" id="hud-bar" role="status" aria-live="off">
+        <span class="seg"><span class="dot"></span><span class="brand">NCTF26</span><span class="k">// console</span></span>
+        <span class="seg"><span class="k">phase</span><span class="v" id="hud-phase">—</span></span>
+        <span class="seg" id="hud-count-seg"><span class="k" id="hud-count-k">échéance</span><span class="v" id="hud-count">—</span></span>
+        <span class="grow"></span>
+        <span class="seg hide-sm"><span class="k">canal</span><span class="v">chiffré</span></span>
+        <span class="seg hide-sm"><span class="k">terminal</span><span class="v">sécurisé</span></span>
+    </div>
+    <script>
+    (function () {
+        var bar = document.getElementById("hud-bar");
+        if (!bar || !window.init) return;
+        var S = init.start ? init.start * 1000 : 0,
+            E = init.end ? init.end * 1000 : 0,
+            F = init.freeze ? init.freeze * 1000 : 0;
+        var phaseEl = document.getElementById("hud-phase"),
+            kEl = document.getElementById("hud-count-k"),
+            cEl = document.getElementById("hud-count"),
+            seg = document.getElementById("hud-count-seg");
+        function two(n) { return (n < 10 ? "0" : "") + n; }
+        function hms(ms) {
+            var s = Math.max(0, Math.floor(ms / 1000));
+            var d = Math.floor(s / 86400); s %= 86400;
+            var h = Math.floor(s / 3600); s %= 3600;
+            var m = Math.floor(s / 60); s %= 60;
+            return (d > 0 ? d + "j " : "") + two(h) + ":" + two(m) + ":" + two(s);
+        }
+        function tick() {
+            var now = Date.now(), phase, klabel = "", target = 0, frozen = false;
+            if (S && now < S) { phase = "ouverture imminente"; klabel = "ouverture dans"; target = S; }
+            else if (E && now >= E) { phase = "clôturé"; }
+            else if (F && now >= F) { phase = "en cours · scores gelés"; klabel = "clôture dans"; target = E; frozen = true; }
+            else if (F && now < F) { phase = "en cours"; klabel = "gel dans"; target = F; }
+            else if (E) { phase = "en cours"; klabel = "clôture dans"; target = E; }
+            else { phase = "terrain d'entraînement"; }
+            bar.classList.toggle("frozen", frozen);
+            phaseEl.textContent = phase;
+            if (target) { kEl.textContent = klabel; cEl.textContent = hms(target - now); seg.style.display = ""; }
+            else { seg.style.display = "none"; }
+        }
+        tick(); setInterval(tick, 1000);
+    })();
+    </script>
 
     <script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
     <script defer src="{{ url_for('views.themes', path='js/core.js') }}"></script>
