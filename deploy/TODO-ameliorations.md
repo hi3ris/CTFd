@@ -19,7 +19,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 | 4   | Sauvegardes automatiques ✅ + répétition | 🟠 moy.  | S      | J-7 (16/10)          | —         |
 | 6   | First bloods (notif + ticker) ✅         | 🟡 spect | M      | finale (29/10)       | —         |
 | 7   | Tableau de bord ops ✅                   | 🟡 spect | M      | finale (29/10)       | 3, 6      |
-| 8   | Page writeups à la clôture               | 🟢 basse | S      | clôture (30/10)      | —         |
+| 8   | Page writeups à la clôture ✅            | 🟢 basse | S      | clôture (30/10)      | —         |
 
 Effort : S = ½ à 1 journée · M = 1 à 3 jours. Commencer par **1 + 2** (plus grand
 effet pour le moins d'effort, zéro impact sur l'expérience joueur), puis **5**
@@ -311,20 +311,34 @@ pas encore construit._
 **Pourquoi.** Les joueurs en redemandent toujours, et ça valorise les 203 épreuves.
 `challenges/WRITEUPS.md` + les `solution/README.md` existent déjà.
 
-- [ ] 🤖 `deploy/scripts/publish_writeups.py` : assemble `WRITEUPS.md` + chaque
-      `solution/README.md` (sans les scripts de solveur bruts) en une Page CTFd
-      `/writeups` (Markdown → CTFd `Pages`, via l'API admin) — créée **cachée**
-      (`hidden=True`) à l'avance, publiée d'un `--publish`.
-- [ ] 🤖 Garde-fou : refus de publier tant que `ctf_ended()` est faux, sauf `--force`.
-- [ ] 🤖 Cible `make writeups-publish` (`URL= TOKEN=`) + ligne dans `RUNBOOK §8`
-      (clôture) et dans `render_archive.py` pour l'archive statique S3.
-- [ ] 🧑 Décider : writeups **complets** ou seulement les catégories jouées en finale ;
-      crédit des auteurs.
+- [x] 🤖 `deploy/scripts/publish_writeups.py` : assemble les `challenge.yml` + chaque
+      `solution/README.md` (jamais les solveurs) en pages CTFd Markdown via l'API admin :
+      `/writeups` (index par catégorie : challenge, points, auteur, lien) + **une page
+      par catégorie** `/writeups/<cat>` (une section par challenge, ancre par slug).
+      _Écart assumé_ : pas une page unique — `Pages.content` est un `TEXT` MariaDB
+      (64 Ko) et les 202 writeups pèsent 386 Ko ; la plus grosse catégorie fait 37 Ko,
+      le script refuse toute page > 60 Ko. Créées en **brouillon** (`draft`, 404 pour
+      tous) et hors menu à l'avance (`--prepare`), publiées d'un `--publish` (l'index
+      entre au menu). Flags réels masqués en `NCTF{…}` (ceux du challenge.yml, puis tout
+      `NCTF{...}` qui n'est pas déjà le gabarit) ; titres des README décalés de 2 niveaux.
+- [x] 🤖 Garde-fou : `--publish` refuse tant que `end` (config) n'est pas passé, sauf
+      `--force` (`FORCE=1` côté Make) ; `--prepare` est toujours permis.
+- [x] 🤖 Cibles `make writeups-prepare / writeups-publish / writeups-unpublish`
+      (`URL= TOKEN=`), `local-writeups` (`PUBLISH=1 FORCE=1`), lignes RUNBOOK §8 + annexe ;
+      `make archive` rend les mêmes pages en HTML autonome (`--static`, même moteur
+      cmarkgfm que CTFd) dans `site/<phase>/writeups/`, liées depuis le scoreboard figé.
+- [ ] 🧑 Décider : writeups **complets** ou seulement les catégories jouées en finale
+      (`WRITEUPS_ARGS="--categories web,pwn"`) ; le crédit reprend `author:` du
+      challenge.yml (181 × dagbanjaphet, quelques `ctf-2026`/`ctf-team` à harmoniser ?).
 
 **Définition de « fait ».** Après `make writeups-publish` sur la stack locale
 (`end` dans le passé), `/writeups` affiche l'index et les 203 solutions, lisibles
 sur mobile, sans flag `NCTF{…}` réel en clair (les flags dynamiques sont par équipe
-de toute façon).
+de toute façon). _Exécuté ici_ (serveur de test, pas la stack Docker) : `--prepare`
+→ 404 anonyme, `--publish` refusé sans `end`, publié après `end` → index (202 liens)
+
+- 19 pages, 0 flag réel en clair, aucun débordement horizontal à 390 px (Playwright),
+  ancre `#slug` fonctionnelle ; tests unitaires + intégration sur la vraie API Pages.
 
 ---
 

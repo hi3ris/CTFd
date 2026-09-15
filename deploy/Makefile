@@ -360,6 +360,10 @@ archive: ## Fige le scoreboard de la phase dans S3, en page autonome
 	 test -s /tmp/ctf-archive/scoreboard.json \
 	   || { echo "ECHEC : scoreboard vide"; exit 1; }; \
 	 $(FRONT_SSH) 'curl -sf http://localhost/api/v1/challenges' > /tmp/ctf-archive/challenges.json || true; \
+	 if [ "$${WRITEUPS:-1}" = "1" ]; then \
+	   $(LOCAL_PY) scripts/publish_writeups.py --static /tmp/ctf-archive/writeups \
+	     || { echo "ECHEC du rendu des writeups (WRITEUPS=0 pour archiver sans)"; exit 1; }; \
+	 fi; \
 	 python3 scripts/render_archive.py /tmp/ctf-archive "$$PREFIX" \
 	   || { echo "ECHEC du rendu de l'archive"; exit 1; }; \
 	 echo ">> Publication"; \
@@ -368,6 +372,21 @@ archive: ## Fige le scoreboard de la phase dans S3, en page autonome
 	 python3 scripts/render_index.py $(BUCKET) \
 	   && aws s3 cp /tmp/ctf-site-index.html s3://$(BUCKET)/site/index.html --only-show-errors; \
 	 echo "  $$($(TF) output -raw archive_site_url)/$$PREFIX/"
+
+.PHONY: writeups-prepare
+writeups-prepare: ## Cree/met a jour les pages writeups en BROUILLON (404 joueurs) : URL=https://... TOKEN=<jeton admin>
+	@test -n "$(URL)" -a -n "$(TOKEN)" || { echo "URL et TOKEN (jeton API admin) requis"; exit 2; }
+	$(LOCAL_PY) scripts/publish_writeups.py --url $(URL) --token $(TOKEN) --prepare $(WRITEUPS_ARGS)
+
+.PHONY: writeups-publish
+writeups-publish: ## Publie /writeups a la cloture (refuse tant que `end` n'est pas passe ; FORCE=1 pour passer outre)
+	@test -n "$(URL)" -a -n "$(TOKEN)" || { echo "URL et TOKEN (jeton API admin) requis"; exit 2; }
+	$(LOCAL_PY) scripts/publish_writeups.py --url $(URL) --token $(TOKEN) --publish $(if $(FORCE),--force) $(WRITEUPS_ARGS)
+
+.PHONY: writeups-unpublish
+writeups-unpublish: ## Remet les writeups en brouillon
+	@test -n "$(URL)" -a -n "$(TOKEN)" || { echo "URL et TOKEN (jeton API admin) requis"; exit 2; }
+	$(LOCAL_PY) scripts/publish_writeups.py --url $(URL) --token $(TOKEN) --unpublish $(WRITEUPS_ARGS)
 
 .PHONY: push-images
 push-images: ## Envoie les images de challenge dans S3 (lues depuis l'arena au prochain demarrage)
@@ -535,6 +554,12 @@ local-loadtest: ## [local] Smoke du test de charge sur la stack locale : 100 VU,
 	$(K6) run $(LT_ARGS) -e URL=http://localhost:$${CTFD_PORT:-8000} -e SMOKE=1 -e VUS=$${VUS:-100} $(LT_DIR)/scenarios.js
 	-$(K6) run $(LT_ARGS) -e URL=http://localhost:$${CTFD_PORT:-8000} -e SMOKE=1 -e VUS=3 $(LT_DIR)/instancer.js
 	@echo "Rapports : $(LT_DIR)/out/*-summary.html   (purge : $(LOCAL_PY) $(LT_DIR)/seed.py --purge)"
+
+.PHONY: local-writeups
+local-writeups: ## [local] Pages writeups sur la stack locale : brouillon, puis PUBLISH=1 (FORCE=1 si `end` n'est pas passe)
+	@TOKEN=$$($(LOCAL_PY) -c "import sys; sys.path.insert(0,'local'); from seed import admin_session, api_token; u='http://localhost:$${CTFD_PORT:-8000}'; print(api_token(admin_session(u), u))"); \
+	 $(LOCAL_PY) scripts/publish_writeups.py --url http://localhost:$${CTFD_PORT:-8000} --token $$TOKEN \
+	   $(if $(PUBLISH),--publish $(if $(FORCE),--force),--prepare) $(WRITEUPS_ARGS)
 
 .PHONY: local-playtest
 local-playtest: ## [local] Spawn -> solveur -> soumission, pour chaque challenge (ARGS="--only web/jwt-cousin")

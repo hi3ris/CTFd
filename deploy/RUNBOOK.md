@@ -304,7 +304,8 @@ make archive                # scoreboards figés + write-ups sur S3 (site statiq
 make season-down            # si pas déjà détruit
 ```
 
-- [ ] 🤖 Publier les write-ups officiels par challenge (**après** l'événement — jamais avant, ils leakeraient les solutions).
+- [ ] 🤖 Writeups officiels : `make writeups-prepare URL=… TOKEN=…` **avant** la clôture (pages en brouillon, 404 pour les joueurs, relecture admin possible via l'API), puis à la clôture `make writeups-publish URL=… TOKEN=…` — refusé tant que `end` n'est pas passé (`FORCE=1` pour passer outre, en connaissance de cause). `/writeups` = index (menu) + une page par catégorie ; flags réels masqués, solveurs jamais publiés. `make archive` embarque la même version en HTML statique (`site/<phase>/writeups/`).
+- [ ] 🧑 Décider avant : writeups **complets** ou seulement les catégories jouées (`WRITEUPS_ARGS="--categories web,pwn"`) ; le crédit `author:` du challenge.yml est repris tel quel.
 - [ ] 🧑 Rapport de clôture (agrégé, sans accusation nominative depuis la scène).
 - [ ] 🤖 Exploiter les logs de charge pour dimensionner l'édition suivante.
 
@@ -321,6 +322,7 @@ make season-down            # si pas déjà détruit
 | `make deploy / tls-init / link`                               | déploiement CTFd / HTTPS / liaison front↔arena↔IA               |
 | `make check-arena / push-images`                              | images de challenge sur l'arena                                   |
 | `make backup / restore FILE=... / archive`                    | sauvegarde vérifiée / restauration / archive S3                   |
+| `make writeups-prepare / writeups-publish URL=... TOKEN=...`  | writeups en brouillon / publiés à la clôture                      |
 | `make loadtest URL=... / loadtest-instancer / loadtest-purge` | test de charge k6 (300 équipes simulées) / instancier / nettoyage |
 | `make logs / gpu / cost`                                      | supervision                                                       |
 | `make ssh-front / ssh-arena / ssh-ai`                         | shells                                                            |

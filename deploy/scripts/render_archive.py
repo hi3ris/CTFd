@@ -31,6 +31,7 @@ def render(directory: pathlib.Path, label: str) -> None:
     if not rows:
         rows.append("<tr><td colspan='3'>Aucun classement enregistre.</td></tr>")
 
+    writeups = (directory / "writeups" / "index.html").exists()
     title = f"CTF — {html.escape(label)}"
     page = f"""<!doctype html>
 <html lang="fr">
@@ -58,6 +59,7 @@ instances de cette edition n'existent plus.</p>
     {"".join(rows)}
   </tbody>
 </table>
+{'<p><a href="writeups/">Writeups officiels de cette edition</a></p>' if writeups else ""}
 <p><a href="../">Toutes les editions</a></p>
 </html>
 """
