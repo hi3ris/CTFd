@@ -373,6 +373,8 @@ archive: ## Fige le scoreboard de la phase dans S3, en page autonome
 	   && aws s3 cp /tmp/ctf-site-index.html s3://$(BUCKET)/site/index.html --only-show-errors; \
 	 echo "  $$($(TF) output -raw archive_site_url)/$$PREFIX/"
 
+TOKEN ?= $(CTFD_TOKEN)
+
 .PHONY: writeups-prepare
 writeups-prepare: ## Cree/met a jour les pages writeups en BROUILLON (404 joueurs) : URL=https://... TOKEN=<jeton admin>
 	@test -n "$(URL)" -a -n "$(TOKEN)" || { echo "URL et TOKEN (jeton API admin) requis"; exit 2; }
@@ -528,22 +530,25 @@ LT_DIR    = loadtest
 LT_ARGS   = -e ACCOUNTS=$(LT_DIR)/out/accounts.json -e OUT=$(LT_DIR)/out --summary-trend-stats="avg,p(95),max,count"
 
 .PHONY: loadtest
-loadtest: ## Test de charge sur le front de repetition : URL=https://... VUS=300 (5 min montee, 15 min plateau)
+loadtest: ## Test de charge sur le front de repetition : URL=https://... CTFD_TOKEN=<jeton admin> VUS=300 (5 + 15 min)
 	@test -n "$(URL)" || { echo "URL manquante (ex: URL=https://ctf.exemple.tg)"; exit 2; }
+	@test -n "$$CTFD_TOKEN" || { echo "CTFD_TOKEN manquant (jeton API admin : Settings > Access Tokens)"; exit 2; }
 	@command -v $(K6) >/dev/null || { echo "k6 introuvable : https://grafana.com/docs/k6/latest/set-up/install/ (ou K6=/chemin/k6)"; exit 2; }
 	$(LOCAL_PY) $(LT_DIR)/seed.py --url $(URL) --teams $$(( $(VUS) + 3 )) --allow-remote
 	$(K6) run $(LT_ARGS) -e URL=$(URL) -e VUS=$(VUS) $(LT_DIR)/scenarios.js
 	@echo "Rapport : $(LT_DIR)/out/scenarios-summary.html  ->  noter le run dans infra-audit.md, puis make loadtest-purge + restore"
 
 .PHONY: loadtest-instancer
-loadtest-instancer: ## Instancier sous charge sur le front de repetition : URL=... VUS=50 (10 min)
+loadtest-instancer: ## Instancier sous charge sur le front de repetition : URL=... CTFD_TOKEN=... (50 equipes, 10 min)
 	@test -n "$(URL)" || { echo "URL manquante"; exit 2; }
+	@test -n "$$CTFD_TOKEN" || { echo "CTFD_TOKEN manquant"; exit 2; }
 	@test -f $(LT_DIR)/out/accounts.json || $(LOCAL_PY) $(LT_DIR)/seed.py --url $(URL) --teams $$(( $(VUS) + 3 )) --allow-remote
 	$(K6) run $(LT_ARGS) -e URL=$(URL) -e VUS=$${IVUS:-50} $(LT_DIR)/instancer.js
 
 .PHONY: loadtest-purge
-loadtest-purge: ## Supprime les equipes de charge lt-* (URL=...) et recalcule les valeurs dynamiques ; puis make restore
+loadtest-purge: ## Supprime les equipes de charge lt-* (URL=... CTFD_TOKEN=...) et recalcule les valeurs dynamiques ; puis make restore
 	@test -n "$(URL)" || { echo "URL manquante"; exit 2; }
+	@test -n "$$CTFD_TOKEN" || { echo "CTFD_TOKEN manquant"; exit 2; }
 	$(LOCAL_PY) $(LT_DIR)/seed.py --url $(URL) --purge --allow-remote
 	@echo "Restaurer maintenant le dump pris AVANT le test : make restore FILE=backups/..."
 

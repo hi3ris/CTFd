@@ -16,6 +16,9 @@ Les flags viennent des `challenge.yml` du depot (entrees `flags:` en chaine) cro
 avec les challenges presents sur la plateforme : ce sont les memes challenges que
 `make local-seed` / ctfcli installent, donc les memes flags.
 
+Authentification (comme preflight.py) : CTFD_TOKEN (jeton API admin), sinon
+CTFD_ADMIN_USER / CTFD_ADMIN_PASS, sinon admin/admin (stack locale).
+
 Garde-fous :
   * refuse toute URL non locale sans --allow-remote ;
   * meme avec --allow-remote, refuse si la plateforme porte deja plus de
@@ -41,14 +44,14 @@ from pathlib import Path
 from urllib.parse import urlparse
 
 try:
-    import requests  # noqa: F401  (used by the helpers imported below)
+    import requests
     import yaml
 except ImportError:
     sys.exit("pip install requests pyyaml")
 
 ROOT = Path(__file__).resolve().parents[2]
 sys.path.insert(0, str(ROOT / "deploy" / "local"))
-from seed import admin_session, nonce_of, wait_for  # noqa: E402
+from seed import nonce_of, wait_for  # noqa: E402
 
 OUT = Path(__file__).resolve().parent / "out"
 PREFIX = "lt-"
@@ -117,11 +120,52 @@ def guard(url, real_teams, start, now, allow_remote, max_real_teams):
     return None
 
 
+def paginate(fetch, what):
+    """Follow meta.pagination.next of a CTFd list endpoint (50 per page)."""
+    out, page = [], 1
+    while page:
+        body = fetch(f"/api/v1/{what}?view=admin&page={page}")
+        out.extend(body["data"])
+        page = (body.get("meta") or {}).get("pagination", {}).get("next")
+    return out
+
+
 # --- platform ---------------------------------------------------------------
 
 
+def admin_session(url):
+    """Token first (CTFD_TOKEN), else a password login (CTFD_ADMIN_USER/PASS,
+    default admin/admin for the local stack)."""
+    s = requests.Session()
+    token = os.environ.get("CTFD_TOKEN")
+    if token:
+        # CTFd only honours the token when the request is application/json.
+        s.headers["Authorization"] = f"Token {token}"
+        s.headers["Content-Type"] = "application/json"
+        r = s.get(url + "/api/v1/users/me")
+        if r.status_code != 200:
+            sys.exit("CTFD_TOKEN refuse (jeton API admin : Settings > Access Tokens)")
+        return s
+    user = os.environ.get("CTFD_ADMIN_USER", "admin")
+    password = os.environ.get("CTFD_ADMIN_PASS", "admin")
+    r = s.get(url + "/login")
+    r = s.post(
+        url + "/login",
+        data={"name": user, "password": password, "nonce": nonce_of(r.text)},
+        allow_redirects=False,
+    )
+    if r.status_code != 302:
+        sys.exit(
+            "login admin impossible : CTFD_TOKEN, ou CTFD_ADMIN_USER / CTFD_ADMIN_PASS"
+        )
+    s.headers["CSRF-Token"] = nonce_of(s.get(url + "/").text)
+    return s
+
+
 def list_all(s, url, what):
-    return s.get(url + f"/api/v1/{what}?view=admin").json()["data"]
+    if what == "challenges":  # not paginated
+        return s.get(url + "/api/v1/challenges?view=admin").json()["data"]
+    return paginate(lambda path: s.get(url + path).json(), what)
 
 
 def create_accounts(s, url, n, password):

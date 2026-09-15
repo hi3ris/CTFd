@@ -16,6 +16,7 @@ Un seul binaire à installer : [k6](https://grafana.com/docs/k6/latest/set-up/in
 ```bash
 cd deploy
 make local-loadtest                      # stack locale, 100 VU, profil court (smoke)
+export CTFD_TOKEN=...                    # jeton API admin du front (Settings > Access Tokens)
 make loadtest URL=https://ctf.exemple.tg # front de répétition, 300 VU, 5 + 15 + 1 min
 make loadtest-instancer URL=...          # instancier, 50 équipes / 10 min
 make loadtest-purge URL=...              # supprime les équipes lt-* et recalcule les valeurs

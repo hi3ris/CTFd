@@ -135,7 +135,7 @@ vendredi 00 h 00, pas pendant.
       soumissions correctes = 100 % acceptées, + `login_ok`, `ratelimit_seen`, et un run
       sans requête n'est jamais VERT ; instancier : `spawn` ≥ 95 %, `running` en p95 < 60 s.
 - [x] 🤖 Cibles Make : `local-loadtest` (stack locale, 100 VU, smoke), `loadtest`
-      (`URL=…`, 300 VU, la vraie), `loadtest-instancer`, `loadtest-purge`. Comptes
+      (`URL=… CTFD_TOKEN=…`, 300 VU, la vraie), `loadtest-instancer`, `loadtest-purge`. Comptes
       `lt-0001…` créés/purgés par `deploy/loadtest/seed.py --teams N` / `--purge`, qui
       **refuse** une URL non locale sans `--allow-remote`, une plateforme portant > 20
       équipes réelles (= l'épreuve) et un `start` dans le futur (403 sur `/attempt`).

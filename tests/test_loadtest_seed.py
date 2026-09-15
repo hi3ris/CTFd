@@ -59,3 +59,19 @@ def test_guard_refuses_remote_real_event_and_future_start():
         "http://localhost:8000", 0, str(now + 60), now, False, 20
     )
     assert lt.guard("http://localhost:8000", 0, str(now - 60), now, False, 20) is None
+
+
+def test_paginate_follows_next():
+    pages = {
+        "/api/v1/teams?view=admin&page=1": {
+            "data": [1, 2],
+            "meta": {"pagination": {"next": 2}},
+        },
+        "/api/v1/teams?view=admin&page=2": {
+            "data": [3],
+            "meta": {"pagination": {"next": None}},
+        },
+        "/api/v1/users?view=admin&page=1": {"data": [9]},  # no meta at all
+    }
+    assert lt.paginate(pages.__getitem__, "teams") == [1, 2, 3]
+    assert lt.paginate(pages.__getitem__, "users") == [9]
