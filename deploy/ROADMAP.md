@@ -3,7 +3,7 @@
 Document de suivi vivant. On coche les cases au fur et à mesure.
 
 - **Aujourd'hui** : 10 septembre 2026
-- **Présélection** : vendredi 23 – samedi 24 octobre (par équipe, ~300 joueurs, distant)
+- **Présélection** : vendredi 23 – dimanche 25 octobre (par équipe, ~300 joueurs, distant)
 - **Finale** : jeudi 29 – vendredi 30 octobre (10 équipes, ~50 joueurs)
 - **Légende propriétaire** : 🧑 = vous (décision / action humaine) · 🤖 = moi (Claude, build)
 - **Convention** : `[ ]` à faire · `[~]` en cours · `[x]` fait · `[!]` bloquant / délai critique
@@ -292,7 +292,7 @@ passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentati
 
 ---
 
-## Lot 6 — Jour J présélection (23-24 octobre) 🔴
+## Lot 6 — Jour J présélection (23-25 octobre) 🔴
 
 - [ ] 🧑 J-7 : `make phase-preselection` (crée arena + IA, télécharge le modèle, câble tout).
 - [ ] 🧑 Repointer le DNS (ou automatique si Route53) ; `make tls-init` ; vérifier HTTPS.

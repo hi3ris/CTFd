@@ -23,5 +23,5 @@ phase = "off"
 # Modele servi par Ollama pour les challenges de type prompt injection.
 ollama_model = "llama3.1:8b"
 
-# true pour les repetitions (-70% sur l'arena), false les 23-24 et 29-30 octobre.
+# true pour les repetitions (-70% sur l'arena), false les 23-25 et 29-30 octobre.
 arena_use_spot = false

@@ -2,7 +2,7 @@
 
 ## Document de décision et de mise en œuvre
 
-_Rédigé le 10 septembre 2026. Présélection : ven. 23 – sam. 24 octobre (distant, ~300 participants). Finale : jeu. 29 – ven. 30 octobre (~50 joueurs, 10 équipes)._
+_Rédigé le 10 septembre 2026. Présélection : ven. 23 – dim. 25 octobre (distant, ~300 participants). Finale : jeu. 29 – ven. 30 octobre (~50 joueurs, 10 équipes)._
 
 ---
 
@@ -18,7 +18,7 @@ L'objectif utilisable n'est donc pas « interdire l'IA » mais : **rendre l'aide
 
 **La présélection filtre. La finale décide.**
 
-- **Présélection (23–24/10, distant)** : non surveillée, donc non probante. Elle sert à sélectionner les équipes invitées, rien d'autre. **Son score compte pour 0 %** dans le classement final. On invite **14 à 16 équipes** au lieu de 10 (marge pour les désistements et pour le bruit inhérent à une phase incontrôlée), dont **2 places wildcard** à la discrétion du jury.
+- **Présélection (23–25/10, distant)** : non surveillée, donc non probante. Elle sert à sélectionner les équipes invitées, rien d'autre. **Son score compte pour 0 %** dans le classement final. On invite **14 à 16 équipes** au lieu de 10 (marge pour les désistements et pour le bruit inhérent à une phase incontrôlée), dont **2 places wildcard** à la discrétion du jury.
 - **Finale (29–30/10)** : c'est le seul instrument de mesure valable. Le classement repart de zéro. Si la finale est sur site avec réseau maîtrisé, elle mesure ce qu'on veut mesurer. Si elle ne l'est pas, on ne mesure rien de plus qu'en présélection et il faut le dire aux sponsors plutôt que de le maquiller.
 
 **Conséquence directe, et c'est le point le plus important de ce document :** puisque la présélection ne pèse rien, la seule décision que toute une chaîne de détection distante pourrait éclairer est une ligne de coupe qu'on élargit délibérément. **Le budget de détection en présélection doit donc être quasi nul.** Tout ce qui a été proposé en surveillance de la phase distante (analyse temporelle, corrélation de flags faux, heuristiques de forme d'agent, empreintes TLS) est du travail dépensé pour une décision qui ne l'exige pas. Ce budget va à la qualité des challenges et à la solidité de l'infrastructure.
@@ -263,7 +263,7 @@ Ne pas annoncer de capacité qu'on n'a pas. Ce public teste les affirmations ; u
 
 ### 6.3 Contrainte de calendrier — à corriger maintenant
 
-La présélection ferme **samedi 24 octobre**. La finale commence **jeudi 29**. Il y a **trois jours ouvrés** entre les deux, dans lesquels il faudrait faire tenir une relecture de writeups, un droit de réponse de 24 h et un recours annoncé à 5 jours ouvrés. Le délai de recours est plus long que l'écart jusqu'à la finale. Ce n'est pas tenable.
+La présélection ferme **dimanche 25 octobre**. La finale commence **jeudi 29**. Il y a **trois jours ouvrés** entre les deux, dans lesquels il faudrait faire tenir une relecture de writeups, un droit de réponse de 24 h et un recours annoncé à 5 jours ouvrés. Le délai de recours est plus long que l'écart jusqu'à la finale. Ce n'est pas tenable.
 
 Correctif :
 

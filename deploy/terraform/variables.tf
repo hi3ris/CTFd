@@ -101,7 +101,7 @@ variable "domain_name" {
 variable "arena_use_spot" {
   description = <<-EOT
     true = instances Spot (~-70%) mais interruptibles par AWS.
-    A garder sur false les 23-24 et 29-30 octobre : une interruption tuerait
+    A garder sur false les 23-25 et 29-30 octobre : une interruption tuerait
     toutes les instances des equipes en cours de resolution.
   EOT
   type        = bool

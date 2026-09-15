@@ -1,7 +1,7 @@
 # Pilotage du CTF. Toutes les commandes se lancent depuis deploy/.
 #
 # Calendrier 2026 :
-#   preselection  vendredi 23 - samedi 24 octobre  (~300 joueurs)
+#   preselection  vendredi 23 - dimanche 25 octobre  (~300 joueurs)
 #   finale        jeudi 29 - vendredi 30 octobre   (~50 joueurs, 10 equipes)
 #
 # Hors de ces fenetres la phase est `off` : aucune instance EC2 n'existe.
@@ -108,7 +108,7 @@ phase-setup: ## Front seul : preparer les challenges, ouvrir les inscriptions
 	@$(TF) output -raw dns_action_required; echo
 
 .PHONY: phase-preselection
-phase-preselection: ## 23-24 oct : front + arena + IA, taille ~300 joueurs
+phase-preselection: ## 23-25 oct : front + arena + IA, taille ~300 joueurs
 	$(TF) apply -var 'phase=preselection'
 	@$(MAKE) --no-print-directory wait-front deploy wait-nodes link
 	@$(TF) output -raw dns_action_required; echo

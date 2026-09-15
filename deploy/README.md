@@ -3,7 +3,7 @@
 Infrastructure d'un CTF annuel a deux phases, concue pour que la facture suive
 strictement l'usage.
 
-**Calendrier 2026** — presélection vendredi 23 et samedi 24 octobre (~300
+**Calendrier 2026** — presélection du vendredi 23 au dimanche 25 octobre (~300
 participants) ; finale jeudi 29 et vendredi 30 octobre (10 equipes, ~50
 joueurs). Entre deux editions, les comptes sont supprimes et les equipes
 changent : rien ne justifie de laisser une machine allumee.

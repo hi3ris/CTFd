@@ -90,7 +90,7 @@ def do_setup(url):
         return
     data = {
         "ctf_name": "NCTF26",
-        "ctf_description": "NCTF26 — CTF national de cybersécurité du Togo, organisé par le CERT.tg. Présélection 23–24 octobre, finale à Lomé 29–30 octobre.",
+        "ctf_description": "NCTF26 — CTF national de cybersécurité du Togo, organisé par le CERT.tg. Présélection en ligne du 23 au 25 octobre (72 h, non-stop), finale à Lomé 29–30 octobre.",
         "user_mode": "teams",
         "name": ADMIN["name"],
         "email": ADMIN["email"],
@@ -102,9 +102,13 @@ def do_setup(url):
         "account_visibility": "public",
         "score_visibility": "public",
         "registration_visibility": "public",
-        "start": "",
-        "end": "",
-        "team_size": "",
+        # Fenêtre de compétition (epoch secondes, GMT/Lomé). Vide par défaut =>
+        # local toujours ouvert (le playtest n'est pas verrouillé). En arène,
+        # passer CTF_START/CTF_END. Présélection : ven 23 oct 00:00 -> dim 25 oct
+        # 23:59 GMT = CTF_START=1792713600 CTF_END=1792972740.
+        "start": os.environ.get("CTF_START", ""),
+        "end": os.environ.get("CTF_END", ""),
+        "team_size": os.environ.get("CTF_TEAM_SIZE", ""),
         "nonce": nonce_of(r.text),
     }
     r = s.post(url + "/setup", data=data, allow_redirects=False)

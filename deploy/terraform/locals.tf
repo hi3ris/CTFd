@@ -1,7 +1,7 @@
 # ---------------------------------------------------------------------------
 # Dimensionnement par phase.
 #
-# Le calendrier est concentre : preselection les 23-24 octobre (~300 joueurs),
+# Le calendrier est concentre : preselection les 23-25 octobre (~300 joueurs),
 # finale les 29-30 octobre (~50 joueurs). Rien ne tourne en dehors de ces
 # fenetres, donc on peut se permettre des machines confortables pendant les
 # quelques jours qui comptent.

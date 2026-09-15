@@ -3,7 +3,7 @@
 Procédure d'exécution de bout en bout : préparation, jours J, incidents, clôture.
 Toutes les commandes se lancent **depuis `deploy/`** sauf mention contraire.
 
-- **Présélection** : ven. 23 – sam. 24 octobre (~300 joueurs, par équipe, distant)
+- **Présélection** : ven. 23 – dim. 25 octobre (~300 joueurs, par équipe, distant)
 - **Finale** : jeu. 29 – ven. 30 octobre (~50 joueurs)
 - Légende : 🧑 action humaine · 🤖 automatisable · ⏱ délai incompressible
 
@@ -168,7 +168,7 @@ make check-arena            # images de challenge présentes
 
 ---
 
-## 4. Jours J présélection (23-24 oct) 🧑
+## 4. Jours J présélection (23-25 oct) 🧑
 
 Cadence pendant l'épreuve :
 
