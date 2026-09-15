@@ -8,10 +8,15 @@ in the ``-wal`` sidecar. Consequences:
 
 * Opening the pair normally (sqlite3 replays the WAL) shows ``REDACTED``.
 * Opening the main ``app.db`` file *without* its ``-wal`` shows the original
-  flag that was never overwritten in the main file.
+  (obfuscated) token that was never overwritten in the main file.
+
+The token itself is **not** stored in cleartext. The recovery_token row holds
+``base64(single-byte-XOR(flag))``, so ``strings app.db | grep NCTF`` finds
+nothing — the player must recover the pre-redaction row *and* undo the encoding.
 
 The artifact ships both ``app.db`` and ``app.db-wal``.
 """
+import base64
 import os
 import shutil
 import sqlite3
@@ -19,6 +24,16 @@ import tempfile
 
 FLAG = "NCTF{wr1t3_4h34d_l0g_l34ks_0ld_r0w}"
 REDACTED = "REDACTED-by-dlp-policy"
+
+# Obfuscation applied to the stored recovery_token so a raw `strings` sweep of
+# the main db page cannot reveal the flag. Single-byte XOR keeps it brute-force
+# recoverable without a shared key (scan 0..255 for the NCTF{ prefix).
+XOR_KEY = 0x5A
+
+
+def encode_token(flag: str) -> str:
+    xored = bytes(b ^ XOR_KEY for b in flag.encode())
+    return base64.b64encode(xored).decode("ascii")
 
 
 def main() -> None:
@@ -34,7 +49,7 @@ def main() -> None:
         [
             (1, "smtp_password", "hunter2"),
             (2, "api_key", "sk-live-0000-1111-2222"),
-            (3, "recovery_token", FLAG),
+            (3, "recovery_token", encode_token(FLAG)),
             (4, "note", "rotate all creds quarterly"),
         ],
     )

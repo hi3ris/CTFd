@@ -3,12 +3,14 @@
 
 The central directory hides ``secret.txt``, so ``zipfile`` / ``unzip`` only see
 ``notes.txt``. Carve every ``PK\\x03\\x04`` local file header directly out of the
-byte stream to recover the orphaned member.
+byte stream to recover the orphaned member. The orphaned member is DEFLATE
+compressed (method 8), so its payload must be inflated (raw deflate).
 
     python3 solve.py ../archive.zip
 """
 import struct
 import sys
+import zlib
 
 LFH = 0x04034B50
 
@@ -38,9 +40,11 @@ def carve(blob: bytes):
             continue
         name = blob[idx + 30 : idx + 30 + namelen].decode("latin-1")
         data_start = idx + 30 + namelen + extralen
-        data = blob[data_start : data_start + comp]
+        payload = blob[data_start : data_start + comp]
         if method == 0:  # stored
-            members[name] = data
+            members[name] = payload
+        elif method == 8:  # deflate -> inflate the raw stream
+            members[name] = zlib.decompress(payload, -15)
         off = data_start + comp
     return members
 

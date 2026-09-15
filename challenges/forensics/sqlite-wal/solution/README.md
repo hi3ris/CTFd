@@ -1,12 +1,13 @@
 # sqlite-wal — writeup
 
-**Category:** forensics · **Difficulty:** hard
+**Category:** forensics · **Difficulty:** medium
 **Flag:** `NCTF{wr1t3_4h34d_l0g_l34ks_0ld_r0w}` (static)
 
 ## One-line summary
 
 The redaction lives only in the write-ahead log; the main `app.db` file was
-never checkpointed, so opening it without its `-wal` reveals the original token.
+never checkpointed, so opening it without its `-wal` reveals the original
+(obfuscated) token — base64-decode and XOR it to get the flag.
 
 ## Technique
 
@@ -24,17 +25,20 @@ So the two files disagree:
 - `app.db` **alone** -> the un-checkpointed main file still contains the original
   `recovery_token` page.
 
+That original page value is **not** the flag in cleartext. It is stored as
+`base64(single-byte-XOR(flag))`, so `strings app.db | grep NCTF` finds nothing —
+you must recover the old row _and_ undo the encoding.
+
 ## Step by step
 
 1. `sqlite3 app.db "SELECT * FROM secrets"` shows the redacted token (the WAL is
    replayed).
 2. Copy `app.db` into an empty directory, leaving `app.db-wal` behind.
 3. Open that lone copy: `sqlite3 main.db "SELECT * FROM secrets"`. Now nothing
-   replays the redaction and the original `recovery_token` is the flag.
-
-You can also carve it without SQLite at all: the string is present verbatim in
-the main `app.db` file (`strings app.db | grep NCTF`), while the WAL holds the
-`REDACTED` page — inspecting both shows the before/after.
+   replays the redaction and you get the original `recovery_token` — a base64
+   blob, not the flag.
+4. Base64-decode the blob, then brute-force the single XOR byte (0–255); the key
+   whose output starts with `NCTF{` (here `0x5A`) yields the flag.
 
 ## Run the reference solver
 

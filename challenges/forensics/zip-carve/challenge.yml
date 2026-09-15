@@ -28,12 +28,20 @@ hints:
     cost: 10
     key: h1
   - content: >-
-      Each stored file also has its own header earlier in the stream, starting
-      with the bytes `PK\x03\x04`. Scan the raw file for every such signature —
-      one of them belongs to a member the central directory never lists.
+      Each file also has its own header earlier in the stream, starting with the
+      bytes `PK\x03\x04`. Scan the raw file for every such signature — one of
+      them belongs to a member the central directory never lists.
     cost: 15
     key: h2
     requirements: [h1]
+  - content: >-
+      The hidden member is DEFLATE-compressed (method 8 in its local header), so
+      `strings` shows nothing. Parse the local file header for the compressed
+      size, then inflate the raw deflate payload (e.g. Python
+      `zlib.decompress(data, -15)`).
+    cost: 15
+    key: h3
+    requirements: [h2]
 tags:
   - forensics
   - file-carving

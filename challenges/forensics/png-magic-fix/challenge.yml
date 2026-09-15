@@ -30,10 +30,18 @@ hints:
   - content: >-
       A PNG must begin with the exact 8-byte signature 89 50 4E 47 0D 0A 1A 0A.
       Overwrite the first 8 bytes with those values, then look at the file's text
-      chunks (the `tEXt` metadata), not the pixels.
+      chunks (the metadata), not the pixels.
     cost: 15
     key: h2
     requirements: [h1]
+  - content: >-
+      `strings` shows nothing because the note is stored in a compressed `zTXt`
+      chunk, not a plaintext `tEXt` chunk. Parse the chunk (keyword, then a
+      1-byte compression method, then a zlib stream) and inflate it — or let a
+      tool like `exiftool` decompress the metadata for you.
+    cost: 15
+    key: h3
+    requirements: [h2]
 tags:
   - forensics
   - file-carving

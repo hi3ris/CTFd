@@ -3,8 +3,9 @@
 
 The file is a perfectly valid PNG whose 8-byte signature has been overwritten
 with zero bytes, so image viewers refuse to open it. The flag lives in a
-``tEXt`` chunk (keyword ``Comment``). Restore the standard PNG signature and any
-tool will open the image and expose the metadata.
+``zTXt`` chunk (keyword ``Comment``) whose text is zlib-*compressed*, so a plain
+``strings`` pass cannot read it. Restore the standard PNG signature, then locate
+and inflate the compressed metadata to recover the note.
 """
 import struct
 import zlib
@@ -29,12 +30,14 @@ def build_png() -> bytes:
         raw.extend(bytes((0x0E, 0x7A, 0x8C)) * width)
     idat = zlib.compress(bytes(raw), 9)
 
-    text = b"Comment\x00" + FLAG.encode()
+    # zTXt: keyword + NUL + compression method (0 = zlib) + zlib-compressed text.
+    # The flag never appears in cleartext, so `strings` cannot surface it.
+    ztxt = b"Comment\x00" + b"\x00" + zlib.compress(FLAG.encode(), 9)
 
     return (
         PNG_SIG
         + chunk(b"IHDR", ihdr)
-        + chunk(b"tEXt", text)
+        + chunk(b"zTXt", ztxt)
         + chunk(b"IDAT", idat)
         + chunk(b"IEND", b"")
     )

@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """Reference solver for png-magic-fix.
 
-Restore the standard PNG signature, then read the ``tEXt`` chunk metadata.
+Restore the standard PNG signature, then inflate the compressed ``zTXt`` chunk
+metadata (the flag is zlib-compressed, so ``strings`` cannot read it).
 
     python3 solve.py ../evidence.png
 """
 import struct
 import sys
+import zlib
 
 PNG_SIG = b"\x89PNG\r\n\x1a\n"
 
@@ -21,6 +23,11 @@ def parse_text_chunks(png: bytes):
         if tag == b"tEXt":
             keyword, _, value = data.partition(b"\x00")
             out[keyword.decode("latin-1")] = value.decode("latin-1")
+        elif tag == b"zTXt":
+            # keyword \x00 compression-method(1 byte) compressed-datastream
+            keyword, _, rest = data.partition(b"\x00")
+            value = zlib.decompress(rest[1:]).decode("latin-1")
+            out[keyword.decode("latin-1")] = value
         off += 12 + length
         if tag == b"IEND":
             break

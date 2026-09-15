@@ -5,8 +5,8 @@
 
 ## One-line summary
 
-The PNG signature has been zeroed out; restore it and read the flag from a
-`tEXt` metadata chunk.
+The PNG signature has been zeroed out; restore it, then inflate the
+zlib-compressed `zTXt` metadata chunk to read the flag.
 
 ## Technique
 
@@ -15,6 +15,12 @@ Every PNG begins with the fixed 8-byte signature
 reject the file even though every chunk after it is valid. This is a classic
 "fix the header magic" carve.
 
+The recovery note is not stored in cleartext. It lives in a **`zTXt`** chunk,
+whose text payload is zlib-_compressed_ (`keyword \x00` + a 1-byte compression
+method + a zlib datastream). Because the bytes are compressed, `strings
+evidence.png` shows nothing useful — you must actually parse the chunk and
+inflate it.
+
 ## Step by step
 
 1. Inspect the first bytes: `xxd evidence.png | head`. They are all zeros where a
@@ -22,8 +28,9 @@ reject the file even though every chunk after it is valid. This is a classic
 2. Overwrite bytes 0–7 with the canonical PNG signature.
 3. The file now opens. The image is a flat teal square — a decoy; the answer is
    in the metadata.
-4. Read the `tEXt` chunks (`exiftool fixed.png`, `pnginfo`, or parse manually).
-   The `Comment` keyword holds the flag.
+4. `strings evidence.png | grep NCTF` finds nothing: the metadata is compressed.
+5. Read the `zTXt` chunk (`exiftool fixed.png` inflates it for you, or parse
+   manually). The `Comment` keyword holds the zlib-compressed flag; inflate it.
 
 ## Run the reference solver
 
@@ -31,7 +38,8 @@ reject the file even though every chunk after it is valid. This is a classic
 python3 solve.py ../evidence.png
 ```
 
-It repairs the signature in memory and prints the `Comment` chunk value.
+It repairs the signature in memory, locates the `zTXt` chunk, inflates its
+datastream, and prints the `Comment` value.
 
 ## Flag
 

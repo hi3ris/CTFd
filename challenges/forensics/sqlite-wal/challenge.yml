@@ -8,18 +8,19 @@ description: |-
   policy.
 
   The redaction may be more recent than the data. Recover the recovery token as
-  it was originally stored. That token is your flag.
+  it was originally stored — but note it was not saved in the clear, so
+  recovering the old row is only half the job. Decode it to get your flag.
 
   Note: you are given BOTH files. Think about what each one represents.
 
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 450
+value: 300
 type: dynamic
 extra:
-  initial: 450
-  decay: 20
+  initial: 300
+  decay: 25
   minimum: 100
 flags:
   - NCTF{wr1t3_4h34d_l0g_l34ks_0ld_r0w}
@@ -41,15 +42,22 @@ hints:
   - content: >-
       Copy `app.db` alone into an empty directory (leave `app.db-wal` behind),
       then `sqlite3 app.db "SELECT * FROM secrets"`. The pre-redaction
-      recovery_token value is the flag.
-    cost: 65
+      recovery_token value is not the flag itself — it is obfuscated.
+    cost: 45
     key: h3
     requirements: [h2]
+  - content: >-
+      The recovered recovery_token is `base64(single-byte-XOR(flag))`. Base64
+      decode it, then brute-force the single XOR byte (0–255) and keep the key
+      whose output starts with `NCTF{`.
+    cost: 45
+    key: h4
+    requirements: [h3]
 tags:
   - forensics
   - sqlite
   - wal
-  - hard
+  - medium
 files:
   - app.db
   - app.db-wal
