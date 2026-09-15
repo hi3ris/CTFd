@@ -1,0 +1,47 @@
+{% extends "admin/challenges/create.html" %}
+
+{% block header %}
+<div class="alert alert-secondary" role="alert">
+	Per-team instanced challenge: each team spawns its own container. The flag is
+	validated by the <code>team_hmac</code> flag class — do not add a static flag.
+	Set the flag to <code>type: team_hmac</code> with the challenge id as content.
+</div>
+{% endblock %}
+
+{% block value %}
+<div class="form-group">
+	<label>Docker image<br>
+		<small class="form-text text-muted">Local image on the arena, e.g. <code>ctf-web-jwt-cousin:latest</code>.</small>
+	</label>
+	<input type="text" class="form-control" name="docker_image" placeholder="ctf-name:latest" required>
+</div>
+<div class="form-group">
+	<label>Internal port<br>
+		<small class="form-text text-muted">Port the container listens on inside itself.</small>
+	</label>
+	<input type="number" class="form-control" name="internal_port" placeholder="e.g. 8000" required>
+</div>
+<div class="form-group">
+	<label>Initial Value</label>
+	<input type="number" class="form-control" name="initial" placeholder="Initial points" required>
+</div>
+<div class="form-group">
+	<label>Decay Function</label>
+	<select name="function" class="custom-select">
+		<option value="logarithmic">Logarithmic</option>
+		<option value="linear">Linear</option>
+	</select>
+</div>
+<div class="form-group">
+	<label>Decay</label>
+	<input type="number" class="form-control" name="decay" min="1" placeholder="Decay value" required>
+</div>
+<div class="form-group">
+	<label>Minimum Value</label>
+	<input type="number" class="form-control" name="minimum" placeholder="Minimum points" required>
+</div>
+{% endblock %}
+
+{% block type %}
+<input type="hidden" value="team_instance" name="type" id="chaltype">
+{% endblock %}

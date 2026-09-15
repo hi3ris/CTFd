@@ -1,0 +1,112 @@
+name: boot2root-c2
+author: dagbanjaphet
+category: pwn
+type: team_instance
+description: |
+  **boot2root-c2** -- *Phantom Wire staging server*. During the HIVE CONSULT
+  incident response, your team found a live host still answering on the
+  attacker's C2 network: the PHANTOM WIRE crew's operator panel. It is yours to
+  take apart. Break in, escalate all the way to **root**, and recover the
+  operator key material at `/root/flag`.
+
+  You are handed only a running host: `http://{host}:{port}`. A small operator
+  "task queue" panel is listening. There are no downloads and no source:
+  everything you need is *on the box* once you land your first shell.
+
+  Your objective, end to end:
+
+    1. Find and exploit the panel to get **code execution as an unprivileged
+       worker account**.
+    2. From there, work through the machine's local misconfigurations to move up
+       to the operator account and finally to **root**. This is a multi-stage
+       local privilege-escalation chain -- expect to pivot through more than one
+       account and to combine more than one weakness. Enumerate.
+    3. As root, read `/root/flag`.
+
+  The flag lives **only** in `/root/flag`, owned by `root` and mode `400`: it is
+  not world-readable, it is not in any environment variable you can reach as the
+  worker user, and it is **not** baked into the image. There is no shortcut and
+  no "verify" endpoint that hands it to you -- the win condition is the effect of
+  actually reading that file as root. If you can `cat /root/flag`, you have
+  rooted the box.
+
+  Per-team instance: each team gets its own container and its own flag, so
+  nothing you find can be replayed against another team.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format: `NCTF{...}`
+
+  Connect:  `http://{host}:{port}`
+
+# Dynamic scoring (hard).
+value: 500
+extra:
+  docker_image: ctf-boot2root-c2:latest
+  internal_port: 8080
+  initial: 500
+  decay: 20
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships in this file. The container derives it
+# at runtime from the injected per-challenge secret as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-boot2root-c2")[:24] + "}"
+# (equivalently "NCTF{" + CHALLENGE_SECRET[:24] + "}"; see flag.py). The
+# platform's team_hmac flag class recomputes and validates each team's flag on
+# submission, so `flags` carries only the challenge-id label, not a value.
+flags:
+  - type: team_hmac
+    content: pwn-boot2root-c2
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la chaîne n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Le panneau « task queue » accepte un corps de requête qu'il parse comme du
+      YAML avec un loader complet. Un loader complet honore les tags d'objets
+      Python -- un tag bien formé lance un processus, et la valeur parsée vous est
+      renvoyée. C'est votre exécution de code comme compte worker.
+    cost: 25
+    key: h1
+  - content: >-
+      Cherchez un binaire SUID (`find / -perm -4000 -type f 2>/dev/null`). Il
+      exécute un script dont le chemin est lu dans un fichier de configuration
+      **modifiable par tout le monde** (`0666`). Réécrivez ce chemin vers votre
+      propre script et lancez le binaire : vous devenez le compte opérateur.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      L'opérateur peut lancer `sudo -n` un script Python (voir `sudo -l`). Ce
+      script fait un `import` d'un module local, résolu depuis **son propre
+      répertoire**, lequel est modifiable par votre groupe. Déposez-y un module du
+      même nom dont le code au niveau module exécute votre charge : il tourne en
+      root. Lisez `/root/flag`.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+# No handout: this is a black-box boot2root. Nothing is shipped to the player;
+# the whole challenge lives in the running container. (No `files:` on purpose --
+# shipping the image contents would reveal the intended chain.)
+
+tags:
+  - pwn
+  - boot2root
+  - linux
+  - hard
+
+# challenge-id (for HMAC / requirements wiring): pwn-boot2root-c2
+# No prerequisites; standalone.
+
+# Served challenge: the platform instancier starts one container per team,
+# injects FLAG / CHALLENGE_SECRET, and templates connection_info with the team's
+# host:port.
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile in this directory; must be named
+# ctf-boot2root-c2:latest so `make push-images` picks it up.

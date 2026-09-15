@@ -1,0 +1,55 @@
+name: boot-rom
+author: dagbanjaphet
+category: hardware
+description: |-
+  `rom.bin` is the boot ROM of a tiny custom 8-bit processor. `ISA.md` documents
+  the machine: its registers, its flat memory, and its whole instruction set.
+  When the chip powers on it runs this ROM from address 0 and prints something to
+  its output port.
+
+  Build the machine, run the ROM, and read what it prints. That output is the
+  flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{tiny_isa_bootrom_interpreted}
+hints:
+  - content: >-
+      You do not need to guess the encoding - `ISA.md` fully specifies it. Every
+      instruction is exactly 3 bytes (opcode, arg1, arg2) and the program counter
+      counts bytes. Write an interpreter that loads `rom.bin` at address 0 and
+      steps through it.
+    cost: 25
+    key: h1
+  - content: >-
+      The program is a decode loop: it walks a pointer register over a block of
+      data that sits right after the code, XORs each byte with a constant held in
+      a register, and `OUT`s the result. Get `LDX` (indexed load), `XOR`, `JNZ`
+      and the `ADDI r, 0xFF` decrement right and the loop falls out.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Collect every byte produced by `OUT` (opcode 0x08) until `HLT` (0x0B). The
+      concatenated output bytes ARE the ASCII flag - no further transform.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - hardware
+  - vm
+  - reverse
+  - hard
+files:
+  - rom.bin
+  - ISA.md
+state: visible
+version: "0.1"

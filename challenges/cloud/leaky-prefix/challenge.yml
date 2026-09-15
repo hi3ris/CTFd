@@ -1,0 +1,53 @@
+name: leaky-prefix
+author: dagbanjaphet
+category: cloud
+description: |-
+  A snapshot of the `kekeli-media-prod` S3 bucket: its live bucket policy
+  (`bucket-policy.json`), the object inventory (`object-index.json`), and every
+  object body under `objects/`. Marketing swears only their public assets are
+  world-readable.
+
+  Find the object an anonymous visitor can actually read. The flag is in it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{public_read_on_the_wrong_prefix}
+hints:
+  - content: >-
+      Do not read the objects at random. Read the bucket policy first and work
+      out exactly which object keys its `Principal: *` GetObject statement
+      grants.
+    cost: 10
+    key: h1
+  - content: >-
+      Look closely at the `Resource` ARN of the public statement. The `*` is in
+      the wrong place: `assets/public*` matches more prefixes than just
+      `assets/public/`.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - cloud
+  - aws
+  - s3
+  - bucket-policy
+  - beginner
+files:
+  - bucket-policy.json
+  - object-index.json
+  - objects/assets/public/logo.txt
+  - objects/assets/public/banner.txt
+  - objects/assets/public/press-kit.txt
+  - objects/assets/public-backup/db-snapshot-note.txt
+  - objects/internal/roadmap.txt
+  - objects/internal/old-ctf-note.txt
+state: visible
+version: "0.1"

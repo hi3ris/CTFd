@@ -1,0 +1,52 @@
+name: php-unserialize
+author: dagbanjaphet
+category: web
+description: |-
+  A legacy PHP portal ships as source, along with a session cookie captured
+  from a guest. The cookie is deserialized on every request. The flag is never
+  written out in the clear -- it is revealed only when a certain object comes
+  to life during deserialization.
+
+  There is no live service. Reproduce the reveal from the shipped files.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{php_object_injection_leaks_the_admin_secret}
+hints:
+  - content: >-
+      The cookie is base64(serialize(...)) and goes straight into unserialize()
+      with no class allowlist. What other classes are defined in the same file?
+    cost: 15
+    key: h1
+  - content: >-
+      FlagReveal::__wakeup() fires automatically whenever a FlagReveal object is
+      unserialized. Inject one instead of a Session object. Its output depends
+      only on the object's $seed.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The correct $seed is the maintenance seed hardcoded at the top of
+      index.php. __wakeup XORs the sealed bytes with md5(seed + ":" + block)
+      over 16-byte blocks. Reproduce that to get the flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - web
+  - php
+  - deserialization
+  - medium
+files:
+  - index.php
+  - session_cookie.b64
+state: visible
+version: "0.1"

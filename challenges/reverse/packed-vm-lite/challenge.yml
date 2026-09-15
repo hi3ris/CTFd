@@ -1,0 +1,76 @@
+name: packed-vm-lite
+author: challenge-team
+category: reverse
+description: |-
+  We pulled a small license checker, `vmcheck`, off an embedded device. When you
+  enter the serial it accepts, the program prints the flag as
+  NCTF{ + <your serial> + }, rebuilt from your input - so you must recover the
+  exact 24-character serial it accepts. There is no flag string in the binary;
+  grep/strings will not hand it to you.
+
+  The serial is exactly 24 characters. Flag format: NCTF{...}
+
+  The binary is a stripped x86-64 ELF; everything you need is inside the file.
+  No network access required.
+
+  Stuck? Hints are available (they cost a few points).
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the flag logic locally (explicitly allowed by the guardrails for RE).
+# The flag never appears in plaintext in the binary - it is reconstructed at
+# runtime from the accepted serial. Static flag below.
+#
+# Invented ISA (not DER/protobuf/etc): a bespoke 1-byte-opcode register+stack
+# machine. Semantics that resist "recognise the format": LOADK/LOADT index into
+# embedded tables, ROLV rotates by a stack-supplied amount, feedback chains on
+# the RAW plaintext byte (not the transformed value), and jump operands are
+# ABSOLUTE program offsets. Two present-but-unused opcodes (RORV, NOT) are wrong
+# turns. See src/gen.py for the full spec.
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 30
+  minimum: 120
+
+flags:
+  - NCTF{vm_bytec0de_1s_n0t_h4rd!}
+
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The serial is not checked with normal code: the binary embeds a small
+      program and an interpreter (a register+stack machine, ~30 opcodes) that
+      runs it. Recover the opcode dispatch table first -- what each handler does
+      to the stack/registers and the program counter.
+    cost: 20
+    key: h1
+  - content: >-
+      The loop transforms each serial byte with a variable rotate, a per-index
+      key table, and feedback from the previous byte, then compares to an
+      embedded target table. Gotchas that punish skimming: jump operands are
+      ABSOLUTE program offsets, the rotate amount is taken off the stack (not an
+      immediate), and the feedback chains on the RAW serial byte (not the
+      transformed value). Two opcodes (RORV, NOT) exist but are never used.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Lift `KEY[]` and `TARGET[]` from `.rodata` and invert left-to-right, with
+      `prev` seeded to `0x5A`:
+      `amt = (i*3+1)&7; t = (TARGET[i] - prev) & 0xFF; t ^= KEY[i];
+      serial[i] = rotr8(t, amt); prev = serial[i]`.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
+tags:
+  - reverse
+
+files:
+  - vmcheck
+
+# No 'requirements' - standalone challenge, not part of a prereq chain.
+# No connection_info - nothing is served; players download 'vmcheck'.

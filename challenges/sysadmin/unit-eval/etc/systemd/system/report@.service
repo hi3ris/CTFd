@@ -1,0 +1,7 @@
+[Unit]
+Description=Kekeli periodic report generator (instance %i)
+
+[Service]
+Type=oneshot
+# BAD: the instance name %i is passed unquoted to a script that eval's it.
+ExecStart=/usr/local/bin/genreport.sh %i

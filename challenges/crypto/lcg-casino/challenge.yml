@@ -1,0 +1,94 @@
+name: lcg-casino
+author: dagbanjaphet
+category: crypto
+description: |
+  A **"provably fair"** casino deals from a home-grown verifiable shuffle. It
+  publishes its RNG, its deck encoding, and a SHA-256 **commitment** to the
+  secret seed -- everything except the seed itself, which is fresh per
+  connection and never revealed.
+
+  You play over a small **line-delimited JSON** protocol on a raw TCP socket
+  (not HTTP -- you speak the framing yourself). Each hand you **call the high
+  card before the deal**; then the full shuffle is published. The service pays
+  the **jackpot only after you land 10 correct calls in a row**. A miss resets
+  the streak to 0; hands are unlimited.
+
+  There is **no downloadable flag**. The running service is the oracle: it
+  verifies the *effect* -- that you actually predicted the hidden future -- not
+  any payload shape. A blind guesser reaches a 10-streak with probability
+  `(1/11)^10`.
+
+  The handout `SPEC.md` gives the public RNG constants and the factorial-base
+  shuffle decode, and `samples.json` is a full transcript from a throwaway seed.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+value: 500
+type: team_instance
+extra:
+  docker_image: ctf-lcg-casino:latest
+  internal_port: 9021
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-lcg-casino")[:24] + "}"
+# and is emitted by the running instance only after the win-streak effect
+# succeeds. The static entry below is a placeholder for the demo TEAM_SECRET used
+# in local builds; CTFd validates the real per-team flag via the custom HMAC flag
+# class, so no static flag is shipped to production.
+flags:
+  - type: team_hmac
+    content: crypto-lcg-casino
+
+# Progressive hints (chained unlock, increasing cost). The vulnerability detail
+# lives here, not in the description.
+hints:
+  - content: >-
+      The seed and its SHA-256 commitment are a rabbit hole -- inverting the
+      commitment is infeasible and you never need the seed. Each published
+      shuffle is derived from that hand's internal RNG *state*, and consecutive
+      hands are linked by the public RNG recurrence. Recover the running state,
+      not the seed.
+    cost: 25
+    key: h1
+  - content: >-
+      The RNG is a linear congruential generator and each shuffle encodes only
+      the *top* bits of the state -- a fixed number of low bits are withheld
+      (here 40 - 24 = 16). Decode a sample shuffle back to its rank with the
+      factorial-base (Lehmer) decode, and note the "high card" is simply the
+      first card off the deck (shuffle[0]).
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Brute-force the 16 hidden low bits: for consecutive observed ranks r0, r1,
+      try every low in [0, 2**16), form x1 = (r0 << 16) | low, step once with the
+      public constants (x2 = (A*x1 + C) mod M), and keep the low where
+      (x2 >> 16) == r1. Two reveals pin the state uniquely; then step forward and
+      call decode_shuffle(state >> 16)[0] every hand -> 10 straight wins -> flag.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+tags:
+  - crypto
+  - custom-protocol
+
+files:
+  - handout/SPEC.md
+  - handout/samples.json
+
+# challenge-id (for HMAC / requirements wiring): crypto-lcg-casino
+# No prerequisites; standalone.
+
+connection_info: nc {host} 9021
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-lcg-casino:latest so
+# `make push-images` finds it.

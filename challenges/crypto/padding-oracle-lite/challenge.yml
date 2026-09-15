@@ -1,0 +1,96 @@
+name: padding-oracle-lite
+author: dagbanjaphet
+category: crypto
+description: |
+  A decommissioned session service still answers on its own home-grown binary
+  protocol, **POP1**. It is deliberately **not HTTP** -- padbuster, Burp, and
+  `curl` have nothing to talk to. You have to speak the framing yourself.
+
+  The service will:
+    * hand you an encrypted session **token** on request (opcode `GETCT`);
+    * expose a `VERIFY` opcode: you send it an `IV||ciphertext` blob, it
+      decrypts with the instance key and returns a **1-word status code**. It
+      does **not** tell you what the code means -- working that out is the point;
+    * emit the flag **only** after you `SUBMIT` the exact recovered token
+      plaintext. Nothing here is a downloadable flag: the running service is the
+      oracle, and it verifies the *effect* (you produced the real plaintext),
+      not any particular payload shape.
+
+  The token is encrypted under a random per-instance key that never leaves the
+  process, so it cannot be read out of the ciphertext directly. You are expected
+  to recover it through the service.
+
+  The handout `SPEC.md` gives the POP1 framing (mind the length field: it counts
+  2-byte **words**, not bytes, and there is a per-frame XOR checksum). It does
+  **not** tell you what `VERIFY` computes -- infer that from how the codes move.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+value: 350
+type: team_instance
+extra:
+  docker_image: ctf-padding-oracle-lite:latest
+  internal_port: 9007
+  initial: 350
+  decay: 30
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "crypto-padding-oracle-lite")[:24] + "}"
+# and is emitted by the running instance after the SUBMIT effect succeeds. The
+# static flag below is a placeholder for the demo TEAM_SECRET used in local
+# builds; CTFd validates the real per-team flag via the custom HMAC flag class,
+# so no static flag is shipped to production.
+flags:
+  - type: team_hmac
+    content: crypto-padding-oracle-lite
+
+# Progressive hints (chained unlock, increasing cost). The vulnerability detail
+# lives here, not in the description.
+hints:
+  - content: >-
+      Characterise VERIFY by probing: real IV||CT -> status 1; random blob -> 0;
+      flip a single byte in the *second-to-last* ciphertext block -> 0, while
+      flipping a byte in an earlier block stays 1. A boolean that depends only on
+      whether the last decrypted block is well-formed is a decryption-validity
+      oracle. (The banner's "legacy default token" is a rabbit hole -- one
+      SUBMIT refutes it, and SUBMITs are unlimited.)
+    cost: 20
+    key: h1
+  - content: >-
+      It is a classic CBC **padding oracle**: VERIFY leaks PKCS#7 validity of the
+      last decrypted block. Recover each block byte-by-byte by forging the 16
+      bytes that play the role of the preceding block and asking the oracle for
+      valid padding of lengths 1..16; then P_i = D_K(C_i) XOR C_(i-1).
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Run the standard byte-at-a-time attack over every ciphertext block,
+      including the pad==1 false-positive guard (flip the second-to-last forged
+      byte to confirm a real 0x01 pad). Concatenate the recovered blocks, strip
+      the trailing PKCS#7 -> the 32-byte token (e.g. SESSION_...), then SUBMIT it
+      and the server returns the per-team flag.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
+tags:
+  - crypto
+  - custom-protocol
+
+files:
+  - handout/SPEC.md
+
+# challenge-id (for HMAC / requirements wiring): crypto-padding-oracle-lite
+# No prerequisites; standalone.
+
+connection_info: nc {host} 9007
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-padding-oracle-lite:latest so
+# `make push-images` finds it.

@@ -1,0 +1,45 @@
+name: root-gate
+author: dagbanjaphet
+category: mobile
+description: |-
+  `securebank.apk` refuses to show its unlock code on rooted devices. We do not
+  have a clean handset, but we do have the APK. The decompiled code shows both
+  what happens on a tampered device and what happens on a "trusted" one.
+
+  Recover the unlock code the trusted path would display. It is the flag. No
+  network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{r00t_g4te_const_is_th3_k3y}
+hints:
+  - content: >-
+      Do not try to bypass the root check on a device — read the code. The
+      tamper branch only shows a decoy. The trusted branch decrypts a payload
+      from strings.xml using a build constant.
+    cost: 10
+    key: h1
+  - content: >-
+      The key is `BuildConfig.RELEASE_CHANNEL`. The payload is XORed with a
+      SHA-256 keystream: `ks[i] = sha256(RELEASE_CHANNEL || byte(i/32))[i%32]`.
+      Decode `secure_payload` with that keystream.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - anti-tamper
+  - easy
+files:
+  - securebank.apk
+state: visible
+version: "0.1"

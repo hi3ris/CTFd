@@ -1,0 +1,26 @@
+name: hex-decode
+author: dagbanjaphet
+category: warmup
+description: |-
+  `secret.txt` is one long string of the characters `0-9` and `a-f`.
+  Every two of them stand for one byte. Turn them back into text and read
+  the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{hex_is_just_base_sixteen}
+tags:
+  - warmup
+  - encoding
+  - hex
+  - beginner
+files:
+  - secret.txt
+state: visible
+version: "0.1"

@@ -1,0 +1,43 @@
+name: gzip-tar-nest
+author: dagbanjaphet
+category: forensics
+description: |-
+  A "parcel" (`parcel.tar.gz`) was intercepted leaving the network. It looks
+  like an ordinary compressed archive, but whoever packed it really did not want
+  the contents read at a glance.
+
+  Unpack it completely and follow the trail to the file at the very center.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{p33l1ng_th3_0ni0n_l4y3r_by_l4y3r}
+hints:
+  - content: >-
+      One decompression is not enough. Each time you open a layer, look at what
+      is inside before deciding you are done — there is another archive waiting.
+    cost: 10
+    key: h1
+  - content: >-
+      The nesting alternates formats: gzip, then tar, then zip, then gzip, then
+      tar. Follow the README/notes breadcrumb at each stage until you reach
+      `flag.txt`. `binwalk -eM parcel.tar.gz` will also recursively extract it.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - forensics
+  - archive
+  - nested
+  - easy
+files:
+  - parcel.tar.gz
+state: visible
+version: "0.1"

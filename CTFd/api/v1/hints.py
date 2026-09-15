@@ -1,6 +1,6 @@
 from typing import List
 
-from flask import request
+from flask import abort, request
 from flask_restx import Namespace, Resource
 
 from CTFd.api.v1.helpers.request import validate_args
@@ -120,6 +120,11 @@ class Hint(Resource):
     )
     def get(self, hint_id):
         hint = Hints.query.filter_by(id=hint_id).first_or_404()
+        # If the user isn't an admin we should respect the challenge visibility
+        if is_admin() is False:
+            if hint.challenge.state == "hidden":
+                abort(404)
+
         user = get_current_user()
 
         # We allow public accessing of hints if challenges are visible and there is no cost or prerequisites
@@ -159,20 +164,23 @@ class Hint(Resource):
             prereqs = set(requirements).intersection(all_hint_ids)
 
             # If the user has the necessary unlocks or is admin we should allow them to view
-            if unlock_ids >= prereqs or is_admin():
+            if unlock_ids >= prereqs:
                 pass
             else:
-                return (
-                    {
-                        "success": False,
-                        "errors": {
-                            "requirements": [
-                                "You must unlock other hints before accessing this hint"
-                            ]
+                if is_admin() and request.args.get("preview", False):
+                    pass
+                else:
+                    return (
+                        {
+                            "success": False,
+                            "errors": {
+                                "requirements": [
+                                    "You must unlock other hints before accessing this hint"
+                                ]
+                            },
                         },
-                    },
-                    403,
-                )
+                        403,
+                    )
 
         view = "locked"
         unlocked = HintUnlocks.query.filter_by(

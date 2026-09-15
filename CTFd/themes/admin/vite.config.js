@@ -16,6 +16,15 @@ export default defineConfig({
   build: {
     manifest: "manifest.json",
     outDir: "static",
+    // Deterministic CommonJS interop. In the plugin's "auto" mode a CJS
+    // module that is both imported from ESM (codemirror in configs.js and
+    // editor.js) and require()d by other CJS modules (its own modes) is
+    // wrapped lazily or not depending on which transform finishes first, so
+    // the htmlmixed chunk hash flipped between identical CI builds. Always
+    // wrapping (the plugin's default since v26) makes the output stable.
+    commonjsOptions: {
+      strictRequires: true
+    },
     rollupOptions: {
       plugins: [
         copy({

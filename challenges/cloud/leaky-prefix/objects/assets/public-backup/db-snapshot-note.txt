@@ -1,0 +1,3 @@
+INTERNAL RESTORE NOTE -- do not distribute.
+Snapshot vault passphrase handoff below.
+NCTF{public_read_on_the_wrong_prefix}

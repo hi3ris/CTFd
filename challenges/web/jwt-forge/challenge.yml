@@ -1,0 +1,56 @@
+name: jwt-forge
+author: dagbanjaphet
+category: web
+description: |-
+  You have the full source of an internal **Ops Console** plus a leaked config
+  file and a bearer token captured from a public `guest` login. The console
+  only reveals its operations flag to an **admin** caller.
+
+  Auth surface (from the source):
+
+      POST /api/login   -> mints a guest token
+      GET  /api/flag    -> admin-only; returns the operations flag
+
+  No server is running. Recover the flag from the shipped files alone.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{hs256_forged_admin_and_unsealed_the_ops_flag}
+hints:
+  - content: >-
+      The token is a real HS256 JWT. The server verifies the signature with a
+      single symmetric key. Where in the handout does that key live?
+    cost: 23
+    key: h1
+  - content: >-
+      config.env was committed with JWT_SECRET in plaintext. Whoever holds that
+      key can mint any claims they like, including role=admin.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Forge {"sub":"x","role":"admin"} signed HS256 with the leaked secret.
+      The flag is not stored in the clear -- /api/flag unseals SEALED_FLAG_HEX
+      with a keystream of sha256(secret + "|ops-seal"). XOR it back.
+    cost: 68
+    key: h3
+    requirements: [h2]
+tags:
+  - web
+  - jwt
+  - crypto
+  - easy
+files:
+  - app.py
+  - config.env
+  - guest_token.jwt
+state: visible
+version: "0.1"

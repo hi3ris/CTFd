@@ -1,0 +1,48 @@
+name: dijkstra-relay
+author: dagbanjaphet
+category: ppc
+description: |-
+  `graph.txt` describes a directed weighted graph: a header with node/edge
+  counts, a source and a target node, one label character per node, and the
+  edge list. Travel from the source to the target as cheaply as possible; the
+  labels of the nodes you pass through, in order, spell the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{dijkstra_relay_spells_the_route}
+hints:
+  - content: >-
+      You want the minimum-total-weight route from source to target in a graph
+      with non-negative edge weights.
+    cost: 15
+    key: h1
+  - content: >-
+      Run Dijkstra with a binary heap and keep a predecessor for each node so
+      you can reconstruct the actual path once you reach the target.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The shortest path is unique: it is the chain of weight-1 edges; every
+      other edge is heavy. Walk the reconstructed path and concatenate each
+      node's label character.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - graph
+  - shortest-path
+  - medium
+files:
+  - graph.txt
+state: visible
+version: "0.1"

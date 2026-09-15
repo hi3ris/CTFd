@@ -1,0 +1,25 @@
+name: reverse-string
+author: dagbanjaphet
+category: warmup
+description: |-
+  `backwards.txt` contains the flag written from right to left. Read it
+  the other way round.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{reverse_it_right_back}
+tags:
+  - warmup
+  - misc
+  - reverse
+  - beginner
+files:
+  - backwards.txt
+state: visible
+version: "0.1"

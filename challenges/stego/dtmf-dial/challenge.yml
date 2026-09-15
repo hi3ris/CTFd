@@ -1,0 +1,47 @@
+name: dtmf-dial
+author: dagbanjaphet
+category: stego
+description: |-
+  We recorded someone dialling a phone and saved it as `dial.wav`. It is just a
+  string of touch-tones. Work out what was "dialled" and recover the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{dtmf_dialed_the_flag_home}
+hints:
+  - content: >-
+      Those are DTMF touch-tones. Each tone is two frequencies at once (one from
+      a low group, one from a high group) and maps to a keypad digit. Recover
+      the sequence of digits first.
+    cost: 20
+    key: h1
+  - content: >-
+      Split the audio into tone bursts by energy and identify each with a
+      Goertzel filter (or an FFT) at the eight DTMF frequencies. You will get a
+      long string of decimal digits.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The digits are the flag's bytes: every group of three decimal digits is
+      one ASCII code (000-255). Group them in threes and decode.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - stego
+  - audio
+  - dtmf
+  - hard
+files:
+  - dial.wav
+state: visible
+version: "0.1"

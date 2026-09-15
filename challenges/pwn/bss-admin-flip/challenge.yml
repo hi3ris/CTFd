@@ -1,0 +1,43 @@
+name: bss-admin-flip
+author: dagbanjaphet
+category: pwn
+description: |-
+  You are given a single x86-64 Linux binary, `chall`. It asks you to register a
+  name and then tells you that the flag is for admins only.
+
+  You are not an admin. Become one and read what the program then prints.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{bss_overflow_flipped_is_admin}
+hints:
+  - content: >-
+      How many bytes does the program read into the name buffer, and how big is
+      that buffer? Think about what other program state lives right next to it
+      in memory.
+    cost: 10
+    key: h1
+  - content: >-
+      The name buffer and the admin flag are fields of the same global struct,
+      so the flag sits directly after the 64-byte buffer. Write 64 bytes to fill
+      the buffer, then a non-zero value to set the admin flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - pwn
+  - buffer-overflow
+  - bss
+  - easy
+files:
+  - chall
+state: visible
+version: "0.1"

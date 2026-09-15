@@ -1,0 +1,48 @@
+name: congruence-vault
+author: dagbanjaphet
+category: ppc
+description: |-
+  `system.txt` starts with a `CIPHER` blob, then lists 160 lines of three
+  integers `a b m`, each stating that `a * x` leaves remainder `b` when divided
+  by `m`. Every line has exactly one solution `x` in `[0, m)`. Solve them all;
+  together they unlock the cipher.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{modular_inverse_batch_solved_clean}
+hints:
+  - content: >-
+      Every modulus m is prime and a is nonzero mod m, so a has a modular
+      inverse and x = b * a^(-1) mod m is unique. Use the extended Euclidean
+      algorithm (or pow(a, -1, m)).
+    cost: 22
+    key: h1
+  - content: >-
+      Solve all 160 congruences and collect the x values in file order.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Join the solutions as decimal separated by commas, take SHA-256 of that
+      string (extend by re-hashing if you need more bytes), and XOR against the
+      CIPHER bytes. Every x must be correct or the whole flag is garbage.
+    cost: 68
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - number-theory
+  - modular-arithmetic
+  - hard
+files:
+  - system.txt
+state: visible
+version: "0.1"

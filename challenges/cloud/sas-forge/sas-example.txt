@@ -1,0 +1,3 @@
+# A working Service SAS handed out for a public sample blob.
+# It shows the query parameter names (sp, se, spr, sv, sr, sig).
+https://kekelistorage.blob.core.windows.net/public-samples/logo.png?sp=r&se=2026-12-31T23:59:59Z&spr=https&sv=2020-12-06&sr=b&sig=bXVUbjBMeGJMaG1KNC9x...

@@ -1,0 +1,44 @@
+name: rbac-reveal
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  A Kubernetes manifest bundle: an RBAC `Role`/`RoleBinding` (`rbac.yaml`), a
+  `Secret` (`secret.yaml`), and the `Deployment` that mounts it
+  (`deployment.yaml`). The app service account can read the secret. Recover the
+  token stored in it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{k8s_secret_is_base64_not_encryption}
+hints:
+  - content: >-
+      A Kubernetes `Secret` protects nothing on its own — its `data` values are
+      just base64. The RBAC here even hands the app broad read access to it.
+    cost: 10
+    key: h1
+  - content: >-
+      Decode the `token` field. It does not look like text after one decode
+      because the deploy script had already base64-encoded the value before
+      `kubectl` encoded it again — so decode it twice.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - sysadmin
+  - kubernetes
+  - rbac
+  - beginner
+files:
+  - rbac.yaml
+  - secret.yaml
+  - deployment.yaml
+state: visible
+version: "0.1"

@@ -1,0 +1,49 @@
+name: oracle-tool-args
+author: dagbanjaphet
+category: ai
+description: |-
+  **ToolBot** ships as `oracle.py` (`respond(prompt)`) and exposes a
+  `read_file:<path>` tool. A policy guard blocks access to the sensitive vault
+  file, so the obvious path is denied.
+
+  Offline only -- no network, no real model. Call the shipped oracle and read
+  the protected file. Its contents are the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{c4s3_c0nfus10n_r34ds_th3_v4ult}
+hints:
+  - content: >-
+      The guard and the file store don't agree on what a path is. One is picky
+      about exact characters; the other is more forgiving.
+    cost: 15
+    key: h1
+  - content: >-
+      The blocklist is matched case-sensitively, but the store looks files up
+      case-insensitively. Find the protected file name in the source.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Request `read_file:Vault/Flag.enc`. No blocked lowercase substring appears
+      in that string, but it still resolves to `vault/flag.enc`.
+    cost: 40
+    key: h3
+    requirements: [h2]
+tags:
+  - ai
+  - tool-abuse
+  - path-filter-bypass
+  - medium
+files:
+  - oracle.py
+state: visible
+version: "0.1"

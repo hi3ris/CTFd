@@ -1,0 +1,80 @@
+name: tlv-vault
+author: dagbanjaphet
+category: crypto
+description: |
+  We recovered eight `.vlt` archives from a decommissioned "vault" service,
+  plus a partial spec for its home-grown `VLT1` container format. The full
+  reader was lost, and the surviving notes are incomplete on purpose.
+
+  The framing is deliberately unfriendly and does not behave like the standard
+  TLV/DER containers it resembles. Reconstruct the parser from the evidence,
+  pull the key out of each vault, and decrypt the payloads. Exactly one vault
+  decrypts to the flag.
+
+  Everything you need is in the handout: `SPEC.md` and `vault_01.vlt` ...
+  `vault_08.vlt`. No network service - this is a pure parsing/crypto puzzle.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 30
+  minimum: 100
+
+flags:
+  - NCTF{r3c0rds_n0t_byt3s_x0r_v4ult}
+
+# Progressive hints (chained unlock, increasing cost). The vulnerability detail
+# lives here, not in the description.
+hints:
+  - content: >-
+      It looks like ordinary TLV/DER but four of its conventions are subverted,
+      and a naive standard-TLV parser walks off the rails. Validate your parse by
+      "does the payload decode to ASCII." Also: record type 0x53 (SALT, marked
+      reserved) is a decoy -- its key-ish bytes are pure noise, so leave it out
+      of the key.
+    cost: 20
+    key: h1
+  - content: >-
+      The four traps: (1) length prefixes count *records/entries*, not bytes --
+      multiply an entry count by the per-type entry size to advance; (2) the
+      header checksum covers the header only (sum(bytes[0:7]) & 0xFF), not the
+      whole file; (3) the ciphertext offset is relative to EOF
+      (ciphertext_start = filesize - ct_off); (4) the payload is
+      repeating-**XOR** encrypted.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The `version` byte is a key mask: real key byte = stored_byte XOR version.
+      KEY-record entries are (pos, stored) pairs that appear out of order -- sort
+      by pos to assemble the key. Then XOR-decrypt the ct_len ciphertext bytes
+      with the repeating key; one of the eight vaults yields NCTF{...}.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
+tags:
+  - crypto
+  - file-format
+
+files:
+  - public/SPEC.md
+  - public/vault_01.vlt
+  - public/vault_02.vlt
+  - public/vault_03.vlt
+  - public/vault_04.vlt
+  - public/vault_05.vlt
+  - public/vault_06.vlt
+  - public/vault_07.vlt
+  - public/vault_08.vlt
+
+# This is a pure downloadable crypto challenge (static artifact, static flag):
+# no server, no per-team dynamic flag, no Dockerfile. Per the authoring rules,
+# static flags are allowed for crypto/reverse/forensics download challenges.
+#
+# requirements: none (standalone; not part of a prerequisite chain).

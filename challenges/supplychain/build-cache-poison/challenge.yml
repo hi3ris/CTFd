@@ -1,0 +1,49 @@
+name: build-cache-poison
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On vous donne le `Makefile` qui alimente le cache de build d'un projet, sa
+  liste de sommes de contrôle (`checksums.sha256`) et le contenu du cache
+  (`vendor-cache/`). Une des dépendances vendorisées n'est pas ce qu'elle
+  prétend être.
+
+  Trouvez l'artefact empoisonné et récupérez le flag qu'il contient.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{build_cache_no_checksum_pull_8d3f}
+hints:
+  - content: >-
+      Regardez la recette de chaque cible dans le Makefile. La plupart
+      vérifient l'artefact téléchargé avec `sha256sum -c`. Une ne le fait pas.
+    cost: 10
+    key: h1
+  - content: >-
+      L'artefact non vérifié (et servi depuis un autre hôte) est empoisonné.
+      Son payload `BUILD_TOKEN=` est du base64 d'un XOR : la clé `XOR_KEY` est
+      déclarée en haut du Makefile. Décodez puis XOR.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - supplychain
+  - build-cache
+  - makefile
+  - easy
+files:
+  - Makefile
+  - checksums.sha256
+  - vendor-cache/libcrc-1.0.tar.gz
+  - vendor-cache/libui-2.3.tar.gz
+  - vendor-cache/libnet-0.9.tar.gz
+  - vendor-cache/libz-1.2.tar.gz
+state: visible
+version: "0.1"

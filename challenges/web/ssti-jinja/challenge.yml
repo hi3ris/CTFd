@@ -1,0 +1,51 @@
+name: ssti-jinja
+author: dagbanjaphet
+category: web
+description: |-
+  A greeting-card service ships as source, with a captured normal request. It
+  turns your name into a friendly card. The flag is never printed for ordinary
+  input.
+
+  Input contract (from the source):
+
+      POST /card  {"name": "<text>"}
+      -> renders  "Dear " + name + ", welcome to Lome!"
+
+  No live service. Determine what the renderer would emit for a name of your
+  choosing.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{jinja2_ssti_config_leak_via_render_string}
+hints:
+  - content: >-
+      The name is concatenated into the template SOURCE before rendering, not
+      passed in as data. So template syntax in the name is evaluated.
+    cost: 15
+    key: h1
+  - content: >-
+      This is Jinja2 SSTI. The render environment exposes a `config` global.
+      Supply a name like {{ config }} and read what the card becomes -- the
+      rendered card string is the key that unseals the shipped flag blob
+      (XOR with keystream(sha256(rendered)); see app.py unseal()).
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - web
+  - ssti
+  - jinja2
+  - medium
+files:
+  - app.py
+  - capture.txt
+state: visible
+version: "0.1"

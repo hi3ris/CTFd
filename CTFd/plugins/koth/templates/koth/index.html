@@ -1,0 +1,227 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>👑 King of the Hill</h1>
+	</div>
+</div>
+<div class="container">
+	{% include "components/errors.html" %}
+
+	<!-- Bandeau « scores gelés » : le classement KotH public est figé comme le
+	     scoreboard principal (le scorer continue de compter en coulisses). -->
+	<div id="koth-frozen" class="koth-frozen" role="status" hidden>
+		<span class="ice" aria-hidden="true">❄</span> Scores <b>gelés</b> — le
+		classement KotH public est figé jusqu'à la fin. Tenez la colline&nbsp;: chaque
+		tick compte toujours.
+	</div>
+
+	<div id="koth-state" class="koth" aria-live="polite">
+		<p class="koth-loading">Chargement…</p>
+	</div>
+
+	<p class="koth-foot">
+		Les points de King of the Hill s'ajoutent à votre score sur le
+		<a href="{{ url_for('scoreboard.listing') }}">scoreboard principal</a>, tick
+		après tick, tant que vous tenez la colline.
+	</p>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ===================================================================
+   King of the Hill — page joueur, thème hibris (console cyberdéfense).
+   Autonome : styles préfixés .koth-*. Polling de /api/state.
+   =================================================================== */
+.koth { position:relative; }
+.koth-loading { color:var(--muted); font-family:'JetBrains Mono',monospace; }
+.koth-foot { color:var(--muted); font-size:.82rem; margin-top:1.4rem; }
+
+.koth-card {
+	background:var(--panel); border:1px solid var(--line); border-radius:14px;
+	padding:18px 20px; margin:16px 0; position:relative; overflow:hidden;
+}
+.koth-card.mine { border-color:var(--green-b); box-shadow:0 0 22px -6px rgba(23,176,107,.4); }
+.koth-card::before {
+	content:""; position:absolute; left:0; top:0; bottom:0; width:4px;
+	background:var(--line);
+}
+.koth-card.held::before { background:var(--yellow); }
+.koth-card.mine::before { background:var(--green-b); }
+
+.koth-head { display:flex; align-items:baseline; justify-content:space-between; gap:1rem; flex-wrap:wrap; }
+.koth-name { font-family:'Tourney',system-ui,sans-serif; font-weight:800; text-transform:uppercase;
+	letter-spacing:1px; font-size:1.3rem; color:#fff; margin:0; }
+.koth-id { color:var(--muted); font-family:'JetBrains Mono',monospace; font-size:.7rem; letter-spacing:1px; }
+.koth-badge { font-family:'JetBrains Mono',monospace; font-size:.68rem; letter-spacing:1px; text-transform:uppercase;
+	border-radius:999px; padding:.24rem .7rem; border:1px solid var(--line); color:var(--muted); }
+.koth-badge.on  { color:var(--green-b); border-color:var(--green-b); }
+.koth-badge.off { color:var(--red); border-color:var(--red); }
+
+.koth-row { display:flex; flex-wrap:wrap; gap:14px 30px; align-items:baseline; margin-top:1rem; }
+.koth-k { color:var(--muted); font-size:.68rem; text-transform:uppercase; letter-spacing:1px; }
+.koth-throne { display:inline-flex; align-items:center; gap:.5rem; font-weight:700; }
+.koth-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); }
+.koth-dot.fresh { background:var(--green-b); box-shadow:0 0 8px var(--green-b); }
+.koth-crown { color:var(--yellow); }
+.koth-half { font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:#0a0f18;
+	background:var(--yellow); border-radius:999px; padding:.05rem .5rem; margin-left:.35rem; white-space:nowrap; }
+.koth-you { color:var(--green-b); }
+.koth-vacant { color:var(--muted); }
+
+.koth-tokrow { margin-top:1rem; }
+.koth-tok {
+	font-family:'JetBrains Mono',monospace; font-weight:700; color:var(--gold, #f9d77e);
+	background:#05070d; border:1px solid var(--line); border-radius:8px; padding:.42rem .7rem;
+	user-select:all; letter-spacing:1px;
+}
+.koth-copy {
+	font-family:'JetBrains Mono',monospace; font-size:.72rem; text-transform:uppercase; letter-spacing:1px;
+	background:transparent; color:var(--muted); border:1px solid var(--line); border-radius:8px;
+	padding:.42rem .7rem; margin-left:.5rem; cursor:pointer; transition:color .12s, border-color .12s;
+}
+.koth-copy:hover { color:var(--yellow); border-color:var(--yellow); }
+.koth-copy.ok { color:var(--green-b); border-color:var(--green-b); }
+
+.koth-help { margin-top:.9rem; }
+.koth-help summary { cursor:pointer; color:var(--muted); font-size:.82rem; }
+.koth-help pre {
+	background:#05070d; border:1px solid var(--line); border-radius:8px; padding:.8rem;
+	overflow:auto; font-size:.78rem; color:#c7cfda; margin-top:.5rem; white-space:pre-wrap;
+}
+
+.koth-table { width:100%; border-collapse:collapse; margin-top:1rem; }
+.koth-table td, .koth-table th { text-align:left; padding:.38rem .2rem; border-bottom:1px solid rgba(255,255,255,.06); }
+.koth-table th { color:var(--muted); font-size:.66rem; text-transform:uppercase; letter-spacing:1px; }
+.koth-table .sc { text-align:right; color:var(--gold, #f9d77e); font-family:'JetBrains Mono',monospace; }
+.koth-warn { color:var(--red); }
+.koth-mut  { color:var(--muted); }
+
+.koth-frozen {
+	display:flex; align-items:center; gap:.55rem; flex-wrap:wrap;
+	margin:.2rem 0 1rem; padding:.7rem 1rem; border-radius:8px;
+	font-family:'JetBrains Mono',monospace; font-size:.86rem; color:#dbe7ff;
+	background:linear-gradient(90deg, rgba(127,178,255,.14), rgba(127,178,255,.05));
+	border:1px solid #3a5b8f; box-shadow:0 0 18px rgba(127,178,255,.10);
+}
+.koth-frozen b { color:#fff; } .koth-frozen .ice { color:#7fb2ff; font-size:1.05rem; }
+</style>
+
+<script defer>
+(function () {
+	"use strict";
+	var URLROOT = (window.init && init.urlRoot) || "";
+	var box = document.getElementById("koth-state");
+	var frozenBanner = document.getElementById("koth-frozen");
+
+	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+	function fmtDur(s){
+		if (s==null) return "—";
+		s = Math.max(0, s|0);
+		var h=(s/3600)|0; s-=h*3600; var m=(s/60)|0; var ss=s-m*60;
+		if (h) return h+"h "+m+"m";
+		return m ? (m+"m "+ss+"s") : (ss+"s");
+	}
+
+	function hillCard(h, state){
+		var k = h.king || {};
+		var mine = !!k.is_you;
+		var held = k.online && k.token_preview;
+		var cls = "koth-card" + (held ? " held" : "") + (mine ? " mine" : "");
+
+		var status = k.online
+			? '<span class="koth-badge on">en ligne</span>'
+			: '<span class="koth-badge off">hors ligne</span>';
+
+		var throne;
+		if (!k.online){
+			throne = '<span class="koth-vacant">colline injoignable</span>';
+		} else if (held){
+			var who = mine
+				? '<span class="koth-you">VOUS tenez la colline</span>'
+				: '<span class="koth-crown">'+esc(k.holder || k.token_preview)+'</span>';
+			var lvl = (k.level === "user")
+				? ' <span class="koth-half">accès user · ½ points</span>'
+				: '';
+			throne = '<span class="koth-throne"><span class="koth-dot '+(k.fresh?'fresh':'')+'"></span>'
+				+ who + lvl + ' <span class="koth-mut">· règne '+fmtDur(k.reign_seconds)
+				+ (k.fresh?'':' (expiré)')+'</span></span>';
+		} else {
+			throne = '<span class="koth-vacant">colline libre — personne ne tient le trône</span>';
+		}
+
+		var rows = (h.top||[]).map(function(t,i){
+			return '<tr><td>'+(i+1)+'</td><td>'+esc(t.name)+'</td><td class="sc">'+t.score+'</td></tr>';
+		}).join('') || '<tr><td colspan="3" class="koth-mut">pas encore de points</td></tr>';
+
+		var tokId = "koth-tok-"+esc(h.id);
+		return '<div class="'+cls+'">'
+			+ '<div class="koth-head"><h2 class="koth-name">'+esc(h.name)+'</h2>'
+			+   '<span class="koth-id">'+esc(h.id)+'</span></div>'
+			+ '<div class="koth-row">'
+			+   '<div><div class="koth-k">Trône</div>'+throne+'</div>'
+			+   '<div><div class="koth-k">Statut</div>'+status+'</div>'
+			+   '<div><div class="koth-k">Points / tick</div><b>'+h.points+'</b></div>'
+			+   '<div><div class="koth-k">Retournements</div><b>'+(k.takeovers||0)+'</b></div>'
+			+   '<div><div class="koth-k">Connexion</div><code class="koth-id">'+esc(h.player_url)+'</code></div>'
+			+ '</div>'
+			+ '<div class="koth-row koth-tokrow"><div style="flex:1 1 100%">'
+			+   '<div class="koth-k">Votre jeton d\'équipe (à planter sur la colline)</div>'
+			+   '<span class="koth-tok" id="'+tokId+'">'+esc(h.your_token)+'</span>'
+			+   '<button class="koth-copy" data-copy="'+tokId+'">copier</button>'
+			+ '</div></div>'
+			+ '<details class="koth-help"><summary>Comment marquer</summary>'
+			+   '<pre>1. Récupère la clé de la colline en exploitant le service ('+esc(h.player_url)+').\n'
+			+   '2. Signe une revendication fraîche pour TON jeton et poste-la sur le trône.\n'
+			+   '3. Rejoue-la en boucle : une revendication expire au bout de '+fmtDur(state.fresh_window)+', il faut re-tenir la colline.\n'
+			+   'Le scorer t\'attribue '+h.points+' pts à chaque tick ('+state.tick+'s) où tu tiens le trône.'
+			+   '\n\nColline boot2root : plante ton jeton dans /home/player/king.txt (accès user → MOITIÉ des points) '
+			+   'ou, après un passage root, dans /root/king.txt (points pleins). Le fichier le plus récent gagne.</pre>'
+			+ '</details>'
+			+ '<table class="koth-table"><thead><tr><th>#</th><th>Équipe</th><th class="sc">Points KotH</th></tr></thead>'
+			+   '<tbody>'+rows+'</tbody></table>'
+			+ '</div>';
+	}
+
+	function render(state){
+		if (frozenBanner) frozenBanner.hidden = !state.frozen;
+		if (!state.active){
+			box.innerHTML = '<div class="koth-card"><p class="koth-warn">Le King of the Hill n\'est pas encore actif.</p>'
+				+ '<p class="koth-mut">Il ouvrira au démarrage de l\'épreuve.</p></div>';
+			return;
+		}
+		if (!state.hills.length){
+			box.innerHTML = '<div class="koth-card"><p class="koth-mut">Aucune colline configurée.</p></div>';
+			return;
+		}
+		var banner = "";
+		if (!state.scoring){
+			banner = '<div class="koth-card"><p class="koth-mut">⏸ Le scoring KotH est en pause '
+				+ '(hors temps de jeu ou épreuve suspendue). Les points reprendront à la reprise.</p></div>';
+		}
+		box.innerHTML = banner + state.hills.map(function(h){ return hillCard(h, state); }).join('');
+	}
+
+	box.addEventListener("click", function(e){
+		var btn = e.target.closest && e.target.closest(".koth-copy");
+		if (!btn) return;
+		var el = document.getElementById(btn.getAttribute("data-copy"));
+		if (!el) return;
+		var txt = el.textContent;
+		var done = function(){ btn.classList.add("ok"); btn.textContent="copié"; setTimeout(function(){ btn.classList.remove("ok"); btn.textContent="copier"; }, 1400); };
+		if (navigator.clipboard && navigator.clipboard.writeText){ navigator.clipboard.writeText(txt).then(done, done); }
+		else { try { var r=document.createRange(); r.selectNode(el); var s=getSelection(); s.removeAllRanges(); s.addRange(r); document.execCommand("copy"); s.removeAllRanges(); } catch(_){} done(); }
+	});
+
+	function tick(){
+		fetch(URLROOT + "/plugins/koth/api/state", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(s){ if (s) render(s); })
+			.catch(function(){});
+	}
+	tick(); setInterval(tick, 10000);
+})();
+</script>
+{% endblock %}

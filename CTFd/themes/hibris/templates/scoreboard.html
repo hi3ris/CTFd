@@ -1,0 +1,704 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>Grand Prix NCTF</h1>
+	</div>
+</div>
+<div class="container">
+	{% include "components/errors.html" %}
+
+	<!-- Sélecteur de vue : la Course est la vue par défaut ; la table reste en repli
+	     (et sert de fond accessible / sans-JS). -->
+	<div class="race-switch" role="tablist" aria-label="Vue du classement">
+		<button type="button" class="rsw-btn active" data-view="race" role="tab" aria-selected="true">Course</button>
+		<button type="button" class="rsw-btn" data-view="table" role="tab" aria-selected="false">Table</button>
+	</div>
+
+	<!-- Bandeau « scores gelés » : affiché par le script quand on dépasse l'instant
+	     de freeze (le classement public est figé jusqu'à la fin). -->
+	<div id="sb-frozen" class="sb-frozen" role="status" hidden>
+		<span class="ice" aria-hidden="true">❄</span> Scores <b>gelés</b> — le classement
+		public est figé jusqu'à la fin de l'épreuve. Continuez à jouer, chaque flag
+		compte&nbsp;!
+	</div>
+
+	<!-- La piste (remplie par le script plus bas). Cachée tant que le JS n'a pas
+	     confirmé qu'il a des données : sans JS, on voit directement la table. -->
+	<div id="race" class="race" hidden aria-hidden="true"></div>
+
+	<div id="board-table">
+	{% cache 60, CacheKeys.PUBLIC_SCOREBOARD_TABLE %}
+	{% if standings %}
+	<div id="scoreboard" class="row">
+		<div class="col-md-12">
+			<table class="table table-striped">
+				<thead>
+					<tr>
+						<td scope="col" width="10px"><b>Place</b></td>
+						<td scope="col"><b>{{ get_mode_as_word(capitalize=True) }}</b></td>
+						<td scope="col"><b>Score</b></td>
+					</tr>
+				</thead>
+				<tbody>
+				{% for standing in standings %}
+					<tr>
+						<th scope="row" class="text-center">{{ loop.index }}</th>
+						<td>
+							<a href="{{ generate_account_url(standing.account_id) }}">
+								{{ standing.name | truncate(50) }}
+							</a>
+						</td>
+						<td>{{ standing.score }}</td>
+					</tr>
+				{% endfor %}
+				</tbody>
+			</table>
+		</div>
+	</div>
+	{% else %}
+	<div id="scoreboard" class="row">
+		<div class="col-md-12">
+			<p class="text-center text-muted" style="padding:2.5rem 1rem;">
+				Aucun score pour le moment — la grille se remplit au premier flag validé.
+			</p>
+		</div>
+	</div>
+	{% endif %}
+	{% endcache %}
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<style>
+/* ===================================================================
+   Grand Prix NCTF — scoreboard « kart ». 100% thème, aucune dépendance.
+   Karts en CSS/SVG, couleur = hash du nom d'équipe. Dépassements =
+   transition CSS sur la position de voie. Countdowns pilotés par
+   init.start / init.end. Mode fun (boost, feux de départ, podium,
+   confettis) — tout est coupé sous prefers-reduced-motion.
+   Fond STATIQUE (pas de parallaxe qui défile).
+   =================================================================== */
+:root { --lane-h: 58px; }
+.race-switch { display:flex; gap:.4rem; margin:.4rem 0 1rem; }
+.rsw-btn {
+	font-family:'JetBrains Mono',monospace; font-size:.78rem; letter-spacing:.5px; text-transform:uppercase;
+	background:var(--panel); color:var(--muted); border:1px solid var(--line); border-radius:999px;
+	padding:.4rem 1rem; cursor:pointer; transition:border-color .12s, color .12s;
+}
+.rsw-btn:hover { color:var(--yellow); }
+.rsw-btn.active { color:#fff; border-color:var(--red); background:rgba(210,16,52,.16); }
+
+.race { position:relative; }
+.race .rc-head {
+	display:flex; align-items:center; justify-content:space-between; gap:1rem;
+	flex-wrap:wrap; margin-bottom:.7rem;
+}
+.race .rc-title { font-family:'Tourney',system-ui,sans-serif; font-weight:800;
+	text-transform:uppercase; letter-spacing:2px; font-size:1.25rem; color:#fff; }
+.race .rc-clock {
+	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:1.05rem; letter-spacing:1px;
+	color:var(--yellow); border:1px solid var(--line); border-radius:999px; padding:.35rem .95rem; background:#05070d;
+	display:flex; align-items:center; gap:.55rem;
+}
+.race .rc-clock b { color:#fff; }
+.race .rc-clock.live { color:var(--green-b); border-color:var(--green-b); box-shadow:0 0 18px rgba(23,176,107,.14); }
+.race .rc-clock.frozen { color:#7fb2ff; border-color:#3a5b8f; }
+.race .rc-clock.done { color:var(--red); border-color:var(--red); }
+
+/* La piste — panneau arrondi, fond STATIQUE (aucune animation d'arrière-plan). */
+.track {
+	position:relative; background:linear-gradient(180deg,#101726,#0a0e17);
+	border:2px solid #232d3d; border-radius:18px; overflow:hidden; padding:12px 0;
+	box-shadow:0 24px 60px -30px rgba(0,0,0,.9), inset 0 1px 0 rgba(255,255,255,.04);
+	transition:height .4s ease;
+}
+.track::before {   /* fine ligne d'horizon statique */
+	content:""; position:absolute; left:0; right:0; top:50%; height:1px; z-index:0;
+	background:rgba(255,255,255,.05); pointer-events:none;
+}
+.track > * { position:absolute; z-index:2; }
+.track .startline { position:absolute; left:5%; top:0; bottom:0; width:3px; background:rgba(255,255,255,.25); z-index:1; }
+.track .finishline {
+	position:absolute; right:0; top:0; bottom:0; width:26px; z-index:1;
+	background:repeating-conic-gradient(#fff 0 25%, #0b0b0b 0 50%) 0 0 / 13px 13px;
+	opacity:.9; box-shadow:-6px 0 16px rgba(0,0,0,.4);
+}
+.track.done .finishline { opacity:1; box-shadow:-6px 0 22px rgba(255,255,255,.4); }
+
+/* Une voie + son kart, positionnés en absolu ; la transition sur top (= voie/rang)
+   EST le dépassement animé. */
+.car-lane {
+	position:absolute; left:0; right:0; height:var(--lane-h);
+	transition:top .9s cubic-bezier(.34,1.2,.5,1);
+}
+.car-lane::before {   /* bande d'asphalte arrondie de la voie */
+	content:""; position:absolute; left:0; right:30px; top:6px; bottom:6px; border-radius:12px;
+	background:#141b28; box-shadow:inset 0 0 0 1px rgba(255,255,255,.03); z-index:0;
+	/* s'arrête avant la bande d'arrivée (26px) pour ne pas la recouvrir */
+}
+.car-lane.leader::before { background:linear-gradient(90deg,rgba(249,215,126,.14),#141b28 46%); box-shadow:inset 0 0 0 1px rgba(249,215,126,.28); }
+
+/* Pastille de position « badge » (or / argent / bronze pour le podium). */
+.car-lane .rank {
+	position:absolute; left:12px; top:50%; z-index:3; width:34px; height:34px; border-radius:11px;
+	display:flex; align-items:center; justify-content:center;
+	font-family:'Tourney',system-ui,sans-serif; font-weight:800; font-size:1.1rem;
+	color:#e7ecf3; background:#39445a; transform:translateY(-50%) rotate(-4deg); box-shadow:0 4px 0 rgba(0,0,0,.35);
+}
+.car-lane .rank.g1 { background:linear-gradient(180deg,#ffe27a,var(--yellow)); color:#3a2a00; }
+.car-lane .rank.g2 { background:linear-gradient(180deg,#eef2f7,#aeb8c4); color:#2a2f38; }
+.car-lane .rank.g3 { background:linear-gradient(180deg,#e6a463,#b9702e); color:#2a1400; }
+
+.car-wrap {
+	position:absolute; top:50%; transform:translate(-50%,-50%); z-index:3;
+	transition:left 1.1s cubic-bezier(.22,.61,.36,1);
+	display:flex; align-items:center; gap:.55rem; white-space:nowrap;
+}
+.car {
+	width:60px; height:40px; position:relative; filter:drop-shadow(0 4px 3px rgba(0,0,0,.55));
+	animation:idlebob 1.15s ease-in-out infinite;   /* le kart sautille légèrement */
+}
+.car .wheel { transform-box:fill-box; transform-origin:center; animation:spin .45s linear infinite; }
+@keyframes spin { to { transform:rotate(360deg); } }
+@keyframes idlebob { 0%,100%{ transform:translateY(0) rotate(0); } 50%{ transform:translateY(-2px) rotate(-1.5deg); } }
+.car-lane:nth-child(odd) .car { animation-delay:.3s; }
+.car-name {
+	font-family:'Lato',sans-serif; font-weight:700; font-size:.95rem; color:var(--fg);
+	max-width:180px; overflow:hidden; text-overflow:ellipsis;
+}
+.car-score { font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.85rem; color:var(--gold); }
+.car-lane.leader .car-score { color:var(--yellow); }
+
+/* Boost : bref élan coloré quand l'équipe marque (mode fun) */
+@keyframes nitro { 0%{transform:translate(-50%,-50%) scale(1)} 30%{transform:translate(-50%,-50%) scale(1.14)} 100%{transform:translate(-50%,-50%) scale(1)} }
+.car-wrap.boost { animation:nitro .6s ease; }
+.car-wrap.boost .flame {
+	position:absolute; right:100%; top:50%; transform:translateY(-50%);
+	width:24px; height:12px; margin-right:-3px; border-radius:6px 3px 3px 6px;
+	background:linear-gradient(90deg, transparent, var(--green-b), var(--yellow)); opacity:.9;
+	animation:flick .14s steps(2) infinite;
+}
+@keyframes flick { 50% { opacity:.45; transform:translateY(-50%) scaleX(.8); } }
+.pluspts {
+	position:absolute; left:50%; top:-6px; transform:translateX(-50%);
+	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.82rem; color:var(--green-b);
+	animation:floatUp 1.2s ease forwards; pointer-events:none;
+}
+@keyframes floatUp { 0%{opacity:0; transform:translate(-50%,4px)} 20%{opacity:1} 100%{opacity:0; transform:translate(-50%,-24px)} }
+
+/* Peloton agrégé (les équipes hors top N) */
+.peloton { position:absolute; left:0; right:0; transition:top .9s ease; }
+.peloton .bubble {
+	position:absolute; transform:translateX(-50%); display:flex; align-items:center; gap:.4rem;
+	font-family:'JetBrains Mono',monospace; font-size:.76rem; color:#c7cfda;
+	background:rgba(11,15,24,.9); border:1px solid var(--line); border-radius:999px; padding:.28rem .85rem;
+}
+.peloton .bubble b { color:var(--yellow); }
+
+/* Feux de départ (mode fun) */
+.lights { display:flex; gap:.5rem; justify-content:center; margin:.4rem 0; }
+.lights .lamp { width:22px; height:22px; border-radius:50%; background:#2a0b0f; border:1px solid #3a1418; }
+.lights .lamp.on { background:var(--red); box-shadow:0 0 12px var(--red); }
+.lights.go .lamp { background:var(--green-b); box-shadow:0 0 14px var(--green-b); border-color:var(--green-b); }
+
+/* Podium à l'arrivée */
+.podium { display:flex; align-items:flex-end; justify-content:center; gap:.8rem; margin-top:1.2rem; }
+.podium .step { width:32%; max-width:210px; text-align:center; }
+.podium .step .who { font-family:'Lato',sans-serif; font-weight:700; color:#fff; margin-bottom:.35rem;
+	overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+.podium .step .bar { border-radius:12px 12px 0 0; border:1px solid var(--line); border-bottom:0;
+	display:flex; align-items:flex-start; justify-content:center; padding-top:.5rem;
+	font-family:'Tourney',sans-serif; font-weight:800; font-size:1.5rem; color:#0a0a0a; }
+.podium .p1 .bar { height:140px; background:linear-gradient(180deg,#ffe27a,var(--yellow)); box-shadow:0 0 40px -8px rgba(255,206,0,.35); }
+.podium .p2 .bar { height:100px; background:linear-gradient(180deg,#eef2f7,#aeb8c4); }
+.podium .p3 .bar { height:72px;  background:linear-gradient(180deg,#e6a463,#b9702e); color:#fff; }
+
+/* ===== Grand Prix intensifié : vitesse, couronne, halo moteur, aura leader ===== */
+/* Lignes de vitesse qui défilent en fond de piste */
+.track::after {
+	content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.5;
+	background:repeating-linear-gradient(90deg, transparent 0 46px, rgba(255,255,255,.05) 46px 48px);
+	-webkit-mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+	        mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+	animation:speedLines 1.1s linear infinite;
+}
+@keyframes speedLines { to { background-position:-48px 0; } }
+/* Halo moteur / traînée derrière chaque kart (or pour le leader) */
+.car-wrap::before {
+	content:""; position:absolute; right:100%; top:50%; transform:translateY(-50%);
+	width:38px; height:7px; margin-right:3px; border-radius:6px;
+	background:linear-gradient(90deg, transparent, rgba(127,178,255,.45)); filter:blur(2px); opacity:.55;
+}
+.car-lane.leader .car-wrap::before { background:linear-gradient(90deg, transparent, rgba(249,215,126,.75)); opacity:.9; width:56px; }
+/* Couronne du leader */
+.car-lane.leader .rank::after {
+	content:"👑"; position:absolute; top:-17px; left:50%; z-index:4;
+	font-size:1rem; transform:translateX(-50%) rotate(4deg);
+	filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); animation:crownBob 1.4s ease-in-out infinite;
+}
+@keyframes crownBob { 0%,100%{ transform:translateX(-50%) rotate(4deg) translateY(0); } 50%{ transform:translateX(-50%) rotate(4deg) translateY(-3px); } }
+/* Aura pulsée de la voie de tête + halo de l'horloge en course */
+.car-lane.leader::before { animation:leaderPulse 2.2s ease-in-out infinite; }
+@keyframes leaderPulse {
+	0%,100%{ box-shadow:inset 0 0 0 1px rgba(249,215,126,.28); }
+	50%{ box-shadow:inset 0 0 0 1px rgba(249,215,126,.55), 0 0 26px -6px rgba(249,215,126,.45); }
+}
+.race .rc-clock.live { animation:clockLive 1.8s ease-in-out infinite; }
+@keyframes clockLive { 50% { box-shadow:0 0 24px rgba(23,176,107,.3); } }
+/* Pastille « tient une colline » (King of the Hill) sur le kart concerné */
+.car-wrap .koth-hill {
+	display:inline-flex; align-items:center; gap:.3rem; margin-left:.5rem;
+	font-family:'JetBrains Mono',monospace; font-weight:700; font-size:.66rem; letter-spacing:.5px;
+	text-transform:uppercase; color:#3a2a00; white-space:nowrap;
+	background:linear-gradient(180deg,#ffe27a,var(--yellow)); border-radius:999px; padding:.12rem .5rem;
+	box-shadow:0 0 14px -3px rgba(255,206,0,.6);
+}
+.car-wrap .koth-hill::before { content:"👑"; font-size:.72rem; }
+@media (max-width:640px){ .car-wrap .koth-hill span { display:none; } }
+/* Pastille éphémère « first blood » (🩸) sur le kart qui vient d'ouvrir une épreuve.
+   Élément frère du badge KotH, jamais sur .rank::after (couronne du leader). */
+.car-wrap .fb-drop {
+	display:inline-flex; align-items:center; margin-left:.4rem; font-size:1rem; line-height:1;
+	filter:drop-shadow(0 0 6px rgba(225,6,0,.7)); animation:fbDrop 12s ease-out forwards;
+}
+@keyframes fbDrop { 0%{ transform:scale(.4); opacity:0; } 8%{ transform:scale(1.5); opacity:1; } 16%{ transform:scale(1); } 85%{ opacity:1; } 100%{ opacity:0; } }
+/* Ticker des 5 derniers first bloods, mode projecteur uniquement, posé
+   au-dessus du ruban HUD (30 px, fixé en bas de page). */
+.fb-ticker {
+	display:none; position:fixed; left:0; right:0; bottom:38px; z-index:55; height:36px; overflow:hidden;
+	align-items:center; gap:.9rem; padding:0 .9rem; font-family:'JetBrains Mono',monospace;
+	background:rgba(0,3,10,.88); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+	backdrop-filter:blur(6px); color:#e6ecf5;
+}
+body.bigmode .fb-ticker.has { display:flex; }
+body.bigmode #race { margin-bottom:84px; }
+.fb-ticker .fb-lbl { color:var(--red); font-weight:700; letter-spacing:.8px; text-transform:uppercase; font-size:.72rem; white-space:nowrap; }
+.fb-ticker .fb-track { flex:1; overflow:hidden; position:relative; height:100%; }
+.fb-ticker .fb-run { position:absolute; left:0; top:0; height:100%; display:flex; align-items:center; gap:2.4rem; white-space:nowrap;
+	font-size:.98rem; animation:fbRun var(--fb-dur,28s) linear infinite; padding-left:100%; }
+.fb-ticker .fb-run b { color:#fff; } .fb-ticker .fb-run em { font-style:normal; color:var(--yellow); }
+.fb-ticker .fb-run .cat { color:var(--muted); font-size:.8rem; }
+@keyframes fbRun { to { transform:translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { .fb-ticker .fb-run { animation:none; padding-left:0; } .car-wrap .fb-drop { animation:none; } }
+@media (prefers-reduced-motion: reduce) {
+	.track::after, .car-lane.leader .rank::after, .car-lane.leader::before, .race .rc-clock.live { animation:none; }
+}
+
+/* Confettis tricolores */
+.confetti { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
+.confetti i { position:absolute; top:-12px; width:8px; height:13px; opacity:.9;
+	animation:fall linear forwards; }
+@keyframes fall { to { transform:translateY(115%) rotate(540deg); opacity:1; } }
+
+.race .waiting { position:static; text-align:center; color:var(--muted); font-family:'JetBrains Mono',monospace;
+	padding:2.5rem 1rem; }
+.race .yourcar { position:absolute; left:0; right:0; }
+
+/* Bandeau « scores gelés » (ice-blue, aligné sur .rc-clock.frozen) */
+.sb-frozen {
+	display:flex; align-items:center; gap:.55rem; flex-wrap:wrap;
+	margin:.2rem 0 1rem; padding:.7rem 1rem; border-radius:8px;
+	font-family:'JetBrains Mono',monospace; font-size:.86rem; color:#dbe7ff;
+	background:linear-gradient(90deg, rgba(127,178,255,.14), rgba(127,178,255,.05));
+	border:1px solid #3a5b8f; box-shadow:0 0 18px rgba(127,178,255,.10);
+}
+.sb-frozen b { color:#fff; }
+.sb-frozen .ice { color:#7fb2ff; font-size:1.05rem; }
+
+/* « Ta voiture » : la voie de l'équipe du joueur connecté (surlignée dans le
+   top N, ou épinglée sous le peloton quand elle est plus loin). */
+.car-lane.mine { background:linear-gradient(90deg, rgba(255,206,0,.10), rgba(255,206,0,0) 60%); box-shadow:inset 3px 0 0 var(--yellow); }
+.car-lane.mine .car-name { color:var(--yellow); }
+.car-lane.mine.pinned { border-top:1px dashed rgba(255,206,0,.45); }
+.you-tag { display:inline-block; margin-left:.4rem; padding:.05rem .45rem; border-radius:999px; font:700 .68rem/1.4 "JetBrains Mono",monospace;
+  letter-spacing:.06em; text-transform:uppercase; color:#0a0f18; background:var(--yellow); vertical-align:middle; }
+.car-lane.mine .you-tag { animation: youPulse 2.4s ease-in-out infinite; }
+@keyframes youPulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
+@media (prefers-reduced-motion: reduce) { .car-lane.mine .you-tag { animation:none; } }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+/* Mode vidéoprojecteur : /scoreboard?big=1 */
+.race.big { --lane-h:74px; }
+.race.big .car { width:88px; height:56px; }
+.race.big .car-name { font-size:1.15rem; max-width:300px; }
+.race.big .car-score { font-size:1.05rem; }
+.race.big .rank { width:44px; height:44px; font-size:1.4rem; border-radius:13px; }
+.race.big .rc-title { font-size:1.9rem; }
+.race.big .rc-clock { font-size:1.6rem; }
+body.bigmode .navbar, body.bigmode .footer, body.bigmode .jumbotron,
+body.bigmode .race-switch, body.bigmode #board-table { display:none !important; }
+body.bigmode #race { margin-top:1rem; }
+
+@media (max-width:640px) {
+	.car-name { max-width:100px; font-size:.78rem; }
+	.car { width:46px; height:30px; }
+	.car-lane .rank { width:28px; height:28px; font-size:.9rem; }
+}
+@media (prefers-reduced-motion: reduce) {
+	.car-lane, .car-wrap, .peloton { transition:none; }
+	.car-wrap.boost, .car, .car .wheel { animation:none; }
+	.confetti { display:none; }
+	.pluspts { animation:none; opacity:0; }
+}
+</style>
+
+<script defer>
+(function () {
+	"use strict";
+	var mount = document.getElementById("race");
+	var tableBox = document.getElementById("board-table");
+	if (!mount) return;
+
+	var URLROOT = (window.init && init.urlRoot) || "";
+	var START = window.init && init.start ? Number(init.start) * 1000 : null;
+	var END   = window.init && init.end   ? Number(init.end)   * 1000 : null;
+	var FREEZE = window.init && init.freeze ? Number(init.freeze) * 1000 : null;
+	var frozenBanner = document.getElementById("sb-frozen");
+	function isFrozen(now){ return !!(FREEZE && now >= FREEZE); }
+	var TOPN = 12;
+	var POLL_MS = 12000;
+	var big = /[?&]big=1/.test(location.search);
+	if (big) { document.body.classList.add("bigmode"); mount.classList.add("big"); TOPN = 14; }
+
+	var prevScores = {};   // account_id -> score, pour détecter les nouveaux solves
+	// « Ta voiture » : compte du joueur connecté (équipe en mode équipes). Jamais
+	// en mode salle : l'écran de la salle n'est l'équipe de personne.
+	var ME = null, meLane = null, lastLead = null, lastMyRank = null, lastTeams = null;
+	var liveEl = null;
+	(function findMe(){
+		if (big || !window.init || !init.userId) return;
+		var teams = (init.userMode === "teams");
+		fetch(URLROOT + (teams ? "/api/v1/teams/me" : "/api/v1/users/me"), {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (j && j.success && j.data && j.data.id != null){
+					ME = j.data.id;
+					if (lastTeams) layout(lastTeams);   // ne pas attendre le prochain sondage
+				}
+			})
+			.catch(function(){ /* pas connecté ou sans équipe : pas de voie « toi » */ });
+	})();
+	function ordinal(n){ return n === 1 ? "1ᵉʳ" : n + "ᵉ"; }
+	var started = false;
+	var kothBy = {};       // account_id -> nom de la colline tenue (badge KotH)
+
+	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+	function hue(name){ var h=0; name=String(name||""); for(var i=0;i<name.length;i++){h=(h*31+name.charCodeAt(i))>>>0;} return h%360; }
+	function kartSVG(h){
+		// petit kart vu de côté, teinte = hash du nom d'équipe
+		return '<svg class="car" viewBox="0 0 64 40" xmlns="http://www.w3.org/2000/svg">'
+			+ '<g class="wheel"><circle cx="16" cy="30" r="9" fill="#0c0c0c"/><circle cx="16" cy="30" r="3.4" fill="hsl('+h+',70%,55%)"/></g>'
+			+ '<g class="wheel"><circle cx="50" cy="31" r="7.5" fill="#0c0c0c"/><circle cx="50" cy="31" r="2.8" fill="hsl('+h+',70%,55%)"/></g>'
+			+ '<path d="M12 30 h42 a3 3 0 0 1 0 6 H12 a3 3 0 0 1 0 -6 z" fill="#1a212e"/>'
+			+ '<path d="M14 30 q3 -12 14 -12 h10 q9 0 13 12 z" fill="hsl('+h+',72%,52%)"/>'
+			+ '<rect x="24" y="23" width="12" height="6" rx="2" fill="#0a0f18" opacity=".85"/>'
+			+ '<path d="M27 20 q1 -6 6 -6 q5 0 6 6 z" fill="hsl('+h+',40%,30%)"/>'
+			+ '<circle cx="33" cy="12" r="6" fill="hsl('+h+',72%,52%)"/>'
+			+ '<path d="M28 11 h10 a1 1 0 0 1 0 3 h-10 a1 1 0 0 1 0 -3 z" fill="#0a0f18" opacity=".9"/>'
+			+ '<rect x="52" y="21" width="8" height="3.4" rx="1.5" fill="hsl('+h+',72%,52%)"/>'
+			+ '</svg>';
+	}
+	function fmt(ms){
+		if (ms<0) ms=0; var s=Math.floor(ms/1000);
+		var d=Math.floor(s/86400); s-=d*86400;
+		var h=Math.floor(s/3600); s-=h*3600;
+		var m=Math.floor(s/60); s-=m*60;
+		function p(n){return (n<10?"0":"")+n;}
+		return (d>0? d+"j " : "") + p(h)+":"+p(m)+":"+p(s);
+	}
+
+	// Ossature
+	mount.innerHTML =
+		'<div class="rc-head"><span class="rc-title">Grille en course</span>'
+		+ '<span class="rc-clock" id="rc-clock">—</span></div>'
+		+ '<div class="lights" id="rc-lights" hidden></div>'
+		+ '<div class="track" id="rc-track" role="list" aria-label="Grille de course"><div class="startline"></div><div class="finishline"></div></div>'
+		+ '<div id="rc-podium"></div>'
+		+ '<div class="sr-only" id="rc-live" role="status" aria-live="polite"></div>';
+
+	var track = document.getElementById("rc-track");
+	var clockEl = document.getElementById("rc-clock");
+	var lightsEl = document.getElementById("rc-lights");
+	var podiumEl = document.getElementById("rc-podium");
+	var lanes = {};   // account_id -> {laneEl, wrapEl}
+
+	function phase(now){
+		if (START && now < START) return "pre";
+		if (END && now >= END) return "done";
+		return "live";
+	}
+
+	function renderClock(now){
+		var ph = phase(now);
+		clockEl.className = "rc-clock" + (ph==="live"?" live":ph==="done"?" done":"") + (isFrozen(now)?" frozen":"");
+		if (ph==="pre"){ clockEl.innerHTML = "DÉPART DANS <b>"+fmt(START-now)+"</b>"; }
+		else if (ph==="live"){ clockEl.innerHTML = END ? "TEMPS RESTANT <b>"+fmt(END-now)+"</b>" : "EN COURSE"; }
+		else { clockEl.innerHTML = "ARRIVÉE — course terminée"; }
+		// feux de départ (mode fun) dans les 6 dernières secondes avant le départ
+		if (ph==="pre" && START-now <= 6000){
+			lightsEl.hidden = false;
+			var lit = 5 - Math.max(0, Math.ceil((START-now)/1000) - 1);
+			var html=""; for(var i=0;i<5;i++){ html += '<span class="lamp'+(i<lit?" on":"")+'"></span>'; }
+			lightsEl.className = "lights"; lightsEl.innerHTML = html;
+		} else if (ph==="live" && !started){
+			started = true; lightsEl.hidden = false; lightsEl.className="lights go";
+			lightsEl.innerHTML = '<span class="lamp"></span><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span><span class="lamp"></span>';
+			setTimeout(function(){ lightsEl.hidden = true; }, 1500);
+		} else if (ph!=="pre") {
+			if (started || ph==="done") lightsEl.hidden = true;
+		}
+	}
+
+	function layout(teams){
+		lastTeams = teams;
+		var laneH = big ? 74 : 58;
+		var top = teams.slice(0, TOPN);
+		var rest = teams.length - top.length;
+		var n = top.length;
+		var rows = top.length + (rest>0 ? 1 : 0);
+		track.style.height = Math.max(rows,1)*laneH + 20 + "px";
+		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+		top.forEach(function(t, i){
+			// grille de course : positions étagées par rang (leader devant ~72 %,
+			// dernier près du départ ~12 %). Un changement de rang = kart qui
+			// avance/recule sur la piste, la transition CSS anime le dépassement.
+			var xpct = n > 1 ? (12 + (1 - i/(n-1)) * 60) : 72;
+			var L = lanes[t.account_id];
+			if (!L){
+				var lane = document.createElement("div");
+				lane.className = "car-lane";
+				var h = hue(t.name);
+				lane.innerHTML = '<span class="rank"></span><div class="car-wrap">'
+					+ kartSVG(h) + '<span class="car-name"></span> <span class="car-score"></span>'
+					+ '<span class="koth-hill" hidden></span><span class="fb-drop" hidden>🩸</span></div>';
+				track.appendChild(lane);
+				L = lanes[t.account_id] = { lane:lane, wrap:lane.querySelector(".car-wrap"),
+					rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
+					score:lane.querySelector(".car-score"), koth:lane.querySelector(".koth-hill"),
+					fb:lane.querySelector(".fb-drop"), h:h };
+			}
+			if (fbPending[t.account_id] != null){
+				var pend = fbPending[t.account_id]; delete fbPending[t.account_id];
+				if (Date.now() - pend < 60000) setTimeout(function(id){ flashFb(id); }, 50, t.account_id);
+			}
+			L.lane.style.top = (i*laneH) + "px";
+			var isMe = ME != null && String(t.account_id) === String(ME);
+			L.lane.className = "car-lane" + (i===0 ? " leader" : "") + (isMe ? " mine" : "");
+			L.lane.setAttribute("role", "listitem");
+			L.lane.setAttribute("aria-label", ordinal(i+1) + (isMe ? " (toi)" : "") + ", " + t.name + ", " + t.score + " points");
+			var tag = L.lane.querySelector(".you-tag");
+			if (isMe && !tag){ tag = document.createElement("span"); tag.className = "you-tag"; tag.textContent = "toi"; L.name.after(tag); }
+			else if (!isMe && tag){ tag.remove(); }
+			L.wrap.style.left = xpct + "%";
+			L.rank.className = "rank" + (i===0?" g1":i===1?" g2":i===2?" g3":"");
+			L.rank.textContent = (i+1);
+			L.name.textContent = t.name;
+			L.score.textContent = t.score;
+			if (L.koth){ var hh = kothBy[t.account_id]; if (hh){ L.koth.hidden=false; L.koth.innerHTML='<span>'+esc(hh)+'</span>'; } else { L.koth.hidden=true; L.koth.textContent=''; } }
+			// boost si le score a monté depuis le dernier poll (mode fun)
+			var was = prevScores[t.account_id];
+			if (was != null && t.score > was && !reduced){
+				var wrap = L.wrap;
+				wrap.classList.remove("boost"); void wrap.offsetWidth; wrap.classList.add("boost");
+				if (!wrap.querySelector(".flame")){ var f=document.createElement("span"); f.className="flame"; wrap.appendChild(f); }
+				var pp=document.createElement("span"); pp.className="pluspts"; pp.textContent="+"+(t.score-was); wrap.appendChild(pp);
+				setTimeout(function(){ var fl=wrap.querySelector(".flame"); if(fl) fl.remove(); if(pp) pp.remove(); wrap.classList.remove("boost"); }, 1300);
+			}
+		});
+		// équipes sorties du top N : on retire leur kart
+		Object.keys(lanes).forEach(function(id){
+			if (!top.some(function(t){return String(t.account_id)===String(id);})){ lanes[id].lane.remove(); delete lanes[id]; }
+		});
+		// peloton agrégé
+		var pel = document.getElementById("rc-peloton");
+		if (rest>0){
+			if (!pel){ pel=document.createElement("div"); pel.className="peloton"; pel.id="rc-peloton";
+				pel.innerHTML='<span class="bubble"></span>'; track.appendChild(pel); }
+			pel.style.top = (top.length*laneH) + "px";
+			pel.querySelector(".bubble").innerHTML = "+<b>"+rest+"</b> kart"+(rest>1?"s":"")+" dans le peloton";
+			pel.querySelector(".bubble").style.left = "12%";
+		} else if (pel){ pel.remove(); }
+
+		// « toi · 47ᵉ » : ta voie épinglée sous le peloton quand tu es hors du top N
+		var myIdx = ME == null ? -1 : teams.findIndex(function(t){ return String(t.account_id) === String(ME); });
+		if (myIdx >= TOPN){
+			var me = teams[myIdx];
+			if (!meLane){
+				meLane = document.createElement("div");
+				meLane.innerHTML = '<span class="rank"></span><div class="car-wrap">' + kartSVG(hue(me.name))
+					+ '<span class="car-name"></span><span class="you-tag">toi</span> <span class="car-score"></span></div>';
+				track.appendChild(meLane);
+			}
+			meLane.className = "car-lane mine pinned";
+			meLane.setAttribute("role", "listitem");
+			meLane.style.top = (rows*laneH) + "px";
+			// position sur la piste proportionnelle au rang dans tout le champ
+			var frac = teams.length > 1 ? 1 - myIdx/(teams.length-1) : 0;
+			meLane.querySelector(".car-wrap").style.left = (12 + frac*60) + "%";
+			meLane.querySelector(".rank").textContent = myIdx + 1;
+			meLane.querySelector(".car-name").textContent = me.name;
+			meLane.querySelector(".car-score").textContent = me.score;
+			meLane.setAttribute("aria-label", ordinal(myIdx+1) + " (toi), " + me.name + ", " + me.score + " points");
+			track.style.height = (rows+1)*laneH + 20 + "px";
+		} else if (meLane){ meLane.remove(); meLane = null; }
+
+		// lecteur d'écran : annonce du changement de tête et de ton rang
+		liveEl = liveEl || document.getElementById("rc-live");
+		if (liveEl){
+			var msgs = [];
+			if (teams[0] && teams[0].account_id !== lastLead){ if (lastLead !== null) msgs.push("Nouvelle tête de course : " + teams[0].name + ", " + teams[0].score + " points."); lastLead = teams[0].account_id; }
+			if (myIdx >= 0 && myIdx + 1 !== lastMyRank){ if (lastMyRank !== null) msgs.push("Ton équipe est " + ordinal(myIdx+1) + " sur " + teams.length + "."); lastMyRank = myIdx + 1; }
+			if (msgs.length) liveEl.textContent = msgs.join(" ");
+		}
+
+		teams.forEach(function(t){ prevScores[t.account_id]=t.score; });
+	}
+
+	function podium(teams){
+		if (phase(Date.now())!=="done" || !teams.length){ podiumEl.innerHTML=""; track.classList.remove("done"); return; }
+		track.classList.add("done");
+		if (podiumEl.dataset.done) return; podiumEl.dataset.done="1";
+		var t = teams.slice(0,3), order=[1,0,2];
+		var html='<div class="podium">';
+		order.forEach(function(idx){ var p=t[idx]; if(!p) return; var cls="p"+(idx+1);
+			html += '<div class="step '+cls+'"><div class="who">'+esc(p.name)+'</div><div class="bar">'+(idx+1)+'</div></div>'; });
+		html += '</div>';
+		podiumEl.innerHTML = html;
+		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+		if (!reduced) confetti();
+	}
+	function confetti(){
+		var cols=["#d21034","#ffce00","#006a4e","#ffffff"];
+		var box=document.createElement("div"); box.className="confetti";
+		for(var i=0;i<80;i++){ var p=document.createElement("i");
+			p.style.left=(Math.random()*100)+"%";
+			p.style.background=cols[i%cols.length];
+			p.style.animationDuration=(2+Math.random()*2.5)+"s";
+			p.style.animationDelay=(Math.random()*0.8)+"s";
+			box.appendChild(p); }
+		track.appendChild(box);
+		setTimeout(function(){ box.remove(); }, 5000);
+	}
+
+	function applyKothBadges(){
+		Object.keys(lanes).forEach(function(id){
+			var L=lanes[id]; if(!L||!L.koth) return;
+			var hh=kothBy[id];
+			if(hh){ L.koth.hidden=false; L.koth.innerHTML='<span>'+esc(hh)+'</span>'; }
+			else { L.koth.hidden=true; L.koth.textContent=''; }
+		});
+	}
+	function refreshKoth(){
+		// Qui tient une colline (King of the Hill). Endpoint public, vide sous gel.
+		// 403/404/absent => aucun badge (le KotH peut ne pas être configuré).
+		fetch(URLROOT + "/plugins/koth/api/holders", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				var next={};
+				if (j && j.success && Array.isArray(j.data)){
+					j.data.forEach(function(d){ if(d && d.account_id!=null){ next[d.account_id]=d.hill; } });
+				}
+				kothBy=next; applyKothBadges();
+			})
+			.catch(function(){ /* pas de KotH : aucun badge */ });
+	}
+
+	// First bloods : ticker (mode projecteur) + pastille 🩸 12 s sur le kart concerné.
+	var fbSeen = null;          // solve_id déjà vus (null = premier chargement, pas de pastille)
+	// Le ticker est créé sous <body>, pas dans <main> : <main> garde un transform
+	// (animation d'entrée) et un position:fixed s'y ancrerait au lieu de la fenêtre.
+	var fbTicker = null, fbRun = null;
+	if (big){
+		fbTicker = document.createElement("div"); fbTicker.className = "fb-ticker"; fbTicker.id = "fb-ticker"; fbTicker.setAttribute("aria-live","polite");
+		fbTicker.innerHTML = '<span class="fb-lbl">🩸 first bloods</span><div class="fb-track"><div class="fb-run" id="fb-run"></div></div>';
+		document.body.appendChild(fbTicker); fbRun = fbTicker.querySelector(".fb-run");
+	}
+	var fbPending = {};         // account_id -> ts : kart pas encore sur la grille au moment de l'annonce
+	function flashFb(accountId){
+		var L = lanes[accountId];
+		if(!L || !L.fb){ fbPending[accountId] = Date.now(); return; }
+		L.fb.hidden = false; L.fb.style.animation = "none"; void L.fb.offsetWidth; L.fb.style.animation = "";
+		setTimeout(function(){ L.fb.hidden = true; }, 12500);
+	}
+	function refreshFirstBloods(){
+		fetch(URLROOT + "/plugins/firstblood/api/recent?limit=5", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (!j || !j.success || !Array.isArray(j.data)) return;
+				var list = j.data;
+				if (fbTicker && fbRun){
+					fbRun.innerHTML = list.map(function(d){
+						return '<span>🩸 <b>'+esc(d.name)+'</b> ouvre <em>'+esc(d.challenge)+'</em> <span class="cat">'+esc(d.category||"")+'</span></span>';
+					}).join('');
+					fbTicker.classList.toggle("has", list.length > 0);
+					fbRun.style.setProperty("--fb-dur", Math.max(18, 6 * list.length + 8) + "s");
+				}
+				var next = {};
+				list.forEach(function(d){ next[d.solve_id] = d.account_id; });
+				if (fbSeen !== null){
+					Object.keys(next).forEach(function(id){ if(!(id in fbSeen)) flashFb(next[id]); });
+				}
+				fbSeen = next;
+			})
+			.catch(function(){ /* plugin absent : pas de ticker */ });
+	}
+
+	function tick(){
+		var now = Date.now();
+		renderClock(now);
+		if (frozenBanner) frozenBanner.hidden = !isFrozen(now);
+	}
+
+	function refresh(){
+		fetch(URLROOT + "/api/v1/scoreboard", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (!j || !j.success || !Array.isArray(j.data)) return;
+				var teams = j.data.map(function(d){ return {account_id:d.account_id, name:d.name, score:Number(d.score)||0}; });
+				if (!teams.length){
+					// pas encore de score : on GARDE la table (état vide serveur) et on
+					// rend un message d'attente lisible dans la piste (hauteur auto,
+					// waiting en position:static — sinon .track > * l'écrase à ~24px).
+					lanes = {};
+					track.style.height = "";
+					track.innerHTML = '<div class="startline"></div><div class="finishline"></div>'
+						+ '<div class="waiting">En attente des premiers scores…</div>';
+					return;
+				}
+				// on a des scores -> on révèle la course et on cache la table
+				if (mount.hasAttribute("hidden")){
+					mount.hidden=false; mount.setAttribute("aria-hidden","false");
+					if (tableBox && !big) tableBox.hidden=true;
+				}
+				layout(teams); podium(teams);
+			})
+			.catch(function(){ /* on garde la table en repli */ });
+	}
+
+	// Sélecteur de vue
+	document.querySelectorAll(".rsw-btn").forEach(function(b){
+		b.addEventListener("click", function(){
+			var v=b.dataset.view;
+			document.querySelectorAll(".rsw-btn").forEach(function(x){ x.classList.toggle("active", x===b); x.setAttribute("aria-selected", x===b?"true":"false"); });
+			if (v==="race"){ mount.hidden=false; if(tableBox) tableBox.hidden=true; }
+			else { mount.hidden=true; if(tableBox) tableBox.hidden=false; }
+		});
+	});
+	// plein écran au clavier (mode salle)
+	document.addEventListener("keydown", function(e){ if(e.key==="f" && !/input|textarea/i.test((e.target.tagName||""))){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); } });
+
+	// horloge chaque seconde ; scores toutes les 12s ; pause si onglet caché
+	tick(); refresh(); refreshKoth(); refreshFirstBloods();
+	var clockTimer=setInterval(tick,1000), pollTimer=setInterval(refresh,POLL_MS);
+	var kothTimer=setInterval(refreshKoth,POLL_MS), fbTimer=setInterval(refreshFirstBloods,POLL_MS);
+	document.addEventListener("visibilitychange", function(){
+		if (document.hidden){ clearInterval(pollTimer); pollTimer=null; }
+		else if (!pollTimer){ refresh(); refreshKoth(); refreshFirstBloods(); pollTimer=setInterval(refresh,POLL_MS); }
+	});
+})();
+</script>
+{% endblock %}

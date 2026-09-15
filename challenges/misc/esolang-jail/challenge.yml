@@ -1,0 +1,89 @@
+name: esolang-jail
+author: ctf-2026
+category: misc
+type: team_instance
+description: |
+  **Marble jail** -- a tiny stack esoteric language, served over TCP as an
+  interactive REPL. You connect, you get a `marble>` prompt, and you run Marble
+  programs one line at a time. The stack (and a 256-cell integer memory) persist
+  across lines within your connection. Type `HELP` for the full language
+  reference; the interpreter source is not shipped, so probe the live REPL to
+  learn how it behaves.
+
+  Your goal: **escape the sandbox and read this instance's flag.** The flag is
+  not in any downloadable file and cannot be recovered by reading a program's
+  output alone -- it lives only in the running instance (its environment and a
+  file on its filesystem), reachable only once you break out of the interpreter.
+  It's a live, per-team instance; probe the language and find the gap.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Connect:  `nc {host} {port}`
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (medium-hard).
+value: 400
+extra:
+  docker_image: ctf-esolang-jail:latest
+  internal_port: 9301
+  initial: 400
+  decay: 30
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# This challenge is SERVED and the flag is derived per team, so no static flag
+# ships in this file. The container derives it at runtime from the injected
+# per-challenge secret as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "misc-esolang-jail")[:24] + "}"
+# (see flag.py). The platform's custom per-account flag class recomputes and
+# validates each team's flag on submission.
+flags:
+  - type: team_hmac
+    content: misc-esolang-jail
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la vuln n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      L'évasion passe forcément par la porte `SYS` -- le seul pont vers les
+      primitives de l'hôte. Regardez de près sur quoi `SYS` dispatch, et comment
+      il valide l'indice qu'il dépile de la pile.
+    cost: 20
+    key: h1
+  - content: >-
+      `SYS` vérifie une borne HAUTE (il refuse un indice >= 8) mais jamais une
+      borne basse. Derrière, un seul tableau contient la bibliothèque standard
+      ET des primitives hôte cachées. En Python, un indice négatif repart de la
+      fin du tableau.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le tokenizer refuse les littéraux négatifs, mais l'arithmétique en
+      fabrique : `0 1 SUB` donne -1. `"<chemin>" 0 1 SUB SYS PRINT` atteint la
+      primitive de lecture de fichier (`SYS -1`) ; `SYS -2` atteint la lecture
+      d'environnement. Lisez `/proc/self/environ`, l'env `FLAG`, ou le fichier
+      de flag.
+    cost: 60
+    key: h3
+    requirements: [h2]
+
+# No handout: the interpreter source is NOT shipped. Players discover the
+# language -- and its gap -- by probing the live REPL. This keeps the escape a
+# genuine interactive/stateful puzzle rather than a static read.
+tags:
+  - misc
+  - medium
+
+# Prerequisite chain: none. This is a standalone challenge.
+# (If wired into a chain, prereqs are set by challenge ID at import time via a
+#  'requirements' key referencing the upstream challenge id.)
+
+# Served challenge: the platform instancier starts one container per team and
+# injects the per-challenge secret. connection_info is templated with the team's
+# host:port.
+connection_info: "nc {host} {port}  (per-team instance; use the 'launch' button)"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up.

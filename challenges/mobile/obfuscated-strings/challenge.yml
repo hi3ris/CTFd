@@ -1,0 +1,43 @@
+name: obfuscated-strings
+author: dagbanjaphet
+category: mobile
+description: |-
+  `app.apk` from the StashBox app builds a license string at runtime instead of
+  storing it. The decompiled sources contain the obfuscated bytes and the code
+  that turns them back into text.
+
+  Recover the license string. It is the flag. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{r3v3rs3_th3_0bfusc4t0r_l00p}
+hints:
+  - content: >-
+      Unzip the APK and read `StringFog.java`. It carries an int array `DATA`
+      and an `unfog()` routine. The flag is the output of `unfog()`.
+    cost: 10
+    key: h1
+  - content: >-
+      `unfog()` is a per-index loop: `x = DATA[i] ^ 0xA5`, rotate right by
+      `(i % 5) + 1`, then subtract `(i*7 + 3)` mod 256. Just run that same loop
+      over DATA in any language.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - string-obfuscation
+  - easy
+files:
+  - app.apk
+state: visible
+version: "0.1"

@@ -1,0 +1,84 @@
+name: graphql-introspection-maze
+author: ctf-2026
+category: web
+description: |
+  **Atlas Ops** exposes a single GraphQL endpoint at `POST /graphql`
+  (JSON body `{"query": "...", "variables": {...}}`). You start as an
+  unprivileged `OBSERVER`; the public data (try `{ announcements { title body } }`)
+  is your way in.
+
+  Somewhere in the API is a privileged operation that can reassign your
+  session's clearance. Reach it and drive your own session to **ROOT**: the
+  server verifies that effect server-side, and only then will
+  `controlPlane { flag }` return anything.
+
+  Nothing here is a downloadable flag -- the running service is the oracle.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+value: 500
+type: team_instance
+extra:
+  docker_image: ctf-graphql-introspection-maze:latest
+  internal_port: 8080
+  initial: 500
+  decay: 30
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "web-graphql-introspection-maze")[:24] + "}"
+# and is emitted by the running instance only after the privileged effect
+# (caller session clearance -> ROOT). CTFd validates the real per-team flag via
+# the custom HMAC flag class; the static entry below is only the placeholder
+# for the local demo TEAM_SECRET and is NOT shipped to production.
+flags:
+  - type: team_hmac
+    content: web-graphql-introspection-maze
+
+# Progressive, point-costing hints. The vuln detail lives here, not in the
+# description: it has to be paid for.
+hints:
+  - content: >-
+      The schema isn't directly readable (no introspection, no GraphiQL), but
+      you don't need it to be -- the server tells you more than it means to
+      whenever a query is slightly wrong. Get a field name a little off and
+      read the reply carefully.
+    cost: 25
+    key: h1
+  - content: >-
+      Those "Did you mean ...?" suggestions and required-argument errors are an
+      oracle: walk it (seed your guesses from the public announcements) to a
+      hidden, un-access-controlled mutation that reassigns clearance. Its ids
+      are a custom scalar, `NodeRef`, and the reference it wants is never
+      returned by any field -- you'll have to build it.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The mutation is `redeemWarrant(warrant: NodeRef!): ControlPlane`. A
+      `NodeRef` decodes as `NR1_<base64url>` of 5 bytes: kind, ordinal
+      (little-endian), version `0x01`, then an additive checksum
+      `(sum + 0x5A) & 0xFF`. Forge one whose kind byte is the WARRANT kind
+      (not the `0x21`/`0x22` you can read -- brute the single byte; it's
+      `0x2A`). Redeeming it flips your session to ROOT, then
+      `controlPlane { flag }` returns.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+tags:
+  - web
+  - hard
+
+# challenge-id (for HMAC / requirements wiring): web-graphql-introspection-maze
+# No prerequisites; standalone.
+
+connection_info: http://{host}:8080/
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-graphql-introspection-maze:latest
+# so `make push-images` finds it.

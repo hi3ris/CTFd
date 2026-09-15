@@ -1,0 +1,41 @@
+name: private-ledger
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You are handed the Solidity source of an on-chain ledger and a raw
+  dump of its storage (`storage.json`, mapping each 32-byte slot to its
+  word). The address you control is
+  `0x00000000000000000000000000000000c0FFee01`. Recover the note the
+  ledger keeps for you.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{priv8_slots_r_just_public}
+hints:
+  - content: >-
+      'private' in Solidity is not secrecy -- the data is still in storage. Where does a mapping value actually live?
+    cost: 10
+    key: h1
+  - content: >-
+      For a mapping at declaration slot p, m[k] is stored at keccak256(abi.encode(k, p)). Count the state variables to find the base slot.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - blockchain
+  - evm
+  - storage
+  - easy
+files:
+  - PrivateLedger.sol
+  - storage.json
+state: visible
+version: "0.1"

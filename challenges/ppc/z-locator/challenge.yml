@@ -1,0 +1,43 @@
+name: z-locator
+author: dagbanjaphet
+category: ppc
+description: |-
+  `data.txt` has a short pattern on line 1 and a large blob of text on line 2.
+  The pattern appears many times in the text. The character sitting immediately
+  after each occurrence, in order, spells the flag.
+
+  Find every occurrence and read the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{z_function_finds_every_needle_fast}
+hints:
+  - content: >-
+      This is exact string matching: locate every start index of the pattern
+      inside the text, then look one character past each match.
+    cost: 10
+    key: h1
+  - content: >-
+      Concatenate pattern + a separator + text and compute the Z-function (or
+      run KMP). Positions where Z equals the pattern length are matches; the
+      byte just past each, in order, is the flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - ppc
+  - strings
+  - z-function
+  - easy
+files:
+  - data.txt
+state: visible
+version: "0.1"

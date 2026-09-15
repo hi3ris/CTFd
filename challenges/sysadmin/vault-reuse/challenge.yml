@@ -1,0 +1,59 @@
+name: vault-reuse
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  An Ansible project snapshot: `ansible.cfg`, `inventory.ini`, `group_vars/`
+  (including a real `ansible-vault` encrypted `secrets.yml`), and a `bin/`
+  helper. The encrypted vars file protects one secret and the repo never stores
+  a vault password literally.
+
+  Decrypt `secrets.yml` and recover the secret. The file is a genuine
+  `$ANSIBLE_VAULT;1.1;AES256` blob — the stock `ansible-vault view` will open it
+  once you supply the right password.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{ansible_vault_password_was_derivable_4e77}
+hints:
+  - content: >-
+      There is no password prompt: `ansible.cfg` sets `vault_password_file` to a
+      script. Read that script — where does the password actually come from?
+    cost: 25
+    key: h1
+  - content: >-
+      The helper builds the password purely from committed, non-secret metadata:
+      `password = "<project>-<deploy_env>-vault-v1"` using values from
+      `group_vars/all.yml`. Here that is `kekeli-staging-vault-v1`.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      `secrets.yml` is a real `$ANSIBLE_VAULT;1.1;AES256` file — no need to
+      reinvent the crypto. Feed the derived password to the stock tool:
+      `ansible-vault view --vault-password-file bin/get-vault-pass.sh
+      group_vars/secrets.yml`. (The password script is already wired up in
+      `ansible.cfg`, so it derives the password for you.)
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - sysadmin
+  - ansible
+  - key-derivation
+  - hard
+files:
+  - ansible.cfg
+  - inventory.ini
+  - group_vars/all.yml
+  - group_vars/secrets.yml
+  - bin/get-vault-pass.sh
+state: visible
+version: "0.1"

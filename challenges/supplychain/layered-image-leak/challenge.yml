@@ -1,0 +1,52 @@
+name: layered-image-leak
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On vous donne une image conteneur exportée avec `docker save` (`image.tar`).
+  Un secret de déploiement aurait été supprimé pendant le build « pour ne pas
+  qu'il finisse dans l'image ». Le système de fichiers final ne le contient
+  effectivement plus.
+
+  Récupérez quand même le secret depuis l'image. Le flag est dedans.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{d0cker_layer_secret_survives_rm_6c15}
+hints:
+  - content: >-
+      Une image Docker est un empilement de couches. `manifest.json` liste les
+      `layer.tar` dans l'ordre. `docker save` conserve CHAQUE couche, pas
+      seulement le résultat final.
+    cost: 22
+    key: h1
+  - content: >-
+      Supprimer un fichier dans une couche supérieure n'efface pas la couche
+      inférieure : ça ajoute juste un marqueur de suppression overlayfs
+      (`.wh.<nom>`). Le fichier original vit toujours dans la couche qui l'a
+      ajouté.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Cherchez `app/config/secret.env` dans les couches plus anciennes (pas la
+      dernière). Sa valeur `DEPLOY_KEY=` est en base64 : décodez-la.
+    cost: 67
+    key: h3
+    requirements: [h2]
+tags:
+  - supplychain
+  - container
+  - docker
+  - hard
+files:
+  - image.tar
+state: visible
+version: "0.1"
