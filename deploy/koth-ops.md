@@ -146,14 +146,17 @@ début à la fin** est `points × (durée / tick)`. Il faut le caler par rapport
 
 | Phase        | Durée | `points` | `tick` | Plafond 1 colline            |
 | ------------ | ----- | -------- | ------ | ---------------------------- |
-| Présélection | 72 h  | **1**    | 60 s   | `1 × 4320` = **4 320**       |
-| Présélection | 72 h  | 3        | 30 s   | `3 × 8640` = 25 920 _(trop)_ |
+| Présélection | 53 h  | **1**    | 60 s   | `1 × 3180` = **3 180**       |
+| Présélection | 53 h  | 3        | 30 s   | `3 × 6360` = 19 080 _(trop)_ |
 | Finale       | 24 h  | **5**    | 30 s   | `5 × 2880` = **14 400**      |
 | Finale       | 24 h  | 10       | 30 s   | `10 × 2880` = 28 800         |
 
-- **Présélection (~300 joueurs, 72 h non-stop)** : la colline tourne des jours ;
+(La présélection dure **53 h** : ven 23 oct 19:00 → lun 26 oct 00:00, cf.
+`deploy/event-windows.env`. `durée / tick` = 190 800 s / `tick`.)
+
+- **Présélection (~300 joueurs, 53 h non-stop)** : la colline tourne deux nuits ;
   un `points` élevé la rendrait dominante. Vise `points=1`, `KOTH_TICK=60` →
-  plafond ~4 320, l'ordre de grandeur d'une poignée d'épreuves _medium_. C'est un
+  plafond ~3 180, l'ordre de grandeur d'une poignée d'épreuves _medium_. C'est un
   bonus d'assiduité, pas la moitié du classement.
 - **Finale (10 équipes, 24 h)** : format spectacle, on peut monter (`points=5`,
   `tick=30` → ~14 400) et/ou ajouter une 2ᵉ colline pour des retournements plus
@@ -161,7 +164,9 @@ début à la fin** est `points × (durée / tick)`. Il faut le caler par rapport
 
 Le total réel est presque toujours **bien en dessous** du plafond : il suppose une
 seule équipe tenant le trône sans interruption, alors qu'en pratique il change de
-mains. Le plafond est la borne haute à ne pas laisser déraper.
+mains. Le plafond est la borne haute à ne pas laisser déraper. Sur une colline
+**boot2root**, une équipe qui ne tient qu'au niveau **user** marque **moitié**
+moins (le plafond ci-dessus suppose un maintien **root** de bout en bout).
 
 ## Suivi en direct (page admin)
 
