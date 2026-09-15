@@ -66,6 +66,8 @@
 .koth-dot { width:9px; height:9px; border-radius:50%; background:var(--muted); }
 .koth-dot.fresh { background:var(--green-b); box-shadow:0 0 8px var(--green-b); }
 .koth-crown { color:var(--yellow); }
+.koth-half { font-size:.72rem; text-transform:uppercase; letter-spacing:.04em; color:#0a0f18;
+	background:var(--yellow); border-radius:999px; padding:.05rem .5rem; margin-left:.35rem; white-space:nowrap; }
 .koth-you { color:var(--green-b); }
 .koth-vacant { color:var(--muted); }
 
@@ -140,8 +142,11 @@
 			var who = mine
 				? '<span class="koth-you">VOUS tenez la colline</span>'
 				: '<span class="koth-crown">'+esc(k.holder || k.token_preview)+'</span>';
+			var lvl = (k.level === "user")
+				? ' <span class="koth-half">accès user · ½ points</span>'
+				: '';
 			throne = '<span class="koth-throne"><span class="koth-dot '+(k.fresh?'fresh':'')+'"></span>'
-				+ who + ' <span class="koth-mut">· règne '+fmtDur(k.reign_seconds)
+				+ who + lvl + ' <span class="koth-mut">· règne '+fmtDur(k.reign_seconds)
 				+ (k.fresh?'':' (expiré)')+'</span></span>';
 		} else {
 			throne = '<span class="koth-vacant">colline libre — personne ne tient le trône</span>';
@@ -171,7 +176,9 @@
 			+   '<pre>1. Récupère la clé de la colline en exploitant le service ('+esc(h.player_url)+').\n'
 			+   '2. Signe une revendication fraîche pour TON jeton et poste-la sur le trône.\n'
 			+   '3. Rejoue-la en boucle : une revendication expire au bout de '+fmtDur(state.fresh_window)+', il faut re-tenir la colline.\n'
-			+   'Le scorer t\'attribue '+h.points+' pts à chaque tick ('+state.tick+'s) où tu tiens le trône.</pre>'
+			+   'Le scorer t\'attribue '+h.points+' pts à chaque tick ('+state.tick+'s) où tu tiens le trône.'
+			+   '\n\nColline boot2root : plante ton jeton dans /home/player/king.txt (accès user → MOITIÉ des points) '
+			+   'ou, après un passage root, dans /root/king.txt (points pleins). Le fichier le plus récent gagne.</pre>'
 			+ '</details>'
 			+ '<table class="koth-table"><thead><tr><th>#</th><th>Équipe</th><th class="sc">Points KotH</th></tr></thead>'
 			+   '<tbody>'+rows+'</tbody></table>'

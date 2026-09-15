@@ -69,6 +69,44 @@ KOTH_SCORER_SECRET=<...> KOTH_THRONE_HILL_KEY=<...> docker compose up -d
 La colline écoute en interne sur `:8080` (jamais publiée directement). Exposez-la
 aux joueurs via le reverse-proxy front / FRP, comme les autres services servis.
 
+### Collines boot2root (Armory · Foundry · Vault) — root/user, points pleins/moitié
+
+Trois collines SSH boot2root ajoutent une nuance au scoring : **deux fichiers roi**
+par colline.
+
+| Fichier                 | Qui l'écrit              | Points / tick |
+| ----------------------- | ------------------------ | ------------- |
+| `/home/player/king.txt` | le login `player`        | **moitié**    |
+| `/root/king.txt`        | root seul (`/root` 0700) | **pleins**    |
+
+Une équipe qui n'a qu'un accès SSH tient au niveau **user** (moitié). Après un
+**passage root** elle écrit `/root/king.txt` et marque **plein**. Le fichier le
+plus récent gagne (root l'emporte à égalité), donc tenir = réécrire son fichier
+plus vite que les rivaux, et **rester root** pour garder le plein tarif. Chaque
+colline a **un** vecteur d'escalade distinct, modeste, pour que la plupart des
+équipes atteignent le jeu de tenue :
+
+| Colline     | Image                        | Escalade                                         |
+| ----------- | ---------------------------- | ------------------------------------------------ |
+| The Armory  | `ctf-koth-boot2root-armory`  | SUID `find` → `find … -exec /bin/sh -p \; -quit` |
+| The Foundry | `ctf-koth-boot2root-foundry` | `sudo` NOPASSWD `python3`                        |
+| The Vault   | `ctf-koth-boot2root-vault`   | capabilité `cap_setuid+ep` sur `/opt/keymaster`  |
+
+Construire la **base d'abord**, puis chaque colline :
+
+```bash
+docker build -t ctf-koth-boot2root-base:latest    challenges/koth/boot2root/base
+docker build -t ctf-koth-boot2root-armory:latest  challenges/koth/boot2root/armory
+docker build -t ctf-koth-boot2root-foundry:latest challenges/koth/boot2root/foundry
+docker build -t ctf-koth-boot2root-vault:latest   challenges/koth/boot2root/vault
+```
+
+Le scorer (root) expose `/king` sur `:8082` avec un champ `level` (`root`/`user`)
+que le plugin traduit en points pleins/moitié. Ajouter les collines à
+`KOTH_HILLS` (`url` = le scorer, `player_url` = l'endpoint SSH), comme la Citadel.
+`make local-koth` en câble une (The Armory) en local sur le port 28902.
+Détails et solveurs : `challenges/koth/boot2root/README.md`.
+
 ## Configurer le plugin CTFd
 
 Variables d'environnement sur le conteneur **CTFd** :

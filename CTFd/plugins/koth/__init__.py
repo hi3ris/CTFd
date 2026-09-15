@@ -160,6 +160,7 @@ def _build_snapshot(hill: dict, prev: dict, now: float) -> dict:
         snap["ts"] = prev.get("ts", 0.0)
         snap["holder_id"] = prev.get("holder_id")
         snap["holder_name"] = prev.get("holder_name")
+        snap["level"] = prev.get("level", "root")
         return snap
     snap["online"] = True
     token = str(king.get("token") or "").strip()
@@ -167,6 +168,12 @@ def _build_snapshot(hill: dict, prev: dict, now: float) -> dict:
         ts = float(king.get("ts") or 0)
     except (TypeError, ValueError):
         ts = 0.0
+    # A hill may report the access level of the current hold. "root" (or a hill
+    # that says nothing, like the Throne/Citadel) scores full points; "user"
+    # scores half — a boot2root hill held only at user level, root not reached.
+    snap["level"] = (
+        "user" if str(king.get("level") or "").strip().lower() == "user" else "root"
+    )
     snap["token"], snap["ts"] = token, ts
     holder = _resolve(token, hill["id"]) if token else None
     if holder:
@@ -214,10 +221,15 @@ def _score_once(app):
                 continue
             if snap["holder_id"] is None:
                 continue
+            # Full points at root, half (rounded, floor 1) when the hold is only
+            # user-level on a boot2root hill.
+            value = hill["points"]
+            if snap.get("level") == "user":
+                value = max(1, hill["points"] // 2)
             award = Awards(
                 name="{} — hill tick".format(hill["name"])[:_AWARD_NAME_MAX],
                 category="koth:{}".format(hill["id"]),
-                value=hill["points"],
+                value=value,
                 icon="crown",
             )
             if teams_mode:
@@ -279,6 +291,8 @@ def _hill_view(hill: dict, snap: dict, now: float, viewer_aid=None) -> dict:
         "last_claim_seconds": int(max(0, now - ts)) if token else None,
         "reign_seconds": int(max(0, now - reign_since)) if reign_since else None,
         "takeovers": int(snap.get("takeovers") or 0),
+        # "user" only on a boot2root hill held at user level (half points).
+        "level": snap.get("level", "root"),
     }
 
 

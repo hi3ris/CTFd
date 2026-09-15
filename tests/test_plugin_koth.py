@@ -138,6 +138,47 @@ def test_holder_scores_each_tick(monkeypatch):
     destroy_ctfd(app)
 
 
+def test_user_level_hold_scores_half(monkeypatch):
+    """A boot2root hill held only at user level ('level': 'user') awards half
+    the points, floored at 1; root and a level-less hill (Throne) award full."""
+    import time as _t
+
+    koth = _koth(
+        monkeypatch,
+        KOTH_HILLS=json.dumps([{"id": "b2r", "url": "http://h:8082", "points": 5}]),
+    )
+    app = _teams_app()
+    with app.app_context():
+        from CTFd.models import db
+
+        tid = gen_team(db, name="alpha", email="a@x.com").id
+
+        def king(level):
+            k = _king_of(koth, "b2r", tid, _t.time())
+            k["level"] = level
+            return k
+
+        # user hold -> half (5 // 2 = 2)
+        monkeypatch.setattr(koth, "_poll_king", lambda h: king("user"))
+        koth._score_once(app)
+        # root hold -> full
+        monkeypatch.setattr(koth, "_poll_king", lambda h: king("root"))
+        koth._score_once(app)
+        # no level reported (Throne/Citadel) -> full
+        monkeypatch.setattr(
+            koth, "_poll_king", lambda h: _king_of(koth, "b2r", tid, _t.time())
+        )
+        koth._score_once(app)
+        values = sorted(a.value for a in Awards.query.filter_by(team_id=tid).all())
+        assert values == [2, 5, 5]
+
+        # the level surfaces in the hill view for the page/badge
+        snap = koth.get_snapshot({"id": "b2r", "url": "http://h:8082"})
+        view = koth._hill_view({"id": "b2r"}, snap, _t.time())
+        assert view["level"] == "root"
+    destroy_ctfd(app)
+
+
 def test_no_score_when_stale_or_unknown_or_offline(monkeypatch):
     import time as _t
 

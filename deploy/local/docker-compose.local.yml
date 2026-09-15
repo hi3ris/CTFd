@@ -183,6 +183,20 @@ services:
       - "127.0.0.1:28901:22"
     profiles: ["koth"]
 
+  # Colline boot2root « The Armory » : SSH (player/player), privesc SUID find,
+  # deux fichiers roi -> /home/player/king.txt (user, moitie des points) ou
+  # /root/king.txt (root, points pleins). Image construite par `make local-koth`
+  # (base + armory), le scorer expose /king sur :8082.
+  koth-armory:
+    image: ctf-koth-boot2root-armory:latest
+    restart: unless-stopped
+    environment:
+      - SCORER_SECRET=${KOTH_SCORER_SECRET:-local-dev-koth-scorer}
+      - SCORER_PORT=8082
+    ports:
+      - "127.0.0.1:28902:22"
+    profiles: ["koth"]
+
 volumes:
   db_data:
   redis_data:
