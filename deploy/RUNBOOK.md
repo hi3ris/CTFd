@@ -212,6 +212,13 @@ Diagnostic d'abord : `make cost` (qu'est-ce qui tourne ?), `make logs`, `make ss
 2. Ollama down → `make ssh-ai`, redémarrer le service ; vérifier le modèle téléchargé.
 3. Arène→front:8600 injoignable → vérifier la règle SG et l'injection `OLLAMA_URL`/`AI_PROXY_TOKEN`.
 
+**Partage de flags (menu admin Anti-triche, ou ligne `ANTICHEAT` dans `logs/submissions.log`)**
+
+1. Ouvrir `/plugins/anticheat/admin` : l'incident donne soumetteur, propriétaire du flag, challenge, IP, horodatage. Une paire qui revient (`2×`, `3×`) est du partage avéré ; une occurrence isolée peut être un copier-coller entre deux onglets d'une même personne membre… d'une seule équipe — vérifier.
+2. **Ne rien bannir à chaud.** Exporter le CSV (bouton) et l'archiver avec l'horodatage ; appliquer le barème du règlement (avertissement au 1ᵉʳ, décision jury au 2ᵉ). Sanction = action manuelle dans Admin → Teams (`banned`), jamais le plugin.
+3. Faux positifs connus : aucun par construction (un flag `team_hmac` d'une autre équipe ne s'invente pas). Si un même compte apparaît des deux côtés, c'est une équipe recomposée : rebâtir l'index avec **Recalculer tout** après tout changement d'équipe ou rotation de `CTF_TEAM_FLAG_SECRET`.
+4. Réponse aux joueurs : uniquement par le canal officiel, jamais via une notification CTFd (globale).
+
 **Disque plein (« no space left »)**
 
 - Les logs de tentatives IA sont en rotation bornée (pas la cause). Supprimer artefacts/anciens backups locaux ; sur l'arena, purger images/conteneurs morts. Les deletes réussissent même disque plein.

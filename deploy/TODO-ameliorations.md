@@ -12,7 +12,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 
 | #   | Chantier                              | Priorité | Effort | À livrer avant       | Dépend de |
 | --- | ------------------------------------- | -------- | ------ | -------------------- | --------- |
-| 1   | Détecteur de partage de flags         | 🔴 haute | S      | présélection (23/10) | —         |
+| 1   | Détecteur de partage de flags ✅      | 🔴 haute | S      | présélection (23/10) | —         |
 | 2   | `make preflight` (check-list de prod) | 🔴 haute | S      | J-7 (16/10)          | —         |
 | 5   | Réparer les 2 flakes CI               | 🟠 moy.  | S      | dès maintenant       | —         |
 | 3   | Test de charge à 300 (outil k6)       | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
@@ -38,7 +38,7 @@ puisse produire, et elle est déjà en base.
 
 **Périmètre.**
 
-- [ ] 🤖 Nouveau plugin `CTFd/plugins/anticheat/` (ou module dans `team_hmac_flag`) :
+- [x] 🤖 Nouveau plugin `CTFd/plugins/anticheat/` (livré le 15/09) :
   - `find_shared_flags(since=None)` : pour chaque `Fails` sur un challenge dont le flag
     est de type `team_hmac`, comparer `provided` (constant-time, `hmac.compare_digest`)
     au flag attendu de **chaque autre** équipe ; retourner
@@ -46,25 +46,28 @@ puisse produire, et elle est déjà en base.
   - Performance : ~300 équipes × N fails → mettre en cache par
     `(challenge_id, provided)` ; ne recalculer que les fails postérieurs au dernier scan
     (curseur `Fails.id`).
-  - Détection **en direct** : à chaque soumission incorrecte, un check immédiat sur le
-    seul `provided` reçu (coût : 300 HMAC) ; si match → `Notifications` admin-only +
-    ligne dans le journal.
-- [ ] 🤖 Page admin `/plugins/anticheat/admin` (menu **Anti-triche**, même patron que
+  - Détection **en direct** : la page admin interroge l'API toutes les 10 s (scan
+    incrémental, curseur `Fails.id`) et chaque incident est écrit dans
+    `logs/submissions.log` (`ANTICHEAT shared flag: …`). **Pas de `Notifications`** :
+    dans CTFd elles sont globales (tous les joueurs les voient) — écarté.
+- [x] 🤖 Page admin `/plugins/anticheat/admin` (menu **Anti-triche**, même patron que
       `koth/admin.html`) : tableau des incidents, filtre par équipe/challenge, export CSV.
-- [ ] 🤖 Endpoint `GET /plugins/anticheat/api/shared` (`@admins_only`), même contrat
-      que la page.
-- [ ] 🤖 Tests `tests/test_plugin_anticheat.py` : A soumet son flag → rien ; B soumet le
+- [x] 🤖 Endpoint `GET /plugins/anticheat/api/incidents` (`@admins_only`) : `?since_id=`,
+      `?rebuild=1` (après rotation du secret / ajout d'un flag `team_hmac` sur un challenge
+      qui a déjà des fails), `?format=csv` (cellules protégées contre l'injection de formules).
+- [x] 🤖 Tests `tests/test_plugin_anticheat.py` (6 tests, dont le vrai chemin de soumission) : A soumet son flag → rien ; B soumet le
       flag de A → 1 incident (bonnes équipes, bon challenge) ; flag aléatoire → rien ;
       flags `static`/`dynamic` classiques ignorés ; page admin 403 pour un joueur.
 - [ ] 🧑 **Décision de politique** (à écrire dans le règlement) : avertissement au
       1ᵉʳ incident, disqualification au 2ᵉ ? Sanction manuelle uniquement — le plugin
       **signale**, il ne bannit jamais seul.
-- [ ] 🤖 Doc : section « Partage de flags » dans `deploy/anti-llm-guardrails.md` +
+- [x] 🤖 Doc : section « Partage de flags » dans `deploy/anti-llm-guardrails.md` +
       playbook d'incident dans `RUNBOOK.md §5`.
 
 **Définition de « fait ».** En local : deux équipes de test, B soumet le flag de A →
-l'incident apparaît sur la page admin avec horodatage et les deux équipes, et l'admin
-reçoit une notification. Aucun faux positif sur `make local-playtest`.
+l'incident apparaît sur la page admin avec horodatage et les deux équipes, et une ligne
+`ANTICHEAT` dans `logs/submissions.log`. Aucun faux positif sur `make local-playtest`.
+_Reste : la décision de politique 🧑 et la vérification sur la stack locale (Docker)._
 
 ---
 

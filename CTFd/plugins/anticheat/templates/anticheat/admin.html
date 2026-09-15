@@ -1,0 +1,102 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>Anti-triche — partage de flags</h1>
+	</div>
+</div>
+<div class="container">
+	<p class="text-muted">
+		Un <b>incident</b> = une équipe a soumis, mot pour mot, le flag <code>team_hmac</code>
+		d'une <b>autre</b> équipe. Le plugin signale ; la sanction reste une décision humaine
+		(règlement). Chaque incident est aussi écrit dans <code>logs/submissions.log</code>.
+	</p>
+	<div id="ac-status" class="mb-3"></div>
+	<form class="form-inline mb-3" onsubmit="return false">
+		<input id="ac-filter" class="form-control mr-2" placeholder="filtrer : équipe, challenge, IP" size="40">
+		<a id="ac-csv" class="btn btn-outline-secondary btn-sm mr-2" href="/plugins/anticheat/api/incidents?format=csv">Export CSV</a>
+		<button id="ac-rebuild" class="btn btn-outline-danger btn-sm" type="button" title="Rejoue tout l'historique des mauvais flags (après rotation du secret ou ajout d'un flag team_hmac)">Recalculer tout</button>
+	</form>
+	<div id="ac-table"><p class="text-muted">Chargement…</p></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer>
+(function () {
+	"use strict";
+	var URLROOT = (window.init && init.urlRoot) || "";
+	var API = URLROOT + "/plugins/anticheat/api/incidents";
+	var status = document.getElementById("ac-status");
+	var table = document.getElementById("ac-table");
+	var filter = document.getElementById("ac-filter");
+	var csv = document.getElementById("ac-csv");
+	csv.href = API + "?format=csv";
+	var rows = [], loadMaxId = null;
+
+	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+	function pill(label, value, cls){ return '<div class="col-auto mb-2"><span class="text-muted small">'+label+'</span><br><span class="badge badge-'+cls+'" style="font-size:.95em">'+value+'</span></div>'; }
+	function who(name, id, hidden, banned){
+		return '<b>'+esc(name)+'</b> <span class="text-muted">#'+id+'</span>'
+			+ (banned ? ' <span class="badge badge-danger">banni</span>' : '')
+			+ (hidden ? ' <span class="badge badge-secondary">caché</span>' : '');
+	}
+	function when(iso){ if(!iso) return "—"; var d=new Date(iso.endsWith("Z")?iso:iso+"Z"); return isNaN(d)?esc(iso):d.toLocaleString(); }
+
+	function render(){
+		var q = (filter.value||"").toLowerCase().trim();
+		var shown = rows.filter(function(r){
+			if(!q) return true;
+			return [r.submitter, r.owner, r.challenge, r.ip].join(" ").toLowerCase().indexOf(q) >= 0;
+		}).slice().reverse();
+		if(!shown.length){ table.innerHTML = '<div class="alert alert-success">Aucun incident'+(q?' pour ce filtre':'')+'.</div>'; return; }
+		var pairs = {};
+		rows.forEach(function(r){ var k=r.submitter_id+"<"+r.owner_id; pairs[k]=(pairs[k]||0)+1; });
+		table.innerHTML = '<table class="table table-sm table-hover"><thead><tr>'
+			+ '<th>Quand</th><th>Soumetteur</th><th>Flag de</th><th>Challenge</th><th>IP</th><th class="text-right">Récidive (paire)</th>'
+			+ '</tr></thead><tbody>'
+			+ shown.map(function(r){
+				var fresh = loadMaxId != null && r.id > loadMaxId;
+				var n = pairs[r.submitter_id+"<"+r.owner_id];
+				return '<tr'+(fresh?' class="table-warning"':'')+'>'
+					+ '<td>'+when(r.date)+(fresh?' <span class="badge badge-warning">nouveau</span>':'')+'</td>'
+					+ '<td>'+who(r.submitter, r.submitter_id, r.submitter_hidden, r.submitter_banned)+'</td>'
+					+ '<td>'+who(r.owner, r.owner_id, r.owner_hidden, r.owner_banned)+'</td>'
+					+ '<td>'+esc(r.challenge)+' <span class="text-muted">#'+r.challenge_id+'</span></td>'
+					+ '<td><code>'+esc(r.ip)+'</code></td>'
+					+ '<td class="text-right">'+(n>1?'<span class="badge badge-danger">'+n+'×</span>':'1')+'</td>'
+					+ '</tr>';
+			}).join('')
+			+ '</tbody></table>';
+	}
+
+	function load(rebuild){
+		fetch(API + (rebuild ? "?rebuild=1" : ""), {credentials:"same-origin", headers:{"Accept":"application/json"}})
+			.then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+			.then(function(j){
+				var d = j.data;
+				rows = d.incidents || [];
+				if(loadMaxId == null) loadMaxId = rows.length ? rows[rows.length-1].id : 0;
+				var teams = {};
+				rows.forEach(function(r){ teams[r.submitter_id]=1; });
+				status.innerHTML = '<div class="row">'
+					+ pill("Incidents", d.total, d.total ? "danger" : "success")
+					+ pill("Équipes impliquées", Object.keys(teams).length, "dark")
+					+ pill("Challenges team_hmac", d.hmac_challenges, d.hmac_challenges ? "dark" : "warning")
+					+ pill("Comptes ("+esc(d.mode)+")", d.accounts, "dark")
+					+ pill("Curseur", "fail #"+d.cursor, "secondary")
+					+ pill("Mise à jour", new Date().toLocaleTimeString(), "secondary")
+					+ '</div>';
+				render();
+			})
+			.catch(function(e){ status.innerHTML = '<div class="alert alert-danger">Erreur : '+esc(e.message)+'</div>'; });
+	}
+
+	filter.addEventListener("input", render);
+	document.getElementById("ac-rebuild").addEventListener("click", function(){ load(true); });
+	load(false);
+	setInterval(function(){ if(!document.hidden) load(false); }, 10000);
+})();
+</script>
+{% endblock %}

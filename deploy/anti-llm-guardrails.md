@@ -217,6 +217,15 @@ Ce qu'on **ne** journalise **pas** : empreintes TLS/JA4, rétention à 90 jours,
 ### 5.2 Les deux seuls signaux réellement diagnostiques
 
 1. **Une équipe soumet un flag frappé pour une autre équipe.** Une requête d'une ligne dans la table de frappe. C'est du partage de flags, pas de l'usage d'IA — ne pas confondre les deux devant le jury.
+   **Outillé** : le plugin `CTFd/plugins/anticheat/` (menu admin **Anti-triche**,
+   `/plugins/anticheat/admin`) recalcule, pour chaque mauvais flag soumis sur un
+   challenge `team_hmac`, le flag attendu de chaque compte et signale toute
+   correspondance avec le flag d'une **autre** équipe : horodatage, soumetteur,
+   propriétaire du flag, challenge, IP. Aucune table de frappe à maintenir : le flag
+   attendu se dérive du secret (`expected_flag(account_id, slug)`). Export CSV pour le
+   dossier du jury ; chaque incident est aussi écrit dans `logs/submissions.log`. Le
+   plugin **signale, ne sanctionne jamais** (voir §6). Pas de notification CTFd : elles
+   sont visibles de tous les joueurs.
 2. **Un solve dont l'horodatage précède toute possibilité d'accès à l'artefact ou au service** (aucune instance jamais créée pour cette équipe, aucun téléchargement, aucune connexion). Là encore : fuite ou chemin de résolution non prévu — dans ce dernier cas on corrige le challenge, on n'accuse personne.
 
 **Tout le reste est du bruit** et ne doit pas figurer dans un dossier de preuve.
