@@ -3,16 +3,18 @@
 
 The privilege path is: logrotate's ``postrotate`` runs ``rotate-hook.sh`` as root
 (and sudoers lets ``deploy`` trigger it too). The hook sources ``rotate.conf``
-and writes a token to a path it derives as::
+and both writes to, and *derives the value for*, a token file:
 
-    OUT = "$SECRET_DIR/app-$CYCLE-$HOSTID.token"
+    OUT   = "$SECRET_DIR/app-$CYCLE-$HOSTID.token"
+    TOKEN = sha256("$CYCLE:$HOSTID:$ROTATE_SECRET")[:10 hex]
 
-We parse those three values from ``rotate.conf``, apply the hook's naming rule to
-find the token path, and read the flag out of the shipped ``fs/`` mirror.
+The token file itself is not shipped, so we reconstruct the token from the four
+config values and wrap it in the flag format.
 
 Pure standard library.
 """
 
+import hashlib
 import os
 
 
@@ -30,19 +32,21 @@ def read_conf(path: str) -> dict:
 def solve(root: str) -> str:
     fs = os.path.join(root, "fs")
     conf = read_conf(os.path.join(fs, "etc", "app", "rotate.conf"))
-    secret_dir = conf["SECRET_DIR"]
     cycle = conf["CYCLE"]
     hostid = conf["HOSTID"]
+    secret = conf["ROTATE_SECRET"]
 
-    # Naming rule from rotate-hook.sh: app-<CYCLE>-<HOSTID>.token
+    # Naming rule from rotate-hook.sh (informational -- the file is not shipped):
     name = f"app-{cycle}-{hostid}.token"
-    token_path = secret_dir.rstrip("/") + "/" + name
-    print(f"[+] deduced root-written token path: {token_path}")
+    token_path = conf["SECRET_DIR"].rstrip("/") + "/" + name
+    print(f"[+] root-written (unshipped) token path: {token_path}")
 
-    local = os.path.join(fs, token_path.lstrip("/"))
-    with open(local, encoding="utf-8") as fh:
-        token = fh.read().strip()
-    print("[+] raw rotation token:", token)
+    # Derivation rule from rotate-hook.sh:
+    #   TOKEN = sha256("CYCLE:HOSTID:ROTATE_SECRET")[:10 hex]
+    material = f"{cycle}:{hostid}:{secret}"
+    token = hashlib.sha256(material.encode()).hexdigest()[:10]
+    print("[+] derived rotation token:", token)
+
     flag = "NCTF{logrotate_postrotate_root_" + token + "}"
     print("[+] FLAG =", flag)
     return flag

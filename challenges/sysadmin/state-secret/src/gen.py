@@ -12,20 +12,29 @@ Ships a Terraform bundle:
                              sit right there.
   * ``vault.enc``          - the encrypted blob produced by the config.
 
-The blob is encrypted with a stdlib-only scheme:
+The blob is encrypted with the scheme documented (and implemented) in the
+shipped ``encrypt.py`` -- the same program ``main.tf`` invokes as a
+``data.external`` source:
 
-    salt   = 16 random bytes (stored in the blob header)
+    salt   = 16 bytes (stored in the blob header)
     key    = PBKDF2-HMAC-SHA256(passphrase, salt, iters)
     stream = SHA256(key || counter) for counter = 0, 1, 2, ...
     ct     = pt XOR stream
 
-Recovering the passphrase from the state file lets you decrypt the blob to the
-flag. The flag never appears in plaintext.
+Because ``encrypt.py`` ships with the handout, the format is fully documented to
+the player; they just need the passphrase, which the tfstate leaks. This
+generator imports ``encrypt.py`` so there is a single source of truth for the
+format. A fixed salt keeps ``vault.enc`` reproducible. The flag never appears in
+plaintext.
 """
 
-import hashlib
 import json
 import os
+import sys
+
+# Single source of truth for the blob format: the shipped encrypt.py.
+sys.path.insert(0, os.path.normpath(os.path.join(os.path.dirname(__file__), "..")))
+import encrypt  # noqa: E402
 
 FLAG = "NCTF{tfstate_stores_secrets_in_plaintext_9d21}"
 
@@ -33,15 +42,16 @@ FLAG = "NCTF{tfstate_stores_secrets_in_plaintext_9d21}"
 VAULT_PASSPHRASE = "tf-dev-vault-pass-2024"
 DECOY_AWS_SECRET = "AKIAFAKE0000EXAMPLE/notThePassphraseAtAll"
 
+# Fixed salt so vault.enc is reproducible across regenerations.
 SALT = bytes.fromhex("0f1e2d3c4b5a69788796a5b4c3d2e1f0")
 ITERS = 50000
-MAGIC = b"ENC1"
 
 MAIN_TF = """\
 terraform {
   required_providers {
-    random = { source = "hashicorp/random" }
-    local  = { source = "hashicorp/local" }
+    random   = { source = "hashicorp/random" }
+    local    = { source = "hashicorp/local" }
+    external = { source = "hashicorp/external" }
   }
 }
 
@@ -57,28 +67,22 @@ resource "random_password" "vault" {
   special = false
 }
 
-# Writes the encrypted secrets blob using the generated passphrase.
-resource "local_file" "vault" {
-  filename       = "${path.module}/vault.enc"
-  content_base64 = base64encode(data.external.encrypt.result["blob"])
+# The encryptor. encrypt.py is committed alongside this config (see its header
+# for the exact blob format) and is invoked with the generated passphrase.
+data "external" "encrypt" {
+  program = ["python3", "${path.module}/encrypt.py"]
+  query = {
+    passphrase = random_password.vault.result
+    infile     = "secret.txt" # local plaintext, not committed
+  }
+}
+
+# encrypt.py writes ${path.module}/vault.enc directly and returns its path.
+resource "local_file" "vault_marker" {
+  filename = "${path.module}/.vault-written"
+  content  = data.external.encrypt.result["path"]
 }
 """
-
-
-def keystream(key: bytes, n: int) -> bytes:
-    out = bytearray()
-    ctr = 0
-    while len(out) < n:
-        out += hashlib.sha256(key + ctr.to_bytes(8, "big")).digest()
-        ctr += 1
-    return bytes(out[:n])
-
-
-def encrypt(passphrase: str, plaintext: bytes) -> bytes:
-    key = hashlib.pbkdf2_hmac("sha256", passphrase.encode(), SALT, ITERS)
-    ks = keystream(key, len(plaintext))
-    ct = bytes(a ^ b for a, b in zip(plaintext, ks))
-    return MAGIC + SALT + ITERS.to_bytes(4, "big") + ct
 
 
 def build_tfstate() -> str:
@@ -111,14 +115,36 @@ def build_tfstate() -> str:
                 ],
             },
             {
+                "mode": "data",
+                "type": "external",
+                "name": "encrypt",
+                "provider": 'provider["registry.terraform.io/hashicorp/external"]',
+                "instances": [
+                    {
+                        "attributes": {
+                            "id": "-",
+                            "program": ["python3", "./encrypt.py"],
+                            "query": {
+                                # Passphrase also leaks here, via the data source
+                                # query stored in state.
+                                "passphrase": VAULT_PASSPHRASE,
+                                "infile": "secret.txt",
+                            },
+                            "result": {"path": "vault.enc"},
+                        }
+                    }
+                ],
+            },
+            {
                 "mode": "managed",
                 "type": "local_file",
-                "name": "vault",
+                "name": "vault_marker",
                 "provider": 'provider["registry.terraform.io/hashicorp/local"]',
                 "instances": [
                     {
                         "attributes": {
-                            "filename": "./vault.enc",
+                            "filename": "./.vault-written",
+                            "content": "vault.enc",
                             "id": "aa11bb22cc33",
                         }
                     }
@@ -137,7 +163,7 @@ def main() -> None:
     with open(os.path.join(root, "terraform.tfstate"), "w", encoding="utf-8") as fh:
         fh.write(build_tfstate() + "\n")
     with open(os.path.join(root, "vault.enc"), "wb") as fh:
-        fh.write(encrypt(VAULT_PASSPHRASE, FLAG.encode()))
+        fh.write(encrypt.encrypt(VAULT_PASSPHRASE, FLAG.encode(), SALT, ITERS))
     print("wrote terraform bundle under", root)
     print("decoy aws secret:", DECOY_AWS_SECRET)
     print("flag:", FLAG)

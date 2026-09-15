@@ -12,33 +12,35 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 300
+value: 100
 type: dynamic
 extra:
-  initial: 300
-  decay: 25
-  minimum: 100
+  initial: 100
+  decay: 40
+  minimum: 50
 flags:
   - NCTF{ci_secret_masking_is_only_literal_b64}
 hints:
   - content: >-
       CI secret masking is a literal find-and-replace on the exact secret
       string. Any step that transforms the secret before printing it defeats the
-      mask. Look for a step that does more than a plain `echo`.
-    cost: 15
+      mask. Skim past the npm/webpack/jest noise and look for a step that does
+      more than a plain `echo`.
+    cost: 5
     key: h1
   - content: >-
-      One "debug" step pipes the secret through `base64`. GitHub does not
-      recognise the base64 form, so it prints in the clear. Grab that line from
-      `run.log` and base64-decode it.
-    cost: 30
+      One "debug" step pipes the secret through `xxd -p` — a hex dump. GitHub
+      does not recognise the hex form, so it prints in the clear. Grab that long
+      hex line from `run.log` and hex-decode it (the same trick works for
+      `base64`, `rev`, etc.).
+    cost: 10
     key: h2
     requirements: [h1]
 tags:
   - sysadmin
   - ci-cd
   - secrets
-  - medium
+  - beginner
 files:
   - .github/workflows/deploy.yml
   - run.log

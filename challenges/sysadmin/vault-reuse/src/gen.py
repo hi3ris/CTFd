@@ -1,40 +1,49 @@
 #!/usr/bin/env python3
 """Deterministic generator for the 'vault-reuse' challenge.
 
-Ships an Ansible-style project whose vault password is *derivable* from
-non-secret project metadata that is committed right next to it:
+Ships an Ansible project whose vault password is *derivable* from non-secret
+project metadata that is committed right next to it:
 
   * ``ansible.cfg``          - points ``vault_password_file`` at a helper script.
   * ``group_vars/all.yml``   - plaintext project metadata (project name, env).
   * ``bin/get-vault-pass.sh`` - the "clever" helper: it builds the vault password
                                deterministically from that metadata instead of
                                reading a real secret.
-  * ``group_vars/secrets.yml`` - an Ansible-vault-*style* encrypted file holding
-                               the flag.
+  * ``group_vars/secrets.yml`` - a **genuine** ``ansible-vault`` file (format
+                               ``$ANSIBLE_VAULT;1.1;AES256``) holding the flag.
 
 Because the password is a pure function of committed, non-secret values, anyone
-can recompute it and decrypt the vault. The flag is never stored in plaintext.
+can recompute it and open the vault with the real tool::
 
-Vault envelope (stdlib-only, ansible-vault-styled):
+    ansible-vault view --vault-password-file bin/get-vault-pass.sh \\
+        group_vars/secrets.yml
 
-    line 1: ``$VAULT;1.0;PBKDF2-SHA256``
-    line 2: base64( salt(16) + iters(4, big-endian) + ciphertext )
-    key    = PBKDF2-HMAC-SHA256(password, salt, iters)
-    stream = SHA256(key || counter) for counter = 0, 1, 2, ...
-    ct     = pt XOR stream
+The vault file is produced with the real Ansible ``VaultAES256`` scheme so it
+interoperates with the stock ``ansible-vault`` CLI. The flag is never stored in
+plaintext. A fixed salt keeps the output byte-for-byte reproducible.
+
+Requires ``pycryptodome`` (for AES-256-CTR) to regenerate the vault blob.
 """
 
-import base64
+import binascii
 import hashlib
+import hmac
 import os
+
+from Crypto.Cipher import AES
+from Crypto.Util import Counter
 
 FLAG = "NCTF{ansible_vault_password_was_derivable_4e77}"
 
 PROJECT = "kekeli"
 DEPLOY_ENV = "staging"
 
-SALT = bytes.fromhex("a1b2c3d4e5f60718293a4b5c6d7e8f90")
-ITERS = 60000
+# Fixed salt so the shipped vault.enc blob is reproducible across regenerations.
+# ansible-vault would normally use a random 32-byte salt here; a real project
+# secret is protected the same way regardless of salt.
+SALT = bytes.fromhex("a1b2c3d4e5f60718293a4b5c6d7e8f90112233445566778899aabbccddeeff00")
+# Ansible's VaultAES256 fixes the KDF at 10000 PBKDF2-HMAC-SHA256 rounds.
+KDF_ITERATIONS = 10000
 
 ANSIBLE_CFG = """\
 [defaults]
@@ -67,7 +76,9 @@ GET_VAULT_PASS = """\
 #!/bin/sh
 # bin/get-vault-pass.sh
 # BAD: derives the vault password from committed, non-secret metadata.
-# Anyone with the repo can reproduce this exact string.
+# Anyone with the repo can reproduce this exact string, so the ansible-vault
+# file next to it protects nothing. ansible calls this script and uses whatever
+# it prints on stdout as the vault password.
 set -eu
 
 here=$(dirname "$0")
@@ -84,20 +95,38 @@ def derive_password() -> str:
     return f"{PROJECT}-{DEPLOY_ENV}-vault-v1"
 
 
-def keystream(key: bytes, n: int) -> bytes:
-    out = bytearray()
-    ctr = 0
-    while len(out) < n:
-        out += hashlib.sha256(key + ctr.to_bytes(8, "big")).digest()
-        ctr += 1
-    return bytes(out[:n])
-
-
 def make_vault(password: str, plaintext: bytes) -> str:
-    key = hashlib.pbkdf2_hmac("sha256", password.encode(), SALT, ITERS)
-    ct = bytes(a ^ b for a, b in zip(plaintext, keystream(key, len(plaintext))))
-    body = base64.b64encode(SALT + ITERS.to_bytes(4, "big") + ct).decode()
-    return "$VAULT;1.0;PBKDF2-SHA256\n" + body + "\n"
+    """Encrypt ``plaintext`` in Ansible's real ``VaultAES256`` (1.1) format.
+
+    Layout, exactly as stock ansible-vault:
+      dk    = PBKDF2-HMAC-SHA256(password, salt, 10000, dklen=80)
+      key1  = dk[0:32]   (AES-256 key)
+      key2  = dk[32:64]  (HMAC-SHA256 key)
+      iv    = dk[64:80]  (AES-CTR nonce/counter seed)
+      ct    = AES-256-CTR(key1, iv).encrypt(PKCS7(plaintext))
+      hmac  = HMAC-SHA256(key2, ct)
+      body  = hexlify( hexlify(salt) + "\\n" + hmac_hex + "\\n" + hexlify(ct) )
+    prefixed with the ``$ANSIBLE_VAULT;1.1;AES256`` header line.
+    """
+    dk = hashlib.pbkdf2_hmac(
+        "sha256", password.encode(), SALT, KDF_ITERATIONS, dklen=80
+    )
+    key1, key2, iv = dk[:32], dk[32:64], dk[64:80]
+
+    block = 16
+    pad = block - (len(plaintext) % block)
+    padded = plaintext + bytes([pad]) * pad
+
+    ctr = Counter.new(128, initial_value=int.from_bytes(iv, "big"))
+    ciphertext = AES.new(key1, AES.MODE_CTR, counter=ctr).encrypt(padded)
+
+    mac = hmac.new(key2, ciphertext, hashlib.sha256).hexdigest().encode()
+    combined = b"\n".join([binascii.hexlify(SALT), mac, binascii.hexlify(ciphertext)])
+    body = binascii.hexlify(combined).decode()
+
+    lines = ["$ANSIBLE_VAULT;1.1;AES256"]
+    lines += [body[i : i + 80] for i in range(0, len(body), 80)]
+    return "\n".join(lines) + "\n"
 
 
 def main() -> None:

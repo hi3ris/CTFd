@@ -3,10 +3,11 @@
 ## TL;DR
 
 logrotate's `postrotate` runs `rotate-hook.sh` as root (and sudoers lets
-`deploy` trigger it too). The hook writes a rotation token to
-`$SECRET_DIR/app-$CYCLE-$HOSTID.token`, derived from `rotate.conf`. Deduce that
-path, read the raw token, and wrap it as
-`NCTF{logrotate_postrotate_root_<token>}`. No file contains the flag literally.
+`deploy` trigger it too). The hook does not store a token — it **derives** one
+from `rotate.conf` and writes it to `$SECRET_DIR/app-$CYCLE-$HOSTID.token`. That
+token file is not shipped, so you reconstruct the token from the config and wrap
+it as `NCTF{logrotate_postrotate_root_<token>}`. No file contains the flag
+literally.
 
 ## The privilege path
 
@@ -15,29 +16,36 @@ path, read the raw token, and wrap it as
 - `etc/sudoers.d/deploy` additionally grants `deploy` NOPASSWD to run the same
   `rotate-hook.sh` as root on demand.
 - So `rotate-hook.sh` is the root-privileged write. It drops its output into
-  `/var/lib/app/secrets/` (mode `0700`, root-owned) — unreadable to normal
-  users, but the filename is fully predictable.
+  `/var/lib/app/secrets/` (mode `0700`, root-owned) — a directory that is not
+  part of the bundle.
 
-## Deducing the path
+## Deriving the token
 
-`rotate-hook.sh` sources `etc/app/rotate.conf` and builds:
+`rotate-hook.sh` sources `etc/app/rotate.conf` and computes the token
+deterministically:
+
+```sh
+NAME="app-${CYCLE}-${HOSTID}.token"
+OUT="${SECRET_DIR}/${NAME}"
+TOKEN=$(printf '%s:%s:%s' "$CYCLE" "$HOSTID" "$ROTATE_SECRET" | sha256sum | cut -c1-10)
+```
+
+With `CYCLE=2024w18`, `HOSTID=kbz07`, `ROTATE_SECRET=dev-rotate-secret-0000`:
 
 ```
-NAME = "app-<CYCLE>-<HOSTID>.token"
-OUT  = "$SECRET_DIR/$NAME"
+sha256("2024w18:kbz07:dev-rotate-secret-0000") = 1c921ff376...
+TOKEN = 1c921ff376
 ```
 
-With `SECRET_DIR=/var/lib/app/secrets`, `CYCLE=2024w18`, `HOSTID=kbz07`, the file
-is `/var/lib/app/secrets/app-2024w18-kbz07.token`. It holds a raw token
-(`9f3ac1d20b` in this snapshot); the flag is that token wrapped in the documented
+Because the token is a pure function of committed config, there is nothing to
+`cat` — you recompute it. The flag is that token wrapped in the documented
 format.
 
 ## Attack
 
-1. Parse `SECRET_DIR`, `CYCLE`, `HOSTID` from `rotate.conf`.
-2. Apply the hook's naming rule to get the token path.
-3. Read the raw token from that path under `fs/`.
-4. Wrap: `NCTF{logrotate_postrotate_root_<token>}`.
+1. Read `CYCLE`, `HOSTID`, `ROTATE_SECRET` from `rotate.conf`.
+2. Apply the hook's rule: `sha256("<CYCLE>:<HOSTID>:<ROTATE_SECRET>")[:10 hex]`.
+3. Wrap: `NCTF{logrotate_postrotate_root_<token>}`.
 
 ## Run
 
@@ -48,13 +56,14 @@ python3 solve.py
 Output:
 
 ```
-[+] deduced root-written token path: /var/lib/app/secrets/app-2024w18-kbz07.token
-[+] raw rotation token: 9f3ac1d20b
-[+] FLAG = NCTF{logrotate_postrotate_root_9f3ac1d20b}
+[+] root-written (unshipped) token path: /var/lib/app/secrets/app-2024w18-kbz07.token
+[+] derived rotation token: 1c921ff376
+[+] FLAG = NCTF{logrotate_postrotate_root_1c921ff376}
 ```
 
 ## Files
 
-- `../fs/...` — the ops bundle (mirror of the host paths).
+- `../fs/...` — the ops bundle (mirror of the host paths); the token file is
+  intentionally absent.
 - `../src/gen.py` — deterministic builder.
 - `solve.py` — reference solver (stdlib only).

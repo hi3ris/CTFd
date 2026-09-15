@@ -3,11 +3,13 @@ author: dagbanjaphet
 category: sysadmin
 description: |-
   An Ansible project snapshot: `ansible.cfg`, `inventory.ini`, `group_vars/`
-  (including an encrypted `secrets.yml`), and a `bin/` helper. The encrypted
-  vars file protects one secret and the repo never stores a vault password
-  literally.
+  (including a real `ansible-vault` encrypted `secrets.yml`), and a `bin/`
+  helper. The encrypted vars file protects one secret and the repo never stores
+  a vault password literally.
 
-  Decrypt `secrets.yml` and recover the secret.
+  Decrypt `secrets.yml` and recover the secret. The file is a genuine
+  `$ANSIBLE_VAULT;1.1;AES256` blob — the stock `ansible-vault view` will open it
+  once you supply the right password.
 
   Stuck? Hints are available (they cost a few points).
 
@@ -34,10 +36,11 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      `secrets.yml` is a vault envelope: line 2 is
-      base64(`salt(16) + iters(4 big-endian) + ciphertext`). Derive
-      `key = PBKDF2-HMAC-SHA256(password, salt, iters)` and XOR the ciphertext
-      with a keystream of `SHA256(key || counter)` for counter 0, 1, 2, ...
+      `secrets.yml` is a real `$ANSIBLE_VAULT;1.1;AES256` file — no need to
+      reinvent the crypto. Feed the derived password to the stock tool:
+      `ansible-vault view --vault-password-file bin/get-vault-pass.sh
+      group_vars/secrets.yml`. (The password script is already wired up in
+      `ansible.cfg`, so it derives the password for you.)
     cost: 65
     key: h3
     requirements: [h2]

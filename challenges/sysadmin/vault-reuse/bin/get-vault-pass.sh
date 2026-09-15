@@ -1,7 +1,9 @@
 #!/bin/sh
 # bin/get-vault-pass.sh
 # BAD: derives the vault password from committed, non-secret metadata.
-# Anyone with the repo can reproduce this exact string.
+# Anyone with the repo can reproduce this exact string, so the ansible-vault
+# file next to it protects nothing. ansible calls this script and uses whatever
+# it prints on stdout as the vault password.
 set -eu
 
 here=$(dirname "$0")

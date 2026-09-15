@@ -18,12 +18,19 @@ secret. Here the vault passphrase lives at
 
 ## The blob format
 
+The encryptor itself, `encrypt.py`, is committed with the bundle (it is the
+`data.external` program `main.tf` calls), and its header documents the format
+exactly:
+
 ```
 b"ENC1" + salt(16) + iters(4, big-endian) + ciphertext
 key    = PBKDF2-HMAC-SHA256(passphrase, salt, iters)
 stream = SHA256(key || counter)  for counter = 0, 1, 2, ...
 plaintext = ciphertext XOR stream
 ```
+
+So the format is not a guess — read `encrypt.py` and invert it (it even ships a
+`decrypt()` helper).
 
 ## Attack
 
@@ -48,5 +55,6 @@ Output:
 ## Files
 
 - `../main.tf`, `../terraform.tfstate`, `../vault.enc` — the leaked bundle.
+- `../encrypt.py` — the committed encryptor; documents/implements the blob format.
 - `../src/gen.py` — deterministic builder.
 - `solve.py` — reference solver (stdlib only).

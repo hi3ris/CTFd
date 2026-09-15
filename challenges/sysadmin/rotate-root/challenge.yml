@@ -4,56 +4,58 @@ category: sysadmin
 description: |-
   An ops bundle from a host (mirrored under `fs/`): a cron job, a logrotate
   rule, a sudoers drop-in, a rotation hook script, and its config. Somewhere a
-  root-privileged step drops a rotation token into a locked-down directory. No
-  file in the bundle contains the flag literally.
+  root-privileged step mints a rotation token and drops it into a locked-down
+  directory. That token file is not in the bundle, and no file contains the flag
+  literally.
 
-  Follow the chain, work out the exact file it writes, read the raw token, and
-  wrap it in the flag format `NCTF{logrotate_postrotate_root_<token>}`.
+  Follow the chain, work out how the hook derives the token from its config, and
+  wrap the reconstructed token in the flag format
+  `NCTF{logrotate_postrotate_root_<token>}`.
 
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 450
+value: 200
 type: dynamic
 extra:
-  initial: 450
-  decay: 20
+  initial: 200
+  decay: 25
   minimum: 100
 flags:
-  - NCTF{logrotate_postrotate_root_9f3ac1d20b}
+  - NCTF{logrotate_postrotate_root_1c921ff376}
 hints:
   - content: >-
       Which of these steps actually runs with root privileges? A `postrotate`
       block runs in logrotate's own (root) context, and the sudoers drop-in lets
       an unprivileged user trigger the same hook. Both point at one script.
-    cost: 25
+    cost: 15
     key: h1
   - content: >-
-      That hook (`rotate-hook.sh`) sources `etc/app/rotate.conf` and writes to a
-      path it builds from those values. Read the script's naming rule and the
-      config to reconstruct the exact token filename.
-    cost: 45
+      That hook (`rotate-hook.sh`) sources `etc/app/rotate.conf` and does not
+      store the token — it *derives* it. Read the hook and the config comments:
+      the token is a hash of a few config fields, so you can recompute it.
+    cost: 25
     key: h2
     requirements: [h1]
   - content: >-
-      The hook writes `$SECRET_DIR/app-$CYCLE-$HOSTID.token`. With
-      `SECRET_DIR=/var/lib/app/secrets`, `CYCLE=2024w18`, `HOSTID=kbz07`, the
-      file is `/var/lib/app/secrets/app-2024w18-kbz07.token`. Read the raw token
-      from `fs/` and wrap it as `NCTF{logrotate_postrotate_root_<token>}`.
-    cost: 65
+      The hook computes
+      `TOKEN = sha256("$CYCLE:$HOSTID:$ROTATE_SECRET")` and keeps the first 10
+      hex chars. With `CYCLE=2024w18`, `HOSTID=kbz07`,
+      `ROTATE_SECRET=dev-rotate-secret-0000`, that is `1c921ff376`. Wrap it as
+      `NCTF{logrotate_postrotate_root_<token>}`.
+    cost: 45
     key: h3
     requirements: [h2]
 tags:
   - sysadmin
   - privesc
   - logrotate
-  - hard
+  - medium
 files:
   - fs/etc/cron.d/app-backup
   - fs/etc/logrotate.d/app
   - fs/etc/sudoers.d/deploy
   - fs/etc/app/rotate.conf
   - fs/usr/local/sbin/rotate-hook.sh
-  - fs/var/lib/app/secrets/app-2024w18-kbz07.token
 state: visible
 version: "0.1"

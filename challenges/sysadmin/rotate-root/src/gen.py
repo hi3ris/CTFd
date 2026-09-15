@@ -2,7 +2,7 @@
 """Deterministic generator for the 'rotate-root' challenge.
 
 Ships an ops bundle (mirrored under ``fs/``) whose pieces, read together, reveal
-where a root-written secret token lands:
+both *where* a root-written secret token lands and *how* its value is computed:
 
   * ``etc/cron.d/app-backup``    - a cron job run as the ``deploy`` user.
   * ``etc/logrotate.d/app``      - rotates ``/var/log/app/*.log`` and, in its
@@ -12,29 +12,39 @@ where a root-written secret token lands:
                                    with NOPASSWD (so the low-priv user can also
                                    trigger the root write on demand).
   * ``usr/local/sbin/rotate-hook.sh`` - the hook. It sources ``rotate.conf`` and
-                                   writes a fresh token to a path it *derives*
-                                   from those values.
-  * ``etc/app/rotate.conf``      - defines ``SECRET_DIR``, ``CYCLE``, ``HOSTID``.
-  * ``var/lib/app/secrets/<derived>.token`` - the root-owned secret token,
-                                   sitting at the deducible path.
+                                   *derives* the rotation token from those values
+                                   (documented naming + hashing rule), then
+                                   writes it to a path it also derives.
+  * ``etc/app/rotate.conf``      - defines ``SECRET_DIR``, ``CYCLE``, ``HOSTID``,
+                                   ``ROTATE_SECRET`` and documents the exact
+                                   derivation used by the hook.
 
-The token file holds only a raw rotation token (no ``NCTF{`` marker, so a blind
-``grep`` across the bundle finds nothing). The flag is that token wrapped in the
-documented format::
+Crucially the token file itself is **not shipped** (a blind ``grep`` /
+``find | cat`` across the bundle turns up nothing). The token is a pure function
+of the committed config, so the player must reconstruct it::
 
-    flag = "NCTF{logrotate_postrotate_root_" + ROTATION_TOKEN + "}"
-
-You must deduce the path from the config chain, read the raw token, and wrap it.
+    TOKEN = sha256("<CYCLE>:<HOSTID>:<ROTATE_SECRET>").hexdigest()[:10]
+    flag  = "NCTF{logrotate_postrotate_root_" + TOKEN + "}"
 """
 
+import hashlib
 import os
-
-ROTATION_TOKEN = "9f3ac1d20b"
-FLAG = "NCTF{logrotate_postrotate_root_" + ROTATION_TOKEN + "}"
 
 SECRET_DIR = "/var/lib/app/secrets"
 CYCLE = "2024w18"
 HOSTID = "kbz07"
+# Obviously-fake dev value. On a real host this would be a genuine secret; here
+# it is committed alongside the derivation rule so the token is reconstructable.
+ROTATE_SECRET = "dev-rotate-secret-0000"
+
+
+def derive_token() -> str:
+    material = f"{CYCLE}:{HOSTID}:{ROTATE_SECRET}"
+    return hashlib.sha256(material.encode()).hexdigest()[:10]
+
+
+ROTATION_TOKEN = derive_token()
+FLAG = "NCTF{logrotate_postrotate_root_" + ROTATION_TOKEN + "}"
 
 CRON = """\
 # /etc/cron.d/app-backup
@@ -73,13 +83,20 @@ ROTATE_CONF = f"""\
 SECRET_DIR={SECRET_DIR}
 CYCLE={CYCLE}
 HOSTID={HOSTID}
+# ROTATE_SECRET seeds the derived rotation token (dev value in this snapshot).
+ROTATE_SECRET={ROTATE_SECRET}
+
+# Token derivation (see rotate-hook.sh):
+#   TOKEN = sha256("<CYCLE>:<HOSTID>:<ROTATE_SECRET>") | first 10 hex chars
+# Output file: $SECRET_DIR/app-<CYCLE>-<HOSTID>.token  (mode 0600, root-owned;
+# NOT included in this bundle -- reconstruct the token from the values above).
 """
 
 HOOK = """\
 #!/bin/sh
 # /usr/local/sbin/rotate-hook.sh
-# Runs as root (from logrotate postrotate, or via sudo). Mints a rotation token
-# and drops it in the secrets dir under a name derived from the config.
+# Runs as root (from logrotate postrotate, or via sudo). Derives a rotation
+# token from the config and drops it in the secrets dir under a derived name.
 set -eu
 
 . /etc/app/rotate.conf
@@ -88,18 +105,15 @@ set -eu
 NAME="app-${CYCLE}-${HOSTID}.token"
 OUT="${SECRET_DIR}/${NAME}"
 
-# Freshly minted per rotation (random). The shipped host snapshot captured the
-# most recent value in the file below.
-ROTATION_TOKEN="$(openssl rand -hex 5)"
+# Derived token value: first 10 hex chars of sha256(CYCLE:HOSTID:ROTATE_SECRET).
+# Deterministic, so it is fully reconstructable from rotate.conf.
+TOKEN=$(printf '%s:%s:%s' "$CYCLE" "$HOSTID" "$ROTATE_SECRET" \\
+    | sha256sum | cut -c1-10)
 
 install -d -m 0700 "$SECRET_DIR"
 umask 077
-printf '%s\\n' "$ROTATION_TOKEN" > "$OUT"
+printf '%s\\n' "$TOKEN" > "$OUT"
 """
-
-
-def derived_name() -> str:
-    return f"app-{CYCLE}-{HOSTID}.token"
 
 
 def main() -> None:
@@ -120,12 +134,14 @@ def main() -> None:
     w("etc/app/rotate.conf", ROTATE_CONF)
     w("usr/local/sbin/rotate-hook.sh", HOOK, mode=0o755)
 
-    # The root-written secret, at the deducible path. Holds only the raw token.
-    token_rel = os.path.join("var/lib/app/secrets", derived_name())
-    w(token_rel, ROTATION_TOKEN + "\n", mode=0o600)
+    # NOTE: the root-written token file is intentionally NOT shipped. The player
+    # must derive the token from rotate.conf; there is nothing to cat.
+    stale = os.path.join(fs, "var/lib/app/secrets", f"app-{CYCLE}-{HOSTID}.token")
+    if os.path.exists(stale):
+        os.remove(stale)
 
     print("wrote ops bundle under", fs)
-    print("token path:", "/" + token_rel)
+    print("derived token:", ROTATION_TOKEN)
     print("flag:", FLAG)
 
 
