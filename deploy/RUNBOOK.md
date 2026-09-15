@@ -165,7 +165,7 @@ make check-arena            # images de challenge présentes
 CTFD_TOKEN=… make preflight PHASE=preselection   # check-list : DOIT être vert (0 FAIL)
 ```
 
-- [ ] 🧑 `make preflight PHASE=preselection` vert (secrets, fenêtres 72 h, 203 challenges,
+- [ ] 🧑 `make preflight PHASE=preselection` vert (secrets, fenêtres 53 h, 203 challenges,
       19 catégories, collines KotH en ligne). Un FAIL = on ne bascule pas. Les WARN se
       lisent une par une ; les 3 lignes `MANUAL` (instancier, IA, images) se font à la main.
 - [ ] 🧑 Repointer le DNS si l'IP a changé ; vérifier HTTPS.

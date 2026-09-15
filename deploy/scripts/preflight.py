@@ -29,7 +29,7 @@ OK, WARN, FAIL, MANUAL = "OK", "WARN", "FAIL", "MANUAL"
 H = 3600
 PHASES = {
     # duree attendue de la competition (tolerance +-1 h) ; freeze = derniere heure
-    "preselection": {"duration": 72 * H, "registration": "public"},
+    "preselection": {"duration": 53 * H, "registration": "public"},
     "finale": {"duration": 24 * H, "registration": "private"},
 }
 PLACEHOLDER_SECRETS = {
