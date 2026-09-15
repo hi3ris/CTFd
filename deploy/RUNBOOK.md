@@ -176,12 +176,14 @@ CTFD_TOKEN=… make preflight PHASE=preselection   # check-list : DOIT être ver
 
 Cadence pendant l'épreuve :
 
-| Quand                    | Commande      | Attendu                                                |
-| ------------------------ | ------------- | ------------------------------------------------------ |
-| toutes les ~30 min       | `make backup` | dump **vérifié** (gzip -t + table users) envoyé sur S3 |
-| en continu (2ᵉ terminal) | `make logs`   | pas d'erreur 5xx en rafale                             |
-| si piste IA active       | `make gpu`    | file Ollama non saturée en permanence                  |
-| au moindre doute         | `make cost`   | rappel de ce qui est facturé                           |
+| Quand                    | Commande              | Attendu                                                                                            |
+| ------------------------ | --------------------- | -------------------------------------------------------------------------------------------------- |
+| automatique (15 min)     | _timer `ctfd-backup`_ | dump **vérifié** → `s3://…/backups/auto/` ; uploads + export natif 1×/h ; état sur la page **Ops** |
+| toutes les ~2 h          | `make backup-status`  | « dernier dump OK : il y a < 15 min » — sinon `make backup-now` puis `make logs`                   |
+| avant toute manipulation | `make backup`         | dump **vérifié** manuel (gzip -t + table users) envoyé sur S3, conservé sans expiration            |
+| en continu (2ᵉ terminal) | `make logs`           | pas d'erreur 5xx en rafale                                                                         |
+| si piste IA active       | `make gpu`            | file Ollama non saturée en permanence                                                              |
+| au moindre doute         | `make cost`           | rappel de ce qui est facturé                                                                       |
 
 - [ ] 🧑 24 au soir : `make season-down` (**sauvegarde vérifiée + archive S3 + destruction EC2**).
 - [ ] 🧑 **Ligne de coupe automatique** à la fermeture : inviter 14-16 équipes (marge + wildcards). Litiges d'intégrité traités **après** la finale.
@@ -229,10 +231,34 @@ Diagnostic d'abord : `make cost` (qu'est-ce qui tourne ?), `make logs`, `make ss
 
 **Corruption / perte de données** → **restaurer**
 
+1. **Qui décide** : le responsable de plateforme, après un mot au jury. **Geler le
+   scoreboard** d'abord (Admin → Config → `freeze` = maintenant) : les joueurs ne
+   voient plus bouger le classement pendant l'opération, et rien n'est perdu côté
+   scoring (les soumissions continuent d'être enregistrées).
+2. **Quel dump** : `make backup-status` donne l'heure du dernier dump automatique OK
+   (`/opt/ctfd/backups/ctfd-auto-*.sql.gz`, aussi dans `s3://…/backups/auto/`).
+   Prendre le **dernier dump antérieur à l'incident**, pas le plus récent. Avant
+   d'écraser : `make backup` (figer l'état corrompu, il peut servir au jury).
+3. **Restaurer** :
+
 ```
 make backup                                   # d'abord figer l'état courant
-make restore FILE=backups/<dump>.sql.gz       # restaure sur le front
+make restore FILE=backups/<dump>.sql.gz       # restaure sur le front (mot de passe : `restaurer`)
+make backup-status                            # le timer a repris, un nouveau dump doit apparaître
 ```
+
+4. **Vérifier** : `/scoreboard` cohérent, page **Ops** verte (DB, Redis, dernier
+   dump), awards KotH présents sur la page admin KotH, une instance test se spawne.
+5. **Annoncer** aux joueurs, par le canal officiel : fenêtre perdue (entre le dump
+   et l'incident), consigne de re-soumettre les flags trouvés dans cet intervalle,
+   puis lever le gel.
+6. **RTO mesuré à la répétition (Lot 5)** : _à remplir_ — durée de
+   `make restore` sur un dump de la taille de la répétition à 300 VU
+   (objectif < 10 min).
+
+Perte des **uploads** (fichiers des challenges) : `uploads-auto-*.tgz` (1×/h) à
+extraire dans le volume `ctfd_uploads` ; l'`export-auto-*.zip` est un export natif
+importable par Admin → Backup → Import si la base elle-même est irrécupérable.
 
 **Apply Terraform interrompu / à moitié raté**
 

@@ -51,3 +51,45 @@ resource "aws_iam_instance_profile" "arena" {
   name = "${var.project_name}-arena"
   role = aws_iam_role.arena.name
 }
+
+# ---------------------------------------------------------------------------
+# Role IAM du front : la sauvegarde automatique (deploy/scripts/backup.sh,
+# timer systemd) envoie les dumps dans backups/. Ecriture seule : ni lecture ni
+# listing, pour qu'une compromission du front ne permette pas de relire les
+# dumps precedents (le front porte deja la base vivante, pas son historique).
+# ---------------------------------------------------------------------------
+
+resource "aws_iam_role" "front" {
+  name = "${var.project_name}-front"
+
+  assume_role_policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [{
+      Effect    = "Allow"
+      Action    = "sts:AssumeRole"
+      Principal = { Service = "ec2.amazonaws.com" }
+    }]
+  })
+}
+
+resource "aws_iam_role_policy" "front_backups" {
+  name = "write-backups-only"
+  role = aws_iam_role.front.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid      = "PutBackupsOnly"
+        Effect   = "Allow"
+        Action   = ["s3:PutObject", "s3:AbortMultipartUpload"]
+        Resource = "${aws_s3_bucket.archive.arn}/backups/*"
+      },
+    ]
+  })
+}
+
+resource "aws_iam_instance_profile" "front" {
+  name = "${var.project_name}-front"
+  role = aws_iam_role.front.name
+}

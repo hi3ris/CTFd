@@ -70,6 +70,23 @@ resource "aws_s3_bucket_lifecycle_configuration" "archive" {
     }
   }
 
+  # Dumps automatiques (toutes les 15 min pendant l'epreuve) : on garde tout
+  # pendant l'evenement, puis ils expirent. Les dumps manuels (`make backup`,
+  # `season-down`) et le fichier quotidien backups/daily/ ne sont pas concernes
+  # et suivent la regle Glacier ci-dessus.
+  rule {
+    id     = "expire-auto-backups"
+    status = "Enabled"
+
+    filter {
+      prefix = "backups/auto/"
+    }
+
+    expiration {
+      days = 14
+    }
+  }
+
   rule {
     id     = "expire-old-versions"
     status = "Enabled"

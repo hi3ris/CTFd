@@ -27,6 +27,10 @@ resource "aws_instance" "front" {
   subnet_id              = aws_subnet.public.id
   vpc_security_group_ids = [aws_security_group.front.id]
   key_name               = aws_key_pair.admin.key_name
+  # Ecriture seule dans backups/ pour la sauvegarde automatique. Ajouter un
+  # profil a une instance existante est une mise a jour en place (`~`), jamais
+  # une recreation : verifier le plan avant d'appliquer sur un front vivant.
+  iam_instance_profile = aws_iam_instance_profile.front.name
 
   root_block_device {
     volume_type = "gp3"

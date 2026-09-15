@@ -16,7 +16,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 | 2   | `make preflight` (check-list de prod) ✅ | 🔴 haute | S      | J-7 (16/10)          | —         |
 | 5   | Réparer les 2 flakes CI ✅               | 🟠 moy.  | S      | dès maintenant       | —         |
 | 3   | Test de charge à 300 (outil k6)          | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
-| 4   | Sauvegardes automatiques + répétition    | 🟠 moy.  | S      | J-7 (16/10)          | —         |
+| 4   | Sauvegardes automatiques ✅ + répétition | 🟠 moy.  | S      | J-7 (16/10)          | —         |
 | 6   | First bloods (notif + ticker)            | 🟡 spect | M      | finale (29/10)       | —         |
 | 7   | Tableau de bord ops                      | 🟡 spect | M      | finale (29/10)       | 3, 6      |
 | 8   | Page writeups à la clôture               | 🟢 basse | S      | clôture (30/10)      | —         |
@@ -153,22 +153,35 @@ une base **de la taille de l'épreuve**.
 
 **Périmètre.**
 
-- [ ] 🤖 Timer systemd (ou cron) sur le front : `make backup` toutes les **15 min**
-      pendant `[start, end]`, toutes les 6 h hors épreuve ; rétention S3 : tout garder
-      pendant l'épreuve, puis 1/jour (règle de cycle de vie Terraform).
-- [ ] 🤖 Alerte : si un dump échoue ou n'a pas tourné depuis 30 min → notification
-      admin CTFd + ligne rouge sur le tableau de bord ops (chantier 7).
-- [ ] 🤖 Inclure les **uploads** (`/var/uploads`) et l'**export CTFd natif**
-      (`/admin/export`) une fois par heure, en plus du dump SQL.
+- [x] 🤖 Timer systemd sur le front (`deploy/front/systemd/ctfd-backup.timer`, toutes les
+      15 min) → `deploy/scripts/backup.sh` : dump vérifié (même chaîne que `make backup`) ;
+      la cadence est décidée par le script (fenêtre `[start, end]` lue dans la table
+      `config` ; hors épreuve seulement si le dernier dump OK a > 6 h). Installé par
+      `make deploy` (`install-backup-timer.sh`, idempotent, installe aussi l'aws CLI).
+      Rétention S3 (**écart avec l'idée initiale** : une règle de cycle de vie ne sait pas
+      « garder 1/jour ») : `backups/auto/` expire à 14 j, `backups/daily/<jour>.sql.gz`
+      (1 fichier/jour, écrasé) et les dumps manuels suivent la règle Glacier existante.
+      Terraform : rôle IAM du front **écriture seule** sur `backups/*` (`iam.tf`,
+      `front.tf` — mise à jour en place, vérifier `~` et non `-/+` au plan).
+- [x] 🤖 Alerte : `status.json` (`/opt/ctfd/backups`, monté en lecture seule dans CTFd
+      → `BACKUP_STATUS_FILE`) + ligne `ctfd-backup` dans le journal système ; la page
+      **Ops** (chantier 7) passe au rouge si le dernier dump OK a > 30 min pendant l'épreuve.
+      **Pas de notification CTFd** (globales, visibles des joueurs — même décision qu'au §1).
+      `make backup-status` / `make backup-now` côté opérateur.
+- [x] 🤖 Uploads (`tar` de `/var/uploads`) et export natif CTFd (`export_ctf()`, zip
+      testé) une fois par heure, en plus du dump SQL.
 - [ ] 🧑🤖 **Répétition** (Lot 5) : restaurer un dump de la répétition à 300 VU sur un
       front neuf, chronométrer → RTO mesuré, écrit dans `RUNBOOK §5` ; vérifier que le
       scoreboard, les awards KotH et les instances survivent.
-- [ ] 🤖 Playbook « perte de base » dans `RUNBOOK §5` : quel dump, quelle commande, qui
-      décide, comment annoncer aux joueurs (le gel du scoreboard peut aider).
+- [x] 🤖 Playbook « perte de base » dans `RUNBOOK §5` (gel, choix du dump, restauration,
+      vérifications, annonce) ; RTO à remplir à la répétition.
 
 **Définition de « fait ».** Pendant 2 h de stack locale, 8 dumps apparaissent sans
 intervention ; couper un dump à la main déclenche l'alerte ; la restauration
 chronométrée est documentée.
+_État : script, unités, Terraform et docs livrés (15/09) ; `bash -n` et helpers de
+statut testés hors Docker. **Non exécuté ici** : la passe « 8 dumps en 2 h » (Docker),
+`terraform plan` (AWS) et la répétition chronométrée 🧑🤖._
 
 ---
 

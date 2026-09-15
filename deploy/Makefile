@@ -194,6 +194,10 @@ deploy: ## Deploie/met a jour CTFd sur le front
 	  cd /opt/ctfd/CTFd; \
 	  test -f deploy/front/.env || { echo "ERREUR : creez deploy/front/.env (voir .env.example)"; exit 1; }; \
 	  test -f deploy/front/nginx/active.conf || cp deploy/front/nginx/bootstrap.conf deploy/front/nginx/active.conf; \
+	  if [ -n "$(BUCKET)" ]; then \
+	    grep -q "^BACKUP_BUCKET=" deploy/front/.env && sed -i "s|^BACKUP_BUCKET=.*|BACKUP_BUCKET=$(BUCKET)|" deploy/front/.env || echo "BACKUP_BUCKET=$(BUCKET)" >> deploy/front/.env; \
+	  fi; \
+	  sudo CTFD_REPO=/opt/ctfd/CTFd deploy/scripts/install-backup-timer.sh; \
 	  $(COMPOSE) up -d --build ctfd db cache nginx certbot'
 
 .PHONY: tls-init
@@ -318,11 +322,25 @@ backup: ## Sauvegarde la base, VERIFIE le dump, puis l'envoie dans S3
 	   aws s3 cp "$$f" s3://$(BUCKET)/backups/ --only-show-errors && echo "  journal IA -> S3"; \
 	 else echo "  (pas de journal IA a exporter)"; rm -f "$$f" 2>/dev/null; fi
 
+.PHONY: backup-status
+backup-status: ## Etat de la sauvegarde automatique du front (timer, dernier dump, S3)
+	@$(FRONT_SSH) 'systemctl list-timers ctfd-backup.timer --no-pager | head -2; echo; \
+	  test -f /opt/ctfd/backups/status.json && python3 -c "import json,time; d=json.load(open(\"/opt/ctfd/backups/status.json\")); \
+	  age=lambda t: (\"il y a %d min\" % ((time.time()-t)//60)) if t else \"jamais\"; \
+	  print(\"dernier passage :\", age(d.get(\"last_run\")), \"OK\" if d.get(\"ok\") else \"ECHEC: \"+str(d.get(\"error\"))); \
+	  print(\"dernier dump OK :\", age(d.get(\"last_ok\")), d.get(\"file\",\"\"), d.get(\"size\",0), \"octets, s3=%s\" % d.get(\"s3\")); \
+	  print(\"derniers extras  :\", age(d.get(\"last_extra\")))" || echo "aucun status.json : le timer n a jamais tourne"; \
+	  echo; ls -1t /opt/ctfd/backups/ 2>/dev/null | head -8'
+
+.PHONY: backup-now
+backup-now: ## Force un passage de la sauvegarde automatique sur le front (dump + extras)
+	$(FRONT_SSH) 'sudo -u ubuntu CTFD_REPO=/opt/ctfd/CTFd /opt/ctfd/CTFd/deploy/scripts/backup.sh --force --extras'
+
 .PHONY: restore
 restore: ## Restaure une sauvegarde sur le front (FILE=backups/...sql.gz)
 	@test -n "$(FILE)" || { echo "Usage : make restore FILE=backups/ctfd-....sql.gz"; \
-	  echo; echo "Sauvegardes disponibles dans S3 :"; \
-	  aws s3 ls s3://$(BUCKET)/backups/ || true; exit 1; }
+	  echo; echo "Sauvegardes disponibles dans S3 (manuelles, puis auto/ toutes les 15 min, daily/ une par jour) :"; \
+	  aws s3 ls s3://$(BUCKET)/backups/ || true; aws s3 ls s3://$(BUCKET)/backups/auto/ | tail -5 || true; exit 1; }
 	@test -f "$(FILE)" || { echo "Fichier introuvable : $(FILE)"; exit 1; }
 	@gzip -t "$(FILE)" || { echo "Archive corrompue"; exit 1; }
 	@echo "Cette commande ECRASE la base actuelle du front."

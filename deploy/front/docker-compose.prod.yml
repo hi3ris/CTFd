@@ -37,9 +37,13 @@ services:
       # API Docker de l'arena, republiee sur le reseau interne par le service
       # dockerproxy. Vide hors evenement : l'instancier est alors inactif.
       - DOCKER_HOST=${DOCKER_HOST:-}
+      # Etat de la sauvegarde automatique (deploy/scripts/backup.sh), lu par la
+      # page admin Ops. Le repertoire est monte en lecture seule ci-dessous.
+      - BACKUP_STATUS_FILE=/backups/status.json
     volumes:
       - ctfd_uploads:/var/uploads
       - ctfd_logs:/var/log/CTFd
+      - /opt/ctfd/backups:/backups:ro
     depends_on:
       db:
         condition: service_healthy
