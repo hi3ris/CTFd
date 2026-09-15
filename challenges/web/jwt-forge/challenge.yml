@@ -16,12 +16,12 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 450
+value: 150
 type: dynamic
 extra:
-  initial: 450
-  decay: 20
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{hs256_forged_admin_and_unsealed_the_ops_flag}
 hints:
@@ -47,7 +47,7 @@ tags:
   - web
   - jwt
   - crypto
-  - hard
+  - easy
 files:
   - app.py
   - config.env

@@ -13,12 +13,12 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 450
+value: 150
 type: dynamic
 extra:
-  initial: 450
-  decay: 20
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{n4t1v3_x0r_t4bl3_unr0ll3d}
 hints:
@@ -39,7 +39,7 @@ tags:
   - mobile
   - android
   - native-jni
-  - hard
+  - easy
 files:
   - nativegame.apk
 state: visible

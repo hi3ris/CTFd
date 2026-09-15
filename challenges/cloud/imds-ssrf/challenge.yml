@@ -12,12 +12,12 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 300
+value: 150
 type: dynamic
 extra:
-  initial: 300
-  decay: 25
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{imdsv2_creds_decrypted_the_note}
 hints:
@@ -38,7 +38,7 @@ tags:
   - aws
   - ssrf
   - imds
-  - medium
+  - easy
 files:
   - ssrf-capture.log
   - notes.enc

@@ -16,12 +16,12 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 300
+value: 150
 type: dynamic
 extra:
-  initial: 300
-  decay: 25
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{itsdangerous_secret_key_resign_admin_session}
 hints:
@@ -48,7 +48,7 @@ tags:
   - web
   - flask
   - session
-  - medium
+  - easy
 files:
   - app.py
   - session_cookie.txt

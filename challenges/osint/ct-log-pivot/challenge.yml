@@ -13,12 +13,12 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 450
+value: 150
 type: dynamic
 extra:
-  initial: 450
-  decay: 20
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{ct_log_san_leaked_shadow_subdomain}
 hints:
@@ -46,7 +46,7 @@ tags:
   - osint
   - dns
   - certificate-transparency
-  - hard
+  - easy
 files:
   - cert.tg.zone
   - whois.txt

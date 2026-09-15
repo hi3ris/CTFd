@@ -16,12 +16,12 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 300
+value: 150
 type: dynamic
 extra:
-  initial: 300
-  decay: 25
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{1cmp_p4yl04d_c0v3rt_ch4nn3l}
 hints:
@@ -49,7 +49,7 @@ tags:
   - forensics
   - network
   - pcap
-  - medium
+  - easy
 files:
   - icmp.pcap
 state: visible
