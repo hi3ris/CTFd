@@ -510,13 +510,15 @@ def test_challenges_max_attempts_timeout_config_change():
             r = client.post("/api/v1/challenges/attempt", json=data)
             assert r.status_code == 200
 
-        # Verify we're locked out
-        data = {"submission": "flag", "challenge_id": chal_id}
-        r = client.post("/api/v1/challenges/attempt", json=data)
-        assert r.status_code == 429
-        resp = r.get_json()["data"]
-        assert resp.get("status") == "ratelimited"
-        assert "300 seconds" in resp.get("message")
+        # Verify we're locked out. Freeze the clock: a second ticking between the
+        # last fail and this check would make the remaining time 299 seconds.
+        with freeze_time(timedelta(seconds=0)):
+            data = {"submission": "flag", "challenge_id": chal_id}
+            r = client.post("/api/v1/challenges/attempt", json=data)
+            assert r.status_code == 429
+            resp = r.get_json()["data"]
+            assert resp.get("status") == "ratelimited"
+            assert "300 seconds" in resp.get("message")
 
         # Change the max_attempts_timeout config (this changes the cache key)
         set_config("max_attempts_timeout", 30)  # Change to 30 seconds
