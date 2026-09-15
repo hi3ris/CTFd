@@ -1,13 +1,14 @@
 #!/usr/bin/env python3
 """Reference solver for 'sub-wildcard'.
 
-1. Read the trust policy's StringLike condition on the OIDC `sub` claim.
-2. Confirm the captured token's `sub` matches that wildcard (an attacker fork in
-   the same org still matches `repo:kekeli-cloud/*`), so `ci-deployer` can be
-   assumed via sts:AssumeRoleWithWebIdentity.
+1. Read the trust policy's StringEquals(`aud`) and StringLike(`sub`) conditions.
+2. Evaluate every captured token in `oidc-token.json` against those conditions.
+   Exactly one satisfies the wildcard (an attacker fork in the same org matches
+   `repo:kekeli-cloud/*`); the decoys fail it (wrong org, look-alike org, etc.),
+   so only that token can assume `ci-deployer` via AssumeRoleWithWebIdentity.
 3. Confirm the role's identity policy grants GetSecretValue on the release
    secret -- it is reachable.
-4. The sealed secret is XOR-encrypted with SHA256(sub); decrypt to get the flag.
+4. The sealed secret is XOR-encrypted with SHA256(admitted sub); decrypt it.
 """
 
 import base64
@@ -37,7 +38,7 @@ def keystream(key: bytes, n: int) -> bytes:
 
 def solve() -> str:
     trust = load("trust-policy.json")
-    token = load("oidc-token.json")
+    tokens = load("oidc-token.json")["CapturedTokens"]
     perms = load("role-permissions.json")
     secret = load("release-secret.json")
 
@@ -45,13 +46,22 @@ def solve() -> str:
     cond = stmt["Condition"]
     aud_expected = cond["StringEquals"]["token.actions.githubusercontent.com:aud"]
     sub_pattern = cond["StringLike"][SUB_KEY]
-    sub = token["sub"]
-
-    assert token["aud"] == aud_expected, "aud mismatch"
-    assert fnmatch.fnmatch(sub, sub_pattern), "sub does not match trust wildcard"
     assert stmt["Action"] == "sts:AssumeRoleWithWebIdentity"
     print(f"[*] trust wildcard sub = {sub_pattern!r}")
-    print(f"[*] presented    sub = {sub!r}  -> MATCHES (org-wide fork admitted)")
+
+    # Evaluate the trust policy against every captured token; keep the admitted.
+    admitted = []
+    for tok in tokens:
+        ok = tok.get("aud") == aud_expected and fnmatch.fnmatchcase(
+            tok["sub"], sub_pattern
+        )
+        mark = "ADMITTED" if ok else "rejected"
+        print(f"[*]   {mark}: {tok['sub']!r}")
+        if ok:
+            admitted.append(tok["sub"])
+    assert len(admitted) == 1, f"expected exactly one admitted token: {admitted}"
+    sub = admitted[0]
+    print(f"[*] sealing sub = {sub!r}  (org-wide fork admitted by the wildcard)")
 
     actions = perms["AttachedPolicy"]["Statement"][0]["Action"]
     assert "secretsmanager:GetSecretValue" in actions

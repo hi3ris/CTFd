@@ -12,11 +12,11 @@ description: |-
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 450
+value: 300
 type: dynamic
 extra:
-  initial: 450
-  decay: 20
+  initial: 300
+  decay: 25
   minimum: 100
 flags:
   - NCTF{ecb_leaks_appended_secrets_one_byte_per_query}
@@ -37,10 +37,12 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      Each entry in `steps` already gives the aligned `target` block for one
-      secret position and a `candidates` map of block -> printable guess. For
-      every step, find the candidate equal to the target; that character is the
-      next secret byte. Concatenate to get the flag.
+      The `queries` map is keyed by SHA256 of the attacker input, so you must
+      build each input yourself. For secret byte i, look up the filler-only
+      input `"A"*(15-(i%16))`, slice block `i//16` as the target, then for each
+      printable guess look up `filler || recovered_so_far || guess` and compare
+      the same block. The next input depends on the byte you just recovered, so
+      recover them in order and concatenate.
     cost: 65
     key: h3
     requirements: [h2]
@@ -48,7 +50,7 @@ tags:
   - crypto
   - aes
   - ecb
-  - hard
+  - medium
 files:
   - oracle_log.json
 state: visible

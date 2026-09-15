@@ -1,11 +1,59 @@
 {
-  "_comment": "Decoded claims of the OIDC JWT presented by the attacker fork.",
-  "iss": "https://token.actions.githubusercontent.com",
-  "aud": "sts.amazonaws.com",
-  "sub": "repo:kekeli-cloud/media-svc-fork:ref:refs/heads/feature/x",
-  "repository": "kekeli-cloud/media-svc-fork",
-  "repository_owner": "kekeli-cloud",
-  "ref": "refs/heads/feature/x",
-  "workflow": "deploy",
-  "actor": "mallory"
+  "CapturedTokens": [
+    {
+      "_comment": "Captured token #1 (partner CI in a different org).",
+      "iss": "https://token.actions.githubusercontent.com",
+      "aud": "sts.amazonaws.com",
+      "sub": "repo:acme-corp/media-svc:ref:refs/heads/main",
+      "repository": "acme-corp/media-svc",
+      "repository_owner": "acme-corp",
+      "ref": "refs/heads/main",
+      "workflow": "release",
+      "actor": "octo-ci"
+    },
+    {
+      "_comment": "Captured token #2 (look-alike org, hyphen-extended).",
+      "iss": "https://token.actions.githubusercontent.com",
+      "aud": "sts.amazonaws.com",
+      "sub": "repo:kekeli-cloud-staging/media-svc:ref:refs/heads/main",
+      "repository": "kekeli-cloud-staging/media-svc",
+      "repository_owner": "kekeli-cloud-staging",
+      "ref": "refs/heads/main",
+      "workflow": "deploy",
+      "actor": "staging-bot"
+    },
+    {
+      "_comment": "Captured token #3 (attacker fork inside the trusted org).",
+      "iss": "https://token.actions.githubusercontent.com",
+      "aud": "sts.amazonaws.com",
+      "sub": "repo:kekeli-cloud/media-svc-fork:ref:refs/heads/feature/x",
+      "repository": "kekeli-cloud/media-svc-fork",
+      "repository_owner": "kekeli-cloud",
+      "ref": "refs/heads/feature/x",
+      "workflow": "deploy",
+      "actor": "mallory"
+    },
+    {
+      "_comment": "Captured token #4 (collapsed org name).",
+      "iss": "https://token.actions.githubusercontent.com",
+      "aud": "sts.amazonaws.com",
+      "sub": "repo:kekelicloud/media-svc:ref:refs/heads/main",
+      "repository": "kekelicloud/media-svc",
+      "repository_owner": "kekelicloud",
+      "ref": "refs/heads/main",
+      "workflow": "deploy",
+      "actor": "ci-runner"
+    },
+    {
+      "_comment": "Captured token #5 (org path split differently).",
+      "iss": "https://token.actions.githubusercontent.com",
+      "aud": "sts.amazonaws.com",
+      "sub": "repo:kekeli/cloud-media-svc:ref:refs/heads/main",
+      "repository": "kekeli/cloud-media-svc",
+      "repository_owner": "kekeli",
+      "ref": "refs/heads/main",
+      "workflow": "deploy",
+      "actor": "kekeli-ci"
+    }
+  ]
 }

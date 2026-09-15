@@ -6,8 +6,9 @@ description: |-
   Le lockfile épingle une empreinte d'intégrité pour chaque dépendance, mais une
   des archives livrées ne serait plus celle d'origine.
 
-  Identifiez l'archive qui ne correspond pas à son empreinte, ouvrez-la et
-  récupérez le flag.
+  Identifiez l'archive dont le sha512 ne correspond pas à son empreinte épinglée.
+  Ce qui a été ajouté à cette archive — la cause exacte de l'écart — porte le
+  flag, mais il n'est ni en clair ni en base64 : il faut le reconstruire.
 
   Stuck? Hints are available (they cost a few points).
 
@@ -27,12 +28,23 @@ hints:
     cost: 15
     key: h1
   - content: >-
-      Une seule archive ne produit pas le hash épinglé : elle a été remplacée
-      après l'écriture du lockfile. C'est celle-là qui est malveillante — lisez
-      son `index.js` et décodez la valeur base64 qu'il contient.
+      Une seule archive ne produit pas le hash épinglé. Son membre gzip est
+      pourtant un paquet parfaitement bénin (l'installer ou faire `zgrep`/`tar`
+      ne révèle rien) : l'altération est un bloc d'octets ajouté *après* le flux
+      gzip. Ce bloc — exactement ce qui fait diverger le sha512 — est le flag
+      chiffré. Récupérez les octets qui suivent le membre gzip (par exemple via
+      `zlib` et `unused_data`).
     cost: 30
     key: h2
     requirements: [h1]
+  - content: >-
+      Le bloc ajouté est le flag XORé avec un keystream dérivé de l'empreinte
+      `integrity` *épinglée* de cette même dépendance (le champ `sha512-...` du
+      lockfile) : keystream = SHA512(integrity_string || compteur_32bits_BE).
+      XORez le bloc avec ce keystream pour lire le flag.
+    cost: 40
+    key: h3
+    requirements: [h2]
 tags:
   - supplychain
   - lockfile

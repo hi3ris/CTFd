@@ -1,10 +1,18 @@
 #!/usr/bin/env python3
 """Generate the lockfile-integrity-drift artifact bundle.
 
-A `package-lock.json` pins an `integrity` (sha512) for every dependency. All
-tarballs match their pin except one: the shipped tarball for that package was
-swapped after the lockfile was written, so its real hash differs. The swapped
-(malicious) tarball carries the flag.
+A `package-lock.json` pins an `integrity` (sha512) for every dependency. Every
+shipped tarball matches its pin except one: the shipped tarball for that package
+was tampered after the lockfile was written, so its real hash differs.
+
+Crucially, the flag is *not* stored anywhere in plaintext or base64. The tamper
+is a block of bytes appended *after* the gzip member of the victim tarball. Those
+trailing bytes are the only reason the file's sha512 no longer matches the pin --
+the mismatch delta and the payload are the same bytes. The trailing block is the
+flag XORed with a keystream derived from that dependency's *pinned* integrity, so
+recovery forces the player to (1) find which dep's sha512 drifted, (2) read the
+delta that caused the drift, and (3) key off that dep's pinned integrity. Reading
+the gzip member normally (npm/tar/zgrep) never sees the payload at all.
 """
 
 import base64
@@ -18,11 +26,25 @@ import tarfile
 HERE = os.path.dirname(os.path.abspath(__file__))
 OUT = os.path.dirname(HERE)
 
-FLAG = "NCTF{1ntegrity_hash_mismatch_carries_flag_d3e1}"
+FLAG = b"NCTF{1ntegrity_hash_mismatch_carries_flag_d3e1}"
 
 
 def sri(body):
     return "sha512-" + base64.b64encode(hashlib.sha512(body).digest()).decode()
+
+
+def keystream(seed: bytes, n: int) -> bytes:
+    out = bytearray()
+    ctr = 0
+    while len(out) < n:
+        out += hashlib.sha512(seed + ctr.to_bytes(4, "big")).digest()
+        ctr += 1
+    return bytes(out[:n])
+
+
+def seal(payload: bytes, pinned_integrity: str) -> bytes:
+    ks = keystream(pinned_integrity.encode(), len(payload))
+    return bytes(a ^ b for a, b in zip(payload, ks))
 
 
 def make_tarball(files):
@@ -53,7 +75,7 @@ def build():
     }
 
     for name, version in deps.items():
-        # Original benign tarball -> its hash goes into the lockfile.
+        # Original benign tarball -> its hash is what the lockfile pins.
         benign = make_tarball(
             {
                 "package.json": json.dumps({"name": name, "version": version}).encode(),
@@ -64,23 +86,13 @@ def build():
 
         tgz = f"{name}-{version}.tgz"
         if name == victim:
-            # Attacker swaps the shipped tarball; the lockfile still pins the
-            # OLD hash, creating a detectable mismatch. This tarball holds
-            # the flag.
-            flag_b64 = base64.b64encode(FLAG.encode()).decode()
-            evil = make_tarball(
-                {
-                    "package.json": json.dumps(
-                        {"name": name, "version": version}
-                    ).encode(),
-                    "index.js": (
-                        b"// build metadata\nvar _sig = '"
-                        + flag_b64.encode()
-                        + b"';\nmodule.exports = _sig;\n"
-                    ),
-                }
-            )
-            shipped = evil
+            # Tamper: append a sealed block AFTER the gzip member. The gzip
+            # payload is byte-for-byte the benign one, so decompressing normally
+            # yields the benign package and reveals nothing. The appended block
+            # is what makes the file's sha512 drift from the pinned value, and it
+            # is the flag XORed with keystream(pinned integrity of this dep).
+            trailer = seal(FLAG, pinned_integrity)
+            shipped = benign + trailer
         else:
             shipped = benign
 

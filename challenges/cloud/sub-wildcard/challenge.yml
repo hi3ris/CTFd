@@ -3,35 +3,38 @@ author: dagbanjaphet
 category: cloud
 description: |-
   The `ci-deployer` IAM role trusts GitHub Actions via OIDC. You have its trust
-  policy, its attached permissions, the decoded claims of an OIDC token that was
-  presented to it (`oidc-token.json`), and a release secret whose value is sealed
-  in the handout (`release-secret.json`).
+  policy, its attached permissions, several captured OIDC tokens presented to it
+  (`oidc-token.json`), and a release secret whose value is sealed in the handout
+  (`release-secret.json`).
 
-  Show that this token can assume the role, then recover the secret. The flag is
-  the secret.
+  Only one captured token actually satisfies the trust policy. Find it, show it
+  can assume the role, then recover the secret. The flag is the secret.
 
   Stuck? Hints are available (they cost a few points).
 
   Flag format: NCTF{...}
-value: 300
+value: 150
 type: dynamic
 extra:
-  initial: 300
-  decay: 25
-  minimum: 100
+  initial: 150
+  decay: 35
+  minimum: 50
 flags:
   - NCTF{oidc_sub_wildcard_assumed_the_role}
 hints:
   - content: >-
-      OIDC trust policies gate on claims. Compare the `StringLike` condition on
-      the `sub` claim in the trust policy against the `sub` in the captured
-      token.
+      OIDC trust policies gate on claims. Evaluate the `StringEquals` (`aud`) and
+      `StringLike` (`sub`) conditions in the trust policy against each captured
+      token — only one token satisfies both; the rest are decoys.
     cost: 15
     key: h1
   - content: >-
       The trust condition matches `repo:kekeli-cloud/*` — any repo in the org,
-      not one repo/branch. A fork in the same org is admitted. That admitted
-      `sub` string is exactly what seals the secret.
+      not one repo/branch. The decoys use a different org, a hyphen-extended
+      look-alike org (`kekeli-cloud-staging/`), a collapsed name
+      (`kekelicloud/`), or a different path split (`kekeli/cloud-...`), so they
+      fail the pattern. The one admitted `sub` string is exactly what seals the
+      secret.
     cost: 30
     key: h2
     requirements: [h1]
@@ -48,7 +51,7 @@ tags:
   - oidc
   - sts
   - trust-policy
-  - medium
+  - easy
 files:
   - trust-policy.json
   - role-permissions.json
