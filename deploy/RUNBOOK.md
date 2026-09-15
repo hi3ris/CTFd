@@ -14,6 +14,13 @@ Toutes les commandes se lancent **depuis `deploy/`** sauf mention contraire.
 
 ## 0. Prérequis opérateur (une seule fois)
 
+> **Raccourci** : `cd deploy && make menu` (ou `./nctf`) ouvre un **lanceur
+> interactif** — il demande ce que tu veux (local, phases AWS, pendant l'épreuve,
+> clôture) et lance le `make` correspondant, en te demandant l'URL et le jeton
+> admin au besoin. `./nctf --dry-run` montre les commandes sans les exécuter.
+> Pour la fenêtre de présélection : `make presel-window` (ajoute `APPLY=1` pour
+> l'appliquer), ou `deploy/preselection-window.sh --apply`.
+
 - [ ] 🧑 AWS CLI configurée (`aws sts get-caller-identity` répond), profil avec droits EC2/S3/IAM/DynamoDB/ServiceQuotas.
 - [ ] 🧑 `terraform` ≥ 1.6, `ssh`, `jq` installés sur le poste.
 - [ ] 🧑 `deploy/terraform/terraform.tfvars` renseigné (au minimum `admin_cidrs` — **obligatoire, sans défaut**), à partir de `terraform.tfvars.example`.

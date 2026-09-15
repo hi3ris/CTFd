@@ -41,6 +41,14 @@ COMPOSE = docker compose -f deploy/front/docker-compose.prod.yml --env-file depl
 # pire qu'une erreur.
 WAIT_TIMEOUT ?= 1800
 
+.PHONY: menu
+menu: ## Lanceur interactif : demande ce que tu veux et lance le make correspondant
+	@./nctf
+
+.PHONY: presel-window
+presel-window: ## Affiche/pose la fenetre de la preselection (ven 23 oct 19h -> lun 26 oct 00h) ; APPLY=1 pour l'appliquer
+	@./preselection-window.sh $(if $(APPLY),--apply) $(if $(URL),--url $(URL))
+
 .PHONY: help
 help:
 	@grep -E '^[a-zA-Z_-]+:.*?## .*$$' $(MAKEFILE_LIST) \

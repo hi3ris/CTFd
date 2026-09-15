@@ -1,0 +1,200 @@
+#!/usr/bin/env bash
+# =============================================================================
+# NCTF26 — lanceur interactif. À lancer sans argument : il demande ce que tu
+# veux et lance le `make` correspondant (en te demandant URL / jeton / fichier
+# quand c'est nécessaire).
+#
+#   deploy/nctf                 # menu interactif
+#   deploy/nctf --dry-run       # affiche les commandes sans les exécuter
+#
+# Les variables saisies (URL, jeton admin) sont mémorisées pour la session, tu
+# ne les retapes pas. Les actions destructrices demandent une confirmation.
+# =============================================================================
+set -uo pipefail
+HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"    # .../deploy
+DRY=0; [ "${1:-}" = "--dry-run" ] && DRY=1
+
+# valeurs mémorisées pour la session
+URL="${CTFD_URL:-}"; TOKEN="${CTFD_TOKEN:-}"
+
+c_hd="\033[1;36m"; c_dim="\033[2m"; c_warn="\033[1;33m"; c_ok="\033[1;32m"; c_off="\033[0m"
+
+run() { # run <libellé> <commande make...>
+  local label="$1"; shift
+  echo -e "\n${c_hd}» ${label}${c_off}"
+  echo -e "${c_dim}\$ $*${c_off}"
+  if [ "$DRY" = "1" ]; then echo -e "${c_dim}(dry-run : non exécuté)${c_off}"; return 0; fi
+  ( cd "$HERE" && "$@" )
+  local rc=$?
+  [ $rc -eq 0 ] && echo -e "${c_ok}✓ ok${c_off}" || echo -e "${c_warn}✗ code $rc${c_off}"
+  return $rc
+}
+
+ask() { # ask <var> <invite> [defaut]  -> renseigne la variable nommée
+  local __v="$1" __p="$2" __d="${3:-}" __cur="${!1:-}" __in
+  local def="${__cur:-$__d}"
+  read -r -p "$__p${def:+ [$def]} : " __in
+  printf -v "$__v" '%s' "${__in:-$def}"
+}
+
+need_url()   { [ -n "$URL" ]   || ask URL   "URL du front (https://…)"; }
+need_token() { [ -n "$TOKEN" ] || ask TOKEN "Jeton API admin (Settings > Access Tokens)"; }
+
+confirm() { # confirm <phrase>  -> 0 si l'utilisateur tape OUI
+  local a; read -r -p $'\033[1;33m'"$1 — tape OUI pour confirmer : "$'\033[0m' a
+  [ "$a" = "OUI" ]
+}
+
+# ------- actions ------------------------------------------------------------
+do_local() {
+  while true; do
+    cat <<MENU
+
+── Local (dev / test) ─────────────────────────────────────────
+  1) Démarrer la stack           (make local-up)
+  2) Démarrer + IA               (make local-up-ai)
+  3) Seed : NCTF26 + challenges  (make local-seed)
+  4) Poser la fenêtre présélec.  (preselection-window.sh --apply)
+  5) Activer King of the Hill    (make local-koth)
+  6) Démo course scoreboard      (make local-race-demo ARGS=--live)
+  7) Playtest des challenges     (make local-playtest)
+  8) Smoke test de charge        (make local-loadtest)
+  9) Vérifs (pages/API/IA)       (make local-smoke)
+ 10) Logs                        (make local-logs)
+ 11) Arrêter                     (make local-down)
+ 12) TOUT EFFACER                (make local-reset)   [destructif]
+  0) retour
+MENU
+    read -r -p "> " a
+    case "$a" in
+      1) run "stack locale" make local-up ;;
+      2) run "stack locale + IA" make local-up-ai ;;
+      3) run "seed" make local-seed ;;
+      4) run "fenêtre présélection" "$HERE/preselection-window.sh" --apply ;;
+      5) run "King of the Hill" make local-koth ;;
+      6) run "démo course" make local-race-demo ARGS=--live ;;
+      7) run "playtest" make local-playtest ;;
+      8) run "smoke charge" make local-loadtest ;;
+      9) run "smoke" make local-smoke ;;
+      10) run "logs" make local-logs ;;
+      11) run "arrêt" make local-down ;;
+      12) confirm "Efface base + uploads + instances locales" && run "reset" make local-reset ;;
+      0|"") return ;;
+      *) echo "?" ;;
+    esac
+  done
+}
+
+do_phases() {
+  while true; do
+    cat <<MENU
+
+── Prod : phases AWS ──────────────────────────────────────────
+ 20) Vérifier le quota GPU        (make check-gpu-quota)   ← À FAIRE MAINTENANT
+ 21) Phase setup (front seul)     (make phase-setup)
+ 22) Phase présélection           (make phase-preselection)
+ 23) Phase finale                 (make phase-final)
+ 24) Déployer/MAJ CTFd            (make deploy)
+ 25) TLS (Let's Encrypt)          (make tls-init)
+ 26) Relier front↔arena↔IA        (make link)
+ 27) Images présentes sur l'arena (make check-arena)
+ 28) Fin de phase + destruction   (make season-down)   [destructif]
+  0) retour
+MENU
+    read -r -p "> " a
+    case "$a" in
+      20) run "quota GPU" make check-gpu-quota ;;
+      21) run "phase setup" make phase-setup ;;
+      22) confirm "Crée l'arène + le nœud IA (coûts EC2)" && run "phase présélection" make phase-preselection ;;
+      23) confirm "Crée l'infra finale (coûts EC2)" && run "phase finale" make phase-final ;;
+      24) run "deploy" make deploy ;;
+      25) run "TLS" make tls-init ;;
+      26) run "link" make link ;;
+      27) run "check-arena" make check-arena ;;
+      28) confirm "Sauvegarde + archive PUIS DÉTRUIT tout l'EC2" && run "season-down" make season-down ;;
+      0|"") return ;;
+      *) echo "?" ;;
+    esac
+  done
+}
+
+do_event() {
+  while true; do
+    cat <<MENU
+
+── Pendant l'épreuve (front en ligne) ─────────────────────────
+ 30) Preflight présélection       (make preflight PHASE=preselection)
+ 31) Preflight finale             (make preflight PHASE=finale)
+ 32) Publier le règlement (/tos)  (make reglement-publish)
+ 33) Sauvegarde vérifiée          (make backup)
+ 34) État des sauvegardes         (make backup-status)
+ 35) Rapport anti-triche (CSV)    (make anticheat-report)
+ 36) Test de charge 300           (make loadtest)
+ 37) Logs / GPU / coût            (make logs | gpu | cost)
+ 38) Restaurer un dump            (make restore FILE=…)
+  0) retour
+MENU
+    read -r -p "> " a
+    case "$a" in
+      30) need_url; need_token; run "preflight présélection" make preflight PHASE=preselection URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      31) need_url; need_token; run "preflight finale" make preflight PHASE=finale URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      32) need_url; need_token; run "règlement -> /tos" make reglement-publish URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      33) run "backup" make backup ;;
+      34) run "backup-status" make backup-status ;;
+      35) need_url; need_token; run "rapport anti-triche" make anticheat-report URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      36) need_url; need_token; confirm "Lance 300 équipes de charge (front de répétition uniquement)" \
+            && run "loadtest" make loadtest URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      37) local w; read -r -p "logs / gpu / cost ? " w; case "$w" in logs) run logs make logs;; gpu) run gpu make gpu;; cost) run cost make cost;; esac ;;
+      38) local f; ask f "Fichier dump (backups/…sql.gz)"; [ -n "$f" ] && confirm "Restaure $f (écrase la base)" && run "restore" make restore FILE="$f" ;;
+      0|"") return ;;
+      *) echo "?" ;;
+    esac
+  done
+}
+
+do_close() {
+  while true; do
+    cat <<MENU
+
+── Clôture ────────────────────────────────────────────────────
+ 40) Writeups en brouillon        (make writeups-prepare)
+ 41) Publier les writeups         (make writeups-publish)   [refuse avant `end`]
+ 42) Archiver (scoreboard + WU S3) (make archive)
+ 43) Fin de saison + destruction  (make season-down)   [destructif]
+  0) retour
+MENU
+    read -r -p "> " a
+    case "$a" in
+      40) need_url; need_token; run "writeups brouillon" make writeups-prepare URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      41) need_url; need_token; confirm "Publie /writeups (à faire APRÈS la clôture)" \
+            && run "writeups publier" make writeups-publish URL="$URL" CTFD_TOKEN="$TOKEN" ;;
+      42) run "archive" make archive ;;
+      43) confirm "Sauvegarde + archive PUIS DÉTRUIT tout l'EC2" && run "season-down" make season-down ;;
+      0|"") return ;;
+      *) echo "?" ;;
+    esac
+  done
+}
+
+# ------- boucle principale --------------------------------------------------
+while true; do
+  echo -e "\n${c_hd}================  NCTF26 — que veux-tu faire ?  ================${c_off}"
+  [ "$DRY" = "1" ] && echo -e "${c_warn}(mode --dry-run : rien n'est exécuté)${c_off}"
+  echo    "  1) Local (dev / test)"
+  echo    "  2) Prod : phases AWS"
+  echo    "  3) Pendant l'épreuve"
+  echo    "  4) Clôture"
+  echo -e "  ${c_dim}u) changer l'URL du front (${URL:-non définie})   t) changer le jeton admin${c_off}"
+  echo    "  q) quitter"
+  read -r -p "> " a
+  case "$a" in
+    1) do_local ;;
+    2) do_phases ;;
+    3) do_event ;;
+    4) do_close ;;
+    u) ask URL "URL du front (https://…)" ;;
+    t) ask TOKEN "Jeton API admin" ;;
+    q|"") echo "à bientôt."; exit 0 ;;
+    *) echo "?" ;;
+  esac
+done
