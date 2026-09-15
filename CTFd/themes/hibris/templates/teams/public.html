@@ -122,18 +122,8 @@
 					<div class="col-md-12">
 						<h3>Awards</h3>
 					</div>
-					{% for award in awards %}
-						<div class="col-md-3 col-sm-6">
-							<p class="text-center">
-								<i class="award-icon award-{{ award.icon }} fa-2x"></i>
-								<br>
-								<strong>{{ award.name }}</strong>
-							</p>
-							{% if award.category %}<p class="text-center">{{ award.category }}</p>{% endif %}
-							{% if award.description %}<p class="text-center">{{ award.description }}</p>{% endif %}
-							<p class="text-center">{{ award.value }}</p>
-						</div>
-					{% endfor %}
+					{% from "components/awards.html" import award_cards %}
+					{{ award_cards(awards) }}
 				</div>
 
 				<br>
