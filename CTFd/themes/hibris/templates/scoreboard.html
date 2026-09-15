@@ -216,6 +216,42 @@
 .podium .p2 .bar { height:100px; background:linear-gradient(180deg,#eef2f7,#aeb8c4); }
 .podium .p3 .bar { height:72px;  background:linear-gradient(180deg,#e6a463,#b9702e); color:#fff; }
 
+/* ===== Grand Prix intensifié : vitesse, couronne, halo moteur, aura leader ===== */
+/* Lignes de vitesse qui défilent en fond de piste */
+.track::after {
+	content:""; position:absolute; inset:0; z-index:0; pointer-events:none; opacity:.5;
+	background:repeating-linear-gradient(90deg, transparent 0 46px, rgba(255,255,255,.05) 46px 48px);
+	-webkit-mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+	        mask-image:linear-gradient(90deg, transparent, #000 12%, #000 88%, transparent);
+	animation:speedLines 1.1s linear infinite;
+}
+@keyframes speedLines { to { background-position:-48px 0; } }
+/* Halo moteur / traînée derrière chaque kart (or pour le leader) */
+.car-wrap::before {
+	content:""; position:absolute; right:100%; top:50%; transform:translateY(-50%);
+	width:38px; height:7px; margin-right:3px; border-radius:6px;
+	background:linear-gradient(90deg, transparent, rgba(127,178,255,.45)); filter:blur(2px); opacity:.55;
+}
+.car-lane.leader .car-wrap::before { background:linear-gradient(90deg, transparent, rgba(249,215,126,.75)); opacity:.9; width:56px; }
+/* Couronne du leader */
+.car-lane.leader .rank::after {
+	content:"👑"; position:absolute; top:-17px; left:50%; z-index:4;
+	font-size:1rem; transform:translateX(-50%) rotate(4deg);
+	filter:drop-shadow(0 2px 4px rgba(0,0,0,.5)); animation:crownBob 1.4s ease-in-out infinite;
+}
+@keyframes crownBob { 0%,100%{ transform:translateX(-50%) rotate(4deg) translateY(0); } 50%{ transform:translateX(-50%) rotate(4deg) translateY(-3px); } }
+/* Aura pulsée de la voie de tête + halo de l'horloge en course */
+.car-lane.leader::before { animation:leaderPulse 2.2s ease-in-out infinite; }
+@keyframes leaderPulse {
+	0%,100%{ box-shadow:inset 0 0 0 1px rgba(249,215,126,.28); }
+	50%{ box-shadow:inset 0 0 0 1px rgba(249,215,126,.55), 0 0 26px -6px rgba(249,215,126,.45); }
+}
+.race .rc-clock.live { animation:clockLive 1.8s ease-in-out infinite; }
+@keyframes clockLive { 50% { box-shadow:0 0 24px rgba(23,176,107,.3); } }
+@media (prefers-reduced-motion: reduce) {
+	.track::after, .car-lane.leader .rank::after, .car-lane.leader::before, .race .rc-clock.live { animation:none; }
+}
+
 /* Confettis tricolores */
 .confetti { position:absolute; inset:0; overflow:hidden; pointer-events:none; }
 .confetti i { position:absolute; top:-12px; width:8px; height:13px; opacity:.9;
