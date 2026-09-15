@@ -308,6 +308,18 @@ body.bigmode #race { margin-bottom:84px; }
 .sb-frozen b { color:#fff; }
 .sb-frozen .ice { color:#7fb2ff; font-size:1.05rem; }
 
+/* « Ta voiture » : la voie de l'équipe du joueur connecté (surlignée dans le
+   top N, ou épinglée sous le peloton quand elle est plus loin). */
+.car-lane.mine { background:linear-gradient(90deg, rgba(255,206,0,.10), rgba(255,206,0,0) 60%); box-shadow:inset 3px 0 0 var(--yellow); }
+.car-lane.mine .car-name { color:var(--yellow); }
+.car-lane.mine.pinned { border-top:1px dashed rgba(255,206,0,.45); }
+.you-tag { display:inline-block; margin-left:.4rem; padding:.05rem .45rem; border-radius:999px; font:700 .68rem/1.4 "JetBrains Mono",monospace;
+  letter-spacing:.06em; text-transform:uppercase; color:#0a0f18; background:var(--yellow); vertical-align:middle; }
+.car-lane.mine .you-tag { animation: youPulse 2.4s ease-in-out infinite; }
+@keyframes youPulse { 0%,100%{ opacity:1 } 50%{ opacity:.55 } }
+@media (prefers-reduced-motion: reduce) { .car-lane.mine .you-tag { animation:none; } }
+.sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
 /* Mode vidéoprojecteur : /scoreboard?big=1 */
 .race.big { --lane-h:74px; }
 .race.big .car { width:88px; height:56px; }
@@ -352,6 +364,24 @@ body.bigmode #race { margin-top:1rem; }
 	if (big) { document.body.classList.add("bigmode"); mount.classList.add("big"); TOPN = 14; }
 
 	var prevScores = {};   // account_id -> score, pour détecter les nouveaux solves
+	// « Ta voiture » : compte du joueur connecté (équipe en mode équipes). Jamais
+	// en mode salle : l'écran de la salle n'est l'équipe de personne.
+	var ME = null, meLane = null, lastLead = null, lastMyRank = null, lastTeams = null;
+	var liveEl = null;
+	(function findMe(){
+		if (big || !window.init || !init.userId) return;
+		var teams = (init.userMode === "teams");
+		fetch(URLROOT + (teams ? "/api/v1/teams/me" : "/api/v1/users/me"), {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (j && j.success && j.data && j.data.id != null){
+					ME = j.data.id;
+					if (lastTeams) layout(lastTeams);   // ne pas attendre le prochain sondage
+				}
+			})
+			.catch(function(){ /* pas connecté ou sans équipe : pas de voie « toi » */ });
+	})();
+	function ordinal(n){ return n === 1 ? "1ᵉʳ" : n + "ᵉ"; }
 	var started = false;
 	var kothBy = {};       // account_id -> nom de la colline tenue (badge KotH)
 
@@ -385,8 +415,9 @@ body.bigmode #race { margin-top:1rem; }
 		'<div class="rc-head"><span class="rc-title">Grille en course</span>'
 		+ '<span class="rc-clock" id="rc-clock">—</span></div>'
 		+ '<div class="lights" id="rc-lights" hidden></div>'
-		+ '<div class="track" id="rc-track"><div class="startline"></div><div class="finishline"></div></div>'
-		+ '<div id="rc-podium"></div>';
+		+ '<div class="track" id="rc-track" role="list" aria-label="Grille de course"><div class="startline"></div><div class="finishline"></div></div>'
+		+ '<div id="rc-podium"></div>'
+		+ '<div class="sr-only" id="rc-live" role="status" aria-live="polite"></div>';
 
 	var track = document.getElementById("rc-track");
 	var clockEl = document.getElementById("rc-clock");
@@ -422,6 +453,7 @@ body.bigmode #race { margin-top:1rem; }
 	}
 
 	function layout(teams){
+		lastTeams = teams;
 		var laneH = big ? 74 : 58;
 		var top = teams.slice(0, TOPN);
 		var rest = teams.length - top.length;
@@ -454,7 +486,13 @@ body.bigmode #race { margin-top:1rem; }
 				if (Date.now() - pend < 60000) setTimeout(function(id){ flashFb(id); }, 50, t.account_id);
 			}
 			L.lane.style.top = (i*laneH) + "px";
-			L.lane.className = "car-lane" + (i===0 ? " leader" : "");
+			var isMe = ME != null && String(t.account_id) === String(ME);
+			L.lane.className = "car-lane" + (i===0 ? " leader" : "") + (isMe ? " mine" : "");
+			L.lane.setAttribute("role", "listitem");
+			L.lane.setAttribute("aria-label", ordinal(i+1) + (isMe ? " (toi)" : "") + ", " + t.name + ", " + t.score + " points");
+			var tag = L.lane.querySelector(".you-tag");
+			if (isMe && !tag){ tag = document.createElement("span"); tag.className = "you-tag"; tag.textContent = "toi"; L.name.after(tag); }
+			else if (!isMe && tag){ tag.remove(); }
 			L.wrap.style.left = xpct + "%";
 			L.rank.className = "rank" + (i===0?" g1":i===1?" g2":i===2?" g3":"");
 			L.rank.textContent = (i+1);
@@ -484,6 +522,38 @@ body.bigmode #race { margin-top:1rem; }
 			pel.querySelector(".bubble").innerHTML = "+<b>"+rest+"</b> kart"+(rest>1?"s":"")+" dans le peloton";
 			pel.querySelector(".bubble").style.left = "12%";
 		} else if (pel){ pel.remove(); }
+
+		// « toi · 47ᵉ » : ta voie épinglée sous le peloton quand tu es hors du top N
+		var myIdx = ME == null ? -1 : teams.findIndex(function(t){ return String(t.account_id) === String(ME); });
+		if (myIdx >= TOPN){
+			var me = teams[myIdx];
+			if (!meLane){
+				meLane = document.createElement("div");
+				meLane.innerHTML = '<span class="rank"></span><div class="car-wrap">' + kartSVG(hue(me.name))
+					+ '<span class="car-name"></span><span class="you-tag">toi</span> <span class="car-score"></span></div>';
+				track.appendChild(meLane);
+			}
+			meLane.className = "car-lane mine pinned";
+			meLane.setAttribute("role", "listitem");
+			meLane.style.top = (rows*laneH) + "px";
+			// position sur la piste proportionnelle au rang dans tout le champ
+			var frac = teams.length > 1 ? 1 - myIdx/(teams.length-1) : 0;
+			meLane.querySelector(".car-wrap").style.left = (12 + frac*60) + "%";
+			meLane.querySelector(".rank").textContent = myIdx + 1;
+			meLane.querySelector(".car-name").textContent = me.name;
+			meLane.querySelector(".car-score").textContent = me.score;
+			meLane.setAttribute("aria-label", ordinal(myIdx+1) + " (toi), " + me.name + ", " + me.score + " points");
+			track.style.height = (rows+1)*laneH + 20 + "px";
+		} else if (meLane){ meLane.remove(); meLane = null; }
+
+		// lecteur d'écran : annonce du changement de tête et de ton rang
+		liveEl = liveEl || document.getElementById("rc-live");
+		if (liveEl){
+			var msgs = [];
+			if (teams[0] && teams[0].account_id !== lastLead){ if (lastLead !== null) msgs.push("Nouvelle tête de course : " + teams[0].name + ", " + teams[0].score + " points."); lastLead = teams[0].account_id; }
+			if (myIdx >= 0 && myIdx + 1 !== lastMyRank){ if (lastMyRank !== null) msgs.push("Ton équipe est " + ordinal(myIdx+1) + " sur " + teams.length + "."); lastMyRank = myIdx + 1; }
+			if (msgs.length) liveEl.textContent = msgs.join(" ");
+		}
 
 		teams.forEach(function(t){ prevScores[t.account_id]=t.score; });
 	}

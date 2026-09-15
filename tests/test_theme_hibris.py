@@ -132,3 +132,43 @@ def test_main_keeps_no_transform_after_its_entry_animation():
     assert m, "the powerOn animation on <main> moved; update this test"
     assert "backwards" in m.group(0)
     assert "both" not in m.group(0) and "forwards" not in m.group(0)
+
+
+def test_scoreboard_race_keeps_the_table_and_announces_for_screen_readers():
+    """The race is a layer over the server-rendered table: without JS the table
+    is the page (300 rows here), the race mount stays hidden, and the script
+    carries the accessibility hooks the design requires (list semantics, a
+    polite live region, the pinned 'toi' lane, a reduced-motion guard)."""
+    from CTFd.models import Awards
+    from tests.helpers import gen_team
+
+    app = create_ctfd(enable_plugins=True, setup=False)
+    app = setup_ctfd(app, user_mode="teams", ctf_theme="hibris", ctf_name="NCTF26")
+    with app.app_context():
+        from CTFd.models import db
+
+        for i in range(15):
+            t = gen_team(db, name=f"Écurie {i:02d}", email=f"e{i}@x.com")
+            db.session.add(
+                Awards(
+                    user_id=t.members[0].id,
+                    team_id=t.id,
+                    name="GP",
+                    value=100 * (15 - i),
+                )
+            )
+        db.session.commit()
+        with app.test_client() as c:
+            html = c.get("/scoreboard").get_data(as_text=True)
+        assert html.count("<tr>") >= 15  # the table is fully server-rendered
+        assert '<div id="race" class="race" hidden aria-hidden="true">' in html
+        for needle in (
+            'role="list"',
+            'aria-live="polite"',
+            "car-lane mine pinned",
+            "/api/v1/teams/me",
+            "prefers-reduced-motion",
+            "you-tag",
+        ):
+            assert needle in html, needle
+    destroy_ctfd(app)

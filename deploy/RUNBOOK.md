@@ -292,6 +292,7 @@ CTFD_TOKEN=… make preflight PHASE=finale         # fenêtre 24 h, inscriptions
 - [ ] 🧑 `make preflight PHASE=finale` vert après `finale-window.sh --apply` (fenêtre 24 h,
       `registration_visibility=private`, KotH finale à `points=5`).
 - [ ] 🧑 Si sur site : réseau contrôlé, egress liste blanche, machines/VLAN, téléphones en caisse.
+- [ ] 🧑 **Écran de la salle** : ouvrir `https://<domaine>/scoreboard?big=1` dans un navigateur dédié (aucun compte connecté), touche `f` pour le plein écran. Top 14 en gros, peloton agrégé, bandeau first bloods, feux de départ, podium et confettis à l'arrivée ; rafraîchi toutes les 12 s, aucune interaction requise. Les joueurs, eux, voient leur propre kart surligné « toi » (ou épinglé sous le peloton s'ils sont hors du top 12) sur `/scoreboard`. Captures : `deploy/docs/scoreboard/` (`race-player-pinned.png`, `race-player-top.png`, `race-big-screen.png`, `race-mobile-400.png`).
 - [ ] 🧑 **Classement repart de zéro** (présélection à 0 %).
 - [ ] 🧑 Défense devant jury (poids additif faible ≤ 10 %, jamais un gate).
 - [ ] 🧑 `make backup` régulier ; `make season-down` le 30 au soir.

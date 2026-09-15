@@ -117,22 +117,22 @@ Tourney, terminal).
 
 ## 7. Plan de livraison (incrémental, testable à chaque étape)
 
-- [ ] **Lot A — squelette statique** : `templates/scoreboard.html` gagne un
+- [x] **Lot A — squelette statique** : `templates/scoreboard.html` gagne un
       conteneur `#race` + le sélecteur de vue ; `static` CSS de la piste, des
       voies, d'un coureur (couleur = hash du nom). Données bidon. Rien de live.
-- [ ] **Lot B — données live** : `assets/js/pages/scoreboard.js` lit
+- [x] **Lot B — données live** : `assets/js/pages/scoreboard.js` lit
       `get_scoreboard_list`, place les coureurs (X = score normalisé, Y = rang),
       poll 12 s, pause si onglet caché. Top N + peloton agrégé + « ton coureur ».
-- [ ] **Lot C — animations** : transitions de voie (dépassement), boost sur
+- [x] **Lot C — animations** : transitions de voie (dépassement), boost sur
       nouveau solve, `prefers-reduced-motion`. `aria-live` sur la tête.
-- [ ] **Lot D — countdowns & états** : machine à états start/end/freeze/arrivée,
+- [x] **Lot D — countdowns & états** : machine à états start/end/freeze/arrivée,
       feux de départ, temps restant, podium + confettis tricolores.
-- [ ] **Lot E — mode vidéoprojecteur** : `?big=1` plein écran, top 10-15, gros,
+- [x] **Lot E — mode vidéoprojecteur** : `?big=1` plein écran, top 10-15, gros,
       auto-refresh, pensé pour la salle ; raccourci clavier `f`.
-- [ ] **Lot F — validation** : test à 300 équipes simulées (seed de faux
+- [x] **Lot F — validation** : test à 300 équipes simulées (seed de faux
       comptes/scores) dans la stack locale ; test mobile 400 px ; reduced-motion ;
       gel ; avant/pendant/après (en forçant `start`/`end`). Screenshots.
-- [ ] **Lot G — repli & a11y finalisés** : couper le JS → table intacte ;
+- [x] **Lot G — repli & a11y finalisés** : couper le JS → table intacte ;
       lecteur d'écran ; pas de scroll horizontal ; documentation dans le RUNBOOK
       (« l'écran de la salle : ouvrir /scoreboard?big=1 en plein écran »).
 

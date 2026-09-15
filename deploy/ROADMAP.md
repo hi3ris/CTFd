@@ -98,9 +98,12 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
       countdown avant départ + feux F1 + temps restant + gel + podium/confettis à l'arrivée,
       mode fun, sélecteur Course(défaut)/Table, mode salle `?big=1` (touche `f` plein écran),
       polling 12s + pause onglet caché, repli table + prefers-reduced-motion. Rendu vérifié.
-- [ ] 🤖 Lots E→G : « ta voiture » surlignée pour le joueur connecté, validation à 300 équipes
-      (seed de faux scores), captures écran, doc RUNBOOK (« écran salle : /scoreboard?big=1 »).
-- [ ] 🧑 Valider l'idée / le niveau d'animation voulu avant de lancer l'implémentation.
+- [x] 🤖 Lots E→G livrés : « ta voiture » (voie surlignée « toi » dans le top 12, ou épinglée
+      sous le peloton avec son rang au-delà ; jamais en mode salle), sémantique liste +
+      `aria-live` (nouvelle tête, ton rang), validation à **300 équipes** (Playwright : 12 karts + « +288 dans le peloton », voie épinglée 18ᵉ, mobile 400 px sans défilement horizontal,
+      reduced-motion, JS coupé → table de 300 lignes intacte, mode salle 14 karts), captures dans
+      `deploy/docs/scoreboard/`, RUNBOOK §7 (« écran salle : /scoreboard?big=1, touche f »).
+- [ ] 🧑 Valider le niveau d'animation voulu sur la stack locale (`make local-race-demo ARGS="--live"`).
 
 ---
 

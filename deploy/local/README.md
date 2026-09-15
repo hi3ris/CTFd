@@ -96,3 +96,15 @@ securite minimal, il tourne en 5 secondes.
 make local-down     # arrete, garde la base et les uploads
 make local-reset    # arrete et efface tout (base, uploads, modele Ollama, instances)
 ```
+
+## Voir la course bouger
+
+```bash
+make local-race-demo                      # 12 écuries de démo + scores
+make local-race-demo ARGS="--teams 300"   # le champ réel de la présélection (top 12 + peloton)
+make local-race-demo ARGS="--live"        # rebump en boucle : dépassements, nitro
+make local-race-clear                     # retire les écuries GP·
+```
+
+Ouvrir `/scoreboard` connecté avec `playtest` pour voir sa voie « toi » ; `/scoreboard?big=1`
+(touche `f`) pour l'écran de la salle.
