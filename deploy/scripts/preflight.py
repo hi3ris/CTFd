@@ -566,9 +566,11 @@ def _session(url):
     return s
 
 
-def _get(s, url, path, ok=(200,)):
+def _get(s, url, path, ok=(200,), required=False):
     r = s.get(url + path, timeout=20)
     if r.status_code not in ok:
+        if required:
+            raise SystemExit("%s -> HTTP %d" % (path, r.status_code))
         return None
     return r
 
@@ -587,17 +589,19 @@ def collect(url):
     if r.status_code != 200:
         raise SystemExit("/api/v1/configs -> HTTP %d" % r.status_code)
     configs = {c["key"]: c["value"] for c in r.json()["data"]}
-    challenges = _get(s, url, "/api/v1/challenges?view=admin").json()["data"]
+    challenges = _get(s, url, "/api/v1/challenges?view=admin", required=True).json()[
+        "data"
+    ]
     # the list omits `state`: mark everything not in the visible subset
     visible = {
         c["id"]
-        for c in _get(s, url, "/api/v1/challenges?view=admin&state=visible").json()[
-            "data"
-        ]
+        for c in _get(
+            s, url, "/api/v1/challenges?view=admin&state=visible", required=True
+        ).json()["data"]
     }
     for c in challenges:
         c["state"] = "visible" if c["id"] in visible else "hidden"
-    flags = _get(s, url, "/api/v1/flags").json()["data"]
+    flags = _get(s, url, "/api/v1/flags", required=True).json()["data"]
     r = _get(s, url, "/plugins/koth/api/admin")
     koth = r.json() if r is not None else None
     r = requests.get(url + "/", timeout=20)
