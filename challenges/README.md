@@ -3,6 +3,39 @@
 Set de présélection (par équipe) et finale. Chaque challenge est un dossier
 autonome au format ctfcli (`challenge.yml`), important directement dans CTFd.
 
+## Catalogue — 203 challenges, 19 catégories
+
+**177 statiques** (téléchargeables, `type: dynamic`) + **26 servis** (instance
+par équipe, `type: team_instance`, image Docker `ctf-*`).
+
+| catégorie   | n   | statiques | servis |
+| ----------- | --- | --------- | ------ |
+| ai          | 12  | 4         | 8      |
+| blockchain  | 10  | 9         | 1      |
+| cloud       | 8   | 7         | 1      |
+| crypto      | 13  | 11        | 2      |
+| forensics   | 13  | 13        | 0      |
+| hardware    | 8   | 8         | 0      |
+| misc        | 13  | 11        | 2      |
+| ml          | 11  | 8         | 3      |
+| mobile      | 8   | 8         | 0      |
+| networking  | 9   | 9         | 0      |
+| osint       | 8   | 8         | 0      |
+| ppc         | 9   | 9         | 0      |
+| pwn         | 13  | 6         | 7      |
+| reverse     | 12  | 12        | 0      |
+| stego       | 8   | 8         | 0      |
+| supplychain | 11  | 10        | 1      |
+| sysadmin    | 8   | 8         | 0      |
+| warmup      | 16  | 16        | 0      |
+| web         | 13  | 8         | 5      |
+| **total**   | 203 | 177       | 26     |
+
+- **Index détaillé** (chaque challenge, points, type, writeup) : [`WRITEUPS.md`](WRITEUPS.md).
+- **Audit de pertinence** (5 axes, keep/revise/cut, note moy. 4.13/5) : [`AUDIT.md`](AUDIT.md).
+- Les collines **King-of-the-Hill** (`koth/`) sont scorées par le plugin `koth`
+  (Awards) et ne figurent pas dans ce décompte jeopardy ; voir `../deploy/koth-ops.md`.
+
 ## Conventions
 
 - **Mode équipes** : la présélection est jouée par équipe. Les flags dynamiques
@@ -18,17 +51,32 @@ autonome au format ctfcli (`challenge.yml`), important directement dans CTFd.
 
 ## État
 
-Ces challenges sont **écrits mais non playtestés**. Le document garde-fous
-impose un pré-test adverse (2 modèles frontier + 1 harness agentique, budget
-30-60 min) avant mise en production : résolu seul en < 15 min → on coupe.
-Ne pas mettre en ligne sans cette étape.
+Les 203 challenges sont **écrits, solveur-vérifiés et audités** (voir
+[`AUDIT.md`](AUDIT.md) — note moyenne 4.13/5, 2 retraits, 22 corrections
+appliquées). Il reste le **playtest adverse en conditions réelles** imposé par
+le document garde-fous (2 modèles frontier + 1 harness agentique, budget
+30-60 min) avant mise en production : résolu seul en < 15 min → on coupe. Ne pas
+mettre en ligne sans cette étape.
 
 ## Import
+
+Un challenge isolé :
 
 ```bash
 pip install ctfcli
 ctf challenge install challenges/<cat>/<nom>
 ```
+
+L'ensemble (setup CTFd + thème + les 203) est installé par le seed, qui
+auto-découvre `challenges/*/*/challenge.yml` :
+
+```bash
+cd deploy && make local-up && make local-seed   # + make local-build-images pour les 26 servis
+```
+
+> Les artefacts téléchargeables (`*.db`, `*.log`, `*.zip`, `*.pyc`, …) sont
+> **suivis dans git** (règle `!challenges/**` du `.gitignore`) : un `git clone`
+> frais contient tout ce dont `ctf challenge install` a besoin.
 
 ## Contrat d'environnement des challenges servis
 
