@@ -89,8 +89,8 @@ def do_setup(url):
         log("   setup deja fait, on passe")
         return
     data = {
-        "ctf_name": "NCTF25",
-        "ctf_description": "National CTF - CERT.tg",
+        "ctf_name": "NCTF26",
+        "ctf_description": "NCTF26 — CTF national de cybersécurité du Togo, organisé par le CERT.tg. Présélection 23–24 octobre, finale à Lomé 29–30 octobre.",
         "user_mode": "teams",
         "name": ADMIN["name"],
         "email": ADMIN["email"],
@@ -110,7 +110,7 @@ def do_setup(url):
     r = s.post(url + "/setup", data=data, allow_redirects=False)
     if r.status_code not in (302, 200):
         raise SystemExit(f"setup: HTTP {r.status_code}\n{r.text[:500]}")
-    log("   setup OK : NCTF25, mode equipes, theme hibris, admin/admin")
+    log("   setup OK : NCTF26, mode equipes, theme hibris, admin/admin")
 
 
 def admin_session(url):
