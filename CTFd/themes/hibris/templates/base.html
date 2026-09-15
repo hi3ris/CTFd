@@ -278,6 +278,10 @@
             box-shadow: 0 0 8px var(--green-b); animation: hudPulse 1.8s ease-in-out infinite; }
         .hud-bar.frozen .dot { background: #7fb2ff; box-shadow: 0 0 8px #7fb2ff; }
         @keyframes hudPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+        .hud-bar .fb .k { color: var(--red); }
+        .hud-bar .fb .v { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
+        .hud-bar .fb.fresh .v { animation: hudFb 1.2s ease-in-out 4; }
+        @keyframes hudFb { 50% { color: var(--red); } }
         @media (max-width: 640px) { .hud-bar .hide-sm { display: none; } }
 
         /* Néon maîtrisé sur les titres */
@@ -383,6 +387,7 @@
         <span class="seg"><span class="dot"></span><span class="brand">NCTF26</span><span class="k">// console</span></span>
         <span class="seg"><span class="k">phase</span><span class="v" id="hud-phase">—</span></span>
         <span class="seg" id="hud-count-seg"><span class="k" id="hud-count-k">échéance</span><span class="v" id="hud-count">—</span></span>
+        <span class="seg fb hide-sm" id="hud-fb" hidden title="dernier first blood"><span class="k">🩸 first blood</span><span class="v" id="hud-fb-v">—</span></span>
         <span class="grow"></span>
         <span class="seg hide-sm"><span class="k">canal</span><span class="v">chiffré</span></span>
         <span class="seg hide-sm"><span class="k">terminal</span><span class="v">sécurisé</span></span>
@@ -420,6 +425,27 @@
             else { seg.style.display = "none"; }
         }
         tick(); setInterval(tick, 1000);
+
+        // Dernier first blood (plugin firstblood). On interroge l'endpoint
+        // public mis en cache (10 s côté serveur) toutes les 45 s plutôt que
+        // d'ouvrir un second flux SSE par onglet : à 300 joueurs, c'est quelques
+        // requêtes/s servies depuis le cache, et rien de plus sur gunicorn.
+        var fbSeg = document.getElementById("hud-fb"), fbVal = document.getElementById("hud-fb-v"), fbLast = null;
+        var ROOT = (init.urlRoot || "");
+        function fbPoll() {
+            fetch(ROOT + "/plugins/firstblood/api/recent?limit=1", { credentials: "same-origin", headers: { "Accept": "application/json" } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (j) {
+                    if (!j || !j.success || !j.data || !j.data.length) return;
+                    var d = j.data[0];
+                    fbVal.textContent = d.name + " · " + d.challenge;
+                    fbSeg.hidden = false;
+                    if (fbLast !== null && fbLast !== d.solve_id) { fbSeg.classList.remove("fresh"); void fbSeg.offsetWidth; fbSeg.classList.add("fresh"); }
+                    fbLast = d.solve_id;
+                })
+                .catch(function () { /* plugin absent : segment caché */ });
+        }
+        fbPoll(); setInterval(function () { if (!document.hidden) fbPoll(); }, 45000);
     })();
     </script>
 

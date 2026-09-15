@@ -258,6 +258,31 @@
 }
 .car-wrap .koth-hill::before { content:"👑"; font-size:.72rem; }
 @media (max-width:640px){ .car-wrap .koth-hill span { display:none; } }
+/* Pastille éphémère « first blood » (🩸) sur le kart qui vient d'ouvrir une épreuve.
+   Élément frère du badge KotH, jamais sur .rank::after (couronne du leader). */
+.car-wrap .fb-drop {
+	display:inline-flex; align-items:center; margin-left:.4rem; font-size:1rem; line-height:1;
+	filter:drop-shadow(0 0 6px rgba(225,6,0,.7)); animation:fbDrop 12s ease-out forwards;
+}
+@keyframes fbDrop { 0%{ transform:scale(.4); opacity:0; } 8%{ transform:scale(1.5); opacity:1; } 16%{ transform:scale(1); } 85%{ opacity:1; } 100%{ opacity:0; } }
+/* Ticker des 5 derniers first bloods, mode projecteur uniquement, posé
+   au-dessus du ruban HUD (30 px, fixé en bas de page). */
+.fb-ticker {
+	display:none; position:fixed; left:0; right:0; bottom:38px; z-index:55; height:36px; overflow:hidden;
+	align-items:center; gap:.9rem; padding:0 .9rem; font-family:'JetBrains Mono',monospace;
+	background:rgba(0,3,10,.88); border-top:1px solid var(--line); border-bottom:1px solid var(--line);
+	backdrop-filter:blur(6px); color:#e6ecf5;
+}
+body.bigmode .fb-ticker.has { display:flex; }
+body.bigmode #race { margin-bottom:84px; }
+.fb-ticker .fb-lbl { color:var(--red); font-weight:700; letter-spacing:.8px; text-transform:uppercase; font-size:.72rem; white-space:nowrap; }
+.fb-ticker .fb-track { flex:1; overflow:hidden; position:relative; height:100%; }
+.fb-ticker .fb-run { position:absolute; left:0; top:0; height:100%; display:flex; align-items:center; gap:2.4rem; white-space:nowrap;
+	font-size:.98rem; animation:fbRun var(--fb-dur,28s) linear infinite; padding-left:100%; }
+.fb-ticker .fb-run b { color:#fff; } .fb-ticker .fb-run em { font-style:normal; color:var(--yellow); }
+.fb-ticker .fb-run .cat { color:var(--muted); font-size:.8rem; }
+@keyframes fbRun { to { transform:translateX(-100%); } }
+@media (prefers-reduced-motion: reduce) { .fb-ticker .fb-run { animation:none; padding-left:0; } .car-wrap .fb-drop { animation:none; } }
 @media (prefers-reduced-motion: reduce) {
 	.track::after, .car-lane.leader .rank::after, .car-lane.leader::before, .race .rc-clock.live { animation:none; }
 }
@@ -417,11 +442,16 @@ body.bigmode #race { margin-top:1rem; }
 				var h = hue(t.name);
 				lane.innerHTML = '<span class="rank"></span><div class="car-wrap">'
 					+ kartSVG(h) + '<span class="car-name"></span> <span class="car-score"></span>'
-					+ '<span class="koth-hill" hidden></span></div>';
+					+ '<span class="koth-hill" hidden></span><span class="fb-drop" hidden>🩸</span></div>';
 				track.appendChild(lane);
 				L = lanes[t.account_id] = { lane:lane, wrap:lane.querySelector(".car-wrap"),
 					rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
-					score:lane.querySelector(".car-score"), koth:lane.querySelector(".koth-hill"), h:h };
+					score:lane.querySelector(".car-score"), koth:lane.querySelector(".koth-hill"),
+					fb:lane.querySelector(".fb-drop"), h:h };
+			}
+			if (fbPending[t.account_id] != null){
+				var pend = fbPending[t.account_id]; delete fbPending[t.account_id];
+				if (Date.now() - pend < 60000) setTimeout(function(id){ flashFb(id); }, 50, t.account_id);
 			}
 			L.lane.style.top = (i*laneH) + "px";
 			L.lane.className = "car-lane" + (i===0 ? " leader" : "");
@@ -507,6 +537,46 @@ body.bigmode #race { margin-top:1rem; }
 			.catch(function(){ /* pas de KotH : aucun badge */ });
 	}
 
+	// First bloods : ticker (mode projecteur) + pastille 🩸 12 s sur le kart concerné.
+	var fbSeen = null;          // solve_id déjà vus (null = premier chargement, pas de pastille)
+	// Le ticker est créé sous <body>, pas dans <main> : <main> garde un transform
+	// (animation d'entrée) et un position:fixed s'y ancrerait au lieu de la fenêtre.
+	var fbTicker = null, fbRun = null;
+	if (big){
+		fbTicker = document.createElement("div"); fbTicker.className = "fb-ticker"; fbTicker.id = "fb-ticker"; fbTicker.setAttribute("aria-live","polite");
+		fbTicker.innerHTML = '<span class="fb-lbl">🩸 first bloods</span><div class="fb-track"><div class="fb-run" id="fb-run"></div></div>';
+		document.body.appendChild(fbTicker); fbRun = fbTicker.querySelector(".fb-run");
+	}
+	var fbPending = {};         // account_id -> ts : kart pas encore sur la grille au moment de l'annonce
+	function flashFb(accountId){
+		var L = lanes[accountId];
+		if(!L || !L.fb){ fbPending[accountId] = Date.now(); return; }
+		L.fb.hidden = false; L.fb.style.animation = "none"; void L.fb.offsetWidth; L.fb.style.animation = "";
+		setTimeout(function(){ L.fb.hidden = true; }, 12500);
+	}
+	function refreshFirstBloods(){
+		fetch(URLROOT + "/plugins/firstblood/api/recent?limit=5", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (!j || !j.success || !Array.isArray(j.data)) return;
+				var list = j.data;
+				if (fbTicker && fbRun){
+					fbRun.innerHTML = list.map(function(d){
+						return '<span>🩸 <b>'+esc(d.name)+'</b> ouvre <em>'+esc(d.challenge)+'</em> <span class="cat">'+esc(d.category||"")+'</span></span>';
+					}).join('');
+					fbTicker.classList.toggle("has", list.length > 0);
+					fbRun.style.setProperty("--fb-dur", Math.max(18, 6 * list.length + 8) + "s");
+				}
+				var next = {};
+				list.forEach(function(d){ next[d.solve_id] = d.account_id; });
+				if (fbSeen !== null){
+					Object.keys(next).forEach(function(id){ if(!(id in fbSeen)) flashFb(next[id]); });
+				}
+				fbSeen = next;
+			})
+			.catch(function(){ /* plugin absent : pas de ticker */ });
+	}
+
 	function tick(){
 		var now = Date.now();
 		renderClock(now);
@@ -552,12 +622,12 @@ body.bigmode #race { margin-top:1rem; }
 	document.addEventListener("keydown", function(e){ if(e.key==="f" && !/input|textarea/i.test((e.target.tagName||""))){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); } });
 
 	// horloge chaque seconde ; scores toutes les 12s ; pause si onglet caché
-	tick(); refresh(); refreshKoth();
+	tick(); refresh(); refreshKoth(); refreshFirstBloods();
 	var clockTimer=setInterval(tick,1000), pollTimer=setInterval(refresh,POLL_MS);
-	var kothTimer=setInterval(refreshKoth,POLL_MS);
+	var kothTimer=setInterval(refreshKoth,POLL_MS), fbTimer=setInterval(refreshFirstBloods,POLL_MS);
 	document.addEventListener("visibilitychange", function(){
 		if (document.hidden){ clearInterval(pollTimer); pollTimer=null; }
-		else if (!pollTimer){ refresh(); refreshKoth(); pollTimer=setInterval(refresh,POLL_MS); }
+		else if (!pollTimer){ refresh(); refreshKoth(); refreshFirstBloods(); pollTimer=setInterval(refresh,POLL_MS); }
 	});
 })();
 </script>

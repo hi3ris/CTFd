@@ -17,7 +17,7 @@ les chantiers **transverses** de fiabilité, d'équité et de spectacle.
 | 5   | Réparer les 2 flakes CI ✅               | 🟠 moy.  | S      | dès maintenant       | —         |
 | 3   | Test de charge à 300 (outil k6)          | 🔴 haute | M      | Lot 5 (sem. 12/10)   | —         |
 | 4   | Sauvegardes automatiques ✅ + répétition | 🟠 moy.  | S      | J-7 (16/10)          | —         |
-| 6   | First bloods (notif + ticker)            | 🟡 spect | M      | finale (29/10)       | —         |
+| 6   | First bloods (notif + ticker) ✅         | 🟡 spect | M      | finale (29/10)       | —         |
 | 7   | Tableau de bord ops                      | 🟡 spect | M      | finale (29/10)       | 3, 6      |
 | 8   | Page writeups à la clôture               | 🟢 basse | S      | clôture (30/10)      | —         |
 
@@ -223,25 +223,33 @@ hibris déjà en place).
 
 **Périmètre.**
 
-- [ ] 🤖 Plugin `CTFd/plugins/firstblood/` : boucle légère (même patron que le scorer
+- [x] 🤖 Plugin `CTFd/plugins/firstblood/` (livré le 15/09) : boucle légère (même patron que le scorer
       KotH : verrou `fcntl`, pas de thread sous `TESTING`) qui, toutes les 5 s, cherche
-      les challenges dont le **premier** `Solves` n'a pas encore été annoncé (table
-      mémoire + cache) et poste une `Notifications` publique
-      `🩸 First blood — <équipe> sur <challenge> (<catégorie>)`.
-- [ ] 🤖 Option `FIRSTBLOOD_BONUS` (points, défaut 0) : award `category="firstblood"`
+      les challenges dont le **premier** `Solves` (compte ni caché ni banni, challenge
+      visible — mêmes règles que le classement) n'a pas encore été annoncé (cache,
+      **amorcé sans rien poster** au démarrage à froid pour ne pas rejouer l'historique)
+      et poste une `Notifications` publique `🩸 First blood — <équipe> ouvre <challenge> (<catégorie>)`.
+- [x] 🤖 Option `FIRSTBLOOD_BONUS` (points, défaut 0) : award `category="firstblood"`
       — **désactivé** par défaut ; à trancher 🧑 avec le règlement.
-- [ ] 🤖 Ruban HUD (`base.html`, `.hud-bar`) : segment « dernier first blood » qui lit le
-      flux de notifications existant.
-- [ ] 🤖 Grand Prix mode projecteur (`scoreboard.html?big=1`) : **ticker** en bas des 5
+- [x] 🤖 Ruban HUD (`base.html`, `.hud-bar`) : segment « dernier first blood ».
+      **Écart** : il interroge `/plugins/firstblood/api/recent` (mis en cache 10 s) toutes
+      les 45 s plutôt que le flux SSE — un second `EventSource` par onglet doublerait les
+      connexions tenues par gunicorn à 300 joueurs, et le bundle `events.js` d'hibris est
+      pré-construit.
+- [x] 🤖 Grand Prix mode projecteur (`scoreboard.html?big=1`) : **ticker** en bas des 5
       derniers first bloods + pastille 🩸 éphémère sur le kart concerné (à côté du badge
       KotH 👑, ne pas chevaucher la couronne du leader).
-- [ ] 🤖 Respect du **gel** : après `freeze`, plus d'annonce publique (l'admin voit tout).
-- [ ] 🤖 Tests : premier solve → 1 notification ; 2ᵉ solve du même challenge → rien ;
+- [x] 🤖 Respect du **gel** : après `freeze`, plus d'annonce publique (l'admin voit tout).
+- [x] 🤖 Tests (`tests/test_plugin_firstblood.py`) : premier solve → 1 notification ; 2ᵉ solve du même challenge → rien ;
       sous gel → rien pour le public.
 
 **Définition de « fait ».** Sur la stack locale, `make local-playtest` déclenche une
 notification par challenge résolu pour la première fois ; le ticker défile sur
 `/scoreboard?big=1`.
+_Vérifié le 15/09 contre un CTFd de test (sqlite) piloté par Playwright : ticker en bas
+de `/scoreboard?big=1`, pastille 🩸 sur le kart après une vraie soumission via l'API,
+segment HUD sur l'accueil. Reste 🧑 : `FIRSTBLOOD_BONUS` (règlement) et la passe
+`make local-playtest` (Docker)._
 
 ---
 
