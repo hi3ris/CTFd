@@ -54,7 +54,8 @@ else
     # servi ? (type team_instance)
     grep -q "type: team_instance" "$y" || continue
     if [ "$ALL" -eq 0 ]; then
-      grep -q "IMPLEMENTED + locally verified" "$y" || continue
+      # implementes (hidden) ou deja passes au Lot-5 (visible) : les STUB sont exclus
+      grep -qE "IMPLEMENTED \+ locally verified|Lot-5 rehearsal passed" "$y" || continue
     fi
     targets+=("$cat/$rel")
   done < <(find "$CH" -mindepth 3 -maxdepth 3 -name challenge.yml | sort)
@@ -132,8 +133,11 @@ PY
     echo "OK"
     pass=$((pass+1))
     if [ "$FLIP" -eq 1 ]; then
-      # passe state: hidden -> visible (garde le reste de la ligne)
-      sed -i.bak -E 's/^state:[[:space:]]*hidden.*/state: visible  # Lot-5 rehearsal passed/' "$y" && rm -f "$y.bak"
+      # passe state: hidden -> visible en GARDANT le commentaire (marqueur IMPLEMENTED
+      # lu par lot5.sh, port_served.py et check_challenges.py) + date du passage
+      if grep -qE '^state:[[:space:]]*hidden' "$y"; then
+        sed -i.bak -E "s/^(state:[[:space:]]*)hidden(.*)$/\1visible\2; Lot-5 rehearsal passed $(date -u +%F)/" "$y" && rm -f "$y.bak"
+      fi
     fi
   else
     echo "SOLVE-FAIL (got=${got:-<vide>} exp=${expect:-<vide>})"

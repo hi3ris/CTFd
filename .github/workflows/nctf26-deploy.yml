@@ -64,7 +64,7 @@ jobs:
         if: steps.front.outputs.id != ''
         run: |
           cat > params.json <<JSON
-          {"commands": ["sudo -u ubuntu -H bash -lc 'cd /opt/ctfd/CTFd && deploy/scripts/front-update.sh ${{ github.sha }}'"],
+          {"commands": ["sudo -u ubuntu -H bash -lc 'cd /opt/ctfd/CTFd && git fetch --prune origin && git checkout -q ${{ github.sha }} && deploy/scripts/front-update.sh ${{ github.sha }}'"],
            "executionTimeout": ["1800"]}
           JSON
           cmd=$(aws ssm send-command --instance-ids "${{ steps.front.outputs.id }}" \

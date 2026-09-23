@@ -23,6 +23,14 @@ variable "github_deploy_refs" {
   default     = ["refs/heads/master", "refs/heads/claude/ctf-platform-free-ptiggj"]
 }
 
+# Un job qui declare `environment:` presente un claim sub de la forme
+# repo:<owner/name>:environment:<env>, pas ref:... : les deux formes sont admises.
+variable "github_deploy_environment" {
+  description = "Environnement GitHub Actions du job de deploiement (vide = aucun)."
+  type        = string
+  default     = "production"
+}
+
 resource "aws_iam_openid_connect_provider" "github" {
   url            = "https://token.actions.githubusercontent.com"
   client_id_list = ["sts.amazonaws.com"]
@@ -43,9 +51,10 @@ resource "aws_iam_role" "github_deploy" {
       Condition = {
         StringEquals = { "token.actions.githubusercontent.com:aud" = "sts.amazonaws.com" }
         StringLike = {
-          "token.actions.githubusercontent.com:sub" = [
-            for r in var.github_deploy_refs : "repo:${var.github_repo}:ref:${r}"
-          ]
+          "token.actions.githubusercontent.com:sub" = concat(
+            [for r in var.github_deploy_refs : "repo:${var.github_repo}:ref:${r}"],
+            var.github_deploy_environment != "" ? ["repo:${var.github_repo}:environment:${var.github_deploy_environment}"] : [],
+          )
         }
       }
     }]
@@ -73,7 +82,7 @@ resource "aws_iam_role_policy" "github_deploy" {
           "arn:aws:ec2:${var.aws_region}:${data.aws_caller_identity.current.account_id}:instance/*",
         ]
         Condition = {
-          StringEquals = { "ec2:ResourceTag/Name" = "${var.project_name}-front" }
+          StringEquals = { "ssm:resourceTag/Name" = "${var.project_name}-front" }
         }
       },
       {

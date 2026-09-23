@@ -45,5 +45,5 @@ tags:
 # challenge-id (HMAC / requirements wiring): web-cms-authbypass
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
-state: visible  # Lot-5 rehearsal passed
+state: visible  # IMPLEMENTED + locally verified end-to-end (ported); Lot-5 rehearsal passed 2026-09-23
 version: "1.0"
