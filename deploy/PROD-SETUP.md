@@ -11,20 +11,39 @@
 
 État de départ : front up sur `http://13.37.197.230`, redirige vers `/setup`.
 
-## 1. Domaine + HTTPS (ctf.tg)
+## 1. Domaine + HTTPS
 
-1. **DNS** : créer un enregistrement **A `ctf.tg` → 13.37.197.230** (TTL court, ex.
-   300 s, le temps des tests). Vérifier : `dig +short ctf.tg` renvoie l'IP.
-2. **Config** (valeurs hors git, sur le front) :
-   - `terraform/terraform.tfvars` : `domain_name = "ctf.tg"`
-   - `front/.env` : `CTF_DOMAIN=ctf.tg` et `CERTBOT_EMAIL=<email d'ops CERT.tg>`
-     (Let's Encrypt y envoie les avis d'expiration — pas une boîte perso jetable).
-3. **TLS** : une fois le A record résolu vers l'IP du front :
-   ```
-   make tls-init
-   ```
-   Vérifier `https://ctf.tg/` en 200 et le certificat valide. Sans DNS résolu,
-   certbot échoue (challenge HTTP-01).
+Le domaine `ctf.tg` **n'est pas requis pour avancer** : il ne bloque que le HTTPS.
+Tout le reste (setup, import, Lot-5, preflight, tests internes) se fait en HTTP sur
+l'IP. On garde donc `ctf.tg` + HTTPS pour la **dernière étape, juste avant la
+présélection**.
+
+### 1a. Phase de test — maintenant, sans domaine
+
+- **Simple (recommandé)** : rester en **HTTP sur `http://13.37.197.230`**. Zéro
+  certificat, zéro DNS. On avance sur tout le reste.
+- **Dérisquer la chaîne TLS une fois** (certbot est une panne classique le jour J) :
+  utiliser un domaine gratuit/instantané qui résout déjà vers l'IP, sans rien
+  enregistrer — `front/.env` : `CTF_DOMAIN=13.37.197.230.sslip.io` (ou `.nip.io`),
+  puis `make tls-init` → vrai certificat Let's Encrypt. Prouve que le pipeline TLS
+  marche ; on rebascule sur `ctf.tg` plus tard.
+
+> ⚠️ Tant qu'on n'est pas sur `ctf.tg` + HTTPS : **ne PAS ouvrir les inscriptions
+> publiques**. Garder `registration_visibility=private` (ou restreindre par
+> `player_cidrs`) et `verify_emails=off`. Tester en interne : OK ; ouvrir au public
+> sur une URL temporaire : non.
+
+### 1b. Bascule finale — `ctf.tg` (avant la présélection)
+
+1. **DNS** : enregistrement **A `ctf.tg` → 13.37.197.230** chez le registre `.tg`
+   (peut être lent/manuel). Vérifier : `dig +short ctf.tg` renvoie l'IP.
+2. **Config** (hors git, sur le front) : `terraform/terraform.tfvars`
+   `domain_name = "ctf.tg"` ; `front/.env` `CTF_DOMAIN=ctf.tg` +
+   `CERTBOT_EMAIL=<email d'ops CERT.tg>` (Let's Encrypt y envoie les avis
+   d'expiration — pas une boîte perso jetable).
+3. **TLS** : `make tls-init`. Vérifier `https://ctf.tg/` en 200, certificat valide.
+   Coût du switch : quasi nul (les instances servies utilisent `FRONT_PUBLIC_IP:port`,
+   pas le domaine). Sans DNS résolu, certbot échoue (challenge HTTP-01).
 
 ## 2. Setup initial CTFd (admin fort, PAS de seed local)
 
@@ -129,7 +148,9 @@ Ne pas rendre les challenges IA visibles tant que le nœud Ollama n'est pas up
 
 ---
 
-**Ordre résumé** : DNS `ctf.tg` → `make tls-init` → `/setup` manuel (admin fort,
-teams, hibris) → jeton API → `reglement-publish` + hero + université → import
-ctfcli → **Lot-5** (`make lot5 FLIP=1`) → calibrer + `make preflight` 0 FAIL →
-`presel-window` → resserrer `admin_cidrs` → ouvrir les inscriptions.
+**Ordre résumé** —
+_Maintenant (test, HTTP sur l'IP, inscriptions fermées)_ : `/setup` admin fort
+(teams, hibris) → jeton API → `reglement-publish` + hero + université → import
+ctfcli → **Lot-5** (`make lot5 FLIP=1`) → calibrer + `make preflight`.
+_Avant la présélection_ : DNS `ctf.tg` → `make tls-init` → `make preflight` 0 FAIL
+→ resserrer `admin_cidrs` → `presel-window` → ouvrir les inscriptions.
