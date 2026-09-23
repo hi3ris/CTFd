@@ -1,34 +1,71 @@
-#!/usr/bin/env python3
-"""Orchestrator Cap -- SERVED CHALLENGE STUB.
+"""Schedd Cap — a helper binary shipped with an over-broad file capability.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/bins`` lists the host's helper "binaries" and their Linux capabilities.
+    ``logtool`` was granted ``cap_dac_read_search`` (read any file, bypassing
+    permissions) so it could tail root-owned logs — far more than it needs.
+  * ``/exec?bin=&args=`` runs a helper. Because ``logtool`` carries
+    ``cap_dac_read_search``, its ``--read=<path>`` reads any file on the host,
+    including the root-only flag.
+
+Intended path: read ``/bins`` → notice ``logtool`` has ``cap_dac_read_search`` →
+``/exec?bin=logtool&args=--read=/flag.txt``.
+
+The flag at ``/flag.txt`` is root-owned and served by no route; only the
+over-privileged capability lets an unprivileged caller read it.
 """
 import os
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+# helper name -> capabilities it was granted (logtool is over-privileged).
+BINS = {
+    "netcheck": [],
+    "logtool": ["cap_dac_read_search"],
+    "pstool": [],
+}
+
+
+def _read(path):
+    # Models a capability-bearing read: cap_dac_read_search bypasses perms.
+    if path == "/flag.txt":
+        try:
+            with open("/flag.txt", encoding="utf-8") as fh:
+                return fh.read().strip()
+        except OSError:
+            return "NCTF{flag-unavailable-in-dev}"
+    return f"<contents of {path}>"
 
 
 @app.route("/")
 def index():
-    return (
-        "<h1>Orchestrator Cap</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>sysadmin-orchestrator-cap</code>.</p>"
+    return jsonify(
+        {
+            "service": "orchestrator-cap",
+            "bins": "/bins",
+            "exec": "/exec?bin=<name>&args=<args>",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/bins")
+def bins():
+    return jsonify({name: {"caps": caps} for name, caps in BINS.items()})
+
+
+@app.route("/exec")
+def do_exec():
+    name = request.args.get("bin", "")
+    args = request.args.get("args", "")
+    if name not in BINS:
+        return jsonify({"error": "no such binary"}), 404
+    if args.startswith("--read=") and "cap_dac_read_search" in BINS[name]:
+        path = args.split("=", 1)[1]
+        return jsonify({"bin": name, "output": _read(path)})
+    return jsonify({"bin": name, "output": f"{name}: nothing to do"})
 
 
 if __name__ == "__main__":

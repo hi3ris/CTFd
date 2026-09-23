@@ -49,6 +49,9 @@ PROTO = {
     "depconf": "supplychain/buildfarm-depconf",
     "postinstall": "supplychain/buildfarm-postinstall",
     "hijack": "supplychain/buildfarm-depconf",
+    "cap": "sysadmin/schedd-cap",
+    "cron": "sysadmin/schedd-cron",
+    "systemd": "sysadmin/schedd-systemd",
     "protoparse": "misc/proto-fuzz-live",
 }
 

