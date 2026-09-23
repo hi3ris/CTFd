@@ -1,34 +1,65 @@
 #!/usr/bin/env python3
-"""Gluesvc Protoparse -- SERVED CHALLENGE STUB.
+"""Proto Fuzz Live — a homemade TLV parser with an out-of-bounds read.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/parse?rec=HEX`` parses a length-prefixed record: ``[type:1][len:2 BE][value]``.
+    It echoes back the parsed value.
+  * The parser trusts the declared ``len`` field and reads that many bytes from a
+    backing buffer that is laid out as ``value || padding || FLAG``. When the
+    declared length matches the real value length you get your value back; when
+    you **over-declare the length**, the read runs past the value into the
+    padding and the flag — a classic out-of-bounds read.
+
+Intended path: send a short value but a large declared length (e.g. 0x0200) so
+the echoed bytes include the trailing flag.
+
+The flag at ``/flag.txt`` is exposed by no route other than through this
+over-read; a well-formed record never reveals it.
 """
 import os
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
 
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip().encode()
+    except OSError:
+        return b"NCTF{flag-unavailable-in-dev}"
+
+
 @app.route("/")
 def index():
-    return (
-        "<h1>Gluesvc Protoparse</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>misc-gluesvc-protoparse</code>.</p>"
+    return jsonify(
+        {
+            "service": "gluesvc-protoparse",
+            "parse": "/parse?rec=HEX  record = [type:1][len:2 BE][value]",
+            "note": "the parser trusts the declared length",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/parse")
+def parse():
+    try:
+        rec = bytes.fromhex(request.args.get("rec", ""))
+    except ValueError:
+        return jsonify({"error": "rec must be hex"}), 400
+    if len(rec) < 3:
+        return jsonify({"error": "record too short: need type(1)+len(2)"}), 400
+    rtype = rec[0]
+    declared = int.from_bytes(rec[1:3], "big")
+    value = rec[3:]
+    # The backing buffer: the value, some padding, then the flag lives right
+    # after it in memory. The parser reads `declared` bytes from here -- trusting
+    # the length field instead of clamping to len(value) is the bug.
+    backing = value + b"\x00" * 8 + _flag()
+    out = backing[:declared]
+    return jsonify({"type": rtype, "declared_len": declared, "value": out.hex()})
 
 
 if __name__ == "__main__":

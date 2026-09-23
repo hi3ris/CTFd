@@ -30,11 +30,11 @@ flags:
 # CVE id (if any) goes in a paid hint, never in the description.
 hints:
   - content: >-
-      TODO: cheap hint narrowing the vulnerability class.
+      Le record est [type:1][len:2][value] et le parser te renvoie la valeur. Que se passe-t-il si len dépasse la vraie longueur ?
     cost: 20
     key: h1
   - content: >-
-      TODO: dearer hint (mechanism / advisory id / patch diff).
+      Lecture hors-borne : le parser fait confiance au champ len. Envoie une petite valeur mais len=0x0200 : la réponse déborde sur le buffer voisin qui contient le flag.
     cost: 40
     key: h2
     requirements: [h1]
@@ -45,5 +45,5 @@ tags:
 # challenge-id (HMAC / requirements wiring): misc-gluesvc-protoparse
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
-state: hidden  # STUB -- flip to visible once the vuln + solver are implemented and Lot-5 verified
-version: "0.1"
+state: hidden  # IMPLEMENTED + locally verified end-to-end (ported); flip to visible after Lot-5 Docker rehearsal
+version: "1.0"

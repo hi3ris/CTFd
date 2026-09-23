@@ -30,11 +30,11 @@ flags:
 # CVE id (if any) goes in a paid hint, never in the description.
 hints:
   - content: >-
-      TODO: cheap hint narrowing the vulnerability class.
+      La clé serveur dérive d'une graine à 4 chiffres. Combien de clés possibles, et que t'offre /login ?
     cost: 20
     key: h1
   - content: >-
-      TODO: dearer hint (mechanism / advisory id / patch diff).
+      KDF faible : brute-force 0000-9999, K=SHA256('nctf-kdf-'+seed), vérifie HMAC(K,'guest') contre le jeton observé, puis forge HMAC(K,'admin').
     cost: 40
     key: h2
     requirements: [h1]
@@ -45,5 +45,5 @@ tags:
 # challenge-id (HMAC / requirements wiring): crypto-vaultkey-kdf
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
-state: hidden  # STUB -- flip to visible once the vuln + solver are implemented and Lot-5 verified
-version: "0.1"
+state: hidden  # IMPLEMENTED + locally verified end-to-end (ported); flip to visible after Lot-5 Docker rehearsal
+version: "1.0"

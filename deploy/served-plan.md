@@ -7,6 +7,7 @@
 ## Deux lots
 
 - **LOT LOGIQUE** (162) — services pur-Python, vérifiés de bout en bout ici.
+  **94/162 faits** ; 68 restants.
 - **LOT BUILD** (166) — exploit / binaire / OS → session Docker/qemu dédiée.
 
 ## Avancement
@@ -14,8 +15,8 @@
 | Statut                                  | Nombre |
 | --------------------------------------- | ------ |
 | ✅ visibles (déjà jouables)             | 27     |
-| ✅ implémentés + vérifiés local (Lot-5) | 13     |
-| ⬜ STUB à faire                         | 288    |
+| ✅ implémentés + vérifiés local (Lot-5) | 86     |
+| ⬜ STUB à faire                         | 215    |
 | **Total servi**                         | 328    |
 
 ## LOT LOGIQUE — implémentable + vérifiable ici (162)
@@ -101,47 +102,47 @@
 
 ### cloud (21)
 
-- [ ] **cloud/artifacts-oidc** — 500 pts  
+- [x] **cloud/artifacts-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/backup-oidc** — 500 pts  
+- [x] **cloud/backup-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/billing-oidc** — 500 pts  
+- [x] **cloud/billing-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/cdn-oidc** — 500 pts  
+- [x] **cloud/cdn-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/gateway-oidc** — 500 pts  
+- [x] **cloud/gateway-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/identity-oidc** — 500 pts  
+- [x] **cloud/identity-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/metrics-oidc** — 500 pts  
+- [x] **cloud/metrics-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
 - [x] **cloud/oidc-forge** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/queue-oidc** — 500 pts  
+- [x] **cloud/queue-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/registry-oidc** — 500 pts  
+- [x] **cloud/registry-oidc** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/artifacts-prefix** — 450 pts  
+- [x] **cloud/artifacts-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
 - [x] **cloud/backup-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/billing-prefix** — 450 pts  
+- [x] **cloud/billing-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
 - [x] **cloud/breach-chain** — 450 pts ✅ visible  
        **Kékéli Cloud.** Le service de prévisualisation média de Kékéli Cloud tourne
 - [ ] **cloud/bucket-pivot** — 450 pts  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/cdn-prefix** — 450 pts  
+- [x] **cloud/cdn-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/gateway-prefix** — 450 pts  
+- [x] **cloud/gateway-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/identity-prefix** — 450 pts  
+- [x] **cloud/identity-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/metrics-prefix** — 450 pts  
+- [x] **cloud/metrics-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/queue-prefix** — 450 pts  
+- [x] **cloud/queue-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
-- [ ] **cloud/registry-prefix** — 450 pts  
+- [x] **cloud/registry-prefix** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Préfixe public -> credential fuité -> escalade de rôle.
 
 ### crypto (35)
@@ -150,71 +151,71 @@
        Dérivation de clé faible -> prédiction -> reprise de session privilégiée.
 - [x] **crypto/lcg-casino** — 500 pts ✅ visible  
        A **"provably fair"** casino deals from a home-grown verifiable shuffle. It
-- [ ] **crypto/notarysvc-kdf** — 500 pts  
+- [x] **crypto/notarysvc-kdf** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session.
-- [ ] **crypto/notarysvc-padoracle** — 500 pts  
+- [x] **crypto/notarysvc-padoracle** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
-- [ ] **crypto/notarysvc-signext** — 500 pts  
+- [x] **crypto/notarysvc-signext** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Extension de hash -> forge -> API privilégiée.
 - [x] **crypto/oracle-cascade** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
-- [ ] **crypto/sealbox-kdf** — 500 pts  
+- [x] **crypto/sealbox-kdf** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session.
-- [ ] **crypto/sealbox-padoracle** — 500 pts  
+- [x] **crypto/sealbox-padoracle** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
 - [x] **crypto/sealbox-signext** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Extension de hash -> forge -> API privilégiée.
-- [ ] **crypto/sessiond-kdf** — 500 pts  
+- [x] **crypto/sessiond-kdf** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session.
-- [ ] **crypto/sessiond-padoracle** — 500 pts  
+- [x] **crypto/sessiond-padoracle** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
-- [ ] **crypto/sessiond-signext** — 500 pts  
+- [x] **crypto/sessiond-signext** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Extension de hash -> forge -> API privilégiée.
-- [ ] **crypto/signgate-kdf** — 500 pts  
+- [x] **crypto/signgate-kdf** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session.
-- [ ] **crypto/signgate-padoracle** — 500 pts  
+- [x] **crypto/signgate-padoracle** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
-- [ ] **crypto/signgate-signext** — 500 pts  
+- [x] **crypto/signgate-signext** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Extension de hash -> forge -> API privilégiée.
-- [ ] **crypto/tokenmint-kdf** — 500 pts  
+- [x] **crypto/tokenmint-kdf** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session.
-- [ ] **crypto/tokenmint-padoracle** — 500 pts  
+- [x] **crypto/tokenmint-padoracle** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
-- [ ] **crypto/tokenmint-signext** — 500 pts  
+- [x] **crypto/tokenmint-signext** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Extension de hash -> forge -> API privilégiée.
-- [ ] **crypto/vaultkey-kdf** — 500 pts  
+- [x] **crypto/vaultkey-kdf** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session.
-- [ ] **crypto/vaultkey-padoracle** — 500 pts  
+- [x] **crypto/vaultkey-padoracle** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
-- [ ] **crypto/vaultkey-signext** — 500 pts  
+- [x] **crypto/vaultkey-signext** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Extension de hash -> forge -> API privilégiée.
 - [x] **crypto/nonce-climb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton signé.
-- [ ] **crypto/notarysvc-ecb** — 450 pts  
+- [x] **crypto/notarysvc-ecb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        ECB cut-and-paste -> contournement d'auth -> action privilégiée.
-- [ ] **crypto/notarysvc-nonce** — 450 pts  
+- [x] **crypto/notarysvc-nonce** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton.
 - [x] **crypto/sealbox-ecb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        ECB cut-and-paste -> contournement d'auth -> action privilégiée.
-- [ ] **crypto/sealbox-nonce** — 450 pts  
+- [x] **crypto/sealbox-nonce** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton.
-- [ ] **crypto/sessiond-ecb** — 450 pts  
+- [x] **crypto/sessiond-ecb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        ECB cut-and-paste -> contournement d'auth -> action privilégiée.
-- [ ] **crypto/sessiond-nonce** — 450 pts  
+- [x] **crypto/sessiond-nonce** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton.
 - [ ] **crypto/sign-slip** — 450 pts  
        Vérification de signature faible -> forge -> action admin.
-- [ ] **crypto/signgate-ecb** — 450 pts  
+- [x] **crypto/signgate-ecb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        ECB cut-and-paste -> contournement d'auth -> action privilégiée.
-- [ ] **crypto/signgate-nonce** — 450 pts  
+- [x] **crypto/signgate-nonce** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton.
-- [ ] **crypto/tokenmint-ecb** — 450 pts  
+- [x] **crypto/tokenmint-ecb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        ECB cut-and-paste -> contournement d'auth -> action privilégiée.
-- [ ] **crypto/tokenmint-nonce** — 450 pts  
+- [x] **crypto/tokenmint-nonce** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton.
-- [ ] **crypto/vaultkey-ecb** — 450 pts  
+- [x] **crypto/vaultkey-ecb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        ECB cut-and-paste -> contournement d'auth -> action privilégiée.
-- [ ] **crypto/vaultkey-nonce** — 450 pts  
+- [x] **crypto/vaultkey-nonce** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Réutilisation de nonce -> récupération de clé -> forge de jeton.
 
 ### cve (1)
@@ -224,17 +225,17 @@
 
 ### misc (8)
 
-- [ ] **misc/bridged-protoparse** — 450 pts  
+- [x] **misc/bridged-protoparse** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Parser maison -> état corrompu -> lecture hors-borne.
-- [ ] **misc/gluesvc-protoparse** — 450 pts  
+- [x] **misc/gluesvc-protoparse** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Parser maison -> état corrompu -> lecture hors-borne.
-- [ ] **misc/ingestd-protoparse** — 450 pts  
+- [x] **misc/ingestd-protoparse** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Parser maison -> état corrompu -> lecture hors-borne.
 - [x] **misc/proto-fuzz-live** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Parser d'un protocole maison -> état corrompu -> lecture hors-borne.
-- [ ] **misc/relaynode-protoparse** — 450 pts  
+- [x] **misc/relaynode-protoparse** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Parser maison -> état corrompu -> lecture hors-borne.
-- [ ] **misc/transcoder-protoparse** — 450 pts  
+- [x] **misc/transcoder-protoparse** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Parser maison -> état corrompu -> lecture hors-borne.
 - [x] **misc/esolang-jail** — 400 pts ✅ visible  
        **Marble jail** -- a tiny stack esoteric language, served over TCP as an
@@ -322,7 +323,7 @@
        Request smuggling -> empoisonnement de cache -> contournement d'auth.
 - [x] **web/smuggle-gap** — 500 pts ✅ visible  
        **Nimbus** runs a tiny job service behind an edge proxy. The edge is the only
-- [ ] **web/cms-authbypass** — 450 pts  
+- [x] **web/cms-authbypass** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Contournement d'auth -> IDOR -> mass-assignment vers rôle admin.
 - [x] **web/forum-authbypass** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Contournement d'auth -> IDOR -> mass-assignment vers rôle admin.
@@ -332,47 +333,47 @@
        XXE -> SSRF -> lecture de fichier interne.
 - [x] **web/graph-climb** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Introspection GraphQL -> IDOR -> mass-assignment vers rôle admin.
-- [ ] **web/hrportal-authbypass** — 450 pts  
+- [x] **web/hrportal-authbypass** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Contournement d'auth -> IDOR -> mass-assignment vers rôle admin.
-- [ ] **web/hrportal-sqli2** — 450 pts  
+- [x] **web/hrportal-sqli2** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Injection SQL de second ordre -> contournement d'auth -> action admin.
 - [ ] **web/hrportal-xxe** — 450 pts  
        XXE -> SSRF -> lecture de fichier interne.
-- [ ] **web/invoicer-authbypass** — 450 pts  
+- [x] **web/invoicer-authbypass** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Contournement d'auth -> IDOR -> mass-assignment vers rôle admin.
-- [ ] **web/invoicer-sqli2** — 450 pts  
+- [x] **web/invoicer-sqli2** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Injection SQL de second ordre -> contournement d'auth -> action admin.
 - [ ] **web/invoicer-xxe** — 450 pts  
        XXE -> SSRF -> lecture de fichier interne.
-- [ ] **web/ledger-authbypass** — 450 pts  
+- [x] **web/ledger-authbypass** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Contournement d'auth -> IDOR -> mass-assignment vers rôle admin.
-- [ ] **web/ledger-sqli2** — 450 pts  
+- [x] **web/ledger-sqli2** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Injection SQL de second ordre -> contournement d'auth -> action admin.
 - [ ] **web/ledger-xxe** — 450 pts  
        XXE -> SSRF -> lecture de fichier interne.
-- [ ] **web/shipyard-authbypass** — 450 pts  
+- [x] **web/shipyard-authbypass** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Contournement d'auth -> IDOR -> mass-assignment vers rôle admin.
-- [ ] **web/shipyard-sqli2** — 450 pts  
+- [x] **web/shipyard-sqli2** — 450 pts ✅ vérifié-local (attend Lot-5)  
        Injection SQL de second ordre -> contournement d'auth -> action admin.
 - [ ] **web/shipyard-xxe** — 450 pts  
        XXE -> SSRF -> lecture de fichier interne.
 - [ ] **web/webhook-relay** — 450 pts  
        Validation de webhook contournée -> SSRF -> service interne.
-- [ ] **web/cms-jwtconf** — 400 pts  
+- [x] **web/cms-jwtconf** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
-- [ ] **web/forum-jwtconf** — 400 pts  
+- [x] **web/forum-jwtconf** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
-- [ ] **web/hrportal-jwtconf** — 400 pts  
+- [x] **web/hrportal-jwtconf** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
-- [ ] **web/invoicer-jwtconf** — 400 pts  
+- [x] **web/invoicer-jwtconf** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
 - [x] **web/jwt-relay** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
-- [ ] **web/ledger-jwtconf** — 400 pts  
+- [x] **web/ledger-jwtconf** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
 - [x] **web/race-the-coupon** — 400 pts ✅ visible  
        **NimbusPay store wallet** exposes a small JSON API. Every account starts
-- [ ] **web/shipyard-jwtconf** — 400 pts  
+- [x] **web/shipyard-jwtconf** — 400 pts ✅ vérifié-local (attend Lot-5)  
        Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
 - [x] **web/jwt-cousin** — 150 pts ✅ visible  
        "It's basically a JWT," said no one who read the code.
@@ -392,7 +393,7 @@
 
 - [ ] **cloud/artifacts-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/artifacts-imds** — 500 pts  
+- [x] **cloud/artifacts-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/artifacts-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
@@ -404,13 +405,13 @@
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
 - [ ] **cloud/billing-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/billing-imds** — 500 pts  
+- [x] **cloud/billing-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/billing-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
 - [ ] **cloud/cdn-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/cdn-imds** — 500 pts  
+- [x] **cloud/cdn-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/cdn-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
@@ -418,13 +419,13 @@
        Injection d'env dans une fonction -> exécution -> vol de secret de plateforme.
 - [ ] **cloud/gateway-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/gateway-imds** — 500 pts  
+- [x] **cloud/gateway-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/gateway-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
 - [ ] **cloud/identity-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/identity-imds** — 500 pts  
+- [x] **cloud/identity-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/identity-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
@@ -432,13 +433,13 @@
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/metrics-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/metrics-imds** — 500 pts  
+- [x] **cloud/metrics-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/metrics-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
 - [ ] **cloud/queue-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/queue-imds** — 500 pts  
+- [x] **cloud/queue-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/queue-poison** — 500 pts  
        Message empoisonné -> worker -> désérialisation -> exécution.
@@ -446,7 +447,7 @@
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
 - [ ] **cloud/registry-envexec** — 500 pts  
        Injection d'env dans une fonction -> exécution -> vol de secret.
-- [ ] **cloud/registry-imds** — 500 pts  
+- [x] **cloud/registry-imds** — 500 pts ✅ vérifié-local (attend Lot-5)  
        SSRF -> IMDS -> assume-role -> lecture d'objet privé.
 - [ ] **cloud/registry-presign** — 500 pts  
        Abus d'URL pré-signée -> écriture d'objet -> exécution au déploiement.
