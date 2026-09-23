@@ -1,8 +1,19 @@
-# chains-pipeline — solution (STUB)
+# chains-pipeline — solution
 
-**Category** chains · **Value** 550 · **Served** yes (per-team flag)
+**Category** chains · **Served** yes (per-team flag) · multi-stage
 
-TODO: document the vulnerability, the intended path, and the read channel.
+## Vulnerability chain
+
+**Dependency confusion → build hook → runner RCE.** `/build` resolves the highest version across the private lockfile and a public registry; a higher public `internal-lib` wins and its build hook installs a runner action that `/run` executes.
+
+## Intended path
+
+1. `POST /publish-public {name:internal-lib, version:99.0.0, buildhook:install-runner:emit-flag}`.
+2. `POST /build {name:internal-lib}` → runner installed.
+3. `POST /run` → the per-team flag.
+
+Each stage's unlock is an effect of the previous one. `/flag.txt` is served by no
+route; it only appears at the end of the chain.
 
 ## Reference solver
 
@@ -10,6 +21,14 @@ TODO: document the vulnerability, the intended path, and the read channel.
 python3 solution/solve.py http://HOST:PORT   # -> NCTF{...}
 ```
 
+## Why it resists AI one-shotting
+
+Per-team HMAC flag on the live instance, no downloadable artifact; every stage
+runs against _this_ instance and the flag is read from its filesystem at solve
+time, so a flag from another team is useless.
+
 ## Verification status
 
-STUB. Not implemented. Live end-to-end exploit is a Lot 5 rehearsal gate (Docker).
+Implemented. Verified end-to-end locally (Flask app + reference solver over
+HTTP): the full chain runs and the service returns the exact per-team flag.
+**Docker/Lot-5 rehearsal is the remaining gate before `state: visible`.**

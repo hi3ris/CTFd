@@ -1,34 +1,94 @@
-#!/usr/bin/env python3
-"""Token Forge -- SERVED CHALLENGE STUB.
+"""Tokenforge — a chain: crypto oracle → forged admin cookie → hidden deser.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  Stage 1 (crypto): ``/login`` returns a cookie that is the ASCII string
+    ``role=guest`` XORed with a fixed per-instance keystream (a stream cipher
+    with a reused keystream). Known plaintext recovers the keystream, so a
+    ``role=admin`` cookie can be forged (both strings are 10 bytes).
+  Stage 2 (hidden endpoint): ``/console`` requires an admin cookie and then
+    deserializes an ``obj`` into a registry class with no allow-list — the
+    registry holds a ``FlagDumper`` gadget.
+
+Reverse the XOR (recover the keystream from the guest cookie), forge the admin
+cookie, then hit the admin-only console with the gadget. The flag at
+``/flag.txt`` is served by no route.
 """
 import os
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+_KS = os.urandom(16)  # reused keystream (the crypto flaw)
+
+
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "NCTF{flag-unavailable-in-dev}"
+
+
+def _xor(data):
+    return bytes(b ^ _KS[i % len(_KS)] for i, b in enumerate(data))
+
+
+class Note:
+    def __init__(self, text="", **_):
+        self.text = text
+
+    def render(self):
+        return f"note: {self.text}"
+
+
+class FlagDumper:
+    def __init__(self, **_):
+        self.output = _flag()
+
+    def render(self):
+        return self.output
+
+
+REGISTRY = {"Note": Note, "FlagDumper": FlagDumper}
+
+
+def _role(cookie_hex):
+    try:
+        return _xor(bytes.fromhex(cookie_hex)).decode("latin-1")
+    except ValueError:
+        return ""
 
 
 @app.route("/")
 def index():
-    return (
-        "<h1>Token Forge</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>chains-tokenforge</code>.</p>"
+    return jsonify(
+        {
+            "service": "tokenforge",
+            "login": "GET /login  -> guest cookie",
+            "console": "POST /console {cookie, obj:{__class__}}  (admin only)",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/login")
+def login():
+    cookie = _xor(b"role=guest").hex()
+    return jsonify({"cookie": cookie, "note": "cookie = role string, stream-encrypted"})
+
+
+@app.route("/console", methods=["POST"])
+def console():
+    b = request.get_json(silent=True) or {}
+    if _role(b.get("cookie", "")) != "role=admin":
+        return jsonify({"error": "admin cookie required"}), 403
+    obj = b.get("obj") or {}
+    cls = obj.get("__class__", "Note")
+    if cls not in REGISTRY:
+        return jsonify({"error": "unknown class", "registry": sorted(REGISTRY)}), 400
+    kwargs = {k: v for k, v in obj.items() if k != "__class__"}
+    return jsonify({"result": REGISTRY[cls](**kwargs).render()})
 
 
 if __name__ == "__main__":
