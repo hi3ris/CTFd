@@ -118,7 +118,7 @@ images doivent exister : `make check-arena` / `make push-images`.
 ## 5. Fenêtre + preflight (le gate)
 
 1. **Calibrer les compteurs attendus** : `make preflight` a des défauts
-   `EXPECT=203 challenges / CATS=19 catégories`. **Les ajuster au set réellement
+   `EXPECT=369 challenges / CATS=20 catégories` (état du 23 septembre 2026). **Les ajuster au set réellement
    importé** (sinon FAIL sur les compteurs) :
    ```
    CTFD_TOKEN=$CTFD_TOKEN make preflight PHASE=preselection URL=$URL EXPECT=<n> CATS=<c>

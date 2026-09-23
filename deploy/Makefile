@@ -570,10 +570,10 @@ local-smoke: ## [local] Verifie pages, theme, assets, API, chaine IA
 	$(LOCAL_PY) local/smoke.py
 
 # Check-list de mise en prod (lecture seule). PHASE=preselection|finale ;
-# EXPECT=203 challenges ; l'env du conteneur CTFd est lu sur stdin et JAMAIS affiche.
+# EXPECT=369 challenges (177 statiques + 192 servis Lot-5, 2026-09-23) ; l'env du conteneur CTFd est lu sur stdin et JAMAIS affiche.
 PHASE  ?= none
-EXPECT ?= 203
-CATS   ?= 19
+EXPECT ?= 369
+CATS   ?= 20
 PREFLIGHT_ARGS = --env-stdin --phase $(PHASE) --expect-challenges $(EXPECT) --expect-categories $(CATS) $(PREFLIGHT_EXTRA)
 
 .PHONY: local-preflight
