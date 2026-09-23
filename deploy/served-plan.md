@@ -1,8 +1,9 @@
 # Liste nominative des challenges servis — worklist pour tout finir
 
-> Cible : **finir les 328 servis**. Ce fichier est la liste de travail exhaustive.
-> Chaque entrée cochée `[x]` est jouable (visible) ou implémentée+vérifiée en
-> local (attend seulement la répétition Docker Lot-5). Les `[ ]` restent à faire.
+> Cible : **finir les 328 servis**. Ce fichier est la liste de travail
+> exhaustive. Chaque entrée cochée `[x]` est jouable (visible) ou implémentée +
+> vérifiée en local (attend seulement la répétition Docker Lot-5). Les `[ ]`
+> restent à faire.
 >
 > Se lit avec `deploy/GOAL.md` (définition de « fini » en 6 points) et
 > `deploy/served-status.md` (méthodo + triage). Régénère les writeups avec
@@ -10,26 +11,24 @@
 
 ## Deux lots
 
-- **LOT LOGIQUE** (162) — services pur-Python (web, crypto, cloud-logic,
-  misc-logic, blockchain off-chain, ml-données, ai, sysadmin-logic). Implémentés
-  **et vérifiés de bout en bout ici** (app Flask + solveur contre localhost, sans
-  Docker). C'est le lot que j'avance dans cette session.
-- **LOT BUILD** (166) — exploit / binaire / OS (pwn, reverse, os, chaînes et
-  cloud/misc/supplychain finissant en RCE ou priv-esc). Exigent Docker + qemu +
-  compilateur, et sont bloqués par le classifieur de sûreté ici → **session de
-  build dédiée**.
+- **LOT LOGIQUE** (162) — services pur-Python,
+  implémentés **et vérifiés de bout en bout ici** (app Flask + solveur contre
+  localhost, sans Docker). Lot avancé dans les sessions Claude.
+- **LOT BUILD** (166) — exploit / binaire / OS
+  (pwn, reverse, os, chaînes et cloud/misc/supplychain finissant en RCE/priv-esc).
+  Exigent Docker + qemu + compilateur → **session de build dédiée**.
 
 ## Avancement
 
 | Statut                                  | Nombre |
 | --------------------------------------- | ------ |
 | ✅ visibles (déjà jouables)             | 27     |
-| ✅ implémentés + vérifiés local (Lot-5) | 3      |
-| ⬜ STUB à faire                         | 298    |
+| ✅ implémentés + vérifiés local (Lot-5) | 6      |
+| ⬜ STUB à faire                         | 295    |
 | **Total servi**                         | 328    |
 
-Le classement lot (LOGIQUE/BUILD) est heuristique (catégorie + mots-clés) ; à
-ajuster à la main au cas par cas si un challenge se révèle plus simple/complexe.
+Le classement lot (LOGIQUE/BUILD) est heuristique ; à ajuster à la main au cas
+par cas.
 
 ## LOT LOGIQUE — implémentable + vérifiable ici (162)
 
@@ -128,7 +127,7 @@ ajuster à la main au cas par cas si un challenge se révèle plus simple/comple
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
 - [ ] **cloud/metrics-oidc** — 500 pts  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
-- [ ] **cloud/oidc-forge** — 500 pts  
+- [x] **cloud/oidc-forge** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
 - [ ] **cloud/queue-oidc** — 500 pts  
        Mauvaise config OIDC -> jeton forgé -> API privilégiée.
@@ -159,7 +158,7 @@ ajuster à la main au cas par cas si un challenge se révèle plus simple/comple
 
 ### crypto (35)
 
-- [ ] **crypto/kdf-slip** — 500 pts  
+- [x] **crypto/kdf-slip** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Dérivation de clé faible -> prédiction -> reprise de session privilégiée.
 - [x] **crypto/lcg-casino** — 500 pts ✅ visible  
        A **"provably fair"** casino deals from a home-grown verifiable shuffle. It
@@ -169,7 +168,7 @@ ajuster à la main au cas par cas si un challenge se révèle plus simple/comple
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
 - [ ] **crypto/notarysvc-signext** — 500 pts  
        Extension de hash -> forge -> API privilégiée.
-- [ ] **crypto/oracle-cascade** — 500 pts  
+- [x] **crypto/oracle-cascade** — 500 pts ✅ vérifié-local (attend Lot-5)  
        Oracle de padding -> cookie forgé -> endpoint admin atteint.
 - [ ] **crypto/sealbox-kdf** — 500 pts  
        Dérivation de clé faible -> prédiction -> reprise de session.
