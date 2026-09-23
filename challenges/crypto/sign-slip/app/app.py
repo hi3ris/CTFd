@@ -1,34 +1,79 @@
-#!/usr/bin/env python3
-"""Sign Slip -- SERVED CHALLENGE STUB.
+"""Sign Slip — a token "signature" that is just a checksum, not a MAC.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/login`` issues a session token ``role=<r>;sig=<crc32(role)>``. The server
+    calls this a signed token, but the "signature" is a plain CRC32 of the role
+    — no secret is involved, so anyone can compute a valid sig for any role.
+  * ``/whoami`` verifies ``sig == crc32(role)`` and trusts the role.
+  * ``/admin/flag`` returns the instance flag when the presented token's role is
+    ``admin``.
+
+Intended path: forge ``role=admin;sig=<crc32("admin")>`` and present it.
+
+The flag at ``/flag.txt`` is served only to an admin token, which the forged
+checksum grants.
 """
 import os
+from zlib import crc32
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
 
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "NCTF{flag-unavailable-in-dev}"
+
+
+def _sig(role):
+    # NOT a MAC: a keyless checksum, so it is trivially forgeable.
+    return format(crc32(role.encode()) & 0xFFFFFFFF, "08x")
+
+
+def _parse(token):
+    parts = dict(p.split("=", 1) for p in token.split(";") if "=" in p)
+    return parts.get("role", ""), parts.get("sig", "")
+
+
 @app.route("/")
 def index():
-    return (
-        "<h1>Sign Slip</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>crypto-sign-slip</code>.</p>"
+    return jsonify(
+        {
+            "service": "sign-slip",
+            "login": "/login  -> token",
+            "whoami": "/whoami  (X-Token)",
+            "admin_flag": "/admin/flag  (X-Token)",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/login")
+def login():
+    role = "user"
+    return jsonify({"token": f"role={role};sig={_sig(role)}"})
+
+
+@app.route("/whoami")
+def whoami():
+    role, sig = _parse(request.headers.get("X-Token", ""))
+    if sig != _sig(role):
+        return jsonify({"error": "bad signature"}), 403
+    return jsonify({"role": role})
+
+
+@app.route("/admin/flag")
+def admin_flag():
+    role, sig = _parse(request.headers.get("X-Token", ""))
+    if sig != _sig(role):
+        return jsonify({"error": "bad signature"}), 403
+    if role != "admin":
+        return jsonify({"error": "admin only"}), 403
+    return jsonify({"flag": _flag()})
 
 
 if __name__ == "__main__":

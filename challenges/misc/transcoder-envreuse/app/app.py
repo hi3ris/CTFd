@@ -1,34 +1,83 @@
-#!/usr/bin/env python3
-"""Transcoder Envreuse -- SERVED CHALLENGE STUB.
+"""Ingestd Envreuse — a debug endpoint leaks the worker's task-signing secret.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/debug/env`` dumps the process environment "for troubleshooting" —
+    including ``WORKER_HMAC_SECRET``, the key the task runner uses to authorise
+    commands. It should never have been exposed.
+  * ``/task`` runs a command only if it carries a valid ``sig = HMAC(secret,
+    cmd)``. With the leaked secret an attacker signs any command; the ``emit-
+    flag`` command reads the instance secret.
+
+Intended path: read ``WORKER_HMAC_SECRET`` from ``/debug/env`` → sign the
+``emit-flag`` command → ``/task``.
+
+The flag at ``/flag.txt`` is served by no route; it only appears as the output of
+the signed command the attacker forged with the leaked secret.
 """
+import hmac
 import os
+from hashlib import sha256
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+# Per-instance worker secret. Leaked by the debug endpoint (the bug).
+WORKER_HMAC_SECRET = os.environ.get("WORKER_HMAC_SECRET") or os.urandom(12).hex()
+
+
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "NCTF{flag-unavailable-in-dev}"
+
+
+def _sign(cmd):
+    return hmac.new(WORKER_HMAC_SECRET.encode(), cmd.encode(), sha256).hexdigest()
+
+
+def run_cmd(cmd):
+    if cmd == "emit-flag":
+        return _flag()
+    return f"ran: {cmd}"
 
 
 @app.route("/")
 def index():
-    return (
-        "<h1>Transcoder Envreuse</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>misc-transcoder-envreuse</code>.</p>"
+    return jsonify(
+        {
+            "service": "transcoder-envreuse",
+            "task": "POST /task {cmd, sig}",
+            "note": "tasks must be signed with the worker secret",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/debug/env")
+def debug_env():
+    # BUG: dumps sensitive env, including the worker signing secret.
+    return jsonify(
+        {
+            "env": {
+                "LOG_LEVEL": "info",
+                "REGION": "eu-west",
+                "WORKER_HMAC_SECRET": WORKER_HMAC_SECRET,
+            }
+        }
+    )
+
+
+@app.route("/task", methods=["POST"])
+def task():
+    body = request.get_json(silent=True) or {}
+    cmd = body.get("cmd", "")
+    sig = body.get("sig", "")
+    if not hmac.compare_digest(sig, _sign(cmd)):
+        return jsonify({"error": "bad signature"}), 403
+    return jsonify({"cmd": cmd, "output": run_cmd(cmd)})
 
 
 if __name__ == "__main__":
