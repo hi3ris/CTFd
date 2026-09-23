@@ -555,6 +555,10 @@ local-fix-heapnote: ## [local] Recompile le binaire heap-note sur glibc 2.31 (Ub
 local-build-images: ## [local] Construit les images ctf-* des challenges servis (ONLY=nom pour un seul)
 	./local/build-images.sh $(ONLY)
 
+.PHONY: lot5
+lot5: ## [local] Repetition Lot-5 : build image -> rejoue le solveur -> flip visible (FLIP=1 ; ONLY="cat/slug ..." ; ALL=1)
+	scripts/lot5.sh $(if $(FLIP),--flip) $(if $(ALL),--all) $(if $(ONLY),--only $(ONLY))
+
 .PHONY: local-seed
 local-seed: ## [local] Setup NCTF25 + theme hibris + accueil + 36 challenges + equipe de test
 	$(LOCAL_PY) local/seed.py
