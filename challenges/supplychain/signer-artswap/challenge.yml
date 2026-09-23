@@ -30,11 +30,11 @@ flags:
 # CVE id (if any) goes in a paid hint, never in the description.
 hints:
   - content: >-
-      TODO: cheap hint narrowing the vulnerability class.
+      La provenance est-elle vraiment signée, ou juste des champs que tu peux recopier ?
     cost: 20
     key: h1
   - content: >-
-      TODO: dearer hint (mechanism / advisory id / patch diff).
+      artifact='on-deploy: emit-flag' + provenance {builder:trusted-builder, digest:sha256(artifact)} sur POST /deploy.
     cost: 40
     key: h2
     requirements: [h1]
@@ -45,5 +45,5 @@ tags:
 # challenge-id (HMAC / requirements wiring): supplychain-signer-artswap
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
-state: hidden  # STUB -- flip to visible once the vuln + solver are implemented and Lot-5 verified
-version: "0.1"
+state: hidden  # IMPLEMENTED + locally verified end-to-end (ported); flip to visible after Lot-5 Docker rehearsal
+version: "1.0"

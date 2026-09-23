@@ -45,6 +45,10 @@ PROTO = {
     "prefix": "cloud/backup-prefix",
     "presign": "cloud/backup-presign",
     "envexec": "cloud/backup-envexec",
+    "artswap": "supplychain/buildfarm-artswap",
+    "depconf": "supplychain/buildfarm-depconf",
+    "postinstall": "supplychain/buildfarm-postinstall",
+    "hijack": "supplychain/buildfarm-depconf",
     "protoparse": "misc/proto-fuzz-live",
 }
 
