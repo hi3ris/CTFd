@@ -128,7 +128,26 @@ PY
 
   cleanup_cid "$cid"
 
-  # 6) verdict
+  # 6) verdict. Un SOLVE-FAIL apres un build AVEC cache est rejoue une fois
+  # sans cache : BuildKit reutilise parfois la couche `COPY flag.py` du frere
+  # construit juste avant (meme Dockerfile, fichier de meme taille et mtime),
+  # et le conteneur sert alors le flag du voisin.
+  if [ -n "$expect" ] && [ "$got" != "$expect" ] && [ -z "$NO_CACHE" ] && [ "${_retried:-0}" -eq 0 ]; then
+    if timeout "$BUILD_TIMEOUT" docker build --no-cache -q -t "$img" "$cdir" >/tmp/lot5-build.log 2>&1; then
+      cid="$(docker run -d -e "TEAM_SECRET=$TS" -p "127.0.0.1::$iport" "$img" 2>/dev/null)"
+      if [ -n "$cid" ]; then
+        hostport=""; for _ in $(seq 1 20); do hostport="$(docker port "$cid" "$iport"/tcp 2>/dev/null | head -1 | sed 's/.*://')"; [ -n "$hostport" ] && break; sleep 0.5; done
+        base="http://127.0.0.1:$hostport"
+        for _ in $(seq 1 "$BOOT_TIMEOUT"); do
+          code="$(curl -s -o /dev/null -w '%{http_code}' "$base/" 2>/dev/null || true)"
+          [ -n "$code" ] && [ "$code" != "000" ] && break; sleep 1
+        done
+        got="$(timeout "$SOLVE_TIMEOUT" "$PY" "$cdir/solution/solve.py" "$base" 2>/tmp/lot5-solve.log | tail -1)"
+        cleanup_cid "$cid"
+        [ "$got" = "$expect" ] && printf '(rebuild sans cache) '
+      fi
+    fi
+  fi
   if [ -n "$expect" ] && [ "$got" = "$expect" ]; then
     echo "OK"
     pass=$((pass+1))
