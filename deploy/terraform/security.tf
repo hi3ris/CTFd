@@ -22,7 +22,7 @@ resource "aws_vpc_security_group_ingress_rule" "front_ssh" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "front_http" {
-  for_each = toset(var.player_cidrs)
+  for_each = toset(length(var.web_cidrs) > 0 ? var.web_cidrs : var.player_cidrs)
 
   security_group_id = aws_security_group.front.id
   description       = "HTTP (redirige vers HTTPS, et challenge ACME Lets Encrypt)"
@@ -33,7 +33,7 @@ resource "aws_vpc_security_group_ingress_rule" "front_http" {
 }
 
 resource "aws_vpc_security_group_ingress_rule" "front_https" {
-  for_each = toset(var.player_cidrs)
+  for_each = toset(length(var.web_cidrs) > 0 ? var.web_cidrs : var.player_cidrs)
 
   security_group_id = aws_security_group.front.id
   description       = "HTTPS"

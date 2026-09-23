@@ -42,7 +42,13 @@ présélection**.
    `CERTBOT_EMAIL=<email d'ops CERT.tg>` (Let's Encrypt y envoie les avis
    d'expiration — pas une boîte perso jetable) + `REDIS_PASSWORD=<openssl rand -hex 32>`
    (obligatoire : le compose lance Redis avec `--requirepass`).
-3. **TLS** : `make tls-init`. Vérifier `https://ctf.tg/` en 200, certificat valide.
+3. **TLS** : `make tls-init` si le domaine pointe **directement** sur le front (DNS only).
+   **ctf.tg est proxifié par Cloudflare** (nuage orange) : utiliser à la place
+   `CF_API_TOKEN=<jeton> make tls-cloudflare` (certificat d'origine Cloudflare 15 ans,
+   mode SSL _Full (strict)_, TLS ≥ 1.2, vraies IP clients via `CF-Connecting-IP`), puis
+   réserver 80/443 aux plages Cloudflare : `web_cidrs` dans `terraform.tfvars`
+   (`scripts/cloudflare-ips.sh --tfvars`) + `terraform apply`. Détails :
+   `deploy/scripts/cloudflare-origin-tls.sh`. Ancien mode : `make tls-init`. Vérifier `https://ctf.tg/` en 200, certificat valide.
    Coût du switch : quasi nul (les instances servies utilisent `FRONT_PUBLIC_IP:port`,
    pas le domaine). Sans DNS résolu, certbot échoue (challenge HTTP-01).
 

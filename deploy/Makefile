@@ -248,6 +248,11 @@ tls-init: ## Emet le certificat Let's Encrypt et bascule nginx en HTTPS
 	  "https://$$($(FRONT_SSH) 'cd /opt/ctfd/CTFd && . deploy/front/.env && echo $$CTF_DOMAIN')/" \
 	  && echo "TLS actif."
 
+.PHONY: tls-cloudflare
+tls-cloudflare: ## TLS derriere le proxy Cloudflare (certificat d'origine + Full strict). CF_API_TOKEN=... requis. Remplace tls-init quand le domaine est proxifie
+	@test -n "$$CF_API_TOKEN" || { echo "CF_API_TOKEN manquant (jeton API Cloudflare, jamais dans git)"; exit 2; }
+	@set -a; . ./front/.env; set +a; FRONT_IP=$(FRONT_IP) ./scripts/cloudflare-origin-tls.sh
+
 .PHONY: link
 link: ## Relie le front a l'arena et au noeud IA, et verifie que ca marche
 	@echo ">> Cle de service deposee sur l'arena"

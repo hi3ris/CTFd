@@ -85,6 +85,17 @@ variable "player_cidrs" {
   default     = ["0.0.0.0/0"]
 }
 
+# Ports web (80/443) du front. Derriere le proxy Cloudflare, on n'y laisse
+# entrer QUE les plages Cloudflare (deploy/scripts/cloudflare-ips.sh) : sinon
+# un joueur qui trouve l'IP contourne le WAF/anti-DDoS et les vraies IP
+# clients (CF-Connecting-IP) ne sont plus fiables. Vide = player_cidrs.
+# Les ports des instances (whale_port_range) restent sur player_cidrs.
+variable "web_cidrs" {
+  description = "IPs autorisees sur 80/443 du front. Vide = player_cidrs."
+  type        = list(string)
+  default     = []
+}
+
 variable "domain_name" {
   description = <<-EOT
     Nom de domaine du CTF (ex: ctf.exemple.com). Il pointe sur le front pendant
