@@ -21,6 +21,13 @@
 		<p class="koth-loading">Chargement…</p>
 	</div>
 
+	<!-- Fil du trône : prises de colline en direct (alimenté par le scorer,
+	     masqué quand le scoreboard est gelé, comme le badge des tenants). -->
+	<div id="koth-feed" class="koth-feed" aria-live="polite" hidden>
+		<div class="koth-feed-h">⚔ Fil du trône</div>
+		<ol class="koth-feed-list"></ol>
+	</div>
+
 	<p class="koth-foot">
 		Les points de King of the Hill s'ajoutent à votre score sur le
 		<a href="{{ url_for('scoreboard.listing') }}">scoreboard principal</a>, tick
@@ -107,6 +114,29 @@
 	border:1px solid #3a5b8f; box-shadow:0 0 18px rgba(127,178,255,.10);
 }
 .koth-frozen b { color:#fff; } .koth-frozen .ice { color:#7fb2ff; font-size:1.05rem; }
+
+/* Fil du trône — feed d'événements live */
+.koth-feed { margin-top:1.6rem; }
+.koth-feed-h { color:var(--muted); font-size:.66rem; text-transform:uppercase; letter-spacing:1px; margin-bottom:.5rem; }
+.koth-feed-list { list-style:none; margin:0; padding:0; border-left:2px solid rgba(255,255,255,.08); }
+.koth-feed-list li {
+	position:relative; padding:.34rem .2rem .34rem .95rem;
+	font-family:'JetBrains Mono',monospace; font-size:.82rem; color:#cdd6e6;
+	border-bottom:1px solid rgba(255,255,255,.04);
+}
+.koth-feed-list li::before {
+	content:""; position:absolute; left:-5px; top:.7rem; width:8px; height:8px;
+	border-radius:50%; background:var(--muted);
+}
+.koth-feed-list li.takeover::before { background:var(--gold,#f9d77e); box-shadow:0 0 8px var(--gold,#f9d77e); }
+.koth-feed-list li.claim::before    { background:#7fe0a0; box-shadow:0 0 8px #7fe0a0; }
+.koth-feed-list li.vacated::before  { background:var(--red,#ff6b6b); }
+.koth-feed-list li .who { color:#fff; font-weight:600; }
+.koth-feed-list li .hill { color:var(--muted); }
+.koth-feed-list li .ago { float:right; color:var(--muted); }
+.koth-feed-list li .half { color:var(--gold,#f9d77e); font-size:.7rem; }
+@keyframes kothflash { from { background:rgba(249,215,126,.22); } to { background:transparent; } }
+.koth-feed-list li.fresh-ev { animation:kothflash 1.8s ease-out; }
 </style>
 
 <script defer>
@@ -115,6 +145,9 @@
 	var URLROOT = (window.init && init.urlRoot) || "";
 	var box = document.getElementById("koth-state");
 	var frozenBanner = document.getElementById("koth-frozen");
+	var feedBox = document.getElementById("koth-feed");
+	var feedList = feedBox && feedBox.querySelector(".koth-feed-list");
+	var lastTopTs = 0;  // ts of the newest event shown, to flash new arrivals
 
 	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
 	function fmtDur(s){
@@ -123,6 +156,31 @@
 		var h=(s/3600)|0; s-=h*3600; var m=(s/60)|0; var ss=s-m*60;
 		if (h) return h+"h "+m+"m";
 		return m ? (m+"m "+ss+"s") : (ss+"s");
+	}
+	function fmtAgo(ts){
+		if (!ts) return "";
+		var d = Math.max(0, (Date.now()/1000 - ts)|0);
+		if (d < 5) return "à l'instant";
+		if (d < 60) return "il y a "+d+"s";
+		return "il y a "+fmtDur(d);
+	}
+	function renderFeed(events){
+		if (!feedBox || !feedList) return;
+		events = events || [];
+		if (!events.length){ feedBox.hidden = true; return; }
+		feedBox.hidden = false;
+		var newestTs = events[0].ts || 0;
+		feedList.innerHTML = events.map(function(e){
+			var isNew = (e.ts||0) > lastTopTs;
+			var verb = e.kind === "takeover" ? "reprend"
+			         : e.kind === "vacated"  ? "perd" : "s'empare de";
+			var half = (e.level === "user") ? ' <span class="half">½</span>' : '';
+			return '<li class="'+esc(e.kind)+(isNew?' fresh-ev':'')+'">'
+				+ '<span class="ago">'+esc(fmtAgo(e.ts))+'</span>'
+				+ '<span class="who">'+esc(e.holder_name || "?")+'</span> '+verb+' '
+				+ '<span class="hill">'+esc(e.hill)+'</span>'+half+'</li>';
+		}).join('');
+		lastTopTs = Math.max(lastTopTs, newestTs);
 	}
 
 	function hillCard(h, state){
@@ -187,6 +245,7 @@
 
 	function render(state){
 		if (frozenBanner) frozenBanner.hidden = !state.frozen;
+		renderFeed(state.events);
 		if (!state.active){
 			box.innerHTML = '<div class="koth-card"><p class="koth-warn">Le King of the Hill n\'est pas encore actif.</p>'
 				+ '<p class="koth-mut">Il ouvrira au démarrage de l\'épreuve.</p></div>';

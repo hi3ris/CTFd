@@ -138,6 +138,46 @@ def test_holder_scores_each_tick(monkeypatch):
     destroy_ctfd(app)
 
 
+def test_throne_timeline_records_takeovers(monkeypatch):
+    """The scorer records throne changes into the live event feed: a first claim
+    on a vacant throne, then a takeover when another team displaces the holder."""
+    import time as _t
+
+    koth = _koth(monkeypatch)
+    app = _teams_app()
+    with app.app_context():
+        from CTFd.models import db
+
+        alpha = gen_team(db, name="alpha", email="a@x.com").id
+        beta = gen_team(db, name="beta", email="b@x.com").id
+
+        # alpha claims the vacant throne
+        monkeypatch.setattr(
+            koth, "_poll_king", lambda h: _king_of(koth, h["id"], alpha, _t.time())
+        )
+        koth._score_once(app)
+        # beta takes it over
+        monkeypatch.setattr(
+            koth, "_poll_king", lambda h: _king_of(koth, h["id"], beta, _t.time())
+        )
+        koth._score_once(app)
+
+        events = koth.recent_events([{"id": "throne", "name": "The Throne"}])
+        assert events, "expected a live event feed"
+        # newest first: beta's takeover, then alpha's claim
+        assert events[0]["kind"] == "takeover"
+        assert events[0]["holder_name"] == "beta"
+        assert events[0]["hill"] == "The Throne"
+        assert any(e["kind"] == "claim" and e["holder_name"] == "alpha" for e in events)
+        # and the feed reaches the player state endpoint
+        register_user(app)
+        client = login_as_user(app)
+        r = client.get("/plugins/koth/api/state")
+        assert r.status_code == 200
+        assert any(e["kind"] == "takeover" for e in r.get_json()["events"])
+    destroy_ctfd(app)
+
+
 def test_user_level_hold_scores_half(monkeypatch):
     """A boot2root hill held only at user level ('level': 'user') awards half
     the points, floored at 1; root and a level-less hill (Throne) award full."""

@@ -63,6 +63,8 @@ bp = Blueprint("koth", __name__, template_folder="templates", static_folder="ass
 
 _SCORER_LOCK_PATH = "/tmp/ctfd_koth_scorer.lock"  # nosec B108 - lock file, not data
 _SNAP_KEY = "koth:snap:{}"
+_HIST_KEY = "koth:hist:{}"  # per-hill ring of recent throne changes
+_HIST_MAX = 20  # events kept per hill (a live feed, not an audit log)
 _AWARD_NAME_MAX = 80  # Awards.name is String(80)
 
 
@@ -136,10 +138,37 @@ def _snapshot_ttl() -> int:
     return max(3 * settings.tick_seconds(), 90)
 
 
-def _build_snapshot(hill: dict, prev: dict, now: float) -> dict:
+def _history_ttl() -> int:
+    return max(6 * settings.tick_seconds(), 600)
+
+
+def _record_event(koth_id: str, event: dict) -> None:
+    """Append a throne-change event to a hill's ring buffer. Called only by the
+    scorer (single writer under the fcntl lock), so no read-modify-write race."""
+    key = _HIST_KEY.format(koth_id)
+    hist = list(cache.get(key) or [])
+    hist.append(event)
+    cache.set(key, hist[-_HIST_MAX:], timeout=_history_ttl())
+
+
+def recent_events(hills, limit: int = 12) -> list:
+    """Most recent throne changes across all hills, newest first. Read from the
+    per-hill rings the scorer maintains; empty until the first takeover."""
+    evs = []
+    for hill in hills:
+        for e in cache.get(_HIST_KEY.format(hill["id"])) or []:
+            evs.append({**e, "hill": hill["name"], "hill_id": hill["id"]})
+    evs.sort(key=lambda e: e.get("ts", 0), reverse=True)
+    return evs[:limit]
+
+
+def _build_snapshot(hill: dict, prev: dict, now: float, record: bool = False) -> dict:
     """Poll one hill and fold the result into the previous snapshot: reign
     start and takeover count survive across ticks; an unreachable hill keeps
-    its last known holder but is flagged offline."""
+    its last known holder but is flagged offline.
+
+    When `record` is set (the scorer only), a throne change is also appended to
+    the hill's live event ring so the page and room screen can show a feed."""
     prev = prev or {}
     snap = {
         "token": "",
@@ -184,6 +213,33 @@ def _build_snapshot(hill: dict, prev: dict, now: float) -> dict:
         snap["reign_since"] = now if token else None
         if holder and prev.get("holder_id") is not None:
             snap["takeovers"] += 1
+        if record and token and holder:
+            # A known team planted a new token: a takeover if it displaced
+            # another known team, otherwise a claim on a vacant/unknown throne.
+            _record_event(
+                hill["id"],
+                {
+                    "ts": now,
+                    "kind": "takeover"
+                    if prev.get("holder_id") is not None
+                    else "claim",
+                    "holder_id": holder[0],
+                    "holder_name": holder[1],
+                    "level": snap["level"],
+                },
+            )
+        elif record and not token and prev.get("holder_id") is not None:
+            # The throne fell vacant: the previous holder lost it.
+            _record_event(
+                hill["id"],
+                {
+                    "ts": now,
+                    "kind": "vacated",
+                    "holder_id": prev.get("holder_id"),
+                    "holder_name": prev.get("holder_name"),
+                    "level": prev.get("level", "root"),
+                },
+            )
     elif token and not snap["reign_since"]:
         snap["reign_since"] = now
     return snap
@@ -212,7 +268,7 @@ def _score_once(app):
         open_ = scoring_open()
         for hill in settings.hills():
             key = _SNAP_KEY.format(hill["id"])
-            snap = _build_snapshot(hill, cache.get(key) or {}, now)
+            snap = _build_snapshot(hill, cache.get(key) or {}, now, record=True)
             cache.set(key, snap, timeout=_snapshot_ttl())
             if not open_ or not snap["online"]:
                 continue
@@ -319,14 +375,19 @@ def api_state():
                 "top": _leaderboard(hill["id"], name_by_id, admin=admin),
             }
         )
+    # The live feed reveals who took each hill, exactly like the holder badge,
+    # so it is suppressed on the public page while the scoreboard is frozen.
+    frozen = bool(is_scoreboard_frozen() and not admin)
+    events = [] if frozen else recent_events(settings.hills())
     return jsonify(
         {
             "active": settings.is_active(),
             "scoring": bool(settings.is_active() and scoring_open()),
-            "frozen": bool(is_scoreboard_frozen() and not admin),
+            "frozen": frozen,
             "tick": settings.tick_seconds(),
             "fresh_window": settings.fresh_window(),
             "hills": out,
+            "events": events,
         }
     )
 
@@ -430,6 +491,7 @@ def api_admin():
             "last_tick_seconds": int(now - last_tick) if last_tick else None,
             "remaining_seconds": int(remaining) if remaining is not None else None,
             "hills": hills,
+            "events": recent_events(settings.hills(), limit=25),
         }
     )
 

@@ -177,6 +177,16 @@ l'instant T, plus le top 10 par colline (vue admin, non gelée). C'est la vue
 d'opérateur pendant l'épreuve — aucune action, lecture seule, rafraîchie toutes
 les 5 s.
 
+### Fil du trône (feed live)
+
+Le scorer tient, par colline, un anneau des derniers changements de trône
+(prise, reprise, colline libérée). La **page joueur** et la page admin l'affichent
+en **fil d'événements en direct** (« _beta_ reprend The Throne — à l'instant »),
+un nouvel item clignotant à son arrivée. C'est ce qui rend le KotH vivant sur un
+écran de salle. Le fil respecte le **gel** : masqué pour les non-admins au-delà
+de `freeze`, comme le badge des tenants (il révèle qui tient la colline). Exposé
+par `/plugins/koth/api/state` (clé `events`) et `/plugins/koth/api/admin`.
+
 ## Gel du scoreboard
 
 Le classement **KotH public** (page joueur + badge « colline tenue » sur le
