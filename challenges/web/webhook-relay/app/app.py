@@ -1,34 +1,71 @@
-#!/usr/bin/env python3
-"""Webhook Relay -- SERVED CHALLENGE STUB.
+"""Webhook Relay — a callback validator that can be tricked into SSRF.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/webhook/deliver?url=`` validates the callback URL then fetches it
+    server-side. The validation is a substring check: the URL must *contain*
+    ``hooks.partner.example`` (the allow-listed partner host). That is trivially
+    bypassed — e.g. ``http://169.254.169.254/...#hooks.partner.example`` contains
+    the string but resolves to the internal metadata host.
+  * The internal metadata host mints a deploy token and, at
+    ``/latest/meta-data/flag``, returns the instance secret. It is reachable only
+    from the server.
+
+Intended path: pass a URL that satisfies the substring check but points at the
+internal metadata flag endpoint.
+
+The flag at ``/flag.txt`` is exposed only through the internal metadata host the
+relayed request reaches server-side.
 """
 import os
+from urllib.parse import urlparse
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+ALLOWED_SUBSTRING = "hooks.partner.example"
+
+
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "NCTF{flag-unavailable-in-dev}"
+
+
+def _server_fetch(url):
+    # Server-side fetch. The internal metadata host is only reachable here.
+    host = urlparse(url).hostname
+    if host == "169.254.169.254":
+        path = urlparse(url).path
+        if path == "/latest/meta-data/flag":
+            return _flag()
+        if path == "/latest/meta-data/role":
+            return "backup-restore"
+        return "<metadata>"
+    return "<partner webhook ack>"
 
 
 @app.route("/")
 def index():
-    return (
-        "<h1>Webhook Relay</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>web-webhook-relay</code>.</p>"
+    return jsonify(
+        {
+            "service": "webhook-relay",
+            "deliver": "/webhook/deliver?url=<callback>",
+            "policy": f"callback URL must reference {ALLOWED_SUBSTRING}",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/webhook/deliver")
+def deliver():
+    url = request.args.get("url", "")
+    # BUG: a substring check, not a host check — bypassable via fragment/userinfo.
+    if ALLOWED_SUBSTRING not in url:
+        return jsonify({"error": "callback host not allowed"}), 403
+    return jsonify({"delivered": True, "response": _server_fetch(url)})
 
 
 if __name__ == "__main__":

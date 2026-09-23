@@ -93,7 +93,7 @@ tags:
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
 state: visible
-version: "1.0"
+version: "0.1"
 
 # Image built from the Dockerfile in this directory; must be named
 # ctf-smuggle-gap:latest so `make push-images` picks it up.
