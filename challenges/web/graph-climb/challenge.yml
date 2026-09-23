@@ -49,5 +49,5 @@ tags:
 # challenge-id (HMAC / requirements wiring): web-graph-climb
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
-state: hidden  # IMPLEMENTED + locally verified end-to-end; flip to visible after Lot-5 Docker rehearsal
+state: visible  # Lot-5 rehearsal passed
 version: "1.0"

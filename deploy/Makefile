@@ -212,15 +212,7 @@ deploy: ## Deploie/met a jour CTFd sur le front (envoie front/.env au premier de
 	   echo ">> Premier deploiement : envoi de front/.env sur le front (les prochains 'make link' le completent sur place)"; \
 	   scp $(SSH_OPTS) front/.env ubuntu@$(FRONT_IP):/opt/ctfd/CTFd/deploy/front/.env; \
 	 fi
-	$(FRONT_SSH) 'set -euo pipefail; \
-	  cd /opt/ctfd/CTFd; \
-	  test -f deploy/front/.env || { echo "ERREUR : creez deploy/front/.env (voir .env.example)"; exit 1; }; \
-	  test -f deploy/front/nginx/active.conf || cp deploy/front/nginx/bootstrap.conf deploy/front/nginx/active.conf; \
-	  if [ -n "$(BUCKET)" ]; then \
-	    grep -q "^BACKUP_BUCKET=" deploy/front/.env && sed -i "s|^BACKUP_BUCKET=.*|BACKUP_BUCKET=$(BUCKET)|" deploy/front/.env || echo "BACKUP_BUCKET=$(BUCKET)" >> deploy/front/.env; \
-	  fi; \
-	  sudo CTFD_REPO=/opt/ctfd/CTFd deploy/scripts/install-backup-timer.sh; \
-	  $(COMPOSE) up -d --build ctfd db cache nginx certbot'
+	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && BACKUP_BUCKET=$(BUCKET) deploy/scripts/front-update.sh $(REPO_BRANCH)'
 
 .PHONY: tls-init
 tls-init: ## Emet le certificat Let's Encrypt et bascule nginx en HTTPS

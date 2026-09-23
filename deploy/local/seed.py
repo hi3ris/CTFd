@@ -87,12 +87,23 @@ def wait_for(url, timeout=180):
     raise SystemExit("CTFd ne repond pas (make local-logs ?)")
 
 
+def is_prod():
+    """Un jeton API = plateforme de prod (le local se connecte en admin/admin).
+    Garde-fou : jamais de /setup admin/admin ni de compte playtest en prod."""
+    return bool(os.environ.get("CTFD_TOKEN"))
+
+
 def do_setup(url):
     s = requests.Session()
     r = s.get(url + "/setup", allow_redirects=False)
     if r.status_code != 200:
         log("   setup deja fait, on passe")
         return
+    if is_prod():
+        raise SystemExit(
+            "REFUS : /setup n'est pas fait et CTFD_TOKEN est pose : faire le /setup "
+            "a la main avec un mot de passe fort (deploy/PROD-SETUP.md §2)."
+        )
     data = {
         "ctf_name": "NCTF26",
         "ctf_description": "NCTF26 — CTF national de cybersécurité du Togo, organisé par le CERT.tg. Présélection en ligne du vendredi 23 octobre 19:00 au lundi 26 octobre 00:00 (53 h, non-stop), finale à Lomé 29–30 octobre.",
@@ -318,6 +329,11 @@ def main():
         "--only", nargs="*", default=[], help="ex: web/jwt-cousin misc/proto-fuzz"
     )
     ap.add_argument("--no-challenges", action="store_true")
+    ap.add_argument(
+        "--no-player",
+        action="store_true",
+        help="ne cree pas le compte/equipe playtest (implicite avec CTFD_TOKEN)",
+    )
     a = ap.parse_args()
     url = a.url.rstrip("/")
 
@@ -331,7 +347,10 @@ def main():
     log(">> champ inscription")
     ensure_university_field(s, url)
     log(">> equipe de test")
-    ensure_player(s, url)
+    if a.no_player or is_prod():
+        log("   prod (jeton API) ou --no-player : aucun compte playtest")
+    else:
+        ensure_player(s, url)
     if a.no_challenges:
         return
     log(">> challenges")

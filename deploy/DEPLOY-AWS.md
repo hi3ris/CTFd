@@ -179,6 +179,8 @@ make season-down        # sauvegarde + archive + DÉTRUIT tout l'EC2
   `terraform.tfvars` renseigné.
 - Dépannage complet : `deploy/RUNBOOK.md` §5 (front KO, instancier KO,
   restauration de base, apply Terraform interrompu).
+- CI/CD (validation Terraform/scripts/challenges, Lot-5 des servis modifiés,
+  déploiement du front par SSM à chaque push) : `deploy/CICD.md`.
 
 ## Carte des commandes
 

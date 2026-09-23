@@ -25,6 +25,7 @@ TS="${TEAM_SECRET:-lot5-rehearsal-secret}"   # secret de test, cohérent build<-
 BUILD_TIMEOUT="${BUILD_TIMEOUT:-600}"
 BOOT_TIMEOUT="${BOOT_TIMEOUT:-40}"
 SOLVE_TIMEOUT="${SOLVE_TIMEOUT:-120}"
+NO_CACHE="${NO_CACHE:-}"                      # 1 = docker build --no-cache
 
 FLIP=0 ALL=0 KEEP=0
 ONLY=()
@@ -87,21 +88,33 @@ PY
   printf '%-34s ' "$rel"
 
   # 1) build
-  if ! timeout "$BUILD_TIMEOUT" docker build -q -t "$img" "$cdir" >/tmp/lot5-build.log 2>&1; then
+  # NO_CACHE=1 : rebuild sans cache (couche COPY flag.py empoisonnee vue quand
+  # deux builds de freres au Dockerfile identique se chevauchent).
+  if ! timeout "$BUILD_TIMEOUT" docker build ${NO_CACHE:+--no-cache} -q -t "$img" "$cdir" >/tmp/lot5-build.log 2>&1; then
     echo "BUILD-FAIL"; fail=$((fail+1)); FAILED+=("$rel (build)"); tail -3 /tmp/lot5-build.log | sed 's/^/    /'; continue
   fi
 
   # 2) run (host port éphémère lié à 127.0.0.1)
   cid="$(docker run -d -e "TEAM_SECRET=$TS" -p "127.0.0.1::$iport" "$img" 2>/tmp/lot5-run.log)"
   if [ -z "$cid" ]; then echo "RUN-FAIL"; fail=$((fail+1)); FAILED+=("$rel (run)"); tail -3 /tmp/lot5-run.log | sed 's/^/    /'; continue; fi
-  hostport="$(docker port "$cid" "$iport"/tcp 2>/dev/null | head -1 | sed 's/.*://')"
+  # le mapping de port n'est pas toujours publie a la seconde ou `docker run -d`
+  # rend la main : on reessaie quelques fois avant de conclure.
+  hostport=""
+  for _ in $(seq 1 20); do
+    hostport="$(docker port "$cid" "$iport"/tcp 2>/dev/null | head -1 | sed 's/.*://')"
+    [ -n "$hostport" ] && break
+    sleep 0.5
+  done
+  if [ -z "$hostport" ]; then echo "PORT-FAIL"; fail=$((fail+1)); FAILED+=("$rel (port)"); cleanup_cid "$cid"; continue; fi
   base="http://127.0.0.1:$hostport"
 
   # 3) attendre la disponibilité
   up=0
   for _ in $(seq 1 "$BOOT_TIMEOUT"); do
-    code="$(curl -s -o /dev/null -w '%{http_code}' "$base/" 2>/dev/null || echo 000)"
-    [ "$code" != "000" ] && { up=1; break; }
+    # NB : ne pas faire `|| echo 000` : -w imprime deja 000 quand curl echoue,
+    # on obtenait "000000" et la boucle sortait avant que l'appli n'ecoute.
+    code="$(curl -s -o /dev/null -w '%{http_code}' "$base/" 2>/dev/null || true)"
+    [ -n "$code" ] && [ "$code" != "000" ] && { up=1; break; }
     sleep 1
   done
   if [ "$up" -eq 0 ]; then echo "BOOT-FAIL"; fail=$((fail+1)); FAILED+=("$rel (boot)"); docker logs "$cid" 2>&1 | tail -4 | sed 's/^/    /'; cleanup_cid "$cid"; continue; fi

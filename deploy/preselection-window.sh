@@ -63,7 +63,7 @@ if [ "$APPLY" = "1" ]; then
   echo ">> application via le seed${URL:+ (--url $URL)} ..."
   export CTF_START="$START" CTF_END="$END" CTF_FREEZE="$FREEZE"
   if [ -n "$URL" ]; then
-    python3 "$ROOT/deploy/local/seed.py" --url "$URL" --no-challenges
+    python3 "$ROOT/deploy/local/seed.py" --url "$URL" --no-challenges --no-player
   else
     make -C "$ROOT/deploy" local-seed
   fi

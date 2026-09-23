@@ -576,6 +576,8 @@ def _session(url):
     token = os.environ.get("CTFD_TOKEN")
     if token:
         s.headers["Authorization"] = "Token " + token
+        # CTFd n'honore le jeton qu'avec un Content-Type JSON (sinon 302 /login).
+        s.headers["Content-Type"] = "application/json"
         return s
     user = os.environ.get("CTFD_ADMIN_USER", "admin")
     pw = os.environ.get("CTFD_ADMIN_PASS", "admin")
