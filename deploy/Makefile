@@ -561,6 +561,10 @@ local-build-images: ## [local] Construit les images ctf-* des challenges servis 
 lot5: ## [local] Repetition Lot-5 : build image -> rejoue le solveur -> flip visible (FLIP=1 ; ONLY="cat/slug ..." ; ALL=1)
 	scripts/lot5.sh $(if $(FLIP),--flip) $(if $(ALL),--all) $(if $(ONLY),--only $(ONLY))
 
+.PHONY: authors-map
+authors-map: ## Regenere la carte nom->auteur lue par la vue "par auteur" du board hibris
+	python3 scripts/gen_authors_map.py
+
 .PHONY: local-seed
 local-seed: ## [local] Setup NCTF25 + theme hibris + accueil + 36 challenges + equipe de test
 	$(LOCAL_PY) local/seed.py
