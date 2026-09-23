@@ -2,8 +2,6 @@
 
 **Catégorie** misc · **Points** 450 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # misc-proto-fuzz-live — solution
 
 **Category** misc · **Value** 450 · **Served** yes (per-team flag)

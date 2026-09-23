@@ -2,8 +2,6 @@
 
 **Catégorie** crypto · **Points** 500 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # crypto-sealbox-kdf — solution
 
 **Category** crypto · **Value** 500 · **Served** yes (per-team flag)

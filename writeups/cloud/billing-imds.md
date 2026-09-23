@@ -2,8 +2,6 @@
 
 **Catégorie** cloud · **Points** 500 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # cloud-billing-imds — solution
 
 **Category** cloud · **Value** 500 · **Served** yes (per-team flag)

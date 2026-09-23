@@ -2,8 +2,6 @@
 
 **Catégorie** web · **Points** 400 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # web-shipyard-jwtconf — solution
 
 **Category** web · **Value** 400 · **Served** yes (per-team flag)

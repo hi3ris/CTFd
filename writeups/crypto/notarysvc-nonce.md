@@ -2,8 +2,6 @@
 
 **Catégorie** crypto · **Points** 450 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # crypto-notarysvc-nonce — solution
 
 **Category** crypto · **Value** 450 · **Served** yes (per-team flag)

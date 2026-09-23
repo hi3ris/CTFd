@@ -49,7 +49,10 @@ def build(cdir, doc, cat, slug):
         body = open(readme, encoding="utf-8").read().strip()
     else:
         body = "_Pas encore de writeup pour ce challenge._"
-    is_stub = "STUB" in body[:400] or doc.get("state") == "hidden"
+    # "Non finalisé" seulement si le writeup lui-même est un squelette (README STUB).
+    # Un servi implémenté+vérifié reste `state: hidden` jusqu'au Lot-5 mais a un
+    # vrai writeup — ne pas le marquer provisoire à cause de son état.
+    is_stub = "STUB" in body[:400]
     header = f"# {name}\n\n**Catégorie** {cat} · **Points** {pts} · **Auteur** {author}"
     if is_stub:
         header += "\n\n> ⚠️ Challenge non finalisé — writeup provisoire."

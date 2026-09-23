@@ -2,8 +2,6 @@
 
 **Catégorie** web · **Points** 450 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # web-cms-authbypass — solution
 
 **Category** web · **Value** 450 · **Served** yes (per-team flag)

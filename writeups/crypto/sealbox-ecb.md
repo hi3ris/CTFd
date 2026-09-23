@@ -2,8 +2,6 @@
 
 **Catégorie** crypto · **Points** 450 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # crypto-sealbox-ecb — solution
 
 **Category** crypto · **Value** 500 · **Served** yes (per-team flag)

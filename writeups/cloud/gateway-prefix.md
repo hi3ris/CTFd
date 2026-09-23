@@ -2,8 +2,6 @@
 
 **Catégorie** cloud · **Points** 450 · **Auteur** ctf-2026
 
-> ⚠️ Challenge non finalisé — writeup provisoire.
-
 # cloud-gateway-prefix — solution
 
 **Category** cloud · **Value** 450 · **Served** yes (per-team flag)
