@@ -84,6 +84,59 @@ jeton API pour la suite scriptée :
    export URL=https://ctf.tg
    ```
 
+## 2bis. E-mail (SMTP) — confirmations d'inscription + reset de mot de passe
+
+**Décision de volume d'abord.** Le facteur limitant d'un CTF n'est pas le quota
+mensuel mais le **plafond journalier** : ~300 joueurs peuvent s'inscrire le même
+soir (présélection ouverte ven 19h). Deux politiques :
+
+- **Vérification e-mail OFF (recommandé pour la présélection)** :
+  `verify_emails=off`. L'inscription n'envoie alors aucun mail de confirmation ;
+  l'e-mail ne sert plus qu'aux **resets de mot de passe** (volume faible, étalé).
+  N'importe quel palier gratuit suffit, et aucune deliverabilité douteuse ne
+  bloque un joueur légitime le soir J. C'est le défaut conseillé.
+- **Vérification ON** (anti multi-comptes) : il faut un **plafond journalier**
+  qui encaisse la pointe d'inscriptions.
+
+**Choix du fournisseur (gratuit) :**
+
+| Fournisseur      | Gratuit                  | Plafond/jour                  | Note                                                                                                                                                                                                                                   |
+| ---------------- | ------------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Brevo** (reco) | ~9 000/mois              | **300/jour**                  | Le meilleur plafond **journalier** gratuit ; serveurs UE / RGPD (adapté à un event francophone). SMTP simple.                                                                                                                          |
+| Mailjet          | 6 000/mois               | 200/jour                      | Plafond journalier plus bas.                                                                                                                                                                                                           |
+| Resend           | 3 000/mois               | 100/jour                      | Trop bas pour une pointe de 300.                                                                                                                                                                                                       |
+| SMTP2GO          | 1 000/mois               | ~33/jour                      | Trop bas.                                                                                                                                                                                                                              |
+| **Amazon SES**   | ~gratuit via crédits AWS | **jusqu'à des milliers/jour** | Le bon choix **si vérification ON à 300 joueurs**. Natif AWS (on y est déjà), ~0,10 $/1000. **Mais** : sortie de sandbox à demander (1–3 jours ouvrés) + domaine `ctf.tg` vérifié (DKIM). À lancer **maintenant** vu le mois d'avance. |
+
+**Recommandation :** **Brevo + vérification OFF** pour la présélection (zéro coût,
+zéro risque de plafond). Si tu veux la vérification obligatoire à l'échelle,
+bascule sur **SES** en demandant la sortie de sandbox dès aujourd'hui.
+
+**⚠️ Deliverabilité — indispensable quel que soit le fournisseur :** authentifie
+le domaine d'envoi (**SPF + DKIM + DMARC sur `ctf.tg`**), sinon les mails de
+confirmation partent en spam et bloquent des inscriptions. Ces enregistrements
+DNS se posent en même temps que le A record de `ctf.tg` (§1b).
+
+**Config CTFd (Brevo) — via `front/.env` (le secret reste hors git) :**
+
+```
+MAILFROM_ADDR=noreply@ctf.tg        # expéditeur (adresse validée / domaine authentifié)
+MAIL_SERVER=smtp-relay.brevo.com
+MAIL_PORT=587
+MAIL_USEAUTH=true
+MAIL_USERNAME=<e-mail de login Brevo>
+MAIL_PASSWORD=<clé SMTP Brevo>      # onglet SMTP du compte — PAS la clé API. SECRET.
+MAIL_TLS=true
+```
+
+Puis `make deploy` (le compose passe ces variables au conteneur CTFd). Étapes
+manuelles côté opérateur : créer le compte Brevo, générer la **clé SMTP**,
+valider l'expéditeur / authentifier `ctf.tg`, renseigner `front/.env`. On peut
+aussi tout saisir dans **Admin → Config → Email** au lieu de `.env`.
+
+> Laisser les `MAIL_*` vides = envoi désactivé → **garder `verify_emails=off`**
+> (sinon l'inscription échoue faute de pouvoir envoyer le mail de confirmation).
+
 ## 3. Contenu
 
 1. **Règlement dans /tos** (obligatoire, `make preflight` le vérifie) :

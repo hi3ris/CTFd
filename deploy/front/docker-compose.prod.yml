@@ -40,6 +40,16 @@ services:
       # Etat de la sauvegarde automatique (deploy/scripts/backup.sh), lu par la
       # page admin Ops. Le repertoire est monte en lecture seule ci-dessous.
       - BACKUP_STATUS_FILE=/backups/status.json
+      # E-mail SMTP (confirmations d'inscription, reset de mot de passe). Voir
+      # deploy/PROD-SETUP.md "E-mail". Tous vides = envoi desactive : garder
+      # alors verify_emails=off. MAIL_PASSWORD est un secret -> front/.env, hors git.
+      - MAILFROM_ADDR=${MAILFROM_ADDR:-}
+      - MAIL_SERVER=${MAIL_SERVER:-}
+      - MAIL_PORT=${MAIL_PORT:-}
+      - MAIL_USEAUTH=${MAIL_USEAUTH:-}
+      - MAIL_USERNAME=${MAIL_USERNAME:-}
+      - MAIL_PASSWORD=${MAIL_PASSWORD:-}
+      - MAIL_TLS=${MAIL_TLS:-}
     volumes:
       - ctfd_uploads:/var/uploads
       - ctfd_logs:/var/log/CTFd
