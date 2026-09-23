@@ -40,7 +40,8 @@ présélection**.
 2. **Config** (hors git, sur le front) : `terraform/terraform.tfvars`
    `domain_name = "ctf.tg"` ; `front/.env` `CTF_DOMAIN=ctf.tg` +
    `CERTBOT_EMAIL=<email d'ops CERT.tg>` (Let's Encrypt y envoie les avis
-   d'expiration — pas une boîte perso jetable).
+   d'expiration — pas une boîte perso jetable) + `REDIS_PASSWORD=<openssl rand -hex 32>`
+   (obligatoire : le compose lance Redis avec `--requirepass`).
 3. **TLS** : `make tls-init`. Vérifier `https://ctf.tg/` en 200, certificat valide.
    Coût du switch : quasi nul (les instances servies utilisent `FRONT_PUBLIC_IP:port`,
    pas le domaine). Sans DNS résolu, certbot échoue (challenge HTTP-01).
@@ -62,7 +63,15 @@ jeton API pour la suite scriptée :
    - **Registration visibility** : `public` (présélection ouverte) — à passer
      `private` pour la finale
    - **Verify emails** : selon ta politique (off si pas de SMTP configuré)
-3. Une fois connecté admin : **Admin → Settings → Access Tokens** → créer un jeton.
+3. **Taille d'équipe** : 4 à 5 joueurs. Le maximum est le réglage CTFd `team_size`,
+   le minimum vient du plugin `team_min_size` (config `team_size_min`) : une équipe
+   incomplète peut s'inscrire et lire les énoncés, mais ne peut ni soumettre de flag
+   ni lancer d'instance tant qu'elle n'a pas 4 membres.
+   ```
+   curl -H "Authorization: Token $CTFD_TOKEN" -H 'Content-Type: application/json' \
+     -X PATCH $URL/api/v1/configs -d '{"team_size": 5, "team_size_min": 4}'
+   ```
+4. Une fois connecté admin : **Admin → Settings → Access Tokens** → créer un jeton.
    L'exporter pour les commandes suivantes (jamais en argument CLI en clair) :
    ```
    export CTFD_TOKEN=<jeton>
