@@ -1,0 +1,135 @@
+# Setup CTFd en production — NCTF26 (ctf.tg)
+
+> Checklist de configuration de la plateforme **après** que `make deploy` a mis le
+> front en ligne (conteneurs Up). Se lit avec `deploy/RUNBOOK.md` (jour-J +
+> incidents) et `deploy/DEPLOY-AWS.md` (infra). **Toutes les commandes depuis
+> `deploy/`.**
+>
+> ⚠️ **Ne JAMAIS lancer `make local-seed` / `local/seed.py` contre la prod** :
+> il crée `admin`/`admin` et `playtest`/`playtest` (comptes de la stack locale
+> jetable). En prod = compromission immédiate.
+
+État de départ : front up sur `http://13.37.197.230`, redirige vers `/setup`.
+
+## 1. Domaine + HTTPS (ctf.tg)
+
+1. **DNS** : créer un enregistrement **A `ctf.tg` → 13.37.197.230** (TTL court, ex.
+   300 s, le temps des tests). Vérifier : `dig +short ctf.tg` renvoie l'IP.
+2. **Config** (valeurs hors git, sur le front) :
+   - `terraform/terraform.tfvars` : `domain_name = "ctf.tg"`
+   - `front/.env` : `CTF_DOMAIN=ctf.tg` et `CERTBOT_EMAIL=<email d'ops CERT.tg>`
+     (Let's Encrypt y envoie les avis d'expiration — pas une boîte perso jetable).
+3. **TLS** : une fois le A record résolu vers l'IP du front :
+   ```
+   make tls-init
+   ```
+   Vérifier `https://ctf.tg/` en 200 et le certificat valide. Sans DNS résolu,
+   certbot échoue (challenge HTTP-01).
+
+## 2. Setup initial CTFd (admin fort, PAS de seed local)
+
+Faire le `/setup` **manuellement** avec un mot de passe fort, puis générer un
+jeton API pour la suite scriptée :
+
+1. Générer le mot de passe admin : `openssl rand -base64 24` (le **conserver** dans
+   ton gestionnaire de secrets).
+2. Ouvrir `https://ctf.tg/setup` (ou HTTP tant que le TLS n'est pas prêt) et
+   renseigner :
+   - **CTF name** : `NCTF26`
+   - **Admin** : login d'équipe CERT.tg + le mot de passe fort ci-dessus (jamais
+     `admin`/`admin`)
+   - **User mode** : **Teams** (équipes)
+   - **Theme** : **hibris**
+   - **Registration visibility** : `public` (présélection ouverte) — à passer
+     `private` pour la finale
+   - **Verify emails** : selon ta politique (off si pas de SMTP configuré)
+3. Une fois connecté admin : **Admin → Settings → Access Tokens** → créer un jeton.
+   L'exporter pour les commandes suivantes (jamais en argument CLI en clair) :
+   ```
+   export CTFD_TOKEN=<jeton>
+   export URL=https://ctf.tg
+   ```
+
+## 3. Contenu
+
+1. **Règlement dans /tos** (obligatoire, `make preflight` le vérifie) :
+   ```
+   make reglement-publish URL=$URL CTFD_TOKEN=$CTFD_TOKEN
+   ```
+2. **Champ « Université »** sur l'inscription (custom field) + **page d'accueil**
+   (hero, `deploy/theme-home-hero.html`) : les poser via l'admin, ou via les
+   étapes de `local/seed.py` réutilisables avec `CTFD_TOKEN` (elles ciblent l'URL
+   fournie ; ne PAS relancer la partie /setup admin/admin).
+3. **Import des challenges (ctfcli)** — cf. RUNBOOK §2 :
+   ```
+   python3 -m pip install --user ctfcli
+   ctf init --url "$URL" --api-key "$CTFD_TOKEN"
+   # installer les dossiers voulus (respecter les prérequis IA : ai0->ai1->ai2->ai3)
+   ctf challenge install challenges/<cat>/<slug>   # ... pour chaque challenge retenu
+   ```
+   Les **86 servis implémentés sont `state: hidden`** → importés masqués (voulu).
+   Ils ne deviennent jouables qu'après le Lot-5 (§4).
+
+## 4. Lot-5 — rendre les servis jouables (AVANT de les publier)
+
+Sur une machine **Docker** (arena ou poste), pour chaque servi : build image →
+rejoue le solveur → flip `visible` si vert.
+
+```
+make lot5              # rapport pass/fail sur les 86 implémentés
+make lot5 FLIP=1       # passe les OK en state: visible
+```
+
+Puis répercuter en prod : soit **ré-importer** les challenges passés `visible`
+(ctfcli), soit basculer leur état dans **Admin → Challenges**. Côté arène, les
+images doivent exister : `make check-arena` / `make push-images`.
+
+> Sans Lot-5 vert, garder les servis `hidden`. Un servi visible sans image
+> exploitable = joueurs bloqués.
+
+## 5. Fenêtre + preflight (le gate)
+
+1. **Calibrer les compteurs attendus** : `make preflight` a des défauts
+   `EXPECT=203 challenges / CATS=19 catégories`. **Les ajuster au set réellement
+   importé** (sinon FAIL sur les compteurs) :
+   ```
+   CTFD_TOKEN=$CTFD_TOKEN make preflight PHASE=preselection URL=$URL EXPECT=<n> CATS=<c>
+   ```
+2. **Fenêtre de présélection** (ven 23 19:00 → lun 26 00:00) :
+   ```
+   make presel-window APPLY=1 URL=$URL CTFD_TOKEN=$CTFD_TOKEN
+   ```
+3. **`make preflight` DOIT être 0 FAIL** avant d'ouvrir. Un FAIL = on ne bascule
+   pas. Les `WARN`/`MANUAL` se lisent une par une (instancier, IA, images).
+
+## 6. Sécurité avant ouverture
+
+- [ ] **Resserrer `admin_cidrs`** : `196.170.0.0/15` est très large (~131k IP).
+      Mettre l'IP fixe/VPN d'admin en `/32` si possible ; l'**agent SSM Online**
+      reste la voie de secours si tu te verrouilles. `terraform apply` après
+      changement.
+- [ ] **Mot de passe admin fort** confirmé (aucun `admin`/`admin`, aucun compte
+      `playtest` en prod).
+- [ ] **HTTPS** actif (`https://ctf.tg`), redirection HTTP→HTTPS.
+- [ ] **Sauvegardes** : timer `ctfd-backup` armé (`make backup-status` < 15 min) ;
+      un `make backup` manuel avant toute grosse manip.
+- [ ] **IMDSv2**, pas de port arène/IA ouvert sur Internet (déjà en Terraform).
+
+## 7. Piste IA (conditionnelle au GPU)
+
+Quota GPU en `CASE_OPENED` (0 vCPU). **Si le quota n'est pas accordé avant le
+23** : lancer la présélection **sans la piste IA** (le reste tourne sans GPU).
+Ne pas rendre les challenges IA visibles tant que le nœud Ollama n'est pas up
+(`OLLAMA_URL` vide = challenges IA indisponibles). Décision à trancher côté humain.
+
+## 8. Divers repérés
+
+- [ ] **heap-note** : committer le binaire recompilé (ou `make local-fix-heapnote`),
+      sinon l'image `ctf-pwn-heap-note` ne se reconstruit pas sur l'arène.
+
+---
+
+**Ordre résumé** : DNS `ctf.tg` → `make tls-init` → `/setup` manuel (admin fort,
+teams, hibris) → jeton API → `reglement-publish` + hero + université → import
+ctfcli → **Lot-5** (`make lot5 FLIP=1`) → calibrer + `make preflight` 0 FAIL →
+`presel-window` → resserrer `admin_cidrs` → ouvrir les inscriptions.
