@@ -107,6 +107,14 @@ check-gpu-quota: ## Verifie le quota GPU AWS dans LA BONNE region. A LANCER MAIN
 	   exit 1; \
 	 fi
 
+.PHONY: request-gpu-quota
+request-gpu-quota: ## Demande l'augmentation du quota GPU via Service Quotas (VALUE=8 par defaut). A LANCER MAINTENANT.
+	@REGION=$$($(TF) output -raw aws_region 2>/dev/null || echo eu-west-3) ./scripts/aws_gpu_quota.sh
+
+.PHONY: free-credits
+free-credits: ## Plan gratuit AWS : fait les 5 activites "Earn AWS credits" (Budgets, EC2, Bedrock, Lambda, RDS) puis nettoie. BUDGET_EMAIL=... pour l'alerte
+	@REGION=$$($(TF) output -raw aws_region 2>/dev/null || echo eu-west-3) ./scripts/aws_free_credits.sh
+
 # --- Phases -----------------------------------------------------------------
 
 .PHONY: phase-setup

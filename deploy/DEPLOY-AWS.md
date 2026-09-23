@@ -66,7 +66,9 @@ cp front/.env.example front/.env
 ## 2. Délai incompressible — à faire MAINTENANT
 
 ```bash
-make check-gpu-quota
+make check-gpu-quota        # lit le quota
+make request-gpu-quota      # dépose la demande (≥ 8 vCPU) si le quota est < 4
+make free-credits           # plan gratuit : les 5 activités « Earn AWS credits » (+100 USD)
 ```
 
 Si le quota « Running On-Demand G and VT instances » est < 4 vCPU → **demander
@@ -184,6 +186,7 @@ make season-down        # sauvegarde + archive + DÉTRUIT tout l'EC2
 | ------------------------------------------- | ----------------------------------------- |
 | `make init` / `make state-bootstrap`        | init Terraform / état distant S3+DynamoDB |
 | `make check-gpu-quota`                      | quota GPU (à lancer **maintenant**)       |
+| `make request-gpu-quota` / `make free-credits` | demande de quota GPU / crédits du plan gratuit |
 | `make phase-setup / -preselection / -final` | leviers de coût / dimensionnement         |
 | `make wait-front / wait-arena`              | attente provisionnement                   |
 | `make deploy / tls-init / link`             | déploiement CTFd / HTTPS / liaison        |
