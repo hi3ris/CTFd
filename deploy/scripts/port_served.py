@@ -43,6 +43,7 @@ PROTO = {
     "oidc": "cloud/oidc-forge",
     "imds": "cloud/backup-imds",
     "prefix": "cloud/backup-prefix",
+    "presign": "cloud/backup-presign",
     "protoparse": "misc/proto-fuzz-live",
 }
 
