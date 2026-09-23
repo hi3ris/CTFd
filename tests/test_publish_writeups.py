@@ -183,7 +183,11 @@ def test_prepare_then_publish_against_ctfd(tmp_path):
             assert len(api.pages()) == 1 + 3  # index page of the CTF + ours
             assert anon.get("/writeups").status_code == 404
             assert anon.get("/writeups/web").status_code == 404
-            assert "Writeups" not in anon.get("/").get_data(as_text=True)
+            # The published-writeups Page menu item ("Writeups NCTF26", see below)
+            # must not appear before publishing. Check that exact label, not the
+            # bare word "Writeups" -- the in-app writeups plugin registers its own
+            # "Writeups" nav item, which is always present and unrelated here.
+            assert "Writeups NCTF26" not in anon.get("/").get_data(as_text=True)
 
             set_config("end", "4102444800")  # 2100: not ended
             assert not pw.may_publish(api.config("end"))
