@@ -441,6 +441,12 @@ preflight: ## Check-list de prod sur le front : PHASE=preselection|finale, CTFD_
 	 $(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ctfd printenv' | \
 	 CTFD_URL="$$URL" $(LOCAL_PY) scripts/preflight.py $(PREFLIGHT_ARGS)
 
+ai-audit: ## Audit resistance au solve IA des challenges : defaut heuristique (hors-ligne) ; MODEL=https://.../v1 ou OLLAMA=http://.. + MODEL_NAME=<fort> pour la verite terrain. OUT=audit.csv
+	$(LOCAL_PY) scripts/ai_resistance_audit.py \
+	  $(if $(MODEL),--model $(MODEL)) $(if $(OLLAMA),--ollama $(OLLAMA)) \
+	  $(if $(MODEL_NAME),--model-name $(MODEL_NAME)) \
+	  $(if $(OUT),--out $(OUT))
+
 logs: ## Suit les logs du front
 	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) logs -f --tail=100'
 
