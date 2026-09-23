@@ -447,6 +447,9 @@ ai-audit: ## Audit resistance au solve IA des challenges : defaut heuristique (h
 	  $(if $(MODEL_NAME),--model-name $(MODEL_NAME)) \
 	  $(if $(OUT),--out $(OUT))
 
+scaffold-backlog: ## Stampe les squelettes SERVIS du backlog (deploy/served-backlog.yml) — STUBS caches, a implementer
+	$(LOCAL_PY) scripts/scaffold_served.py --manifest served-backlog.yml
+
 logs: ## Suit les logs du front
 	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) logs -f --tail=100'
 
