@@ -1,0 +1,16 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>{{ title }}</h1>
+		<p class="lead text-capitalize">{{ category }}</p>
+	</div>
+</div>
+<div class="container">
+	<p><a href="{{ url_for('writeups.index') }}">&larr; Tous les writeups</a></p>
+	<div class="writeup-body">
+		{{ content|safe }}
+	</div>
+</div>
+{% endblock %}

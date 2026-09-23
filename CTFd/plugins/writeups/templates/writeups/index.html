@@ -1,0 +1,38 @@
+{% extends "base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>📝 Writeups</h1>
+	</div>
+</div>
+<div class="container">
+	{% if not published %}
+	<div class="alert alert-info" role="status">
+		Les writeups ne sont pas encore publiés. Ils seront disponibles après la
+		clôture de l'épreuve.
+	</div>
+	{% else %}
+		{% if admin and not live %}
+		<div class="alert alert-warning" role="status">
+			Aperçu admin — les writeups sont <b>masqués aux joueurs</b>. Active
+			l'affichage depuis la
+			<a href="{{ url_for('writeups.admin_page') }}">page d'administration</a>.
+		</div>
+		{% endif %}
+		{% if not tree %}
+		<p class="text-muted">Aucun writeup pour le moment.</p>
+		{% endif %}
+		{% for category, entries in tree.items() %}
+		<h3 class="mt-4 text-capitalize">{{ category }}</h3>
+		<ul class="list-unstyled">
+			{% for slug, title in entries %}
+			<li>
+				<a href="{{ url_for('writeups.show', category=category, slug=slug) }}">{{ title }}</a>
+			</li>
+			{% endfor %}
+		</ul>
+		{% endfor %}
+	{% endif %}
+</div>
+{% endblock %}

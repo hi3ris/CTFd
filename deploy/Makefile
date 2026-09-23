@@ -450,6 +450,11 @@ ai-audit: ## Audit resistance au solve IA des challenges : defaut heuristique (h
 scaffold-backlog: ## Stampe les squelettes SERVIS du backlog (deploy/served-backlog.yml) — STUBS caches, a implementer
 	$(LOCAL_PY) scripts/scaffold_served.py --manifest served-backlog.yml
 
+writeups-sync: ## (Re)genere writeups/<cat>/<slug>.md depuis les solution/README.md (lu par le plugin writeups) ; PRUNE=1 pour retirer les orphelins
+	$(LOCAL_PY) scripts/sync_writeups.py $(if $(PRUNE),--prune)
+	@command -v prettier >/dev/null 2>&1 && prettier --write '../writeups/**/*.md' >/dev/null 2>&1 || true
+	@echo "writeups/ synchronise. Plugin: /plugins/writeups/ (toggle admin: /plugins/writeups/admin)"
+
 logs: ## Suit les logs du front
 	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) logs -f --tail=100'
 
