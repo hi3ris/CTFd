@@ -1,0 +1,13 @@
+# Local run notes for sysadmin-provisioner-cap (STUB).
+#   docker build -t ctf-sysadmin-provisioner-cap:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  sysadmin-provisioner-cap:
+    image: ctf-sysadmin-provisioner-cap:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

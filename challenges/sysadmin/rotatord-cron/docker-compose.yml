@@ -1,0 +1,13 @@
+# Local run notes for sysadmin-rotatord-cron (STUB).
+#   docker build -t ctf-sysadmin-rotatord-cron:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  sysadmin-rotatord-cron:
+    image: ctf-sysadmin-rotatord-cron:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

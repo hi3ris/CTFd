@@ -1,0 +1,13 @@
+# Local run notes for crypto-signgate-signext (STUB).
+#   docker build -t ctf-crypto-signgate-signext:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  crypto-signgate-signext:
+    image: ctf-crypto-signgate-signext:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

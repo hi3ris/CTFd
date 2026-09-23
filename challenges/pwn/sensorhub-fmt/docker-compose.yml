@@ -1,0 +1,13 @@
+# Local run notes for pwn-sensorhub-fmt (STUB).
+#   docker build -t ctf-pwn-sensorhub-fmt:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  pwn-sensorhub-fmt:
+    image: ctf-pwn-sensorhub-fmt:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

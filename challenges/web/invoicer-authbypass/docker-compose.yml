@@ -1,0 +1,13 @@
+# Local run notes for web-invoicer-authbypass (STUB).
+#   docker build -t ctf-web-invoicer-authbypass:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-invoicer-authbypass:
+    image: ctf-web-invoicer-authbypass:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

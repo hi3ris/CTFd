@@ -1,0 +1,13 @@
+# Local run notes for crypto-sessiond-padoracle (STUB).
+#   docker build -t ctf-crypto-sessiond-padoracle:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  crypto-sessiond-padoracle:
+    image: ctf-crypto-sessiond-padoracle:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

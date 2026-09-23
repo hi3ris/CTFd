@@ -1,0 +1,13 @@
+# Local run notes for ml-trainer-poison (STUB).
+#   docker build -t ctf-ml-trainer-poison:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  ml-trainer-poison:
+    image: ctf-ml-trainer-poison:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

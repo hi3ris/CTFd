@@ -1,0 +1,13 @@
+# Local run notes for web-hrportal-authbypass (STUB).
+#   docker build -t ctf-web-hrportal-authbypass:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-hrportal-authbypass:
+    image: ctf-web-hrportal-authbypass:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+# Local run notes for web-forum-ssrf-deser (STUB).
+#   docker build -t ctf-web-forum-ssrf-deser:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-forum-ssrf-deser:
+    image: ctf-web-forum-ssrf-deser:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

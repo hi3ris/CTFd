@@ -1,0 +1,13 @@
+# Local run notes for sysadmin-provisioner-cron (STUB).
+#   docker build -t ctf-sysadmin-provisioner-cron:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  sysadmin-provisioner-cron:
+    image: ctf-sysadmin-provisioner-cron:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

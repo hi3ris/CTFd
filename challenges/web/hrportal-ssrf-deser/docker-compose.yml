@@ -1,0 +1,13 @@
+# Local run notes for web-hrportal-ssrf-deser (STUB).
+#   docker build -t ctf-web-hrportal-ssrf-deser:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-hrportal-ssrf-deser:
+    image: ctf-web-hrportal-ssrf-deser:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

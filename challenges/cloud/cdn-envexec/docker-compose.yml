@@ -1,0 +1,13 @@
+# Local run notes for cloud-cdn-envexec (STUB).
+#   docker build -t ctf-cloud-cdn-envexec:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  cloud-cdn-envexec:
+    image: ctf-cloud-cdn-envexec:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

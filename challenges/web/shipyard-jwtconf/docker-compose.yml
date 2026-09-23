@@ -1,0 +1,13 @@
+# Local run notes for web-shipyard-jwtconf (STUB).
+#   docker build -t ctf-web-shipyard-jwtconf:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-shipyard-jwtconf:
+    image: ctf-web-shipyard-jwtconf:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

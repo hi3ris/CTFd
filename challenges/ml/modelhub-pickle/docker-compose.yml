@@ -1,0 +1,13 @@
+# Local run notes for ml-modelhub-pickle (STUB).
+#   docker build -t ctf-ml-modelhub-pickle:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  ml-modelhub-pickle:
+    image: ctf-ml-modelhub-pickle:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

@@ -1,0 +1,13 @@
+# Local run notes for sysadmin-auditd-systemd (STUB).
+#   docker build -t ctf-sysadmin-auditd-systemd:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  sysadmin-auditd-systemd:
+    image: ctf-sysadmin-auditd-systemd:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped
