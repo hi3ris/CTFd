@@ -425,18 +425,22 @@ writeups-unpublish: ## Remet les writeups en brouillon
 	@test -n "$(URL)" -a -n "$(TOKEN)" || { echo "URL et TOKEN (jeton API admin) requis"; exit 2; }
 	$(LOCAL_PY) scripts/publish_writeups.py --url $(URL) --token $(TOKEN) --unpublish $(WRITEUPS_ARGS)
 
+# Sur le DISQUE, pas /tmp : /tmp est souvent un tmpfs en RAM (9,8 Go ici) et
+# une centaine de tars d'images (~10 Go) le remplit -> "no space left on device".
+IMAGES_DIR ?= /var/tmp/ctf-images
+
 .PHONY: push-images
-push-images: ## Envoie les images de challenge dans S3 (lues depuis l'arena au prochain demarrage)
+push-images: ## Envoie les images de challenge dans S3 (lues depuis l'arena au prochain demarrage) ; IMAGES_DIR=/var/tmp/ctf-images
 	@test -d ../challenges || { echo "Aucun dossier challenges/ a la racine du depot"; exit 1; }
-	@mkdir -p /tmp/ctf-images
+	@mkdir -p $(IMAGES_DIR)
 	@for img in $$(docker image ls --format '{{.Repository}}:{{.Tag}}' | grep '^ctf-' || true); do \
 	   name=$$(echo "$$img" | tr '/:' '__'); \
 	   echo "  $$img -> $$name.tar"; \
-	   docker save "$$img" -o /tmp/ctf-images/$$name.tar; \
+	   docker save "$$img" -o $(IMAGES_DIR)/$$name.tar; \
 	 done
-	@ls /tmp/ctf-images/*.tar >/dev/null 2>&1 \
+	@ls $(IMAGES_DIR)/*.tar >/dev/null 2>&1 \
 	  || { echo "Aucune image nommee ctf-* trouvee localement"; exit 1; }
-	@aws s3 sync /tmp/ctf-images s3://$(BUCKET)/images/ --only-show-errors
+	@AWS_MAX_ATTEMPTS=10 AWS_RETRY_MODE=adaptive aws s3 sync $(IMAGES_DIR) s3://$(BUCKET)/images/ --only-show-errors
 	@echo "Images publiees. Elles seront chargees au prochain demarrage de l'arena."
 
 .PHONY: logs
