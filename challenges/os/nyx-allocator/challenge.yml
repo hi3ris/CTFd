@@ -1,0 +1,49 @@
+name: nyx-allocator
+author: ctf-2026
+category: os
+type: team_instance
+description: |
+  Allocateur de tas noyau custom : débordement -> contrôle d'objet -> détournement de flux -> flag.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 550
+extra:
+  docker_image: ctf-os-nyx-allocator:latest
+  internal_port: 8080
+  initial: 550
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: os-nyx-allocator
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      TODO: cheap hint narrowing the vulnerability class.
+    cost: 20
+    key: h1
+  - content: >-
+      TODO: dearer hint (mechanism / advisory id / patch diff).
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - os
+
+# challenge-id (HMAC / requirements wiring): os-nyx-allocator
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: hidden  # STUB -- flip to visible once the vuln + solver are implemented and Lot-5 verified
+version: "0.1"

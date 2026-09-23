@@ -1,0 +1,12 @@
+# 5 served challenges around a custom teaching micro-OS ("NyxOS"): one OS, five
+# exploitable subsystems. Each is a per-team qemu instance (NOT the generic Flask
+# stub — see challenges/os/README.md for the qemu-harness build contract); the
+# flag lives in the running kernel and is read only by exploiting the subsystem.
+# Summaries are design-level. Scaffolded as STUBS (state: hidden); the build
+# session replaces the placeholder with the qemu harness + exploit, verifies
+# under qemu (Lot 5), then flips to visible.
+- { name: os/nyx-bootstrap, points: 400, title: "NyxOS Bootstrap", summary: "Bootloader d'un OS custom : validation d'image défaillante -> détournement du boot -> lecture du flag noyau." }
+- { name: os/nyx-syscall, points: 500, title: "NyxOS Syscall Gate", summary: "Table d'appels système custom : borne manquante sur un argument -> lecture/écriture arbitraire noyau -> flag." }
+- { name: os/nyx-scheduler, points: 550, title: "NyxOS Scheduler", summary: "Ordonnanceur custom : course TOCTOU -> confusion de privilège -> exécution en anneau 0 -> flag." }
+- { name: os/nyx-allocator, points: 550, title: "NyxOS Allocator", summary: "Allocateur de tas noyau custom : débordement -> contrôle d'objet -> détournement de flux -> flag." }
+- { name: os/nyx-vfs, points: 500, title: "NyxOS VFS", summary: "Système de fichiers virtuel custom : bug de permission/chemin -> lecture du flag réservé à root." }

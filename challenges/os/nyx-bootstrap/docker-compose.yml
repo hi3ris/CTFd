@@ -1,0 +1,13 @@
+# Local run notes for os-nyx-bootstrap (STUB).
+#   docker build -t ctf-os-nyx-bootstrap:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  os-nyx-bootstrap:
+    image: ctf-os-nyx-bootstrap:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped
