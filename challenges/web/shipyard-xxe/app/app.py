@@ -1,34 +1,76 @@
-#!/usr/bin/env python3
-"""Shipyard Xxe -- SERVED CHALLENGE STUB.
+"""Forum XXE — an XML parser that resolves external SYSTEM entities.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/import`` accepts an XML document (e.g. a bulk post import). The parser
+    resolves external entities, including ``SYSTEM "file://..."`` and
+    ``SYSTEM "http://..."`` — classic XXE, giving internal file read and SSRF.
+  * An entity pointing at ``file:///flag.txt`` expands to the instance secret in
+    the parsed output.
+
+Intended path: POST an XML doc declaring
+``<!DOCTYPE r [<!ENTITY x SYSTEM "file:///flag.txt">]>`` and referencing ``&x;``.
+
+The flag at ``/flag.txt`` is served by no route; it only reaches the attacker via
+the external-entity expansion the parser should have disabled.
+
+This models the XXE resolver explicitly (it recognises SYSTEM entities and
+resolves file:// and the internal metadata host) so the behaviour is
+deterministic and self-contained, independent of the host XML library's settings.
 """
 import os
+import re
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+# Internal "metadata" service reachable only from the server (SSRF target).
+INTERNAL = {"http://169.254.169.254/latest/meta-data/role": "backup-restore"}
+
+
+def _resolve_system(uri):
+    if uri.startswith("file://"):
+        path = uri[len("file://") :]
+        try:
+            with open(path, encoding="utf-8") as fh:
+                return fh.read().strip()
+        except OSError:
+            return ""
+    if uri in INTERNAL:  # SSRF to an internal-only host
+        return INTERNAL[uri]
+    return ""
+
+
+def parse_xml(doc):
+    # Recognise a single external SYSTEM entity and expand its references.
+    entities = {}
+    for name, uri in re.findall(r'<!ENTITY\s+(\w+)\s+SYSTEM\s+"([^"]+)"\s*>', doc):
+        entities[name] = _resolve_system(uri)
+    out = doc
+    for name, value in entities.items():
+        out = out.replace("&" + name + ";", value)
+    # strip the DOCTYPE/entity declarations from the rendered result
+    out = re.sub(r"<!DOCTYPE.*?\]>", "", out, flags=re.S)
+    return out.strip()
 
 
 @app.route("/")
 def index():
-    return (
-        "<h1>Shipyard Xxe</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>web-shipyard-xxe</code>.</p>"
+    return jsonify(
+        {
+            "service": "shipyard-xxe",
+            "import": "POST /import  (XML body) -> parsed result",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/import", methods=["POST"])
+def do_import():
+    doc = request.get_data(as_text=True)
+    if "<" not in doc:
+        return jsonify({"error": "expected XML"}), 400
+    return jsonify({"parsed": parse_xml(doc)})
 
 
 if __name__ == "__main__":

@@ -46,7 +46,7 @@ def _handle_internal(path):
 def index():
     return jsonify(
         {
-            "service": "ledger-smuggle",
+            "service": "smuggle-gap",
             "ingest": "POST /ingest  (raw body)",
             "page": "/page?p=<path>  (cache)",
             "admin_flag": "/admin/flag  (admin only)",

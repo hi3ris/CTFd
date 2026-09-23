@@ -30,11 +30,11 @@ flags:
 # CVE id (if any) goes in a paid hint, never in the description.
 hints:
   - content: >-
-      TODO: cheap hint narrowing the vulnerability class.
+      L'ingest découpe le corps naïvement. Que fait-il d'une ligne « SMUGGLED GET ... » ?
     cost: 20
     key: h1
   - content: >-
-      TODO: dearer hint (mechanism / advisory id / patch diff).
+      POST /ingest avec une ligne SMUGGLED GET /admin/flag (traitée comme requête pipelinée de confiance), puis GET /page?p=/admin/flag.
     cost: 40
     key: h2
     requirements: [h1]
@@ -45,5 +45,5 @@ tags:
 # challenge-id (HMAC / requirements wiring): web-invoicer-smuggle
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
 
-state: hidden  # STUB -- flip to visible once the vuln + solver are implemented and Lot-5 verified
-version: "0.1"
+state: hidden  # IMPLEMENTED + locally verified end-to-end (ported); flip to visible after Lot-5 Docker rehearsal
+version: "1.0"

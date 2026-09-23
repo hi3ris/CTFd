@@ -1,34 +1,79 @@
-#!/usr/bin/env python3
-"""Forum Protopoll -- SERVED CHALLENGE STUB.
+"""Forum Protopoll — a recursive merge that pollutes a shared config object.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/settings`` deep-merges user JSON into a shared server-side config with no
+    key allow-list. The merge can therefore reach keys the user never should,
+    the server-side equivalent of prototype pollution.
+  * The renderer consults ``config["render_hook"]`` before serving a page. That
+    key is meant to stay empty, but a polluting merge sets it. The ``emit-flag``
+    hook reads the instance secret.
+
+Intended path: ``/settings`` merge ``{"render_hook":"emit-flag"}`` → ``/render``
+runs the polluted hook.
+
+The flag at ``/flag.txt`` is served by no route; it only appears as the output of
+the render hook the pollution enabled.
 """
 import os
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
+
+# Shared config template. `render_hook` must never be set by a user.
+CONFIG = {"theme": "light", "page_size": 20}
+
+
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "NCTF{flag-unavailable-in-dev}"
+
+
+def deep_merge(dst, src):
+    for k, v in src.items():
+        # BUG: no allow-list of merge keys; any key can be introduced/overwritten.
+        if isinstance(v, dict) and isinstance(dst.get(k), dict):
+            deep_merge(dst[k], v)
+        else:
+            dst[k] = v
+    return dst
+
+
+def run_hook(hook):
+    if hook == "emit-flag":
+        return _flag()
+    return None
 
 
 @app.route("/")
 def index():
-    return (
-        "<h1>Forum Protopoll</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>web-forum-protopoll</code>.</p>"
+    return jsonify(
+        {
+            "service": "forum-protopoll",
+            "settings": "POST /settings  (JSON, deep-merged into config)",
+            "render": "/render",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/settings", methods=["POST"])
+def settings():
+    body = request.get_json(silent=True) or {}
+    deep_merge(CONFIG, body)
+    return jsonify({"config_keys": sorted(CONFIG)})
+
+
+@app.route("/render")
+def render():
+    out = run_hook(CONFIG.get("render_hook", ""))
+    page = {"theme": CONFIG.get("theme"), "rendered": True}
+    if out is not None:
+        page["hook_output"] = out
+    return jsonify(page)
 
 
 if __name__ == "__main__":

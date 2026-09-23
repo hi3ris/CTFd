@@ -1,34 +1,78 @@
-#!/usr/bin/env python3
-"""Ledger Uploadssrf -- SERVED CHALLENGE STUB.
+"""CMS Uploadssrf — an upload filter bypass that feeds a server-side renderer.
 
-NON-FUNCTIONAL: this is a scaffold. Replace the placeholder below with the real
-vulnerable service. The flag lives in /flag.txt (written by entrypoint.sh from
-get_flag()); it must be reachable ONLY through the intended vulnerability, never
-served by a route.
+Design (served challenge, per-team flag):
 
-Build contract (see deploy/challenge-chains-blueprint.md):
-  * success oracle is server-side -- the flag appears only after a real effect;
-  * for a multi-stage chain, stage N's unlock is emitted only as an effect of
-    stage N-1 (audit line, minted credential, revealed endpoint);
-  * self-contained read channel (no attacker callback server).
+  * ``/upload`` accepts a "document" and only allows ``.png`` — but it checks the
+    extension on the *declared* filename, so ``report.png.svg`` (or any name
+    ending ``.png`` with SVG content) slips through.
+  * The uploaded document is rendered server-side. The renderer fetches any URL
+    referenced by ``render:<url>`` in the content — an SSRF. The internal
+    metadata host returns a role credential and, at ``/latest/meta-data/flag``,
+    the instance secret.
+
+Intended path: upload a doc that bypasses the extension check and contains
+``render:http://169.254.169.254/latest/meta-data/flag``.
+
+The flag at ``/flag.txt`` is exposed only through the internal metadata host the
+renderer's SSRF reaches.
 """
 import os
+import re
 
-from flask import Flask
+from flask import Flask, jsonify, request
 
 app = Flask(__name__)
 
 
+def _flag():
+    try:
+        with open("/flag.txt", encoding="utf-8") as fh:
+            return fh.read().strip()
+    except OSError:
+        return "NCTF{flag-unavailable-in-dev}"
+
+
+# Internal metadata service (reachable only server-side).
+def _metadata(url):
+    table = {
+        "http://169.254.169.254/latest/meta-data/role": "backup-restore",
+        "http://169.254.169.254/latest/meta-data/flag": _flag(),
+    }
+    return table.get(url)
+
+
+def _allowed(filename):
+    # BUG: only checks that the name ends with .png, ignoring real content type
+    # and double extensions.
+    return filename.endswith(".png")
+
+
 @app.route("/")
 def index():
-    return (
-        "<h1>Ledger Uploadssrf</h1><p>Scaffold stub. TODO: implement the vulnerability "
-        "for challenge <code>web-ledger-uploadssrf</code>.</p>"
+    return jsonify(
+        {
+            "service": "ledger-uploadssrf",
+            "upload": "POST /upload {filename, content}",
+            "note": "only .png documents are accepted",
+        }
     )
 
 
-# TODO: the vulnerable route(s) go here. The flag is /flag.txt, readable only via
-# the intended exploit. Do not add a route that serves it directly.
+@app.route("/upload", methods=["POST"])
+def upload():
+    body = request.get_json(silent=True) or {}
+    filename = body.get("filename", "")
+    content = body.get("content", "")
+    if not _allowed(filename):
+        return jsonify({"error": "only .png allowed"}), 400
+    # Server-side render: follow any render:<url> directive (SSRF).
+    m = re.search(r"render:(\S+)", content)
+    rendered = None
+    if m:
+        rendered = _metadata(m.group(1))
+        if rendered is None:
+            rendered = f"<fetched {m.group(1)}>"
+    return jsonify({"stored": filename, "rendered": rendered})
 
 
 if __name__ == "__main__":
