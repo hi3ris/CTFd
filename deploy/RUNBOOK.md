@@ -167,7 +167,7 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 ## 3. J-7 — Bascule présélection 🧑
 
 ```
-make phase-preselection      # crée arena + nœud IA ; ~1,30 USD/h
+make phase-preselection      # crée arena + nœud IA ; ~1,46 USD/h
 make wait-front              # front prêt
 make wait-arena             # arena + IA prêts (télécharge le modèle Ollama)
 make link                   # relie tout, vérifie arena + IA

@@ -112,7 +112,7 @@ make deploy && make tls-init
 ## 6. Bascule présélection (J-7 / le 23)
 
 ```bash
-make phase-preselection        # crée arena + nœud IA ; ~1,30 USD/h
+make phase-preselection        # crée arena + nœud IA ; ~1,46 USD/h
 make wait-front && make wait-arena     # wait-arena télécharge le modèle Ollama
 make link                      # relie front<->arena<->IA ; écrit les vars auto de front/.env
 make deploy && make tls-init   # si le front a été recréé

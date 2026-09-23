@@ -31,8 +31,8 @@ changent : rien ne justifie de laisser une machine allumee.
 | -------------- | ------------ | ------------- | ------------- | --------------- |
 | `off`          | —            | —             | —             | **0 USD d'EC2** |
 | `setup`        | `t4g.small`  | —             | —             | ~0,02 USD/h     |
-| `preselection` | `t4g.medium` | `c6a.4xlarge` | `g4dn.xlarge` | ~1,30 USD/h     |
-| `final`        | `t4g.small`  | `c6a.2xlarge` | `g4dn.xlarge` | ~0,96 USD/h     |
+| `preselection` | `t4g.medium` | `c6i.4xlarge` | `g4dn.xlarge` | ~1,46 USD/h     |
+| `final`        | `t4g.small`  | `c6i.2xlarge` | `g4dn.xlarge` | ~1,04 USD/h     |
 
 Hors evenement, aucune instance EC2 n'existe. Seul subsiste le bucket S3 des
 archives, pour environ 0,50 USD par mois.

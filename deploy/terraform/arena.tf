@@ -32,7 +32,7 @@ resource "aws_instance" "arena" {
 
       # Requete one-time volontairement : une requete "persistent" survit au
       # `terraform destroy` et AWS relance alors une instance que Terraform ne
-      # connait plus. On paierait une c6a hors de tout suivi jusqu'a s'en
+      # connait plus. On paierait une c6i hors de tout suivi jusqu'a s'en
       # apercevoir sur la facture.
       spot_options {}
     }

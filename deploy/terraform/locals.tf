@@ -26,14 +26,14 @@ locals {
     # l'arena heberge beaucoup d'instances de challenge simultanees.
     preselection = {
       front = "t4g.medium"  # 2 vCPU ARM / 4 Go
-      arena = "c6a.4xlarge" # 16 vCPU / 32 Go
+      arena = "c6i.4xlarge" # 16 vCPU / 32 Go (c6a absent de Paris et Stockholm)
       ai    = "g4dn.xlarge" # GPU T4 16 Go
     }
 
     # ~50 joueurs (10 equipes de 4 a 5). Beaucoup plus leger.
     final = {
       front = "t4g.small"
-      arena = "c6a.2xlarge" # 8 vCPU / 16 Go
+      arena = "c6i.2xlarge" # 8 vCPU / 16 Go
       ai    = "g4dn.xlarge"
     }
   }
@@ -49,7 +49,7 @@ locals {
   hourly_estimate_usd = {
     off          = 0.00
     setup        = 0.02
-    preselection = 1.30
-    final        = 0.96
+    preselection = 1.46 # t4g.medium 0.038 + c6i.4xlarge 0.808 + g4dn.xlarge 0.615 (Paris, on-demand)
+    final        = 1.04 # t4g.small 0.019 + c6i.2xlarge 0.404 + g4dn.xlarge 0.615
   }
 }
