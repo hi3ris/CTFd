@@ -44,6 +44,7 @@ PROTO = {
     "imds": "cloud/backup-imds",
     "prefix": "cloud/backup-prefix",
     "presign": "cloud/backup-presign",
+    "envexec": "cloud/backup-envexec",
     "protoparse": "misc/proto-fuzz-live",
 }
 
