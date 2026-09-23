@@ -182,17 +182,17 @@ make season-down        # sauvegarde + archive + DÉTRUIT tout l'EC2
 
 ## Carte des commandes
 
-| Commande                                    | Rôle                                      |
-| ------------------------------------------- | ----------------------------------------- |
-| `make init` / `make state-bootstrap`        | init Terraform / état distant S3+DynamoDB |
-| `make check-gpu-quota`                      | quota GPU (à lancer **maintenant**)       |
+| Commande                                       | Rôle                                           |
+| ---------------------------------------------- | ---------------------------------------------- |
+| `make init` / `make state-bootstrap`           | init Terraform / état distant S3+DynamoDB      |
+| `make check-gpu-quota`                         | quota GPU (à lancer **maintenant**)            |
 | `make request-gpu-quota` / `make free-credits` | demande de quota GPU / crédits du plan gratuit |
-| `make phase-setup / -preselection / -final` | leviers de coût / dimensionnement         |
-| `make wait-front / wait-arena`              | attente provisionnement                   |
-| `make deploy / tls-init / link`             | déploiement CTFd / HTTPS / liaison        |
-| `make check-arena / push-images`            | images de challenge sur l'arena           |
-| `make preflight PHASE=...`                  | check-list de mise en prod (gate)         |
-| `make backup / restore FILE=... / archive`  | sauvegarde / restauration / archive S3    |
-| `make season-down / destroy`                | destruction de l'EC2 (le bucket survit)   |
-| `make logs / gpu / cost`                    | supervision                               |
-| `make ssh-front / ssh-arena / ssh-ai`       | shells                                    |
+| `make phase-setup / -preselection / -final`    | leviers de coût / dimensionnement              |
+| `make wait-front / wait-arena`                 | attente provisionnement                        |
+| `make deploy / tls-init / link`                | déploiement CTFd / HTTPS / liaison             |
+| `make check-arena / push-images`               | images de challenge sur l'arena                |
+| `make preflight PHASE=...`                     | check-list de mise en prod (gate)              |
+| `make backup / restore FILE=... / archive`     | sauvegarde / restauration / archive S3         |
+| `make season-down / destroy`                   | destruction de l'EC2 (le bucket survit)        |
+| `make logs / gpu / cost`                       | supervision                                    |
+| `make ssh-front / ssh-arena / ssh-ai`          | shells                                         |
