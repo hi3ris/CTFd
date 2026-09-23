@@ -89,7 +89,7 @@ state-bootstrap: ## (une fois) Cree le bucket S3 d'etat + la table de verrou Dyn
 
 .PHONY: check-gpu-quota
 check-gpu-quota: ## Verifie le quota GPU AWS dans LA BONNE region. A LANCER MAINTENANT.
-	@REGION=$$($(TF) output -raw aws_region 2>/dev/null || echo eu-west-3); \
+	@REGION=$$($(TF) output -raw aws_region 2>/dev/null); REGION=$${REGION:-eu-west-3}; \
 	 echo "Quota 'Running On-Demand G and VT instances' dans $$REGION :"; \
 	 V=$$(aws service-quotas get-service-quota --region "$$REGION" \
 	      --service-code ec2 --quota-code L-DB2E81BA \
@@ -109,11 +109,11 @@ check-gpu-quota: ## Verifie le quota GPU AWS dans LA BONNE region. A LANCER MAIN
 
 .PHONY: request-gpu-quota
 request-gpu-quota: ## Demande l'augmentation du quota GPU via Service Quotas (VALUE=8 par defaut). A LANCER MAINTENANT.
-	@REGION=$$($(TF) output -raw aws_region 2>/dev/null || echo eu-west-3) ./scripts/aws_gpu_quota.sh
+	@REGION=$$($(TF) output -raw aws_region 2>/dev/null); REGION=$${REGION:-eu-west-3} ./scripts/aws_gpu_quota.sh
 
 .PHONY: free-credits
 free-credits: ## Plan gratuit AWS : fait les 5 activites "Earn AWS credits" (Budgets, EC2, Bedrock, Lambda, RDS) puis nettoie. BUDGET_EMAIL=... pour l'alerte
-	@REGION=$$($(TF) output -raw aws_region 2>/dev/null || echo eu-west-3) ./scripts/aws_free_credits.sh
+	@REGION=$$($(TF) output -raw aws_region 2>/dev/null); REGION=$${REGION:-eu-west-3} ./scripts/aws_free_credits.sh
 
 # --- Phases -----------------------------------------------------------------
 
@@ -200,13 +200,19 @@ check-arena: ## Liste les images de challenge reellement presentes sur l'arena
 # --- Deploiement ------------------------------------------------------------
 
 .PHONY: deploy
-deploy: ## Deploie/met a jour CTFd sur le front
+deploy: ## Deploie/met a jour CTFd sur le front (envoie front/.env au premier deploiement)
+	@test -f front/.env || { echo "ERREUR : creez deploy/front/.env (voir .env.example)"; exit 1; }
 	$(FRONT_SSH) 'set -euo pipefail; \
 	  if [ ! -d /opt/ctfd/CTFd ]; then \
 	    git clone --branch $(REPO_BRANCH) $(REPO_URL) /opt/ctfd/CTFd; \
 	  else \
 	    cd /opt/ctfd/CTFd && git fetch origin $(REPO_BRANCH) && git checkout $(REPO_BRANCH) && git pull origin $(REPO_BRANCH); \
-	  fi; \
+	  fi'
+	@if ! $(FRONT_SSH) 'test -f /opt/ctfd/CTFd/deploy/front/.env'; then \
+	   echo ">> Premier deploiement : envoi de front/.env sur le front (les prochains 'make link' le completent sur place)"; \
+	   scp $(SSH_OPTS) front/.env ubuntu@$(FRONT_IP):/opt/ctfd/CTFd/deploy/front/.env; \
+	 fi
+	$(FRONT_SSH) 'set -euo pipefail; \
 	  cd /opt/ctfd/CTFd; \
 	  test -f deploy/front/.env || { echo "ERREUR : creez deploy/front/.env (voir .env.example)"; exit 1; }; \
 	  test -f deploy/front/nginx/active.conf || cp deploy/front/nginx/bootstrap.conf deploy/front/nginx/active.conf; \

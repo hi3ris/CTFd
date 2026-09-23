@@ -4,7 +4,7 @@
 
 resource "aws_security_group" "front" {
   name        = "${var.project_name}-front"
-  description = "CTFd front : web public, SSH admin, tunnel frp depuis l'arena"
+  description = "CTFd front : web public, SSH admin, tunnel frp depuis arena"
   vpc_id      = aws_vpc.main.id
 
   tags = { Name = "${var.project_name}-front" }
@@ -25,7 +25,7 @@ resource "aws_vpc_security_group_ingress_rule" "front_http" {
   for_each = toset(var.player_cidrs)
 
   security_group_id = aws_security_group.front.id
-  description       = "HTTP (redirige vers HTTPS, et challenge ACME Let's Encrypt)"
+  description       = "HTTP (redirige vers HTTPS, et challenge ACME Lets Encrypt)"
   cidr_ipv4         = each.value
   from_port         = 80
   to_port           = 80
@@ -106,7 +106,7 @@ resource "aws_vpc_security_group_egress_rule" "arena_all" {
 # arena, donc c'est le front qui doit accepter l'entree sur le port frps.
 resource "aws_vpc_security_group_ingress_rule" "front_frp_bind" {
   security_group_id            = aws_security_group.front.id
-  description                  = "Tunnel frp depuis l'arena"
+  description                  = "Tunnel frp depuis arena"
   referenced_security_group_id = aws_security_group.arena.id
   from_port                    = 7000
   to_port                      = 7000
@@ -117,7 +117,7 @@ resource "aws_vpc_security_group_ingress_rule" "front_frp_bind" {
 
 resource "aws_security_group" "ai" {
   name        = "${var.project_name}-ai"
-  description = "Ollama sur GPU. Aucune entree publique : seul le front l'interroge."
+  description = "Ollama sur GPU. Aucune entree publique : seul le front interroge Ollama."
   vpc_id      = aws_vpc.main.id
 
   tags = { Name = "${var.project_name}-ai" }
@@ -158,7 +158,7 @@ resource "aws_vpc_security_group_egress_rule" "ai_all" {
 # d'admission ne puisse pas etre contourne par un conteneur compromis.
 resource "aws_vpc_security_group_ingress_rule" "front_ai_gw_from_arena" {
   security_group_id            = aws_security_group.front.id
-  description                  = "Passerelle admission IA, depuis l'arena"
+  description                  = "Passerelle admission IA, depuis arena"
   referenced_security_group_id = aws_security_group.arena.id
   from_port                    = 8600
   to_port                      = 8600

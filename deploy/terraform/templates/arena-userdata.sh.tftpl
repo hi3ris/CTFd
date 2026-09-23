@@ -113,7 +113,17 @@ systemctl enable frpc
 # editions. Elles y sont poussees par `make push-images` depuis la machine de
 # l'auteur des challenges.
 
-apt-get install -y --no-install-recommends awscli
+apt-get install -y --no-install-recommends unzip
+# --- AWS CLI v2 ----------------------------------------------------------------
+# Ubuntu 24.04 n'a plus de paquet apt "awscli" : installeur officiel (arm64 et
+# x86_64). Sans cette etape le script mourait ici (set -e) et rien n'etait
+# installe : ni Docker, ni frps, ni le marqueur attendu par `make wait-front`.
+if ! command -v aws >/dev/null 2>&1; then
+  curl -fsSL "https://awscli.amazonaws.com/awscli-exe-linux-$(uname -m).zip" -o /tmp/awscliv2.zip
+  unzip -q -o /tmp/awscliv2.zip -d /tmp
+  /tmp/aws/install --update
+  rm -rf /tmp/aws /tmp/awscliv2.zip
+fi
 
 mkdir -p /opt/challenge-images
 

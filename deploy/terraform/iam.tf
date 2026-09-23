@@ -93,3 +93,12 @@ resource "aws_iam_instance_profile" "front" {
   name = "${var.project_name}-front"
   role = aws_iam_role.front.name
 }
+
+# Acces operateur de secours par AWS Systems Manager (Run Command / Session
+# Manager, via HTTPS) : quand le SSH admin est inutilisable (CGNAT, blackhole
+# PMTU...), l'operateur garde une voie vers le front. Politique geree AWS,
+# aucune permission sur les donnees du CTF.
+resource "aws_iam_role_policy_attachment" "front_ssm" {
+  role       = aws_iam_role.front.name
+  policy_arn = "arn:aws:iam::aws:policy/AmazonSSMManagedInstanceCore"
+}

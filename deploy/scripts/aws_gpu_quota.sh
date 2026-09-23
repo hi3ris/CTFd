@@ -16,7 +16,8 @@
 # plan payant (Billing > Free plan > Upgrade) puis redemander.
 set -euo pipefail
 
-REGION=${REGION:-$(terraform -chdir="$(dirname "$0")/../terraform" output -raw aws_region 2>/dev/null || echo eu-west-3)}
+REGION=${REGION:-$(terraform -chdir="$(dirname "$0")/../terraform" output -raw aws_region 2>/dev/null)}
+REGION=${REGION:-eu-west-3}
 VALUE=${VALUE:-8}
 FORCE=${FORCE:-0}
 QUOTA=L-DB2E81BA

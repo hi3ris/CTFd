@@ -131,7 +131,7 @@ act_rds() {
 # --- 5. Lambda ---------------------------------------------------------------
 act_lambda() {
   local role=$PREFIX-lambda fn=$PREFIX-hello arn tmp i
-  tmp=$(mktemp -d); trap 'rm -rf "$tmp"' RETURN
+  tmp=$(mktemp -d); trap "rm -rf '$tmp'" RETURN
   arn=$(aws iam get-role --role-name "$role" --query Role.Arn --output text 2>/dev/null) || {
     arn=$(aws iam create-role --role-name "$role" --query Role.Arn --output text \
       --assume-role-policy-document '{"Version":"2012-10-17","Statement":[{"Effect":"Allow",
