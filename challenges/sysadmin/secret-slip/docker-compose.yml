@@ -1,0 +1,13 @@
+# Local run notes for sysadmin-secret-slip (STUB).
+#   docker build -t ctf-sysadmin-secret-slip:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  sysadmin-secret-slip:
+    image: ctf-sysadmin-secret-slip:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

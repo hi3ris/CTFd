@@ -1,0 +1,13 @@
+# Local run notes for misc-proto-fuzz-live (STUB).
+#   docker build -t ctf-misc-proto-fuzz-live:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  misc-proto-fuzz-live:
+    image: ctf-misc-proto-fuzz-live:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

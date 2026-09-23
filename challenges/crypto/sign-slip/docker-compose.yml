@@ -1,0 +1,13 @@
+# Local run notes for crypto-sign-slip (STUB).
+#   docker build -t ctf-crypto-sign-slip:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  crypto-sign-slip:
+    image: ctf-crypto-sign-slip:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

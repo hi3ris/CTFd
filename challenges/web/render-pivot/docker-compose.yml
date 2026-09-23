@@ -1,0 +1,13 @@
+# Local run notes for web-render-pivot (STUB).
+#   docker build -t ctf-web-render-pivot:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-render-pivot:
+    image: ctf-web-render-pivot:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

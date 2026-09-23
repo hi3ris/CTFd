@@ -1,0 +1,13 @@
+# Local run notes for crypto-oracle-cascade (STUB).
+#   docker build -t ctf-crypto-oracle-cascade:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  crypto-oracle-cascade:
+    image: ctf-crypto-oracle-cascade:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped
