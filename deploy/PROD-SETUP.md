@@ -53,6 +53,7 @@ présélection**.
    **Réglages de la zone Cloudflare à contrôler avant l'ouverture** (le script
    applique les deux premiers ; les règles WAF se gèrent dans le tableau de bord,
    Sécurité → WAF → Règles personnalisées) :
+
    - Bot Fight Mode **désactivé** et niveau de sécurité **medium** : sinon les
      scripts des joueurs (curl, python-requests, ctfcli) sont défiés ou bloqués,
      sans exception possible sur le plan Free.
@@ -69,8 +70,8 @@ présélection**.
      protégées par le proxy.
    - Plan Free : envoi limité à 100 Mo par requête (gros imports/fichiers de
      challenge : passer par le tunnel SSH), délai de réponse maximal 100 s.
-   Coût du switch : quasi nul (les instances servies utilisent `FRONT_PUBLIC_IP:port`,
-   pas le domaine). Sans DNS résolu, certbot échoue (challenge HTTP-01).
+     Coût du switch : quasi nul (les instances servies utilisent `FRONT_PUBLIC_IP:port`,
+     pas le domaine). Sans DNS résolu, certbot échoue (challenge HTTP-01).
 
 ## 2. Setup initial CTFd (admin fort, PAS de seed local)
 
