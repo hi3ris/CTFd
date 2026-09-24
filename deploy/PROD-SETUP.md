@@ -49,6 +49,26 @@ présélection**.
    réserver 80/443 aux plages Cloudflare : `web_cidrs` dans `terraform.tfvars`
    (`scripts/cloudflare-ips.sh --tfvars`) + `terraform apply`. Détails :
    `deploy/scripts/cloudflare-origin-tls.sh`. Ancien mode : `make tls-init`. Vérifier `https://ctf.tg/` en 200, certificat valide.
+
+   **Réglages de la zone Cloudflare à contrôler avant l'ouverture** (le script
+   applique les deux premiers ; les règles WAF se gèrent dans le tableau de bord,
+   Sécurité → WAF → Règles personnalisées) :
+   - Bot Fight Mode **désactivé** et niveau de sécurité **medium** : sinon les
+     scripts des joueurs (curl, python-requests, ctfcli) sont défiés ou bloqués,
+     sans exception possible sur le plan Free.
+   - Aucune règle limitant les méthodes HTTP : l'API CTFd utilise PATCH et DELETE
+     (la règle héritée « Only Get & Post » a été désactivée le 2026-09-24).
+   - Règle « CTFd API » (skip niveau de sécurité + Browser Integrity Check sur
+     `/api/`) : conservée.
+   - Règle « IP not from Togo » (bloque tout visiteur hors Togo) : **décision
+     d'organisation**. Si le CTF est réservé au Togo, la garder ; sinon la
+     désactiver. Dans tous les cas, les vérifications externes (CI, moniteurs)
+     doivent passer par le tunnel SSH ou être faites depuis le Togo.
+   - Les instances de challenge (ports 28000-28500) sont jointes par l'IP publique
+     du front, pas par le nom : Cloudflare ne les voit pas, elles ne sont pas
+     protégées par le proxy.
+   - Plan Free : envoi limité à 100 Mo par requête (gros imports/fichiers de
+     challenge : passer par le tunnel SSH), délai de réponse maximal 100 s.
    Coût du switch : quasi nul (les instances servies utilisent `FRONT_PUBLIC_IP:port`,
    pas le domaine). Sans DNS résolu, certbot échoue (challenge HTTP-01).
 

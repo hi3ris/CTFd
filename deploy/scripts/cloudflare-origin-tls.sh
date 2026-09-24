@@ -75,11 +75,19 @@ $SSH "set -euo pipefail; cd /opt/ctfd/CTFd; \
   code=\$(curl -sk -o /dev/null -w '%{http_code}' --resolve $DOMAIN:443:127.0.0.1 https://$DOMAIN/healthcheck || true); \
   echo \"   origine https://$DOMAIN/healthcheck -> \$code\"; test \"\$code\" = 200 || rollback"
 
-echo ">> Cloudflare : SSL Full (strict), TLS minimum 1.2, HTTPS force"
-for kv in ssl:strict min_tls_version:1.2 always_use_https:on; do
+echo ">> Cloudflare : SSL Full (strict), TLS minimum 1.2, HTTPS force, niveau de securite medium"
+# security_level=high defie (JS challenge) les IP a mauvaise reputation : les
+# joueurs derriere le CGNAT des FAI togolais et leurs scripts en feraient les frais.
+for kv in ssl:strict min_tls_version:1.2 always_use_https:on security_level:medium; do
   k=${kv%%:*}; v=${kv#*:}
   cf -X PATCH "$API/zones/$ZONE/settings/$k" --data "{\"value\":\"$v\"}" >/dev/null && echo "   $k = $v"
 done
+# Bot Fight Mode bloque tout client non-navigateur (curl, python-requests,
+# ctfcli) et n'admet aucune exception sur le plan Free : incompatible avec un CTF.
+cf -X PUT "$API/zones/$ZONE/bot_management" --data '{"fight_mode":false}' >/dev/null && echo "   bot_fight_mode = off"
+echo "   regles WAF personnalisees de la zone (a verifier a la main, voir PROD-SETUP.md) :"
+cf "$API/zones/$ZONE/rulesets/phases/http_request_firewall_custom/entrypoint" \
+  | python3 -c 'import sys,json; [print("     ", "ON " if r["enabled"] else "off", r["action"], "|", r["description"][:60], "|", r["expression"]) for r in json.load(sys.stdin)["result"].get("rules",[])]' || true
 
 echo ">> verification a travers Cloudflare"
 sleep 3
