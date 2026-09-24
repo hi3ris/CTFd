@@ -10,6 +10,8 @@
 # ATTENTION : sur un compte AWS neuf, le quota "Running On-Demand G and VT
 # instances" est souvent a 0. La demande d'augmentation peut prendre plusieurs
 # jours ouvres. A verifier des maintenant : `make check-gpu-quota`.
+# Quota refuse ? `ai_backend = "bedrock"` dans terraform.tfvars : ce noeud
+# n'est pas cree et la passerelle du front interroge Amazon Bedrock a la place.
 # ---------------------------------------------------------------------------
 
 resource "aws_instance" "ai" {

@@ -57,10 +57,12 @@ output "cost_note" {
     "(~0.50 USD/mois).",
     ]) : join("", [
     "Phase ${var.phase} : ~",
-    format("%.2f", local.hourly_estimate_usd[var.phase]),
+    format("%.2f", local.hourly_now_usd),
     " USD/h, soit ~",
-    format("%.0f", local.hourly_estimate_usd[var.phase] * 24),
-    " USD par jour. Lancez `make season-down` des la fin de la phase.",
+    format("%.0f", local.hourly_now_usd * 24),
+    " USD par jour",
+    var.ai_backend == "bedrock" ? " (+ Bedrock a l'usage, ~0.1 USD / 1000 requetes IA)" : "",
+    ". Lancez `make season-down` des la fin de la phase.",
   ])
 }
 
@@ -91,4 +93,19 @@ output "whale_port_range_start" {
 output "whale_port_range_end" {
   description = "Dernier port TCP des instances de challenge (lu par le Makefile)."
   value       = var.whale_port_range_end
+}
+
+output "ai_backend" {
+  description = "ollama (noeud GPU) ou bedrock (aucun noeud IA). Lu par `make link`."
+  value       = var.ai_backend
+}
+
+output "bedrock_models" {
+  description = "Pool de modeles Bedrock (id=rpm,...) pousse dans front/.env par `make link`."
+  value       = var.bedrock_models
+}
+
+output "bedrock_chat_models" {
+  description = "Modeles Bedrock sans outils (id=rpm,...) pousses dans front/.env par `make link`."
+  value       = var.bedrock_chat_models
 }

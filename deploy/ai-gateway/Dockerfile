@@ -7,7 +7,7 @@ WORKDIR /app
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-COPY app.py .
+COPY app.py bedrock_backend.py ./
 
 RUN useradd -m -u 1001 gw && mkdir -p /var/log/ai-gateway && chown gw /var/log/ai-gateway
 USER gw

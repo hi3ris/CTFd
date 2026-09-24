@@ -263,12 +263,32 @@ images doivent exister : `make check-arena` / `make push-images`.
       un `make backup` manuel avant toute grosse manip.
 - [ ] **IMDSv2**, pas de port arène/IA ouvert sur Internet (déjà en Terraform).
 
-## 7. Piste IA (conditionnelle au GPU)
+## 7. Piste IA (GPU refusé → Bedrock)
 
-Quota GPU en `CASE_OPENED` (0 vCPU). **Si le quota n'est pas accordé avant le
-23** : lancer la présélection **sans la piste IA** (le reste tourne sans GPU).
-Ne pas rendre les challenges IA visibles tant que le nœud Ollama n'est pas up
-(`OLLAMA_URL` vide = challenges IA indisponibles). Décision à trancher côté humain.
+Quota GPU **refusé** par AWS le 23/09 14:37 UTC (case 179016552700802, demande
+API sans justification) ; appel déposé le 24/09 avec le cas d'usage détaillé.
+Le statut `CASE_OPENED` de l'API n'est pas à jour, ne pas s'y fier.
+
+**Plan B prêt : `ai_backend = "bedrock"`** (terraform.tfvars). Aucun nœud IA ;
+la passerelle du front appelle Amazon Bedrock avec le rôle IAM du front.
+Vérifié en eu-west-3 le 24/09 : les 4 modèles Nova répondent (chat + appel
+d'outil) sans formalité ; Claude Haiku 4.5 exige le formulaire « use case
+details » Anthropic (console Bedrock) ; Pixtral Large est limité à 1 req/min.
+
+- [ ] Décider : attendre la réponse à l'appel GPU ou basculer `bedrock` (à
+      trancher **avant le 16/10** pour laisser une répétition).
+- [ ] `make check-bedrock` vert (chaque modèle du pool + quotas affichés).
+- [ ] Rejouer les solutions des 3 challenges IA à modèle (`ai1-naive-guard`,
+      `ai3-tool-abuse`, `agent-tool-abuse`) contre le pool : les Nova résistent
+      plus à l'injection que `llama3.1:8b`. Ajuster les prompts si un niveau
+      devient insoluble ; option `bedrock_chat_models =
+    "mistral.mistral-7b-instruct-v0:2=8"` pour un modèle plus naïf sur les
+      niveaux sans outils.
+- [ ] Quotas : chaque modèle est plafonné à 20-25 req/min ; le pool tient
+      ~85 req/min, au-delà la passerelle répond 503 « réessayez ». Augmentation
+      possible (ajustable) : Nova 2 Lite global, Claude Haiku 4.5.
+- [ ] `make phase-preselection` puis `make link` écrivent `AI_BACKEND` et le
+      pool dans `front/.env` ; `make link` échoue si la passerelle ne répond pas.
 
 ## 8. Divers repérés
 

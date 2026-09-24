@@ -75,7 +75,7 @@ Sans Docker, le filet minimal reste `pytest tests/test_theme_hibris.py` (5 s).
 
 Ces points, pas le code, peuvent faire rater le 23 octobre.
 
-- [ ] ⏱ **Quota GPU** : `make check-gpu-quota`. Si < 4 vCPU, **demander ≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Sans GPU → **toute la catégorie IA saute**.
+- [ ] ⏱ **Quota GPU** : `make check-gpu-quota`. Si < 4 vCPU, **demander ≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Refusé → plan B **`ai_backend = "bedrock"`** (aucun nœud IA, `make check-bedrock`), cf. DEPLOY-AWS §2.
 - [ ] ⏱ **Finale sur site ou distante** — deadline **18 septembre** (appro salle/switch/machines). Défaut si non tranché : portables perso sur VLAN contrôlé + téléphones en caisse.
 - [ ] **Domaine** acheté/réservé ; décider Route53 (DNS auto) ou manuel.
 - [ ] **Usage IA** : (A) mesurer la compétence _sans_ assistance → IA autorisée en présélection, finale contrôlée [**recommandé**], ou (B) autorisée partout.
@@ -229,7 +229,7 @@ Diagnostic d'abord : `make cost` (qu'est-ce qui tourne ?), `make logs`, `make ss
 **Piste IA : 503 permanents / GPU saturé**
 
 1. `make gpu` : file pleine → c'est le comportement borné attendu sous pointe. Réduire les quotas d'admission (`AI_*` dans l'env de `ai-gateway`) sans rebuild.
-2. Ollama down → `make ssh-ai`, redémarrer le service ; vérifier le modèle téléchargé.
+2. Ollama down → `make ssh-ai`, redémarrer le service ; vérifier le modèle téléchargé. Backend bedrock : `make gpu` affiche les compteurs par modèle (cooldown = quota Bedrock atteint), `make check-bedrock` depuis le poste.
 3. Arène→front:8600 injoignable → vérifier la règle SG et l'injection `OLLAMA_URL`/`AI_PROXY_TOKEN`.
 
 **Partage de flags (menu admin Anti-triche, ou ligne `ANTICHEAT` dans `logs/submissions.log`)**

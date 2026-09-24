@@ -142,6 +142,15 @@ services:
       - "8600:8600"
     environment:
       - OLLAMA_URL=http://ollama:11434
+      # AI_BACKEND=bedrock + identifiants AWS dans l'env de l'operateur :
+      # repetition du plan B sans GPU (le conteneur ollama tourne mais est ignore).
+      - AI_BACKEND=${AI_BACKEND:-ollama}
+      - AI_BEDROCK_MODELS=${AI_BEDROCK_MODELS:-}
+      - AI_BEDROCK_CHAT_MODELS=${AI_BEDROCK_CHAT_MODELS:-}
+      - AWS_REGION=${AWS_REGION:-eu-west-3}
+      - AWS_ACCESS_KEY_ID=${AWS_ACCESS_KEY_ID:-}
+      - AWS_SECRET_ACCESS_KEY=${AWS_SECRET_ACCESS_KEY:-}
+      - AWS_SESSION_TOKEN=${AWS_SESSION_TOKEN:-}
       - CTF_TEAM_FLAG_SECRET=${CTF_TEAM_FLAG_SECRET:-local-dev-team-flag-secret}
       - AI_RATE_MAX=${AI_RATE_MAX:-30}
       - AI_TOKEN_BUDGET=${AI_TOKEN_BUDGET:-200000}

@@ -27,6 +27,9 @@ AI_PRIV     = $(call tfout,ai_private_ip)
 BUCKET      = $(call tfout,archive_bucket)
 REGION      = $(call tfout,aws_region)
 PHASE       = $(call tfout,phase)
+AI_BACKEND       = $(call tfout,ai_backend)
+BEDROCK_MODELS   = $(call tfout,bedrock_models)
+BEDROCK_CHAT     = $(call tfout,bedrock_chat_models)
 WHALE_PORT_START = $(call tfout,whale_port_range_start)
 WHALE_PORT_END   = $(call tfout,whale_port_range_end)
 
@@ -173,8 +176,12 @@ wait-nodes: ## Attend l'arena et le noeud IA (avec delai maximal)
 	   printf '.'; sleep 10; \
 	 done; echo " pret."
 	@$(ARENA_SSH) 'cat /var/log/challenge-images.log' || true
-	@echo -n "Attente du noeud IA ($(AI_IP)), telechargement du modele "
-	@deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
+	@if [ -z "$(AI_IP)" ]; then \
+	   echo "Noeud IA : aucun (ai_backend = $(AI_BACKEND)) ; la passerelle du front interroge Bedrock."; \
+	   exit 0; \
+	 fi; \
+	 echo -n "Attente du noeud IA ($(AI_IP)), telechargement du modele "; \
+	 deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
 	 until $(AI_SSH) 'test -f /var/lib/cloud/ctfd-ai-provisioned' 2>/dev/null; do \
 	   if [ $$(date +%s) -gt $$deadline ]; then \
 	     echo " ECHEC"; \
@@ -183,8 +190,8 @@ wait-nodes: ## Attend l'arena et le noeud IA (avec delai maximal)
 	     exit 1; \
 	   fi; \
 	   printf '.'; sleep 15; \
-	 done; echo " pret."
-	@$(AI_SSH) 'nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv'
+	 done; echo " pret."; \
+	 $(AI_SSH) 'nvidia-smi --query-gpu=name,memory.used,memory.total --format=csv'
 
 .PHONY: check-arena
 check-arena: ## Liste les images de challenge reellement presentes sur l'arena
@@ -280,7 +287,11 @@ link: ## Relie le front a l'arena et au noeud IA, et verifie que ca marche
 	 $(FRONT_SSH) "cd /opt/ctfd/CTFd && \
 	   set -e; \
 	   upsert() { grep -q \"^\$$1=\" deploy/front/.env && sed -i \"s|^\$$1=.*|\$$1=\$$2|\" deploy/front/.env || echo \"\$$1=\$$2\" >> deploy/front/.env; }; \
-	   upsert OLLAMA_URL http://$(AI_PRIV):11434; \
+	   upsert AI_BACKEND $(AI_BACKEND); \
+	   upsert OLLAMA_URL '$(if $(AI_PRIV),http://$(AI_PRIV):11434,)'; \
+	   upsert AI_BEDROCK_MODELS '$(BEDROCK_MODELS)'; \
+	   upsert AI_BEDROCK_CHAT_MODELS '$(BEDROCK_CHAT)'; \
+	   upsert AWS_REGION $(REGION); \
 	   upsert AI_PROXY_URL http://$(FRONT_PRIV):8600; \
 	   upsert ARENA_HOST $(ARENA_PRIV); \
 	   upsert DOCKER_HOST tcp://dockerproxy:2375; \
@@ -298,12 +309,13 @@ import os, urllib.request, json; \
 u = os.environ[\"DOCKER_HOST\"].replace(\"tcp://\", \"http://\") + \"/version\"; \
 print(\"  Docker arena :\", json.load(urllib.request.urlopen(u, timeout=10))[\"Version\"])"' \
 	  || { echo "ECHEC : CTFd ne joint pas le Docker de l'arena. L'instancier ne marchera pas."; exit 1; }
-	@echo ">> Verification du canal Ollama"
-	@$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ctfd python -c "\
-import os, urllib.request, json; \
-r = json.load(urllib.request.urlopen(os.environ[\"OLLAMA_URL\"] + \"/api/tags\", timeout=15)); \
-print(\"  Modeles :\", [m[\"name\"] for m in r[\"models\"]])"' \
-	  || { echo "ECHEC : CTFd ne joint pas Ollama. Les challenges IA ne marcheront pas."; exit 1; }
+	@echo ">> Verification du canal IA (passerelle front:8600 -> $(AI_BACKEND))"
+	@$(FRONT_SSH) 'sleep 3; python3 -c "\
+import urllib.request, json; \
+r = json.load(urllib.request.urlopen(\"http://127.0.0.1:8600/api/tags\", timeout=20)); \
+print(\"  Backend :\", r.get(\"backend\"), \"| modeles :\", [m[\"name\"] for m in r[\"models\"]])"' \
+	  || { echo "ECHEC : la passerelle IA ne repond pas ($(AI_BACKEND)). Les challenges IA ne marcheront pas."; \
+	       echo "Diagnostiquer : make logs (service ai-gateway) ; backend bedrock : make check-bedrock."; exit 1; }
 	@echo
 	@$(TF) output -raw cost_note; echo
 
@@ -480,8 +492,35 @@ logs: ## Suit les logs du front
 	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) logs -f --tail=100'
 
 .PHONY: gpu
-gpu: ## Etat du GPU et des requetes Ollama en cours
-	$(AI_SSH) 'nvidia-smi; echo; curl -s http://127.0.0.1:11434/api/ps'
+gpu: ## Etat du GPU et des requetes Ollama en cours (backend bedrock : compteurs du pool)
+	@if [ -z "$(AI_IP)" ]; then \
+	   echo "Pas de noeud GPU (ai_backend = $(AI_BACKEND)). Compteurs de la passerelle :"; \
+	   $(FRONT_SSH) 'curl -s http://127.0.0.1:8600/metrics'; echo; \
+	 else \
+	   $(AI_SSH) 'nvidia-smi; echo; curl -s http://127.0.0.1:11434/api/ps'; \
+	 fi
+
+.PHONY: check-bedrock
+check-bedrock: ## Plan B sans GPU : verifie depuis le poste que chaque modele du pool repond (chat + appel d'outil)
+	@REGION=$${REGION:-$(REGION)}; REGION=$${REGION:-eu-west-3}; \
+	 MODELS="$${MODELS:-$(BEDROCK_MODELS)}"; \
+	 test -n "$$MODELS" || MODELS="eu.amazon.nova-lite-v1:0=20,eu.amazon.nova-micro-v1:0=20,eu.amazon.nova-pro-v1:0=25,eu.amazon.nova-2-lite-v1:0=20"; \
+	 TOOLS='{"tools":[{"toolSpec":{"name":"read_ticket","description":"Read a ticket","inputSchema":{"json":{"type":"object","properties":{"id":{"type":"string"}},"required":["id"]}}}}]}'; \
+	 fail=0; \
+	 for entry in $${MODELS//,/ }; do m=$${entry%%=*}; \
+	   printf '%-45s ' "$$m"; \
+	   out=$$(aws bedrock-runtime converse --region $$REGION --model-id $$m \
+	     --system '[{"text":"You are HELM. Use tools when asked."}]' \
+	     --messages '[{"role":"user","content":[{"text":"Read ticket TCK-1002 with your tool."}]}]' \
+	     --tool-config "$$TOOLS" --inference-config '{"maxTokens":120}' \
+	     --query 'stopReason' --output text 2>&1 | tail -1); \
+	   case "$$out" in tool_use) echo "OK (appel d'outil)";; *) echo "ECHEC : $$out"; fail=1;; esac; \
+	 done; \
+	 echo; echo "Quotas Bedrock (req/min) dans $$REGION :"; \
+	 aws service-quotas list-service-quotas --service-code bedrock --region $$REGION \
+	   --query 'Quotas[?contains(QuotaName, `requests per minute`) && (contains(QuotaName, `Nova`) || contains(QuotaName, `Haiku 4.5`) || contains(QuotaName, `Mistral 7B`))].[Value,Adjustable,QuotaName]' \
+	   --output text | sort -rn | sed 's/^/  /'; \
+	 test $$fail -eq 0 || { echo "Un modele du pool ne repond pas : le retirer de bedrock_models (terraform.tfvars)."; exit 1; }
 
 .PHONY: cost
 cost: ## Rappelle ce qui est facture en ce moment

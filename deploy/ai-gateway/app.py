@@ -17,6 +17,11 @@ Single process (run under gunicorn with ONE worker and threads): the in-memory
 counters are then exact without cross-process coordination -- the GPU serves on
 the order of 1-2 useful req/s, so one worker is ample.
 
+Model backend (AI_BACKEND): "ollama" (GPU node, the default) or "bedrock"
+(Amazon Bedrock Converse through the front's instance role, no GPU quota
+needed; see bedrock_backend.py). Either way the containers keep speaking the
+Ollama /api/chat dialect: only this process knows which backend answers.
+
 Numbers come from the environment so they can be tuned at the rehearsal without
 a rebuild. Attempt records are appended as JSONL to LOG_DIR (metadata always;
 prompt/response only when AI_LOG_CONTENT=1, which is a final-only + legal call).
@@ -33,9 +38,28 @@ import time
 import requests
 from flask import Flask, Response, jsonify, request
 
+import bedrock_backend
+
 app = Flask(__name__)
 
 OLLAMA_URL = os.environ.get("OLLAMA_URL", "http://127.0.0.1:11434").rstrip("/")
+
+# Which model answers. "bedrock" removes the GPU node entirely: the gateway
+# calls Bedrock Converse (eu-west-3) with the front's instance role, spreading
+# requests over a POOL of models because each one has a small per-minute quota
+# (see bedrock_backend.py). Syntax: model_id[=requests_per_minute],...
+#   AI_BEDROCK_MODELS        tool-capable models (default: the four Nova models,
+#                            ~85 req/min in total, no paperwork)
+#   AI_BEDROCK_CHAT_MODELS   extra models for tool-less requests only
+#                            (e.g. mistral.mistral-7b-instruct-v0:2=8)
+AI_BACKEND = (os.environ.get("AI_BACKEND") or "ollama").strip().lower()
+BEDROCK_MODELS = os.environ.get("AI_BEDROCK_MODELS") or bedrock_backend.DEFAULT_POOL
+BEDROCK_CHAT_MODELS = os.environ.get("AI_BEDROCK_CHAT_MODELS") or ""
+BEDROCK_REGION = (
+    os.environ.get("AI_BEDROCK_REGION") or os.environ.get("AWS_REGION") or "eu-west-3"
+).strip()
+if AI_BACKEND not in ("ollama", "bedrock"):
+    raise SystemExit(f"AI_BACKEND invalide: {AI_BACKEND!r} (ollama | bedrock)")
 
 # Least privilege: this service only needs the DERIVED token-signing key, never
 # the CTF-wide master flag secret (which computes every team's every flag). The
@@ -77,6 +101,19 @@ MAX_PER_TEAM_INFLIGHT = _int("AI_TEAM_INFLIGHT", 2)  # a team's share of the glo
 EST_TOKENS = _int("AI_EST_TOKENS", 1200)  # provisional budget reservation per call
 QUEUE_WAIT = _int("AI_QUEUE_WAIT", 20)  # total seconds a request may wait for a slot
 UPSTREAM_TIMEOUT = _int("AI_UPSTREAM_TIMEOUT", 180)
+MAX_TOKENS = _int(
+    "AI_MAX_TOKENS", 1024
+)  # Bedrock: maxTokens when num_predict is absent
+
+_POOL = None
+if AI_BACKEND == "bedrock":
+    _POOL = bedrock_backend.Pool(
+        bedrock_backend.parse_pool(BEDROCK_MODELS),
+        bedrock_backend.parse_pool(BEDROCK_CHAT_MODELS),
+        region=BEDROCK_REGION,
+        timeout=UPSTREAM_TIMEOUT,
+        default_max_tokens=MAX_TOKENS,
+    )
 LOG_DIR = os.environ.get("AI_LOG_DIR", "/var/log/ai-gateway")
 LOG_CONTENT = os.environ.get("AI_LOG_CONTENT", "0") == "1"
 LOG_MAX_BYTES = _int("AI_LOG_MAX_BYTES", 50 * 1024 * 1024)
@@ -180,19 +217,71 @@ def _busy(msg="Modele occupe, reessayez dans un instant.", retry=5):
     return resp
 
 
+def _call_upstream(payload, team=""):
+    """Run one chat call on the configured backend.
+
+    Returns (ollama_shaped_reply, None) or (None, flask_error_response). Both
+    backends yield the same reply shape, so admission accounting and logging
+    below do not care which one answered.
+    """
+    if AI_BACKEND == "bedrock":
+        try:
+            data = _POOL.invoke(payload, team=team)
+        except bedrock_backend.BedrockError as e:
+            app.logger.warning("bedrock: %s", e)
+            if e.busy:
+                return None, _busy("Backend indisponible, reessayez.", 10)
+            return None, (jsonify({"error": f"backend bedrock: {e}"}), 502)
+        return data, None
+
+    try:
+        r = requests.post(
+            f"{OLLAMA_URL}/api/chat", json=payload, timeout=UPSTREAM_TIMEOUT
+        )
+    except requests.RequestException:
+        return None, _busy("Backend indisponible, reessayez.", 10)
+    if r.status_code == 503:
+        return None, _busy()  # normalise Ollama's queue-full 503
+    if r.status_code != 200:
+        return None, (jsonify({"error": f"backend {r.status_code}"}), 502)
+    return r.json(), None
+
+
 @app.route("/healthz")
 def healthz():
-    return jsonify(ok=True)
+    return jsonify(ok=True, backend=AI_BACKEND)
+
+
+@app.route("/api/tags")
+def tags():
+    """Ollama's model listing, served for both backends so `make link` (and a
+    curious operator) can check the channel with one request. Model names are
+    not sensitive; no admission token needed."""
+    if AI_BACKEND == "bedrock":
+        return jsonify(backend="bedrock", region=BEDROCK_REGION, models=_POOL.listing())
+    try:
+        r = requests.get(f"{OLLAMA_URL}/api/tags", timeout=15)
+    except requests.RequestException:
+        return jsonify({"error": "ollama injoignable", "backend": "ollama"}), 503
+    if r.status_code != 200:
+        return jsonify({"error": f"ollama {r.status_code}", "backend": "ollama"}), 502
+    body = r.json()
+    body["backend"] = "ollama"
+    return jsonify(body)
 
 
 @app.route("/metrics")
 def metrics():
     with _lock:
-        return jsonify(
+        body = dict(
+            backend=AI_BACKEND,
             teams_tracked=len(_tokens),
             inflight_team_levels=len(_team_level),
             levels=list(_level_sems.keys()),
         )
+    if _POOL is not None:
+        body["bedrock"] = _POOL.stats()
+    return jsonify(body)
 
 
 @app.route("/api/chat", methods=["POST"])
@@ -255,17 +344,9 @@ def chat():
 
         # Force non-streaming so we get token counts and a single JSON body.
         payload["stream"] = False
-        try:
-            r = requests.post(
-                f"{OLLAMA_URL}/api/chat", json=payload, timeout=UPSTREAM_TIMEOUT
-            )
-        except requests.RequestException:
-            return _busy("Backend indisponible, reessayez.", 10)
-        if r.status_code == 503:
-            return _busy()  # normalise Ollama's queue-full 503
-        if r.status_code != 200:
-            return jsonify({"error": f"backend {r.status_code}"}), 502
-        data = r.json()
+        data, err = _call_upstream(payload, team)
+        if err is not None:
+            return err
 
         # Reconcile: replace the reservation with the model's actual token count.
         used = (data.get("prompt_eval_count") or 0) + (data.get("eval_count") or 0)

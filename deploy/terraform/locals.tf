@@ -42,7 +42,8 @@ locals {
 
   front_enabled = local.current.front != null
   arena_enabled = local.current.arena != null
-  ai_enabled    = local.current.ai != null
+  # Backend bedrock : la phase garde sa taille mais le noeud GPU n'existe pas.
+  ai_enabled = local.current.ai != null && var.ai_backend == "ollama"
 
   # Le noeud IA est le poste le plus cher a l'heure : on le rappelle dans les
   # sorties pour qu'un oubli d'extinction saute aux yeux.
@@ -52,4 +53,8 @@ locals {
     preselection = 1.46 # t4g.medium 0.038 + c6i.4xlarge 0.808 + g4dn.xlarge 0.615 (Paris, on-demand)
     final        = 1.04 # t4g.small 0.019 + c6i.2xlarge 0.404 + g4dn.xlarge 0.615
   }
+  gpu_hourly_usd = 0.615
+  hourly_now_usd = local.hourly_estimate_usd[var.phase] - (
+    local.current.ai != null && !local.ai_enabled ? local.gpu_hourly_usd : 0
+  )
 }

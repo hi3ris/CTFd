@@ -89,6 +89,31 @@ resource "aws_iam_role_policy" "front_backups" {
   })
 }
 
+# Backend bedrock : la passerelle IA (conteneur ai-gateway du front) invoque
+# les modeles avec ce role. InvokeModel seulement : ni gestion des modeles,
+# ni lecture des journaux d'invocation. Les profils d'inference "eu." routent
+# vers plusieurs regions, d'ou le foundation-model en wildcard de region.
+resource "aws_iam_role_policy" "front_bedrock" {
+  count = var.ai_backend == "bedrock" ? 1 : 0
+  name  = "invoke-bedrock-models"
+  role  = aws_iam_role.front.id
+
+  policy = jsonencode({
+    Version = "2012-10-17"
+    Statement = [
+      {
+        Sid    = "InvokeOnly"
+        Effect = "Allow"
+        Action = ["bedrock:InvokeModel"]
+        Resource = [
+          "arn:aws:bedrock:*::foundation-model/*",
+          "arn:aws:bedrock:*:${data.aws_caller_identity.current.account_id}:inference-profile/*",
+        ]
+      },
+    ]
+  })
+}
+
 resource "aws_iam_instance_profile" "front" {
   name = "${var.project_name}-front"
   role = aws_iam_role.front.name

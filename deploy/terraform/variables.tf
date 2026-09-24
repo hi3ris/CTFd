@@ -53,6 +53,46 @@ variable "expected_players" {
 # Modele de langage des challenges IA
 # ---------------------------------------------------------------------------
 
+variable "ai_backend" {
+  description = <<-EOT
+    Qui repond aux challenges IA.
+      ollama   noeud GPU g4dn.xlarge + Ollama (defaut). Exige le quota EC2
+               "Running On-Demand G and VT instances" >= 4 vCPU.
+      bedrock  AUCUN noeud IA : la passerelle ai-gateway du front appelle
+               Amazon Bedrock (Converse) avec le role IAM du front. Plan B
+               quand le quota GPU est refuse (cas du 23/09/2026).
+  EOT
+  type        = string
+  default     = "ollama"
+
+  validation {
+    condition     = contains(["ollama", "bedrock"], var.ai_backend)
+    error_message = "ai_backend doit valoir ollama ou bedrock."
+  }
+}
+
+variable "bedrock_models" {
+  description = <<-EOT
+    Pool de modeles Bedrock (ai_backend = bedrock), avec pour chacun son quota
+    de requetes par minute : "id[=rpm],id[=rpm]...". Chaque modele a un petit
+    quota par minute non ajustable sur ce compte ; la passerelle repartit les
+    equipes sur le pool. Ces modeles DOIVENT supporter l'appel d'outils.
+    Verifie en eu-west-3 le 24/09/2026 : les 4 Nova, sans formalite.
+  EOT
+  type        = string
+  default     = "eu.amazon.nova-lite-v1:0=20,eu.amazon.nova-micro-v1:0=20,eu.amazon.nova-pro-v1:0=25,eu.amazon.nova-2-lite-v1:0=20"
+}
+
+variable "bedrock_chat_models" {
+  description = <<-EOT
+    Modeles Bedrock supplementaires reserves aux requetes SANS outils (ex :
+    mistral.mistral-7b-instruct-v0:2=8, plus faible donc plus proche du
+    llama3.1:8b sur lequel les niveaux sont calibres). Vide = aucun.
+  EOT
+  type        = string
+  default     = ""
+}
+
 variable "ollama_model" {
   description = <<-EOT
     Modele servi par Ollama pour les challenges de type prompt injection.

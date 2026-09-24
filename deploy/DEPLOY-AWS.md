@@ -60,8 +60,8 @@ cp front/.env.example front/.env
   `team_hmac`.
 - `CTF_DOMAIN`, `CERTBOT_EMAIL` (TLS Let's Encrypt, lus par `make tls-init`).
 - Ne PAS toucher les blocs marqués « écrits par `make link` » (`ARENA_HOST`,
-  `DOCKER_HOST`, `OLLAMA_URL`, `FRPC_*`, `WORKERS`, `INNODB_POOL`…) : le prochain
-  `make link` les écrase.
+  `DOCKER_HOST`, `AI_BACKEND`, `OLLAMA_URL`, `AI_BEDROCK_*`, `FRPC_*`, `WORKERS`,
+  `INNODB_POOL`…) : le prochain `make link` les écrase.
 
 ## 2. Délai incompressible — à faire MAINTENANT
 
@@ -72,8 +72,29 @@ make free-credits           # plan gratuit : les 5 activités « Earn AWS credit
 ```
 
 Si le quota « Running On-Demand G and VT instances » est < 4 vCPU → **demander
-≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Sans GPU, toute la
-catégorie IA saute.
+≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Une demande déposée
+par l'API sans justification est refusée d'office sur un compte neuf : rouvrir
+le dossier support avec le cas d'usage détaillé.
+
+**Quota refusé → plan B sans GPU (Amazon Bedrock).** Dans
+`terraform/terraform.tfvars` : `ai_backend = "bedrock"`. Le nœud IA n'est pas
+créé ; la passerelle `ai-gateway` du front appelle Bedrock (Converse) avec le
+rôle IAM du front (`bedrock:InvokeModel` seulement). Les challenges ne
+changent pas : ils parlent toujours le dialecte Ollama `/api/chat`, la
+passerelle traduit. Chaque modèle Bedrock a un petit quota de requêtes par
+minute (20-25, non ajustable) : la passerelle répartit les équipes sur un
+**pool** de modèles (`bedrock_models`, défaut : les 4 Nova, ~85 req/min).
+Vérifier avant le jour J que chaque modèle du pool répond (chat + appel
+d'outil) :
+
+```bash
+make check-bedrock             # depuis le poste, avec les identifiants AWS
+```
+
+Coût : à l'usage, ~0,1 USD / 1000 requêtes (aucune instance à l'heure).
+Limite : les niveaux IA sont calibrés sur `llama3.1:8b` ; les Nova résistent
+davantage à l'injection, rejouer les solutions (`challenges/ai/*/solution`)
+contre le pool avant d'ouvrir la catégorie.
 
 ## 3. État Terraform distant (recommandé avant le jour J)
 
@@ -112,9 +133,9 @@ make deploy && make tls-init
 ## 6. Bascule présélection (J-7 / le 23)
 
 ```bash
-make phase-preselection        # crée arena + nœud IA ; ~1,46 USD/h
-make wait-front && make wait-arena     # wait-arena télécharge le modèle Ollama
-make link                      # relie front<->arena<->IA ; écrit les vars auto de front/.env
+make phase-preselection        # crée arena + nœud IA ; ~1,46 USD/h (0,85 sans nœud IA, ai_backend=bedrock)
+make wait-front && make wait-arena     # wait-arena télécharge le modèle Ollama (sauté en bedrock)
+make link                      # relie front<->arena<->IA ; écrit les vars auto de front/.env (dont AI_BACKEND)
 make deploy && make tls-init   # si le front a été recréé
 make check-arena               # images de challenge présentes sur l'arena
 make push-images               # si check-arena signale des images manquantes
@@ -137,7 +158,7 @@ make presel-window APPLY=1 URL=https://<domaine> CTFD_TOKEN=<jeton>
 ```bash
 make backup-status     # ~toutes les 2 h : "dernier dump OK < 15 min" (timer auto 15 min)
 make logs              # 2e terminal : pas de 5xx en rafale
-make gpu               # si piste IA : file Ollama non saturée en continu
+make gpu               # si piste IA : file Ollama non saturée (bedrock : compteurs du pool)
 make cost              # au moindre doute : ce qui est facturé
 make backup            # dump vérifié manuel AVANT toute manipulation
 # page admin Ops : https://<domaine>/plugins/ops/admin (DB, Redis, dump, reaper, collines, 5xx)

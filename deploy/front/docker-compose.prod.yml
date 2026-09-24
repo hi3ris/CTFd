@@ -86,7 +86,8 @@ services:
   # AI admission gateway: single admission point for all AI-challenge model
   # traffic. Only needed during an event (profile arena). Published on the front
   # host's 8600 so arena containers reach it (SG front_ai_gw_from_arena); it
-  # reaches Ollama on the GPU node via the front's own SG allowance.
+  # reaches Ollama on the GPU node via the front's own SG allowance, or Amazon
+  # Bedrock with the front's instance role (AI_BACKEND=bedrock, no GPU node).
   ai-gateway:
     build:
       context: ./ai-gateway
@@ -95,7 +96,13 @@ services:
     ports:
       - "8600:8600"
     environment:
+      # ollama (noeud GPU) ou bedrock (Amazon Bedrock via le role IAM du front,
+      # aucun noeud IA). Ecrits par `make link` depuis les sorties Terraform.
+      - AI_BACKEND=${AI_BACKEND:-ollama}
       - OLLAMA_URL=${OLLAMA_URL:-}
+      - AI_BEDROCK_MODELS=${AI_BEDROCK_MODELS:-}
+      - AI_BEDROCK_CHAT_MODELS=${AI_BEDROCK_CHAT_MODELS:-}
+      - AWS_REGION=${AWS_REGION:-eu-west-3}
       # Prefere la cle DERIVEE (le maitre n'entre alors jamais dans ce conteneur).
       # A defaut, le maitre sert a la deriver au demarrage puis est retire de
       # l'environnement du process (cf. app.py).

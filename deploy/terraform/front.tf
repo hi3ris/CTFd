@@ -60,8 +60,10 @@ resource "aws_instance" "front" {
   }
 
   metadata_options {
-    http_tokens                 = "required" # IMDSv2 obligatoire
-    http_put_response_hop_limit = 1
+    http_tokens = "required" # IMDSv2 obligatoire
+    # Backend bedrock : le conteneur ai-gateway (reseau bridge Docker) lit les
+    # identifiants du role via IMDSv2, ce qui coute un saut de plus.
+    http_put_response_hop_limit = var.ai_backend == "bedrock" ? 2 : 1
   }
 
   tags = { Name = "${var.project_name}-front" }

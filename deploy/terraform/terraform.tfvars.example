@@ -23,5 +23,12 @@ phase = "off"
 # Modele servi par Ollama pour les challenges de type prompt injection.
 ollama_model = "llama3.1:8b"
 
+# Qui repond aux challenges IA : "ollama" (noeud GPU, quota G/VT requis) ou
+# "bedrock" (aucun noeud IA, Amazon Bedrock via le role du front). Plan B si
+# le quota GPU est refuse. Pool par defaut : les 4 modeles Nova (~85 req/min).
+ai_backend = "ollama"
+# bedrock_models      = "eu.amazon.nova-lite-v1:0=20,eu.amazon.nova-micro-v1:0=20,eu.amazon.nova-pro-v1:0=25,eu.amazon.nova-2-lite-v1:0=20"
+# bedrock_chat_models = "mistral.mistral-7b-instruct-v0:2=8"
+
 # true pour les repetitions (-70% sur l'arena), false les 23-25 et 29-30 octobre.
 arena_use_spot = false
