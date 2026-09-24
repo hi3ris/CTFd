@@ -205,7 +205,7 @@ def test_pool_order_is_sticky_per_team_and_hides_chat_models_from_tool_calls():
     b = pool.order("team-a", tools=True)
     assert a == b and len(a) == 3 and "c1" not in [m for m, _ in a]
     # tool-less requests may also use the chat-only model, home model first
-    assert set(m for m, _ in pool.order("team-a", tools=False)) == {
+    assert {m for m, _ in pool.order("team-a", tools=False)} == {
         "t1",
         "t2",
         "t3",
