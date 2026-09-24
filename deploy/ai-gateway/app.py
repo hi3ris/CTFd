@@ -36,7 +36,7 @@ import threading
 import time
 
 import requests
-from flask import Flask, Response, jsonify, request
+from flask import Flask, jsonify, request
 
 import bedrock_backend
 
@@ -273,12 +273,12 @@ def tags():
 @app.route("/metrics")
 def metrics():
     with _lock:
-        body = dict(
-            backend=AI_BACKEND,
-            teams_tracked=len(_tokens),
-            inflight_team_levels=len(_team_level),
-            levels=list(_level_sems.keys()),
-        )
+        body = {
+            "backend": AI_BACKEND,
+            "teams_tracked": len(_tokens),
+            "inflight_team_levels": len(_team_level),
+            "levels": list(_level_sems.keys()),
+        }
     if _POOL is not None:
         body["bedrock"] = _POOL.stats()
     return jsonify(body)
