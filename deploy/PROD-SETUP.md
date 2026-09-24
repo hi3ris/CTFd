@@ -138,6 +138,13 @@ le domaine d'envoi (**SPF + DKIM + DMARC sur `ctf.tg`**), sinon les mails de
 confirmation partent en spam et bloquent des inscriptions. Ces enregistrements
 DNS se posent en même temps que le A record de `ctf.tg` (§1b).
 
+> ⚠️ **Enregistrements mail en DNS-only (nuage GRIS), jamais proxifiés.** Le
+> domaine `ctf.tg` est derrière le proxy Cloudflare, mais les DKIM/SPF/DMARC et
+> tout CNAME de tracking/sous-domaine d'envoi (Brevo/SES) doivent rester en
+> **DNS only** — un enregistrement mail proxifié (orange) casse l'auth d'envoi
+> (c'est ce qui casserait le vieux CNAME Mailgun `email.ctf.tg`, actuellement
+> proxifié). Purger au passage les enregistrements Mailgun hérités inutilisés.
+
 **Config CTFd (Brevo) — via `front/.env` (le secret reste hors git) :**
 
 ```
