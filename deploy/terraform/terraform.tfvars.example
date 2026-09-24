@@ -1,6 +1,6 @@
 # Copier en terraform.tfvars et adapter.
 
-aws_region   = "eu-west-3" # Paris : latence minimale et GPU g4dn disponibles
+aws_region   = "eu-west-3" # Paris : latence minimale + Amazon Bedrock/Nova dispo (g4dn seulement pour le repli ollama)
 project_name = "ctf"
 
 # Contenu de votre cle publique SSH.
@@ -20,13 +20,14 @@ domain_name = "ctf.exemple.com"
 # off | setup | preselection | final
 phase = "off"
 
-# Modele servi par Ollama pour les challenges de type prompt injection.
-ollama_model = "llama3.1:8b"
+# Modele Ollama (repli ai_backend=ollama uniquement) pour les challenges prompt injection.
+# ollama_model = "llama3.1:8b"
 
-# Qui repond aux challenges IA : "ollama" (noeud GPU, quota G/VT requis) ou
-# "bedrock" (aucun noeud IA, Amazon Bedrock via le role du front). Plan B si
-# le quota GPU est refuse. Pool par defaut : les 4 modeles Nova (~85 req/min).
-ai_backend = "ollama"
+# Qui repond aux challenges IA : "bedrock" (defaut retenu NCTF26 : aucun noeud
+# IA, Amazon Bedrock via le role du front) ou "ollama" (repli historique : noeud
+# GPU, quota G/VT requis). Le quota GPU ayant ete refuse le 23/09, on reste sur
+# bedrock. Pool par defaut : les 4 modeles Nova (~85 req/min).
+ai_backend = "bedrock"
 # bedrock_models      = "eu.amazon.nova-lite-v1:0=20,eu.amazon.nova-micro-v1:0=20,eu.amazon.nova-pro-v1:0=25,eu.amazon.nova-2-lite-v1:0=20"
 # bedrock_chat_models = "mistral.mistral-7b-instruct-v0:2=8"
 

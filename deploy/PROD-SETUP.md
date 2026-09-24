@@ -263,32 +263,45 @@ images doivent exister : `make check-arena` / `make push-images`.
       un `make backup` manuel avant toute grosse manip.
 - [ ] **IMDSv2**, pas de port arène/IA ouvert sur Internet (déjà en Terraform).
 
-## 7. Piste IA (GPU refusé → Bedrock)
+## 7. Piste IA — Amazon Bedrock (chemin par défaut)
 
-Quota GPU **refusé** par AWS le 23/09 14:37 UTC (case 179016552700802, demande
-API sans justification) ; appel déposé le 24/09 avec le cas d'usage détaillé.
-Le statut `CASE_OPENED` de l'API n'est pas à jour, ne pas s'y fier.
+**Backend IA finalisé : `ai_backend = "bedrock"`** (défaut dans
+`terraform.tfvars`). Décision NCTF26 : le quota GPU EC2 « Running On-Demand G and
+VT instances » a été **refusé le 23/09/2026** (case 179016552700802) → **aucun
+nœud IA, aucune dépendance GPU**. La passerelle `ai-gateway` tourne sur le
+**front** : elle garde le dialecte Ollama `/api/chat` côté challenges et, avec
+`AI_BACKEND=bedrock`, traduit vers Bedrock Converse. IA à l'usage : ~0,1 USD /
+1000 requêtes, pas de `g4dn`.
 
-**Plan B prêt : `ai_backend = "bedrock"`** (terraform.tfvars). Aucun nœud IA ;
-la passerelle du front appelle Amazon Bedrock avec le rôle IAM du front.
-Vérifié en eu-west-3 le 24/09 : les 4 modèles Nova répondent (chat + appel
-d'outil) sans formalité ; Claude Haiku 4.5 exige le formulaire « use case
-details » Anthropic (console Bedrock) ; Pixtral Large est limité à 1 req/min.
-
-- [ ] Décider : attendre la réponse à l'appel GPU ou basculer `bedrock` (à
-      trancher **avant le 16/10** pour laisser une répétition).
-- [ ] `make check-bedrock` vert (chaque modèle du pool + quotas affichés).
+- [x] **Décision tranchée** : backend IA = Bedrock (quota GPU refusé le
+      23/09/2026, case 179016552700802).
+- [ ] **IAM** : la politique `bedrock:InvokeModel` est attachée au rôle du
+      **front** ; IMDSv2 `hop-limit=2` pour que le conteneur lise le rôle ;
+      région `eu-west-3`.
+- [ ] `make check-bedrock` vert : chaque modèle du pool répond + quotas affichés.
+      Par défaut les **4 modèles Nova** (Amazon Nova, eu-west-3), ~85 req/min
+      cumulé ; chaque modèle a un petit quota par minute non ajustable (Nova
+      20-25). Modèle « maison » stable par équipe, débordement sur les suivants,
+      cooldown 20 s sur throttle ; au-delà du pool la passerelle répond 503
+      « réessayez ». Vérifié en eu-west-3 : les 4 Nova répondent (chat + appel
+      d'outil) sans formalité ; Claude Haiku 4.5 exige le formulaire « use case
+      details » Anthropic (console Bedrock), Pixtral Large est limité à 1 req/min ;
+      augmentation possible (ajustable) sur Nova 2 Lite global et Claude Haiku 4.5.
 - [ ] Rejouer les solutions des 3 challenges IA à modèle (`ai1-naive-guard`,
       `ai3-tool-abuse`, `agent-tool-abuse`) contre le pool : les Nova résistent
       plus à l'injection que `llama3.1:8b`. Ajuster les prompts si un niveau
-      devient insoluble ; option `bedrock_chat_models =
-"mistral.mistral-7b-instruct-v0:2=8"` pour un modèle plus naïf sur les
-      niveaux sans outils.
-- [ ] Quotas : chaque modèle est plafonné à 20-25 req/min ; le pool tient
-      ~85 req/min, au-delà la passerelle répond 503 « réessayez ». Augmentation
-      possible (ajustable) : Nova 2 Lite global, Claude Haiku 4.5.
-- [ ] `make phase-preselection` puis `make link` écrivent `AI_BACKEND` et le
-      pool dans `front/.env` ; `make link` échoue si la passerelle ne répond pas.
+      devient insoluble ; modèles chat-only optionnels pour les niveaux sans
+      outils : `bedrock_chat_models = "mistral.mistral-7b-instruct-v0:2=8"`
+      (modèle plus naïf).
+- [ ] `make phase-preselection` puis `make link` écrivent `AI_BACKEND` /
+      `AI_BEDROCK_*` dans `front/.env` ; `make link` échoue si la passerelle ne
+      répond pas. `/metrics` expose les compteurs du pool. Les cibles
+      `wait-nodes` / `gpu` sautent le nœud IA absent en bedrock.
+
+> **Repli historique — `ai_backend = "ollama"`** (nœud GPU `g4dn.xlarge`) :
+> sélectionnable **uniquement si le quota GPU est un jour accordé** (l'appel du
+> 24/09 reste déposé ; le statut `CASE_OPENED` de l'API n'est pas à jour, ne pas
+> s'y fier). Non retenu pour NCTF26 — laissé étiqueté comme repli.
 
 ## 8. Divers repérés
 

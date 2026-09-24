@@ -3,7 +3,8 @@
 Backlog d'idées d'épreuves « originales » proposées, **à sélectionner après la
 création du King-of-the-Hill** (KotH, en cours). Chaque idée note ce qui la rend
 innovante, son adéquation à l'infra existante (instancier Docker par équipe,
-gateway LLM Ollama/GPU, mode équipe, univers DFIR Phantom Wire) et l'effort.
+passerelle LLM — Bedrock par défaut, Ollama/GPU en repli historique —, mode
+équipe, univers DFIR Phantom Wire) et l'effort.
 
 Statut légende : `[ ]` à faire · `[~]` en cours · `[x]` fait.
 
@@ -18,12 +19,13 @@ Statut légende : `[ ]` à faire · `[~]` en cours · `[x]` fait.
 ## Backlog (à trancher après le KotH)
 
 - [ ] **RAG poisoning / agent à outils réels** _(AI + pwn — reco présélection)_
-      Chatbot support (gateway Ollama) avec récupération de contexte (RAG) et de
-      vrais outils (lecture fichier / requête HTTP) dans un conteneur par équipe.
-      Le joueur empoisonne la base de connaissances (ticket / upload) pour
-      détourner l'agent et lire un fichier flag hors périmètre.
+      Chatbot support (passerelle au dialecte Ollama `/api/chat`) avec récupération
+      de contexte (RAG) et de vrais outils (lecture fichier / requête HTTP) dans un
+      conteneur par équipe. Le joueur empoisonne la base de connaissances
+      (ticket / upload) pour détourner l'agent et lire un fichier flag hors périmètre.
       OWASP LLM01/LLM06, indirect prompt injection _avec exécution réelle_.
-      Innovation ★★★ · effort moyen · infra : GPU déjà là.
+      Innovation ★★★ · effort moyen · infra : IA via la passerelle Bedrock du front
+      (repli historique GPU si le quota est un jour accordé).
 
 - [ ] **Live DFIR — « chasse l'intrusion » Phantom Wire** _(forensics temps réel)_
       Conteneur où un adversaire scripté rejoue l'attaque HIVE/Phantom Wire
@@ -43,7 +45,7 @@ Statut légende : `[ ]` à faire · `[~]` en cours · `[x]` fait.
       empoisonnement d'un cache de build pour lire un secret. Colle au stack
       Docker/Terraform. Innovation ★★★ · effort élevé.
 
-- [ ] **Stégano multimodale + LLM** _(dépend d'un modèle de vision dispo)_
+- [ ] **Stégano multimodale + LLM** _(dépend d'un modèle de vision Bedrock disponible)_
       Image portant des instructions cachées qu'un modèle de vision exécute
       (prompt-injection par canal image). Innovation ★★★ · effort moyen.
 
@@ -55,8 +57,8 @@ Statut légende : `[ ]` à faire · `[~]` en cours · `[x]` fait.
 
 ## Notes de sélection
 
-- Présélection (~300 joueurs, équipes) : privilégier accessible→hard, montrer le
-  GPU (→ RAG poisoning) + le KotH partagé.
+- Présélection (~300 joueurs, équipes) : privilégier accessible→hard, montrer la
+  piste IA (Bedrock) (→ RAG poisoning) + le KotH partagé.
 - Finale (10 équipes) : formats spectaculaires (KotH, Live DFIR).
 - Toute nouvelle épreuve servie suit le contrat existant : `type: team_instance`,
   flag `team_hmac` par équipe, writeup + solveur, validation logique.

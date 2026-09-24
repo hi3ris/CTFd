@@ -22,10 +22,12 @@ Document de suivi vivant. On coche les cases au fur et à mesure.
 
 Ce sont elles qui peuvent faire rater le 23 octobre, pas le code.
 
-- [!] **Demander le quota GPU AWS maintenant.** Compte neuf = quota « Running On-Demand
-  G and VT instances » souvent à 0 ; une `g4dn.xlarge` en consomme 4 vCPU. Délai de
-  traitement : plusieurs jours ouvrés. Lancer `cd deploy && make check-gpu-quota` ;
-  si < 4, demander ≥ 8 immédiatement. **Sans GPU, toute la catégorie IA saute.**
+- [x] **Quota GPU AWS demandé — REFUSÉ le 23/09/2026** (dossier support AWS ; quota « Running
+      On-Demand G and VT instances » maintenu à 0). **Décision NCTF26 : bascule sur Amazon Bedrock**
+      (`ai_backend = bedrock`, désormais le défaut du terraform) → **aucune dépendance GPU, aucun
+      nœud IA à provisionner**. La catégorie IA **ne saute pas** : elle passe par Bedrock (modèles
+      Nova en eu-west-3) derrière la passerelle d'admission sur le front. Le nœud GPU
+      (`ai_backend = ollama`, `g4dn.xlarge`) reste un **repli historique** si le quota est un jour accordé.
 - [!] **Décider : finale sur site ou distante.** Deadline **18 septembre** (appro salle /
   switch / machines a un délai). Défaut si non tranché : portables perso sur VLAN
   contrôlé + téléphones en caisse (moins fort, sans achat).
@@ -34,9 +36,10 @@ Ce sont elles qui peuvent faire rater le 23 octobre, pas le code.
       contrôlée. (B) mesurer la compétence _avec_ IA → autorisée partout. **Recommandé : A.**
 - [ ] **Confirmer : présélection par équipe.** ✅ _Confirmé le 10/09._ Impact déjà intégré
       (mode équipes CTFd, flags par `team_id`).
-- [ ] **Trancher : piste IA en présélection ou réservée à la finale.** Un GPU sert ~1-2
-      req/s utiles ; à 300 joueurs la piste ne tient qu'avec quota bas + file stricte.
-      **Recommandé : réserver à la finale**, ou side-event annoncé à quota bas.
+- [ ] **Trancher : piste IA en présélection ou réservée à la finale.** Désormais servie par
+      **Bedrock** via la passerelle (plus de GPU) : le pool Nova plafonne à ~85 req/min cumulé,
+      chaque modèle a un petit quota/min non ajustable, cooldown 20 s sur throttle.
+      **Recommandé : réserver à la finale**, ou side-event annoncé à débit borné.
 - [ ] **Saisir juridique / RH** sur la notice de collecte de données (logs, prompts finale,
       conservation 30 j). Conditionne la section détection ; hors chemin critique technique.
 - [ ] **Acheter / réserver un domaine** pour le CTF, et décider si géré dans Route53
@@ -54,8 +57,10 @@ Ce sont elles qui peuvent faire rater le 23 octobre, pas le code.
 
 Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 
-- [x] Terraform : VPC, front (ARM), arena (x86 Swarm), nœud IA (GPU), archives S3
-- [x] Modèle de coût par phase (~120 USD/édition), `make cost`
+- [x] Terraform : VPC, front (ARM), arena (x86 Swarm), IA via **Bedrock** (défaut, sans nœud ;
+      nœud IA GPU = repli historique `ai_backend = ollama`), archives S3
+- [x] Modèle de coût par phase (~120 USD/édition, chiffré avec le nœud g4dn ; en bedrock ce poste
+      disparaît, Bedrock ~0,1 USD / 1000 req IA à l'usage), `make cost`
 - [x] TLS (`make tls-init`), en-têtes proxy durcis (X-Forwarded-Host)
 - [x] Sauvegarde **vérifiée** + `make restore` (le blocker de dump silencieux est corrigé)
 - [x] Archives statiques rendues côté serveur, bucket `prevent_destroy`
@@ -142,9 +147,10 @@ Piloté par une variable `phase` (off / setup / preselection / final). PR #1.
 - [x] 🤖 **Chaîne de prérequis IA câblée** (confirmée par le porteur) : ai0 → ai1 → ai2 → ai3.
       ai0 = racine (flag statique, sans prérequis) ; chaque niveau suivant déclare
       `requirements: [<nom-nu-du-niveau-precedent>]`, que ctfcli résout en IDs à l'import.
-      Décision porteur : **la piste IA tourne aussi en présélection** — la phase `preselection`
-      provisionne déjà le nœud GPU (`ai = g4dn.xlarge`, `ai_enabled = true`) et la gateway
-      d'admission sur le front, donc les challenges IA sont jouables dès la présélection.
+      Décision porteur : **la piste IA tourne aussi en présélection** — servie par **Bedrock**
+      (`ai_backend = bedrock`, défaut : aucun nœud IA à provisionner) via la gateway d'admission
+      sur le front, donc les challenges IA sont jouables dès la présélection. Le nœud GPU
+      (`ai_backend = ollama`, `g4dn.xlarge`) reste un repli historique.
 - [~] 🧑🤖 **Playtest adverse** : pré-passe STATIQUE faite (52 agents, chaque verdict vérifié
   en contradictoire) → `deploy/challenge-audit.md`. Règle stricte < 15 min : 22/26 jugés
   LLM-trivial. **À arbitrer par l'organisateur** (présélection filtre / finale décide ;
@@ -239,7 +245,9 @@ concurrentes** max. TTL 1 h + reaping le tiennent, mais élargir la plage si bes
 **Déviation actée du ROADMAP** (conception dans `deploy/ai-track-design.md`) : la route
 `/message`, l'UI de chat et l'oracle de flag **existent déjà dans les conteneurs** (chaque
 app IA sert sa console + un `/verify` déterministe). On **ne les reconstruit pas**. Le vrai
-Lot 3 = **une passerelle d'admission Ollama** sur le front + petits correctifs.
+Lot 3 = **une passerelle d'admission** sur le front + petits correctifs. Elle garde le dialecte
+Ollama (`/api/chat`) côté challenges et, avec `AI_BACKEND=bedrock` (défaut), traduit vers
+**Bedrock Converse** ; le backend Ollama/GPU reste un repli historique.
 
 ### Correctifs (faits)
 
@@ -259,13 +267,15 @@ Lot 3 = **une passerelle d'admission Ollama** sur le front + petits correctifs.
 - [x] 🤖 ai1/ai3 envoient `AI_PROXY_TOKEN` en en-tête ; ai2 est déterministe (0 GPU).
 - [x] 🤖 **Journalisation** rotative des tentatives (succès + refus ; contenu finale-seulement),
       exportée par `make backup` avant `season-down`.
-- [ ] 🧑 **Décision** : piste IA en présélection ou **réservée à la finale** ? Un T4 ne tient
-      pas 300 équipes simultanées ; la passerelle borne, elle n'ajoute pas de capacité.
+- [ ] 🧑 **Décision** : piste IA en présélection ou **réservée à la finale** ? Avec **Bedrock**
+      (défaut), le pool Nova plafonne à ~85 req/min cumulé (quota/min par modèle non ajustable) ;
+      la passerelle borne, elle n'ajoute pas de capacité.
 - [ ] 🧑 Quotas exacts par phase — fixés à la répétition (Lot 5), pas à l'intuition.
-- [ ] ⚠🧑🤖 **Répétition** : joignabilité arène→8600→Ollama, latence, comportement 503/429 réels.
+- [ ] ⚠🧑🤖 **Répétition** : joignabilité arène→8600→backend IA (Bedrock par défaut), latence,
+      comportement 503/429 réels (dont throttle Bedrock + cooldown).
 
 **Définition de « fait » Lot 3** : une équipe résout ai0 → débloque ai1 → discute via la
-passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentatives loggées.
+passerelle → flag validé par `/verify` → scoreboard OK, débit IA borné, tentatives loggées.
 
 ---
 
@@ -301,10 +311,12 @@ passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentati
 
 ## Lot 6 — Jour J présélection (23-25 octobre) 🔴
 
-- [ ] 🧑 J-7 : `make phase-preselection` (crée arena + IA, télécharge le modèle, câble tout).
+- [ ] 🧑 J-7 : `make phase-preselection` (crée arena ; IA par Bedrock, aucun nœud ni modèle à
+      télécharger ; câble tout). Repli historique : `ai_backend = ollama` provisionne le nœud GPU.
 - [ ] 🧑 Repointer le DNS (ou automatique si Route53) ; `make tls-init` ; vérifier HTTPS.
-- [ ] 🧑 Ouvrir les inscriptions ; vérifier `make check-arena` et la piste IA.
-- [ ] 🧑 Pendant l'épreuve : `make logs`, `make gpu`, `make backup` **régulièrement**.
+- [ ] 🧑 Ouvrir les inscriptions ; vérifier `make check-arena`, `make check-bedrock` et la piste IA.
+- [ ] 🧑 Pendant l'épreuve : `make logs`, `make backup` **régulièrement** (`make gpu` = repli GPU
+      seulement, saute le nœud IA absent en bedrock ; `/metrics` expose les compteurs du pool).
 - [ ] 🧑 24 au soir : `make season-down` (sauvegarde vérifiée + archive S3 + destruction EC2).
 - [ ] 🧑 Ligne de coupe **automatique** à la fermeture : inviter 14-16 équipes (marge +
       wildcards). Litiges d'intégrité traités **après** la finale.
@@ -340,7 +352,7 @@ passerelle → flag validé par `/verify` → scoreboard OK, GPU borné, tentati
 
 ## Ordre recommandé d'exécution
 
-1. **En parallèle maintenant** : 🧑 Phase 0 (quota GPU + décisions) · 🤖 **Lot 2 (instancier)**
+1. **En parallèle maintenant** : 🧑 Phase 0 (quota GPU refusé → **Bedrock** acté, décisions restantes) · 🤖 **Lot 2 (instancier)**
 2. 🤖 Lot 3 (plugin IA) + reliquat Lot 4 (prérequis, files:)
 3. 🧑🤖 Lot 5 (intégration + test de charge + répétition + playtest)
 4. Lots 6 → 9 (jours J et clôture)

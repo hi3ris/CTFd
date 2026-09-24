@@ -97,7 +97,8 @@ dans `deploy/Makefile`. Livré le 15/09 ; tests `tests/test_preflight.py` (éval
       `NCTF{test` ; les 26 servis ont leur image `ctf-*` présente sur l'arena
       (`make check-arena`).
 - [~] 🤖 **Services** : `/plugins/koth/api/admin` → chaque colline `online` ✅ ;
-  passerelle IA et instancier (spawn/kill d'une instance témoin) restent des lignes
+  passerelle IA (backend **Bedrock** désormais, via `make check-bedrock` pour le pool de
+  modèles) et instancier (spawn/kill d'une instance témoin) restent des lignes
   `MANUAL` du rapport (RUNBOOK §2) — un spawn n'est pas « lecture seule ».
 - [x] 🤖 **Thème/pages** : page `/` contient `nctf-intro` ; `HTML_SANITIZATION` désactivée
       (sinon l'intro et le bloc `<style>` disparaissent) — **avertissement**, pas refus.
@@ -276,7 +277,9 @@ segment HUD sur l'accueil. Reste 🧑 : `FIRSTBLOOD_BONUS` (règlement) et la pa
 
 ## 7. Tableau de bord ops 🟡 (finale)
 
-**Pourquoi.** Pendant l'épreuve, l'opérateur jongle entre `make logs`, `make gpu`,
+**Pourquoi.** Pendant l'épreuve, l'opérateur jongle entre `make logs`, `make gpu`
+(nœud IA — **repli Ollama seulement** : le backend IA par défaut est désormais Bedrock
+via la passerelle du front, sans nœud GPU ; la cible saute alors ce nœud absent),
 la page KotH admin et l'admin CTFd. Une seule page, rafraîchie toutes les 5 s, pour
 voir en 3 secondes si quelque chose brûle.
 

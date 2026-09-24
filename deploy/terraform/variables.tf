@@ -1,5 +1,5 @@
 variable "aws_region" {
-  description = "Region AWS. eu-west-3 (Paris) : latence minimale et instances GPU g4dn disponibles."
+  description = "Region AWS. eu-west-3 (Paris) : latence minimale et Amazon Bedrock / modeles Nova disponibles (GPU g4dn seulement pour le repli ollama)."
   type        = string
   default     = "eu-west-3"
 }
@@ -22,8 +22,11 @@ variable "phase" {
                     les archives statiques sur S3 (site statique, ~0.50 USD/mois).
       setup         Front seul, petite taille. Pour preparer les challenges,
                     tester, ouvrir les inscriptions.
-      preselection  Front + arena + noeud IA, dimensionnes pour ~300 joueurs.
-      final         Front + arena + noeud IA, dimensionnes pour ~50 joueurs.
+      preselection  Front + arena, dimensionnes pour ~300 joueurs. IA servie
+                    par Bedrock depuis le front (aucun noeud ; noeud IA GPU
+                    seulement en repli ai_backend=ollama).
+      final         Front + arena, dimensionnes pour ~50 joueurs. IA via
+                    Bedrock (aucun noeud ; noeud IA GPU = repli ollama).
 
     Bascule via `make phase-<nom>`.
   EOT
@@ -56,14 +59,16 @@ variable "expected_players" {
 variable "ai_backend" {
   description = <<-EOT
     Qui repond aux challenges IA.
-      ollama   noeud GPU g4dn.xlarge + Ollama (defaut). Exige le quota EC2
-               "Running On-Demand G and VT instances" >= 4 vCPU.
-      bedrock  AUCUN noeud IA : la passerelle ai-gateway du front appelle
-               Amazon Bedrock (Converse) avec le role IAM du front. Plan B
-               quand le quota GPU est refuse (cas du 23/09/2026).
+      bedrock  (defaut) AUCUN noeud IA : la passerelle ai-gateway du front
+               appelle Amazon Bedrock (Converse) avec le role IAM du front.
+               Choix retenu pour NCTF26 : le quota GPU EC2 a ete refuse le
+               23/09/2026 (cas 179016552700802), donc aucune dependance GPU.
+      ollama   REPLI historique : noeud GPU g4dn.xlarge + Ollama. Exige le
+               quota EC2 "Running On-Demand G and VT instances" >= 4 vCPU
+               (a demander plusieurs jours a l'avance).
   EOT
   type        = string
-  default     = "ollama"
+  default     = "bedrock"
 
   validation {
     condition     = contains(["ollama", "bedrock"], var.ai_backend)
@@ -95,7 +100,8 @@ variable "bedrock_chat_models" {
 
 variable "ollama_model" {
   description = <<-EOT
-    Modele servi par Ollama pour les challenges de type prompt injection.
+    Repli ai_backend=ollama uniquement. Modele servi par Ollama pour les
+    challenges de type prompt injection.
     llama3.1:8b tient largement sur le GPU T4 16 Go d'une g4dn.xlarge.
   EOT
   type        = string

@@ -91,7 +91,7 @@ state-bootstrap: ## (une fois) Cree le bucket S3 d'etat + la table de verrou Dyn
 	 echo "  3. make init   (repondre 'yes' pour migrer l'etat local vers S3)"
 
 .PHONY: check-gpu-quota
-check-gpu-quota: ## Verifie le quota GPU AWS dans LA BONNE region. A LANCER MAINTENANT.
+check-gpu-quota: ## Verifie le quota GPU AWS (repli ollama uniquement ; refuse pour NCTF26, non requis en bedrock).
 	@REGION=$$($(TF) output -raw aws_region 2>/dev/null); REGION=$${REGION:-eu-west-3}; \
 	 echo "Quota 'Running On-Demand G and VT instances' dans $$REGION :"; \
 	 V=$$(aws service-quotas get-service-quota --region "$$REGION" \
@@ -111,7 +111,7 @@ check-gpu-quota: ## Verifie le quota GPU AWS dans LA BONNE region. A LANCER MAIN
 	 fi
 
 .PHONY: request-gpu-quota
-request-gpu-quota: ## Demande l'augmentation du quota GPU via Service Quotas (VALUE=8 par defaut). A LANCER MAINTENANT.
+request-gpu-quota: ## Demande l'augmentation du quota GPU (repli ollama seulement ; inutile tant qu'on reste en bedrock).
 	@REGION=$$($(TF) output -raw aws_region 2>/dev/null); REGION=$${REGION:-eu-west-3} ./scripts/aws_gpu_quota.sh
 
 .PHONY: free-credits
@@ -127,13 +127,13 @@ phase-setup: ## Front seul : preparer les challenges, ouvrir les inscriptions
 	@$(TF) output -raw dns_action_required; echo
 
 .PHONY: phase-preselection
-phase-preselection: ## 23-25 oct : front + arena + IA, taille ~300 joueurs
+phase-preselection: ## 23-25 oct : front + arena (IA via Bedrock, sans noeud), ~300 joueurs
 	$(TF) apply -var 'phase=preselection'
 	@$(MAKE) --no-print-directory wait-front deploy wait-nodes link
 	@$(TF) output -raw dns_action_required; echo
 
 .PHONY: phase-final
-phase-final: ## 29-30 oct : front + arena + IA, taille ~50 joueurs
+phase-final: ## 29-30 oct : front + arena (IA via Bedrock, sans noeud), ~50 joueurs
 	$(TF) apply -var 'phase=final'
 	@$(MAKE) --no-print-directory wait-front deploy wait-nodes link
 	@$(TF) output -raw dns_action_required; echo
@@ -166,7 +166,7 @@ wait-front: ## Attend la fin du provisionnement du front
 	 done; echo " pret."
 
 .PHONY: wait-nodes
-wait-nodes: ## Attend l'arena et le noeud IA (avec delai maximal)
+wait-nodes: ## Attend l'arena (et, en repli ollama, le noeud IA) avec delai maximal
 	@echo -n "Attente de l'arena ($(ARENA_IP)) "
 	@deadline=$$(( $$(date +%s) + $(WAIT_TIMEOUT) )); \
 	 until $(ARENA_SSH) 'test -f /var/lib/cloud/ctfd-arena-provisioned' 2>/dev/null; do \
@@ -261,7 +261,7 @@ tls-cloudflare: ## TLS derriere le proxy Cloudflare (certificat d'origine + Full
 	@set -a; . ./front/.env; set +a; FRONT_IP=$(FRONT_IP) ./scripts/cloudflare-origin-tls.sh
 
 .PHONY: link
-link: ## Relie le front a l'arena et au noeud IA, et verifie que ca marche
+link: ## Relie le front a l'arena (et au noeud IA en repli ollama), ecrit AI_BACKEND/AI_BEDROCK_* et verifie la passerelle IA
 	@echo ">> Cle de service deposee sur l'arena"
 	@PUBKEY=$$($(FRONT_SSH) 'cat ~/.ssh/id_ed25519_arena.pub'); \
 	 test -n "$$PUBKEY" || { echo "ERREUR : cle publique introuvable sur le front"; exit 1; }; \
@@ -501,7 +501,7 @@ gpu: ## Etat du GPU et des requetes Ollama en cours (backend bedrock : compteurs
 	 fi
 
 .PHONY: check-bedrock
-check-bedrock: ## Plan B sans GPU : verifie depuis le poste que chaque modele du pool repond (chat + appel d'outil)
+check-bedrock: ## Backend IA par defaut : verifie depuis le poste que chaque modele du pool Bedrock repond (chat + appel d'outil)
 	@REGION=$${REGION:-$(REGION)}; REGION=$${REGION:-eu-west-3}; \
 	 MODELS="$${MODELS:-$(BEDROCK_MODELS)}"; \
 	 test -n "$$MODELS" || MODELS="eu.amazon.nova-lite-v1:0=20,eu.amazon.nova-micro-v1:0=20,eu.amazon.nova-pro-v1:0=25,eu.amazon.nova-2-lite-v1:0=20"; \
@@ -535,7 +535,7 @@ ssh-arena: ## Shell sur l'arena
 	$(ARENA_SSH)
 
 .PHONY: ssh-ai
-ssh-ai: ## Shell sur le noeud IA
+ssh-ai: ## Shell sur le noeud IA (repli ollama uniquement)
 	$(AI_SSH)
 
 .PHONY: destroy-all

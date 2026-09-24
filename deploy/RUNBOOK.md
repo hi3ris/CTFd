@@ -24,7 +24,7 @@ Toutes les commandes se lancent **depuis `deploy/`** sauf mention contraire.
 > `deploy/preselection-window.sh --apply`. Le seed pose aussi `/tos` et le
 > champ « Université » ; `make preflight` refuse s'ils manquent.
 
-- [ ] 🧑 AWS CLI configurée (`aws sts get-caller-identity` répond), profil avec droits EC2/S3/IAM/DynamoDB/ServiceQuotas.
+- [ ] 🧑 AWS CLI configurée (`aws sts get-caller-identity` répond), profil avec droits EC2/S3/IAM/DynamoDB/Bedrock (ServiceQuotas seulement pour le repli GPU ollama).
 - [ ] 🧑 `terraform` ≥ 1.6, `ssh`, `jq` installés sur le poste.
 - [ ] 🧑 `deploy/terraform/terraform.tfvars` renseigné (au minimum `admin_cidrs` — **obligatoire, sans défaut**), à partir de `terraform.tfvars.example`.
 - [ ] 🧑 Clé SSH d'admin déclarée dans les variables.
@@ -75,7 +75,7 @@ Sans Docker, le filet minimal reste `pytest tests/test_theme_hibris.py` (5 s).
 
 Ces points, pas le code, peuvent faire rater le 23 octobre.
 
-- [ ] ⏱ **Quota GPU** : `make check-gpu-quota`. Si < 4 vCPU, **demander ≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Refusé → plan B **`ai_backend = "bedrock"`** (aucun nœud IA, `make check-bedrock`), cf. DEPLOY-AWS §2.
+- [ ] **Backend IA = Bedrock** (décision NCTF26 : le quota GPU EC2 a été **refusé le 23/09/2026** → aucun nœud GPU, aucune dépendance GPU). `make check-bedrock` depuis le poste : les 4 modèles Nova répondent en eu-west-3. Repli historique : `make check-gpu-quota` + `ai_backend = "ollama"` (nœud GPU g4dn.xlarge) uniquement si le quota GPU est un jour accordé, cf. DEPLOY-AWS §2.
 - [ ] ⏱ **Finale sur site ou distante** — deadline **18 septembre** (appro salle/switch/machines). Défaut si non tranché : portables perso sur VLAN contrôlé + téléphones en caisse.
 - [ ] **Domaine** acheté/réservé ; décider Route53 (DNS auto) ou manuel.
 - [ ] **Usage IA** : (A) mesurer la compétence _sans_ assistance → IA autorisée en présélection, finale contrôlée [**recommandé**], ou (B) autorisée partout.
@@ -119,16 +119,18 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 
 ### Instancier par équipe (Lot 2) — validation live ⚠
 
-- [ ] `make link` (relie front↔arena↔IA et vérifie). Doit passer les deux checks `check-arena` et IA.
+- [ ] `make link` (relie front↔arena↔IA et vérifie ; en bedrock, écrit `AI_BACKEND` / `AI_BEDROCK_*`). Doit passer les deux checks `check-arena` et IA.
 - [ ] Un compte test clique « Démarrer » sur un challenge servi → obtient `front_ip:port`, s'y connecte, exploite, soumet son flag propre, scoreboard OK.
 - [ ] Vérifier reap : après TTL (1 h) ou `destroy`, l'instance et son port frp disparaissent (`make check-arena`).
 - [ ] **Migration MariaDB** : confirmer que les tables `team_instance`/`frp_port` sont créées et que `FOR UPDATE SKIP LOCKED` fonctionne sur la version MariaDB déployée.
 
 ### Piste IA (Lot 3) — validation live ⚠
 
-- [ ] Résoudre ai0 → débloquer ai1 → discuter via la console → la passerelle d'admission (`ai-gateway`, front:8600) relaie vers Ollama → `/verify` valide le flag.
+- [ ] Résoudre ai0 → débloquer ai1 → discuter via la console → la passerelle d'admission (`ai-gateway`, front:8600) garde le dialecte Ollama `/api/chat` côté challenges et, avec `AI_BACKEND=bedrock`, traduit vers Bedrock Converse → `/verify` valide le flag.
+- [ ] `make check-bedrock` vert : chaque modèle du pool répond + quotas OK (par défaut les 4 modèles Nova en eu-west-3, ~85 req/min cumulé ; modèle « maison » stable par équipe, débordement sur les suivants, cooldown 20 s sur throttle).
+- [ ] **IAM** : le rôle du front porte la politique `bedrock:InvokeModel` ; IMDSv2 `hop-limit=2` pour que le conteneur lise le rôle ; région `eu-west-3`.
 - [ ] Vérifier les bornes : rate-limit par équipe, budget tokens, 503 « modèle occupé » normalisé sous charge.
-- [ ] `make gpu` montre l'activité ; les tentatives sont loggées (rotation en place).
+- [ ] `make gpu` montre l'activité (compteurs du pool par modèle ; `/metrics` de la passerelle) ; les tentatives sont loggées (rotation en place).
 
 ### Test de charge (300) 🤖
 
@@ -167,21 +169,31 @@ for d in challenges/*/*/; do ctf challenge install "$d" || echo "ECHEC: $d"; don
 ## 3. J-7 — Bascule présélection 🧑
 
 ```
-make phase-preselection      # crée arena + nœud IA ; ~1,46 USD/h
+make phase-preselection      # crée l'arena ; aucun nœud IA en bedrock (IA à l'usage, ~0,1 USD / 1000 req)
 make wait-front              # front prêt
-make wait-arena             # arena + IA prêts (télécharge le modèle Ollama)
-make link                   # relie tout, vérifie arena + IA
+make wait-arena             # arena prête (le nœud IA absent est sauté en bedrock)
+make link                   # relie tout, vérifie l'arena ; écrit AI_BACKEND / AI_BEDROCK_*
 make deploy && make tls-init # si le front a été recréé
 make check-arena            # images de challenge présentes
+make check-bedrock          # pool Bedrock : chaque modèle + quotas (remplace la validation du nœud IA)
 CTFD_TOKEN=… make preflight PHASE=preselection   # check-list : DOIT être vert (0 FAIL)
 ```
 
 - [ ] 🧑 `make preflight PHASE=preselection` vert (secrets, fenêtres 53 h, 203 challenges,
       19 catégories, collines KotH en ligne). Un FAIL = on ne bascule pas. Les WARN se
       lisent une par une ; les 3 lignes `MANUAL` (instancier, IA, images) se font à la main.
+- [ ] 🧑 `make check-bedrock` vert : le pool Bedrock répond (4 modèles Nova en eu-west-3) et
+      les quotas sont OK. L'IA passe par le rôle IAM du front (`bedrock:InvokeModel`), pas par
+      un nœud GPU.
 - [ ] 🧑 Repointer le DNS si l'IP a changé ; vérifier HTTPS.
 - [ ] 🧑 Ouvrir les inscriptions.
 - [ ] 🧑 Dernier `season`-test : un compte réel résout un challenge de chaque type.
+
+> **Repli historique — `ai_backend = "ollama"`** (nœud GPU `g4dn.xlarge`, uniquement si un
+> jour le quota GPU est accordé ; hors chemin critique NCTF26). Le levier `phase-preselection`
+> crée alors **arena + nœud IA** (~1,46 USD/h) ; `make wait-arena` attend aussi l'IA
+> (télécharge le modèle Ollama) ; `make link` vérifie arena **+ IA** ; à J-30 on aura d'abord
+> lancé `make check-gpu-quota`. Supervision de repli : `make gpu` = file Ollama, `make ssh-ai`.
 
 ---
 
@@ -189,15 +201,15 @@ CTFD_TOKEN=… make preflight PHASE=preselection   # check-list : DOIT être ver
 
 Cadence pendant l'épreuve :
 
-| Quand                    | Commande              | Attendu                                                                                            |
-| ------------------------ | --------------------- | -------------------------------------------------------------------------------------------------- |
-| automatique (15 min)     | _timer `ctfd-backup`_ | dump **vérifié** → `s3://…/backups/auto/` ; uploads + export natif 1×/h ; état sur la page **Ops** |
-| toutes les ~2 h          | `make backup-status`  | « dernier dump OK : il y a < 15 min » — sinon `make backup-now` puis `make logs`                   |
-| avant toute manipulation | `make backup`         | dump **vérifié** manuel (gzip -t + table users) envoyé sur S3, conservé sans expiration            |
-| en continu (écran 2)     | page admin **Ops**    | `/plugins/ops/admin` : tout vert (DB, Redis, dernier dump < 15 min, reaper, collines, 5xx = 0)     |
-| en continu (2ᵉ terminal) | `make logs`           | pas d'erreur 5xx en rafale                                                                         |
-| si piste IA active       | `make gpu`            | file Ollama non saturée en permanence                                                              |
-| au moindre doute         | `make cost`           | rappel de ce qui est facturé                                                                       |
+| Quand                    | Commande              | Attendu                                                                                                                            |
+| ------------------------ | --------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| automatique (15 min)     | _timer `ctfd-backup`_ | dump **vérifié** → `s3://…/backups/auto/` ; uploads + export natif 1×/h ; état sur la page **Ops**                                 |
+| toutes les ~2 h          | `make backup-status`  | « dernier dump OK : il y a < 15 min » — sinon `make backup-now` puis `make logs`                                                   |
+| avant toute manipulation | `make backup`         | dump **vérifié** manuel (gzip -t + table users) envoyé sur S3, conservé sans expiration                                            |
+| en continu (écran 2)     | page admin **Ops**    | `/plugins/ops/admin` : tout vert (DB, Redis, dernier dump < 15 min, reaper, collines, 5xx = 0)                                     |
+| en continu (2ᵉ terminal) | `make logs`           | pas d'erreur 5xx en rafale                                                                                                         |
+| si piste IA active       | `make gpu`            | compteurs du pool par modèle ; cooldown 20 s = quota Bedrock atteint, ne doit pas être permanent (repli ollama : file non saturée) |
+| au moindre doute         | `make cost`           | rappel de ce qui est facturé                                                                                                       |
 
 - [ ] 🧑 24 au soir : `make season-down` (**sauvegarde vérifiée + archive S3 + destruction EC2**).
 - [ ] 🧑 **Ligne de coupe automatique** à la fermeture : inviter 14-16 équipes (marge + wildcards). Litiges d'intégrité traités **après** la finale.
@@ -226,11 +238,12 @@ Diagnostic d'abord : `make cost` (qu'est-ce qui tourne ?), `make logs`, `make ss
 1. frpc admin joignable via le tunnel ? `PUT /api/config` + reload effectifs ?
 2. `allowPorts` frps couvre la plage ; le forward 7400 via dockerproxy est up.
 
-**Piste IA : 503 permanents / GPU saturé**
+**Piste IA : 503 permanents / pool Bedrock en cooldown (repli ollama : GPU saturé)**
 
-1. `make gpu` : file pleine → c'est le comportement borné attendu sous pointe. Réduire les quotas d'admission (`AI_*` dans l'env de `ai-gateway`) sans rebuild.
-2. Ollama down → `make ssh-ai`, redémarrer le service ; vérifier le modèle téléchargé. Backend bedrock : `make gpu` affiche les compteurs par modèle (cooldown = quota Bedrock atteint), `make check-bedrock` depuis le poste.
-3. Arène→front:8600 injoignable → vérifier la règle SG et l'injection `OLLAMA_URL`/`AI_PROXY_TOKEN`.
+1. `make gpu` : compteurs par modèle. Cooldown 20 s = throttle Bedrock atteint (petit quota par minute non ajustable, Nova ~20-25, ~85 cumulé ; le pool déborde sur les modèles suivants). Un cooldown permanent → réduire les quotas d'admission (`AI_*` dans l'env de `ai-gateway`) sans rebuild.
+2. `make check-bedrock` depuis le poste : si la passerelle ne lit pas le rôle → vérifier IMDSv2 `hop-limit=2` et la politique `bedrock:InvokeModel` sur le rôle du front (eu-west-3).
+3. Arène→front:8600 injoignable → vérifier la règle SG et l'injection `OLLAMA_URL`/`AI_PROXY_TOKEN` (la passerelle garde le dialecte Ollama sur front:8600).
+4. **Repli ollama** : Ollama down → `make ssh-ai`, redémarrer le service ; vérifier le modèle téléchargé.
 
 **Partage de flags (menu admin Anti-triche, ou ligne `ANTICHEAT` dans `logs/submissions.log`)**
 
@@ -293,10 +306,11 @@ importable par Admin → Backup → Import si la base elle-même est irrécupér
 ## 7. Finale (29-30 oct) 🧑
 
 ```
-make phase-final            # taille réduite (~50 joueurs)
-make wait-front && make wait-arena && make link
+make phase-final            # taille réduite (~50 joueurs) ; aucun nœud IA en bedrock
+make wait-front && make wait-arena && make link   # wait-arena saute le nœud IA en bedrock
 make deploy && make tls-init
 make check-arena
+make check-bedrock          # pool Bedrock : chaque modèle + quotas (repli ollama : voir §3)
 CTFD_TOKEN=… make preflight PHASE=finale         # fenêtre 24 h, inscriptions fermées
 ```
 
@@ -327,18 +341,19 @@ make season-down            # si pas déjà détruit
 
 ## Annexe — carte des commandes
 
-| Commande                                                           | Rôle                                                              |
-| ------------------------------------------------------------------ | ----------------------------------------------------------------- |
-| `make init` / `make state-bootstrap`                               | init Terraform / état distant S3+DynamoDB                         |
-| `make check-gpu-quota`                                             | quota GPU (à lancer **maintenant**)                               |
-| `make phase-setup / -preselection / -final / season-down`          | leviers de coût                                                   |
-| `make wait-front / wait-arena`                                     | attente provisionnement                                           |
-| `make deploy / tls-init / link`                                    | déploiement CTFd / HTTPS / liaison front↔arena↔IA               |
-| `make check-arena / push-images`                                   | images de challenge sur l'arena                                   |
-| `make backup / restore FILE=... / archive`                         | sauvegarde vérifiée / restauration / archive S3                   |
-| `make writeups-prepare / writeups-publish URL=... TOKEN=...`       | writeups en brouillon / publiés à la clôture                      |
-| `make reglement-publish / anticheat-report URL=... CTFD_TOKEN=...` | règlement dans `/tos` / rapports anti-triche pour le jury         |
-| `make loadtest URL=... / loadtest-instancer / loadtest-purge`      | test de charge k6 (300 équipes simulées) / instancier / nettoyage |
-| `make logs / gpu / cost`                                           | supervision                                                       |
-| `make ssh-front / ssh-arena / ssh-ai`                              | shells                                                            |
-| `make destroy`                                                     | détruit l'EC2 (le bucket d'archives survit)                       |
+| Commande                                                           | Rôle                                                                           |
+| ------------------------------------------------------------------ | ------------------------------------------------------------------------------ |
+| `make init` / `make state-bootstrap`                               | init Terraform / état distant S3+DynamoDB                                      |
+| `make check-bedrock`                                               | pool Bedrock : chaque modèle + quotas (chemin IA par défaut)                   |
+| `make check-gpu-quota`                                             | quota GPU — repli ollama uniquement (refusé pour NCTF26)                       |
+| `make phase-setup / -preselection / -final / season-down`          | leviers de coût                                                                |
+| `make wait-front / wait-arena`                                     | attente provisionnement (wait-arena saute le nœud IA en bedrock)               |
+| `make deploy / tls-init / link`                                    | déploiement CTFd / HTTPS / liaison front↔arena↔IA (link écrit AI*BEDROCK*\*) |
+| `make check-arena / push-images`                                   | images de challenge sur l'arena                                                |
+| `make backup / restore FILE=... / archive`                         | sauvegarde vérifiée / restauration / archive S3                                |
+| `make writeups-prepare / writeups-publish URL=... TOKEN=...`       | writeups en brouillon / publiés à la clôture                                   |
+| `make reglement-publish / anticheat-report URL=... CTFD_TOKEN=...` | règlement dans `/tos` / rapports anti-triche pour le jury                      |
+| `make loadtest URL=... / loadtest-instancer / loadtest-purge`      | test de charge k6 (300 équipes simulées) / instancier / nettoyage              |
+| `make logs / gpu / cost`                                           | supervision (gpu = compteurs du pool Bedrock par modèle)                       |
+| `make ssh-front / ssh-arena / ssh-ai`                              | shells (ssh-ai = repli ollama uniquement)                                      |
+| `make destroy`                                                     | détruit l'EC2 (le bucket d'archives survit)                                    |

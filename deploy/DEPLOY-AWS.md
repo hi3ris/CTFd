@@ -15,7 +15,8 @@
   (~0,50 USD/mois). Estimation de l'édition : ~120 USD (couverts par crédits AWS).
 - Calendrier : présélection **23–25 oct** (~300 joueurs, mode équipes, distant),
   finale **29–30 oct** (~50 joueurs).
-- Région par défaut : `eu-west-3` (Paris ; GPU g4dn disponibles).
+- Région par défaut : `eu-west-3` (Paris ; Amazon Bedrock / modèles Nova
+  disponibles — GPU g4dn seulement pour le repli `ollama`).
 
 ## Authentification AWS (la session d'action fournit ses propres credentials)
 
@@ -24,7 +25,7 @@ La méthode officielle, jamais une clé en clair dans une commande :
 ```bash
 aws configure sso          # ou un profil IAM/role classique
 aws sso login
-aws sts get-caller-identity # doit répondre : profil avec droits EC2/S3/IAM/DynamoDB/ServiceQuotas
+aws sts get-caller-identity # doit répondre : profil avec droits EC2/S3/IAM/DynamoDB/Bedrock (ServiceQuotas uniquement pour le repli GPU ollama)
 ```
 
 ## 0. Prérequis poste opérateur
@@ -47,8 +48,11 @@ cp front/.env.example front/.env
 - `admin_cidrs` = IP publique bureau/VPN en `/32` — **obligatoire, sans défaut ;
   jamais `0.0.0.0/0`**.
 - `ssh_public_key` = contenu de la clé publique SSH admin.
-- `domain_name` (optionnel), `player_cidrs` (défaut `0.0.0.0/0`), `aws_region`,
-  `ollama_model` (`llama3.1:8b`).
+- `domain_name` (optionnel), `player_cidrs` (défaut `0.0.0.0/0`), `aws_region`.
+- `ai_backend` : **défaut `"bedrock"`** (backend IA retenu pour NCTF26, aucun
+  nœud IA) ; `"ollama"` = repli GPU historique. `bedrock_models` (pool par
+  défaut : les 4 Nova) et `ollama_model` (`llama3.1:8b`, utile au seul repli
+  `ollama`) ne servent qu'au backend correspondant.
 - Laisser `phase = "off"` (les `make phase-*` passent la valeur voulue).
 
 Éditer **`front/.env`** (renseigner à la main ; générer chaque secret avec
@@ -63,38 +67,49 @@ cp front/.env.example front/.env
   `DOCKER_HOST`, `AI_BACKEND`, `OLLAMA_URL`, `AI_BEDROCK_*`, `FRPC_*`, `WORKERS`,
   `INNODB_POOL`…) : le prochain `make link` les écrase.
 
-## 2. Délai incompressible — à faire MAINTENANT
+## 2. IA : Amazon Bedrock (backend retenu) — à vérifier MAINTENANT
+
+Le backend IA de NCTF26 est **Amazon Bedrock** (`ai_backend = "bedrock"`, valeur
+par défaut). **Aucun nœud IA n'est créé** : la passerelle `ai-gateway` tourne
+sur le front et appelle Bedrock (Converse) avec le **rôle IAM du front**
+(`bedrock:InvokeModel` seulement ; IMDSv2 `hop-limit=2` pour que le conteneur
+lise le rôle). Les challenges ne changent pas : ils parlent toujours le dialecte
+Ollama `/api/chat`, la passerelle traduit vers Bedrock Converse.
+
+Chaque modèle Bedrock a un petit quota de requêtes par minute (Nova 20-25, non
+ajustable) : la passerelle répartit les équipes sur un **pool** de modèles
+(`bedrock_models`, défaut : les 4 Nova en `eu-west-3`, ~85 req/min cumulés).
+Chaque équipe a un modèle « maison » stable, avec débordement sur les suivants
+et **cooldown 20 s** sur throttle. Des modèles chat-only optionnels
+(`bedrock_chat_models`, ex. `mistral.mistral-7b-instruct-v0:2=8`) servent les
+niveaux sans appel d'outil. `/metrics` expose les compteurs du pool.
+
+```bash
+make check-bedrock          # vérifie chaque modèle du pool + quotas (identifiants AWS)
+make free-credits           # plan gratuit : les 5 activités « Earn AWS credits » (+100 USD)
+```
+
+Coût : à l'usage, ~0,1 USD / 1000 requêtes IA (aucune instance à l'heure, pas
+de g4dn). Limite : les niveaux IA sont calibrés sur `llama3.1:8b` ; les Nova
+résistent davantage à l'injection, rejouer les solutions
+(`challenges/ai/*/solution`) contre le pool avant d'ouvrir la catégorie.
+
+### Repli historique — GPU / Ollama (si un jour le quota GPU est accordé)
+
+Le quota GPU EC2 « Running On-Demand G and VT instances » a été **refusé le
+23/09/2026** : aucune dépendance GPU pour NCTF26. Ce chemin ne sert que si le
+quota est un jour accordé. Basculer alors `ai_backend = "ollama"` dans
+`terraform/terraform.tfvars` : un nœud GPU `g4dn.xlarge` + Ollama est créé à la
+place de l'appel Bedrock.
 
 ```bash
 make check-gpu-quota        # lit le quota
 make request-gpu-quota      # dépose la demande (≥ 8 vCPU) si le quota est < 4
-make free-credits           # plan gratuit : les 5 activités « Earn AWS credits » (+100 USD)
 ```
 
-Si le quota « Running On-Demand G and VT instances » est < 4 vCPU → **demander
-≥ 8 immédiatement** (traitement plusieurs jours ouvrés). Une demande déposée
-par l'API sans justification est refusée d'office sur un compte neuf : rouvrir
-le dossier support avec le cas d'usage détaillé.
-
-**Quota refusé → plan B sans GPU (Amazon Bedrock).** Dans
-`terraform/terraform.tfvars` : `ai_backend = "bedrock"`. Le nœud IA n'est pas
-créé ; la passerelle `ai-gateway` du front appelle Bedrock (Converse) avec le
-rôle IAM du front (`bedrock:InvokeModel` seulement). Les challenges ne
-changent pas : ils parlent toujours le dialecte Ollama `/api/chat`, la
-passerelle traduit. Chaque modèle Bedrock a un petit quota de requêtes par
-minute (20-25, non ajustable) : la passerelle répartit les équipes sur un
-**pool** de modèles (`bedrock_models`, défaut : les 4 Nova, ~85 req/min).
-Vérifier avant le jour J que chaque modèle du pool répond (chat + appel
-d'outil) :
-
-```bash
-make check-bedrock             # depuis le poste, avec les identifiants AWS
-```
-
-Coût : à l'usage, ~0,1 USD / 1000 requêtes (aucune instance à l'heure).
-Limite : les niveaux IA sont calibrés sur `llama3.1:8b` ; les Nova résistent
-davantage à l'injection, rejouer les solutions (`challenges/ai/*/solution`)
-contre le pool avant d'ouvrir la catégorie.
+Si le quota est < 4 vCPU → **demander ≥ 8** (traitement plusieurs jours ouvrés).
+Une demande déposée par l'API sans justification est refusée d'office sur un
+compte neuf : rouvrir le dossier support avec le cas d'usage détaillé.
 
 ## 3. État Terraform distant (recommandé avant le jour J)
 
@@ -133,9 +148,9 @@ make deploy && make tls-init
 ## 6. Bascule présélection (J-7 / le 23)
 
 ```bash
-make phase-preselection        # crée arena + nœud IA ; ~1,46 USD/h (0,85 sans nœud IA, ai_backend=bedrock)
-make wait-front && make wait-arena     # wait-arena télécharge le modèle Ollama (sauté en bedrock)
-make link                      # relie front<->arena<->IA ; écrit les vars auto de front/.env (dont AI_BACKEND)
+make phase-preselection        # bedrock (défaut) : arena sans nœud IA, ~0,85 USD/h ; repli ollama : + nœud GPU = ~1,46 USD/h
+make wait-front && make wait-arena     # bedrock : aucun nœud IA à attendre (sauté) ; repli ollama : télécharge le modèle
+make link                      # relie front<->arena<->IA ; écrit les vars auto de front/.env (dont AI_BACKEND / AI_BEDROCK_*)
 make deploy && make tls-init   # si le front a été recréé
 make check-arena               # images de challenge présentes sur l'arena
 make push-images               # si check-arena signale des images manquantes
@@ -158,7 +173,7 @@ make presel-window APPLY=1 URL=https://<domaine> CTFD_TOKEN=<jeton>
 ```bash
 make backup-status     # ~toutes les 2 h : "dernier dump OK < 15 min" (timer auto 15 min)
 make logs              # 2e terminal : pas de 5xx en rafale
-make gpu               # si piste IA : file Ollama non saturée (bedrock : compteurs du pool)
+make gpu               # bedrock (défaut) : compteurs du pool (/metrics) ; repli ollama : file non saturée
 make cost              # au moindre doute : ce qui est facturé
 make backup            # dump vérifié manuel AVANT toute manipulation
 # page admin Ops : https://<domaine>/plugins/ops/admin (DB, Redis, dump, reaper, collines, 5xx)
@@ -205,17 +220,19 @@ make season-down        # sauvegarde + archive + DÉTRUIT tout l'EC2
 
 ## Carte des commandes
 
-| Commande                                       | Rôle                                           |
-| ---------------------------------------------- | ---------------------------------------------- |
-| `make init` / `make state-bootstrap`           | init Terraform / état distant S3+DynamoDB      |
-| `make check-gpu-quota`                         | quota GPU (à lancer **maintenant**)            |
-| `make request-gpu-quota` / `make free-credits` | demande de quota GPU / crédits du plan gratuit |
-| `make phase-setup / -preselection / -final`    | leviers de coût / dimensionnement              |
-| `make wait-front / wait-arena`                 | attente provisionnement                        |
-| `make deploy / tls-init / link`                | déploiement CTFd / HTTPS / liaison             |
-| `make check-arena / push-images`               | images de challenge sur l'arena                |
-| `make preflight PHASE=...`                     | check-list de mise en prod (gate)              |
-| `make backup / restore FILE=... / archive`     | sauvegarde / restauration / archive S3         |
-| `make season-down / destroy`                   | destruction de l'EC2 (le bucket survit)        |
-| `make logs / gpu / cost`                       | supervision                                    |
-| `make ssh-front / ssh-arena / ssh-ai`          | shells                                         |
+| Commande                                    | Rôle                                              |
+| ------------------------------------------- | ------------------------------------------------- |
+| `make init` / `make state-bootstrap`        | init Terraform / état distant S3+DynamoDB         |
+| `make check-bedrock`                        | vérifie le pool Bedrock + quotas (**maintenant**) |
+| `make free-credits`                         | crédits du plan gratuit AWS                       |
+| `make check-gpu-quota`                      | quota GPU (repli `ollama` uniquement)             |
+| `make request-gpu-quota`                    | demande de quota GPU (repli `ollama`)             |
+| `make phase-setup / -preselection / -final` | leviers de coût / dimensionnement                 |
+| `make wait-front / wait-arena`              | attente provisionnement                           |
+| `make deploy / tls-init / link`             | déploiement CTFd / HTTPS / liaison                |
+| `make check-arena / push-images`            | images de challenge sur l'arena                   |
+| `make preflight PHASE=...`                  | check-list de mise en prod (gate)                 |
+| `make backup / restore FILE=... / archive`  | sauvegarde / restauration / archive S3            |
+| `make season-down / destroy`                | destruction de l'EC2 (le bucket survit)           |
+| `make logs / gpu / cost`                    | supervision                                       |
+| `make ssh-front / ssh-arena / ssh-ai`       | shells (`ssh-ai` : repli `ollama` seulement)      |
