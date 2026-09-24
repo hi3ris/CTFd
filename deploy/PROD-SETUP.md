@@ -282,7 +282,7 @@ details » Anthropic (console Bedrock) ; Pixtral Large est limité à 1 req/min.
       `ai3-tool-abuse`, `agent-tool-abuse`) contre le pool : les Nova résistent
       plus à l'injection que `llama3.1:8b`. Ajuster les prompts si un niveau
       devient insoluble ; option `bedrock_chat_models =
-    "mistral.mistral-7b-instruct-v0:2=8"` pour un modèle plus naïf sur les
+"mistral.mistral-7b-instruct-v0:2=8"` pour un modèle plus naïf sur les
       niveaux sans outils.
 - [ ] Quotas : chaque modèle est plafonné à 20-25 req/min ; le pool tient
       ~85 req/min, au-delà la passerelle répond 503 « réessayez ». Augmentation
