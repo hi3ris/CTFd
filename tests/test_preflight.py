@@ -179,6 +179,32 @@ def test_identity_per_phase():
     )
 
 
+def test_email_gate_when_verification_on():
+    # verify OFF -> le check email reste silencieux (check_identity le signale)
+    assert pf.check_email({"verify_emails": "false"}, {}, "preselection") == []
+    # verify ON sans SMTP (ni config ni env) -> FAIL bloquant (lockout)
+    st = statuses(pf.check_email({"verify_emails": "true"}, {}, "preselection"))
+    assert st["smtp"] == pf.FAIL
+    # SMTP via la config CTFd -> OK + rappel MANUAL de prouver l'envoi
+    st = statuses(
+        pf.check_email(
+            {"verify_emails": "true", "mail_server": "smtp-relay.brevo.com"},
+            {},
+            "preselection",
+        )
+    )
+    assert st["smtp"] == pf.OK and st["envoi"] == pf.MANUAL
+    # SMTP via l'env (MAIL_SERVER injecté par le compose, absent de /configs) -> OK
+    st = statuses(
+        pf.check_email(
+            {"verify_emails": "true"},
+            {"MAIL_SERVER": "email-smtp.eu-west-3.amazonaws.com"},
+            "preselection",
+        )
+    )
+    assert st["smtp"] == pf.OK
+
+
 def test_registration_needs_reglement_and_university_field():
     cfg = {"tos_text": "# Reglement"}
     uni = [{"name": "Université", "required": True}]

@@ -292,6 +292,49 @@ def check_identity(configs, phase, team_size=None):
     return out
 
 
+def check_email(configs, env, phase):
+    """Quand `verify_emails` est ON, l'inscription DEPEND de l'envoi SMTP : un
+    SMTP absent ou cassé bloque tout nouveau joueur (lockout massif le soir J).
+
+    On vérifie au moins que le SMTP est *configuré* — via la config CTFd (Admin
+    → Email) OU la variable d'env `MAIL_SERVER` (notre cas : le compose injecte
+    les MAIL_* ; ils ne remontent alors PAS dans /api/v1/configs). Configuré ne
+    veut pas dire qui-marche : on rappelle de PROUVER l'envoi avec `make
+    mail-test` avant d'ouvrir. Silencieux si la vérification est OFF.
+    """
+    S = "email"
+    out = []
+    if not _truthy(configs.get("verify_emails")):
+        return out
+    server = str(configs.get("mail_server") or "").strip()
+    if not server and env:
+        server = str(env.get("MAIL_SERVER") or "").strip()
+    if not server:
+        out.append(
+            Result(
+                FAIL,
+                S,
+                "smtp",
+                "verify_emails ON mais aucun SMTP (ni config CTFd ni MAIL_SERVER) "
+                "-> lockout a l'inscription ; configurer le SMTP (PROD-SETUP "
+                "§2bis) ou verify_emails=OFF",
+            )
+        )
+        return out
+    out.append(Result(OK, S, "smtp", "configure (%s)" % server))
+    out.append(
+        Result(
+            MANUAL,
+            S,
+            "envoi",
+            "verify_emails ON : PROUVER l'envoi avant d'ouvrir -> "
+            "`make mail-test TO=<toi>` (config != envoi qui marche : mot de "
+            "passe, DKIM, port).",
+        )
+    )
+    return out
+
+
 def check_registration(configs, user_fields, phase):
     """Ce que l'inscription exige : le reglement derriere /tos (case « j'accepte »
     obligatoire du theme) et le champ user « Universite » requis (liste deroulante)."""
@@ -672,6 +715,7 @@ def main(argv=None):
     results += check_secrets(env)
     results += check_windows(configs, a.phase, allow_running=a.allow_running)
     results += check_identity(configs, a.phase, a.team_size)
+    results += check_email(configs, env, a.phase)
     results += check_registration(configs, user_fields, a.phase)
     results += check_content(
         challenges, flags, a.expect_challenges, a.expect_categories

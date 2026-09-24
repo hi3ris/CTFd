@@ -456,6 +456,12 @@ preflight: ## Check-list de prod sur le front : PHASE=preselection|finale, CTFD_
 	 $(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ctfd printenv' | \
 	 CTFD_URL="$$URL" $(LOCAL_PY) scripts/preflight.py $(PREFLIGHT_ARGS)
 
+.PHONY: mail-test
+mail-test: ## [front] Prouve l'envoi SMTP AVANT verify_emails=ON. TO=destinataire@exemple.com
+	@test -n "$(TO)" || { echo "TO manquant : make mail-test TO=toi@exemple.com"; exit 2; }
+	@echo ">> Envoi d'un e-mail de test via le SMTP du conteneur ctfd (MAIL_* de front/.env)"
+	$(FRONT_SSH) 'cd /opt/ctfd/CTFd && $(COMPOSE) exec -T ctfd python3 - "$(TO)"' < scripts/mail-test.py
+
 ai-audit: ## Audit resistance au solve IA des challenges : defaut heuristique (hors-ligne) ; MODEL=https://.../v1 ou OLLAMA=http://.. + MODEL_NAME=<fort> pour la verite terrain. OUT=audit.csv
 	$(LOCAL_PY) scripts/ai_resistance_audit.py \
 	  $(if $(MODEL),--model $(MODEL)) $(if $(OLLAMA),--ollama $(OLLAMA)) \

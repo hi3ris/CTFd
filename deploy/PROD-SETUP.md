@@ -89,7 +89,9 @@ jeton API pour la suite scriptée :
    - **Theme** : **hibris**
    - **Registration visibility** : `public` (présélection ouverte) — à passer
      `private` pour la finale
-   - **Verify emails** : selon ta politique (off si pas de SMTP configuré)
+   - **Verify emails** : **ON** — mais seulement APRÈS avoir prouvé le SMTP
+     (`make mail-test`), cf. §2bis. L'activer sans SMTP qui marche = lockout à
+     l'inscription (le preflight le bloque en FAIL).
 3. **Taille d'équipe** : 4 à 5 joueurs. Le maximum est le réglage CTFd `team_size`,
    le minimum vient du plugin `team_min_size` (config `team_size_min`) : une équipe
    incomplète peut s'inscrire et lire les énoncés, mais ne peut ni soumettre de flag
@@ -107,19 +109,30 @@ jeton API pour la suite scriptée :
 
 ## 2bis. E-mail (SMTP) — confirmations d'inscription + reset de mot de passe
 
-**Décision de volume d'abord.** Le facteur limitant d'un CTF n'est pas le quota
-mensuel mais le **plafond journalier** : ~300 joueurs peuvent s'inscrire le même
-soir (présélection ouverte ven 19h). Deux politiques :
+**Décision : vérification e-mail ON.** L'inscription exige alors un mail de
+confirmation reçu **et** cliqué. Conséquence directe : **si le SMTP ne marche pas
+le soir J, personne ne peut valider son compte** (lockout massif). D'où l'ordre
+imposé ci-dessous — on prouve l'envoi AVANT d'activer la vérification.
 
-- **Vérification e-mail OFF (recommandé pour la présélection)** :
-  `verify_emails=off`. L'inscription n'envoie alors aucun mail de confirmation ;
-  l'e-mail ne sert plus qu'aux **resets de mot de passe** (volume faible, étalé).
-  N'importe quel palier gratuit suffit, et aucune deliverabilité douteuse ne
-  bloque un joueur légitime le soir J. C'est le défaut conseillé.
-- **Vérification ON** (anti multi-comptes) : il faut un **plafond journalier**
-  qui encaisse la pointe d'inscriptions.
+**Ordre à respecter (ne pas activer ON à l'aveugle) :**
 
-**Choix du fournisseur (gratuit) :**
+1. **Domaine + auth** : `ctf.tg` résolu, **SPF + DKIM + DMARC** posés (§1b) — en
+   **DNS-only** (voir l'encart plus bas). Sans DKIM, les confirmations partent en
+   spam et bloquent des inscriptions.
+2. **Renseigner le SMTP** dans `front/.env` (bloc ci-dessous) puis `make deploy`.
+3. **PROUVER l'envoi** : `make mail-test TO=<toi>` (envoie un vrai mail depuis le
+   conteneur front). Doit arriver **en boîte de réception**, pas en spam.
+4. **Seulement alors** activer la vérification :
+   `curl -H "Authorization: Token $CTFD_TOKEN" -X PATCH $URL/api/v1/configs -d '{"verify_emails": true}'`.
+5. **`make preflight`** garde le coup : `verify_emails ON` sans SMTP configuré =
+   **FAIL** bloquant (check `email/smtp`), et un rappel `MANUAL` de rejouer
+   `mail-test`.
+
+**Plafond journalier = le vrai facteur** (pas le quota mensuel) : ~300 joueurs
+peuvent s'inscrire le même soir (ven 19h). Avec la vérification ON, un mail non
+reçu = un joueur bloqué, donc il faut de la **marge**.
+
+**Choix du fournisseur :**
 
 | Fournisseur      | Gratuit                  | Plafond/jour                  | Note                                                                                                                                                                                                                                   |
 | ---------------- | ------------------------ | ----------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -129,9 +142,13 @@ soir (présélection ouverte ven 19h). Deux politiques :
 | SMTP2GO          | 1 000/mois               | ~33/jour                      | Trop bas.                                                                                                                                                                                                                              |
 | **Amazon SES**   | ~gratuit via crédits AWS | **jusqu'à des milliers/jour** | Le bon choix **si vérification ON à 300 joueurs**. Natif AWS (on y est déjà), ~0,10 $/1000. **Mais** : sortie de sandbox à demander (1–3 jours ouvrés) + domaine `ctf.tg` vérifié (DKIM). À lancer **maintenant** vu le mois d'avance. |
 
-**Recommandation :** **Brevo + vérification OFF** pour la présélection (zéro coût,
-zéro risque de plafond). Si tu veux la vérification obligatoire à l'échelle,
-bascule sur **SES** en demandant la sortie de sandbox dès aujourd'hui.
+**Recommandation (vérification ON à ~300) : Amazon SES.** La vérification rend le
+plafond critique — un mail perdu = un joueur bloqué — donc on veut de la marge.
+SES est natif AWS (on y est déjà), monte à des milliers/jour, ~0,10 $/1000. **À
+lancer maintenant** (sortie de sandbox 1–3 j ouvrés + DKIM `ctf.tg`). **Brevo
+(300/jour)** reste le plan de repli immédiat / pour tester la chaîne tout de
+suite, viable si les inscriptions s'étalent sur le week-end (23–26 oct) plutôt
+que toutes le vendredi soir.
 
 **⚠️ Deliverabilité — indispensable quel que soit le fournisseur :** authentifie
 le domaine d'envoi (**SPF + DKIM + DMARC sur `ctf.tg`**), sinon les mails de
@@ -156,6 +173,22 @@ MAIL_USERNAME=<e-mail de login Brevo>
 MAIL_PASSWORD=<clé SMTP Brevo>      # onglet SMTP du compte — PAS la clé API. SECRET.
 MAIL_TLS=true
 ```
+
+**Config CTFd (Amazon SES) — via `front/.env` :**
+
+```
+MAILFROM_ADDR=noreply@ctf.tg        # identité vérifiée dans SES (domaine ctf.tg)
+MAIL_SERVER=email-smtp.eu-west-3.amazonaws.com   # endpoint SMTP de TA région SES
+MAIL_PORT=587
+MAIL_USEAUTH=true
+MAIL_USERNAME=<SMTP username SES>   # créé via SES > SMTP settings (≠ clé IAM console)
+MAIL_PASSWORD=<SMTP password SES>   # dérivé à la création des identifiants SMTP. SECRET.
+MAIL_TLS=true
+```
+
+Prérequis SES : domaine `ctf.tg` vérifié (DKIM signé) **et** sortie de sandbox
+accordée (sinon envoi limité aux adresses vérifiées, 200/jour). Demander la prod
+dès maintenant.
 
 Puis `make deploy` (le compose passe ces variables au conteneur CTFd). Étapes
 manuelles côté opérateur : créer le compte Brevo, générer la **clé SMTP**,
