@@ -10,7 +10,10 @@
  *                                 équipe (vert) ; un éclair lointain de temps
  *                                 en temps.
  *   /scoreboard         radar   — un écho vert par score qui monte, un écho
- *                                 rouge avec onde par first blood.
+ *                                 rouge avec onde par first blood ; l'éclair
+ *                                 frappe le kart de l'équipe (calque avant,
+ *                                 effet ponctuel) et le vainqueur à la
+ *                                 révélation finale (nctf:kartstrike).
  *   login / register /  circuit — impulsions tricolores sur des pistes de
  *   reset / confirm               circuit ; accélèrent à l'envoi du formulaire.
  *   pages d'erreur      pluie de chiffrement (glyphes hex, « NCTF26{ »).
@@ -83,10 +86,12 @@
     }, 150);
   });
 
-  // ================================================================== ORAGE
-  function storm(board) {
-    var S = Canvas("nctf-storm");
-    var veil = layer("div", "nctf-veil");
+  // ======================================================== MOTEUR D'ÉCLAIRS
+  // Partagé par l'orage du plateau (calque de fond) et par la course (calque
+  // AU-DESSUS du contenu, pour frapper un kart : effet ponctuel de 420 ms, pas
+  // un fond). File d'attente : jamais deux frappes à moins de 400 ms.
+  function Lightning(cls, veil) {
+    var S = Canvas(cls);
     var Y = tk("yellow", "#ffce00"),
       CORE = tk("bolt-core", "#fff7cc"),
       RED = tk("red", "#d21034"),
@@ -184,7 +189,7 @@
       b.t0 = lastStrike;
       b.t = 0;
       bolts.push(b);
-      if (kind !== "solve") {
+      if (veil && kind !== "solve") {
         veil.style.setProperty("--fx", ((x / S.w) * 100).toFixed(1) + "%");
         veil.style.opacity = kind === "fb" ? "1" : "0.5";
         setTimeout(function () {
@@ -214,6 +219,25 @@
         pump();
       }, wait);
     }
+    return { S: S, strike: strike };
+  }
+
+  // Dédoublonnage des first bloods : le ruban HUD et la course peuvent annoncer
+  // le même (même solve_id) à quelques secondes d'écart.
+  var fbDone = {};
+  function freshFb(d) {
+    if (!d || d.solve_id == null) return true;
+    if (fbDone[d.solve_id]) return false;
+    fbDone[d.solve_id] = 1;
+    return true;
+  }
+
+  // ================================================================== ORAGE
+  function storm(board) {
+    var veil = layer("div", "nctf-veil");
+    var E = Lightning("nctf-storm", veil),
+      S = E.S,
+      strike = E.strike;
 
     function tile(cid) {
       return board.querySelector('button.challenge-button[value="' + String(cid).replace(/[^0-9]/g, "") + '"]');
@@ -241,6 +265,7 @@
     // First blood : l'événement porte le challenge_id → la tuile.
     window.addEventListener("nctf:firstblood", function (e) {
       var d = e.detail || {};
+      if (!freshFb(d)) return;
       hit(d.challenge_id != null ? tile(d.challenge_id) : null, "fb");
     });
 
@@ -392,8 +417,34 @@
     window.addEventListener("nctf:score", function () {
       blip(false);
     });
-    window.addEventListener("nctf:firstblood", function () {
+    // Éclair sur le kart : calque au-dessus du contenu, sans voile d'écran.
+    var E = Lightning("nctf-front", null);
+    resizeHandlers.push(E.S.fit);
+    function strikeKart(accountId) {
+      var lane = document.querySelector('.car-lane[data-account="' + String(accountId).replace(/[^0-9]/g, "") + '"]');
+      if (!lane) return false;
+      var w = lane.querySelector(".car-wrap .car") || lane;
+      var r = w.getBoundingClientRect();
+      if (r.bottom < 0 || r.top > E.S.h) return false;
+      E.strike(r.left + r.width / 2, r.top + r.height / 2, "fb");
+      lane.classList.remove("nctf-struck-fb");
+      void lane.offsetWidth;
+      lane.classList.add("nctf-struck-fb");
+      setTimeout(function () {
+        lane.classList.remove("nctf-struck-fb");
+      }, 1700);
+      return true;
+    }
+    window.addEventListener("nctf:firstblood", function (e) {
+      var d = e.detail || {};
+      if (!freshFb(d)) return;
       blip(true);
+      if (d.account_id != null) strikeKart(d.account_id);
+    });
+    // la révélation finale fait frapper le vainqueur
+    window.addEventListener("nctf:kartstrike", function (e) {
+      var d = e.detail || {};
+      if (d.account_id != null) strikeKart(d.account_id);
     });
     visHandlers.push(function (visible) {
       if (visible) start();

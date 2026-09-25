@@ -91,3 +91,64 @@ def test_tokens_the_layer_reads_are_defined():
         "--cipher",
     ):
         assert name + ":" in root, name
+
+
+# --------------------------------------------------------------------------
+# Grand Prix v2 (scoreboard.html)
+# --------------------------------------------------------------------------
+def test_race_positions_by_score_and_never_clips():
+    """A kart sits at score / leader score, anchored by its LEFT edge between
+    the rank badge and a reserve before the finish line: the old centred
+    translate(-50%) clipped trailing karts on phones (audit finding)."""
+    assert "var(--p, 0) * (100% - var(--start, 56px) - var(--reserve" in SCOREBOARD
+    assert "transform:translate(-50%,-50%)" not in SCOREBOARD
+    assert 'setProperty("--p"' in SCOREBOARD
+
+
+def test_race_features_are_wired():
+    for needle in (
+        # gaps in points + « à 1 flag » from the median challenge value
+        "à 1 flag",
+        "flagStep",
+        # 1 h trend, 30 min ghost, categories: from the public top-N history
+        "/api/v1/scoreboard/top/",
+        "ref - 3600e3",
+        "ref - 1800e3",
+        "cat-chips",
+        # commentator, announced politely to screen readers
+        'id="rc-comment" role="log" aria-live="polite"',
+        # freeze fog and the organiser-driven final reveal (?big=1&reveal=1, R)
+        "fogged",
+        "reveal=1",
+        'e.key === "r"',
+        "nctf:kartstrike",
+        # explorable pack + duel
+        "togglePack",
+        "renderPack",
+        "pickDuel",
+        "drawDuelChart",
+        # lanes carry their account for the kart lightning
+        'setAttribute("data-account"',
+    ):
+        assert needle in SCOREBOARD, needle
+
+
+def test_race_first_bloods_strike_the_kart_once():
+    js = JS_MIN.read_text(encoding="utf-8")
+    assert "nctf-front" in js and '.car-lane[data-account="' in js
+    assert '"nctf:kartstrike"' in js
+    # the HUD and the race may both report the same first blood
+    assert "freshFb(d)" in js
+    assert 'fire("nctf:firstblood", d)' in SCOREBOARD
+
+
+def test_race_duel_palette_is_the_validated_pair():
+    # validated with the dataviz palette checker on --panel (#0b0f18), dark mode
+    assert 'var DUEL_COL = ["#b38a00", "#5b8fe8"]' in SCOREBOARD
+
+
+def test_race_motion_is_guarded():
+    assert "if (reducedMotion()){ revealDone = true;" in SCOREBOARD
+    block = SCOREBOARD[SCOREBOARD.rindex("@media (prefers-reduced-motion: reduce)") :]
+    for sel in (".track.fogged .fog", ".rc-comment li:first-child", ".track.revealing"):
+        assert sel in block, sel

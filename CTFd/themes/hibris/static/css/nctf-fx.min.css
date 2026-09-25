@@ -37,6 +37,15 @@
   100% { filter: none; }
 }
 
+/* Course : l'éclair qui frappe un kart passe AU-DESSUS du contenu (effet de
+   420 ms, jamais un fond) ; il ne capte toujours aucun clic. */
+.nctf-fx.nctf-front {
+  z-index: 40;
+}
+.car-lane.nctf-struck-fb .car-wrap {
+  animation: nctfStruckFb 1.6s ease-out;
+}
+
 /* Aurore tricolore (pages statiques / accueil) */
 .nctf-aurora {
   inset: -20%;
@@ -79,5 +88,6 @@
   .nctf-aurora i { animation: none; }
   .challenge-button.nctf-struck-fb,
   .challenge-button.nctf-struck-solve { animation: none; outline: 2px solid var(--yellow); outline-offset: 3px; }
+  .car-lane.nctf-struck-fb .car-wrap { animation: none; outline: 2px solid var(--yellow); outline-offset: 3px; border-radius: 8px; }
   .nctf-veil { display: none; }
 }
