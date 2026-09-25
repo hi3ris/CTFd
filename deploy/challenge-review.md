@@ -89,6 +89,19 @@ Contredit la posture anti-LLM affichée (`anti-llm-guardrails.md`).
 (comme le set servi) ou retirer la formule finale de l'indice, sinon aligner les
 points sur la vraie résistance.
 
+> **✅ PARTIELLEMENT APPLIQUÉ (§3, volet indices).** La branche « retirer la
+> formule finale de l'indice » a été appliquée aux statiques à forte valeur :
+> `reverse/java-cafe`, `reverse/pyc-ghost`, `reverse/shell-lock`,
+> `web/reset-token-lcg` (le pire ratio, 450 pts), `pwn/fmt-key-leak`,
+> `pwn/ret2win-keyed` — le dernier indice ne livre plus la formule close /
+> l'offset / la graine, seulement la technique et la forme. Les statiques
+> bon-marché (`bss-admin-flip`/`off-by-one-auth`/`stack-smash-reveal` 100-150,
+> beginner/easy ; warmup/networking/hardware/mobile) sont **laissées
+> explicites** : leur résistance ≈ nulle est cohérente avec leur prix bas, elles
+> ne sont **pas** comptées comme « résistantes ». Le **volet structurel**
+> (oracle serveur, flag offline non récupérable statiquement, reverse « écart
+> aux specs ») nécessite l'arène et est **parké** (`HANDOFF-NCTF26.md`).
+
 ## 4. Calibration & étiquetage
 
 - **~67/69 servis cloud/supplychain sans tag de difficulté** ; ~310/505 au total sans tag `easy/medium/hard`.

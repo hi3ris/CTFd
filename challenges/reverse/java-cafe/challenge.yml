@@ -26,9 +26,9 @@ hints:
     cost: 15
     key: h1
   - content: >-
-      One constant is base64, the other is a short key. The flag is
-      `xor(base64_decode(B), key)` with the key repeated. Decode B, XOR with the
-      key, and you get NCTF{...}.
+      One constant is base64-encoded ciphertext, the other is a short repeating
+      key; the flag is their XOR. Recover both constants from the decompiled
+      class and combine them.
     cost: 30
     key: h2
     requirements: [h1]

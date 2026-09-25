@@ -40,8 +40,9 @@ hints:
     requirements: [h1]
   - content: >-
       Seed the LCG with the admin line's timestamp to regenerate the admin
-      token, then reproduce /reset/confirm: XOR SEALED_FLAG_HEX with a keystream
-      of sha256("resetseal|" + token).
+      token. The flag is sealed against that token -- read what /reset/confirm
+      does to see how the token is stretched into a keystream and XORed onto the
+      sealed bytes, then undo it.
     cost: 68
     key: h3
     requirements: [h2]

@@ -32,9 +32,9 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      Scan with `%N$lx` to locate the 64-bit cookie (offset 25 on the shipped
-      build), then type it back in decimal at the verification prompt. Do the
-      leak and the reply in the same run — the value is randomised each time.
+      Scan the stack with `%N$lx` to locate the 64-bit cookie (find the offset
+      yourself), then type it back in decimal at the verification prompt. Do the
+      leak and the reply in the same run -- the value is randomised each time.
     cost: 45
     key: h3
     requirements: [h2]

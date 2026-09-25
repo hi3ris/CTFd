@@ -33,9 +33,9 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      Overflow at offset 72 to the saved return address, then chain a
-      `pop rdi; ret` gadget (the binary ships one) with the leaked token, then
-      the reveal routine's address.
+      Find the overflow offset to the saved return address, then chain a
+      `pop rdi; ret` gadget (the binary ships one) loaded with the leaked token,
+      followed by the reveal routine's address.
     cost: 45
     key: h3
     requirements: [h2]

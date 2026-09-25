@@ -27,9 +27,10 @@ hints:
     cost: 10
     key: h1
   - content: >-
-      `_k` is the password with every byte XORed by 0x2A, hex-encoded. De-xor it
-      to get the password. Then `_b` is base64 of the flag XORed with that
-      password (repeated) — base64-decode and XOR back to reveal the flag.
+      `_k` is the password obfuscated by a single-byte XOR then hex-encoded --
+      trace the perl line to recover the XOR byte and de-obfuscate it. `_b` is
+      then the base64 of the flag XORed with that password (repeated); reverse
+      those two steps to reveal it.
     cost: 20
     key: h2
     requirements: [h1]

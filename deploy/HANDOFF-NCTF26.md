@@ -46,6 +46,23 @@ Légende : 🖥️ action sur une machine de déploiement · 🧑 décision / ac
   30 j).
 - **Domaine / Savings Plan** : à confirmer après le test de charge.
 
+## Durcissement anti-LLM structurel (revue §3) 🖥️🧑
+
+Le volet **indices** de la revue §3 est appliqué (dernier indice directionnel
+sur les statiques à forte valeur, cf. `challenge-review.md`). Le volet
+**structurel** exige l'arène / une refonte binaire et reste à trancher :
+
+- **pwn à flag récupérable hors-ligne** (`fmt-key-leak`, `shellcode-decoder`,
+  etc.) : le flag est XOR-encodé avec une clé de compilation lisible dans le
+  binaire → récupérable sans exploitation. Durcir = flag servi par un **oracle**
+  côté conteneur (au run), pas embarqué dans l'ELF. Nécessite Docker.
+- **reverse à format standard** (`java-cafe`, `pyc-ghost`) : appliquer le
+  principe deep-research « **écart délibéré aux specs** + leurres » (ex. runtime
+  WASM à opcodes permutés, à la `synthvm`) plutôt que JVM/.pyc décompilables.
+- **web statiques à forte valeur** (`reset-token-lcg`) : envisager la bascule
+  vers un **oracle serveur** (`type: team_instance`) comme le set servi, sinon
+  garder l'indice directionnel (fait) et le prix aligné.
+
 ## Challenges restants (~70 stubs) 🖥️
 
 Backlog chiffré : pwn (heap/ROP), blockchain/EVM, ai, ml, os. Leur **authoring**

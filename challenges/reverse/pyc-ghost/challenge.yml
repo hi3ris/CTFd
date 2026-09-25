@@ -26,10 +26,10 @@ hints:
     cost: 15
     key: h1
   - content: >-
-      The comparison target is rebuilt as `DATA[i] ^ keystream[i]`, where the
-      keystream is a linear congruential generator: `x = (x*1103515245 + 12345) &
-      0x7FFFFFFF`, byte = `(x >> 16) & 0xFF`, seeded with `0x1337`. Reproduce it
-      and XOR against DATA, or just call the reconstruction function.
+      The target is `DATA[i] ^ keystream[i]`, where the keystream comes from a
+      linear congruential generator whose multiplier, increment and seed are all
+      visible in the bytecode. Lift those constants, reproduce the keystream and
+      XOR it against DATA -- or just call the reconstruction function directly.
     cost: 30
     key: h2
     requirements: [h1]
