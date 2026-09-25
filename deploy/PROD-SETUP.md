@@ -233,13 +233,19 @@ dès maintenant.
   `~/.config/nctf26/ses-smtp.env` (600, hors git) et déjà écrits dans
   `front/.env` (local + front). `make mail-test TO=success@simulator.amazonses.com`
   → **OK** (le simulateur SES marche même en sandbox).
-- **Sortie de sandbox demandée** (cas TRANSACTIONAL, ~300 inscriptions le soir
-  d'ouverture) : statut `PENDING`, réponse AWS sous 24 h en général, par e-mail.
-  Tant que c'est `PENDING`, seuls le simulateur et les adresses vérifiées
-  reçoivent : l'adresse de l'opérateur a été ajoutée comme identité, **cliquer
-  le lien de vérification SES reçu par e-mail** pour pouvoir se faire un
-  `make mail-test` réel. Vérifier : `aws sesv2 get-account --region eu-west-3`
-  (`ProductionAccessEnabled`).
+- **Sortie de sandbox : demandée puis REFUSÉE par AWS** le 2026-09-25 (dossier
+  support `179029768300189`, cas TRANSACTIONAL, ~300 inscriptions le soir
+  d'ouverture). Le refus se conteste **depuis la console** (Support Center →
+  répondre au dossier : préciser l'organisation CERT-TG, le site https://ctf.tg
+  déjà en ligne, le double opt-in, la gestion des bounces/plaintes) ; l'API
+  Support exige un plan payant. Tant que `ProductionAccessEnabled` est `false`,
+  seuls le simulateur et les adresses vérifiées reçoivent : l'adresse de
+  l'opérateur a été ajoutée comme identité, **cliquer le lien de vérification
+  SES reçu par e-mail** pour pouvoir se faire un `make mail-test` réel.
+  Vérifier : `aws sesv2 get-account --region eu-west-3`.
+- **Repli si le refus est maintenu : Brevo** (300/jour, config plus haut) — le
+  domaine est déjà authentifié (SPF/DMARC) ; il restera à poser le DKIM Brevo en
+  DNS-only et à écraser les `MAIL_*` SES dans `front/.env`.
 - **Ne passer `verify_emails=ON` qu'une fois la prod SES accordée** ; le
   preflight le rappelle (WARN tant que c'est off).
 
