@@ -153,7 +153,11 @@
 .car-lane .rank.g3 { background:linear-gradient(180deg,#e6a463,#b9702e); color:#2a1400; }
 
 .car-wrap {
-	position:absolute; top:50%; transform:translate(-50%,-50%); z-index:3;
+	/* --p = score / score du leader (0..1). Ancré par son bord gauche entre la
+	   pastille de rang (--start) et une réserve avant l'arrivée (--reserve) :
+	   un kart n'est jamais coupé, même sur téléphone. */
+	position:absolute; top:50%; transform:translateY(-50%); z-index:3;
+	left:calc(var(--start, 56px) + var(--p, 0) * (100% - var(--start, 56px) - var(--reserve, 470px)));
 	transition:left 1.1s cubic-bezier(.22,.61,.36,1);
 	display:flex; align-items:center; gap:.55rem; white-space:nowrap;
 }
@@ -173,7 +177,7 @@
 .car-lane.leader .car-score { color:var(--yellow); }
 
 /* Boost : bref élan coloré quand l'équipe marque (mode fun) */
-@keyframes nitro { 0%{transform:translate(-50%,-50%) scale(1)} 30%{transform:translate(-50%,-50%) scale(1.14)} 100%{transform:translate(-50%,-50%) scale(1)} }
+@keyframes nitro { 0%{transform:translateY(-50%) scale(1)} 30%{transform:translateY(-50%) scale(1.14)} 100%{transform:translateY(-50%) scale(1)} }
 .car-wrap.boost { animation:nitro .6s ease; }
 .car-wrap.boost .flame {
 	position:absolute; right:100%; top:50%; transform:translateY(-50%);
@@ -332,7 +336,107 @@ body.bigmode .navbar, body.bigmode .footer, body.bigmode .jumbotron,
 body.bigmode .race-switch, body.bigmode #board-table { display:none !important; }
 body.bigmode #race { margin-top:1rem; }
 
+
+/* ===== Grand Prix v2 : écarts, tendance, fantôme, catégories, commentateur,
+   brouillard du gel, révélation finale, peloton explorable, duel ===== */
+.car-gap { font-family:'JetBrains Mono',monospace; font-size:.74rem; color:var(--muted); }
+.car-gap.close { color:var(--yellow); }
+.car-gap.lead { color:var(--green-b); }
+.cat-chips { display:inline-flex; gap:.2rem; }
+.cat-chips i { font:500 .6rem/1 'JetBrains Mono',monospace; font-style:normal; letter-spacing:.4px; color:#c7cfda;
+	border:1px solid #2b3a4d; border-radius:4px; padding:.12rem .28rem; text-transform:uppercase; }
+.trend { position:absolute; left:50px; top:4px; z-index:4; font:700 .62rem/1 'JetBrains Mono',monospace; }
+.trend.up { color:var(--green-b); } .trend.down { color:var(--red-text); }
+.ghost { position:absolute; top:50%; z-index:2; pointer-events:none; opacity:.22; filter:grayscale(1);
+	transform:translateY(-50%); transition:left 1.1s ease;
+	left:calc(var(--start, 56px) + var(--g, 0) * (100% - var(--start, 56px) - var(--reserve, 470px))); }
+.ghost .car { animation:none; } .ghost .car .wheel { animation:none; }
+
+.rc-comment { list-style:none; margin:.2rem 0 .7rem; padding:0; min-height:1.4rem; font-family:'JetBrains Mono',monospace; font-size:.8rem; }
+.rc-comment li { color:var(--muted); white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+.rc-comment li:first-child { color:#e6ecf5; animation:commentIn .5s ease; }
+.rc-comment li::before { content:"// "; color:var(--yellow); }
+.rc-comment li b { color:#fff; }
+@keyframes commentIn { from { opacity:0; transform:translateX(-8px); } to { opacity:1; transform:none; } }
+.rc-hint { font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--muted); }
+
+/* Brouillard du gel : la moitié avant de la piste s'efface dans la glace */
+.track .fog { position:absolute; top:0; bottom:0; right:26px; width:55%; z-index:5; pointer-events:none; opacity:0;
+	background:
+		radial-gradient(60% 40% at 30% 30%, rgba(127,178,255,.22), transparent 70%),
+		radial-gradient(50% 45% at 70% 70%, rgba(219,231,255,.18), transparent 70%),
+		linear-gradient(90deg, rgba(10,14,23,0) 0%, rgba(58,91,143,.22) 28%, rgba(58,91,143,.32) 100%);
+	transition:opacity 2.2s ease; }   /* teinte seulement : les noms restent lisibles pendant le gel */
+.track .fog span { position:absolute; right:14px; top:8px; font:500 .72rem/1 'JetBrains Mono',monospace; color:#dbe7ff; letter-spacing:.5px; }
+.track.fogged .fog { opacity:1; animation:fogDrift 14s ease-in-out infinite alternate; }
+@keyframes fogDrift { to { background-position:40px 0, -30px 0, 0 0; } }
+.track.fogged .car-lane.in-fog .car-wrap { filter:saturate(.35) brightness(.8); }
+.track.fog-clear .fog { opacity:0 !important; }
+
+/* Révélation finale (mode projecteur) : noms floutés, karts sur la ligne */
+.track.revealing .car-lane:not(.revealed) .car-name { color:transparent; text-shadow:0 0 9px rgba(255,255,255,.75); }
+.track.revealing .car-lane:not(.revealed) .car-score,
+.track.revealing .car-lane:not(.revealed) .car-gap,
+.track.revealing .car-lane:not(.revealed) .rank,
+.track.revealing .trend, .track.revealing .ghost, .track.revealing .cat-chips { opacity:0; }
+.track.revealing .car-lane.revealed { animation:revealFlash 1s ease; }
+@keyframes revealFlash { 0% { filter:brightness(2); } 100% { filter:none; } }
+.reveal-cta { display:block; margin:.8rem auto 0; font:700 .9rem/1 'JetBrains Mono',monospace; letter-spacing:1px; text-transform:uppercase;
+	color:var(--on-yellow, #1a1400); background:var(--yellow); border:0; border-radius:999px; padding:.7rem 1.4rem; cursor:pointer; }
+
+/* Peloton explorable */
+.peloton .bubble { cursor:pointer; pointer-events:auto; font:inherit; }
+.peloton .bubble:hover { border-color:var(--yellow); }
+.rc-pack { margin-top:.8rem; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem; position:relative; }
+.rc-pack h4, .rc-duel h4 { font-size:.95rem; margin:0 0 .6rem; letter-spacing:2px; }
+.rc-pack svg { display:block; width:100%; height:120px; overflow:visible; }
+.rc-pack .bin { fill:#5b8fe8; cursor:pointer; }
+.rc-pack .bin.me { fill:var(--yellow); }
+.rc-pack .bin:hover, .rc-pack .bin:focus { fill:#8fb3f0; outline:none; }
+.rc-pack .bin.me:hover, .rc-pack .bin.me:focus { fill:#ffe27a; }
+.rc-pack .axis { fill:var(--muted); font:500 10px 'JetBrains Mono',monospace; }
+.rc-pack .cut { stroke:var(--yellow); stroke-dasharray:3 3; stroke-width:1; }
+.rc-pack .base { stroke:var(--line); stroke-width:1; }
+.rc-pack .pack-list { margin:.7rem 0 0; padding:0; list-style:none; columns:2 220px; font-size:.86rem; }
+.rc-pack .pack-list li { break-inside:avoid; padding:.15rem 0; }
+.rc-pack .pack-list .r { font-family:'JetBrains Mono',monospace; color:var(--muted); display:inline-block; min-width:3.2em; }
+.rc-pack .pack-list .s { font-family:'JetBrains Mono',monospace; color:var(--gold); margin-left:.4rem; }
+.rc-pack .pack-list li.me a { color:var(--yellow); }
+.rc-tip { position:absolute; z-index:10; pointer-events:none; background:#05070d; border:1px solid var(--line); border-radius:6px;
+	padding:.3rem .5rem; font:500 .72rem/1.4 'JetBrains Mono',monospace; color:#e6ecf5; white-space:nowrap; transform:translate(-50%,-110%); }
+
+/* Duel */
+.car-lane[tabindex] { cursor:pointer; }
+.car-lane.duel-pick::after { content:""; position:absolute; inset:4px 28px 4px 2px; border:2px solid var(--yellow); border-radius:12px; pointer-events:none; }
+.rc-duel { margin-top:.8rem; background:var(--panel); border:1px solid var(--line); border-radius:12px; padding:1rem 1.1rem; position:relative; }
+.rc-duel .close-duel { position:absolute; top:.5rem; right:.7rem; background:none; border:0; color:#fff; opacity:.7; font-size:1.4rem; cursor:pointer; }
+.duel-grid { display:grid; grid-template-columns:1fr auto 1fr; gap:.4rem 1rem; align-items:center; font-size:.9rem; }
+.duel-grid .who { font-weight:700; display:flex; align-items:center; gap:.45rem; }
+.duel-grid .who i { width:12px; height:12px; border-radius:3px; display:inline-block; }
+.duel-grid .k { text-align:center; font-family:'JetBrains Mono',monospace; font-size:.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:.5px; }
+.duel-grid .v { font-family:'JetBrains Mono',monospace; }
+.duel-grid .v.b { text-align:right; }
+.duel-grid .v.win { color:var(--green-b); }
+.duel-chart { position:relative; margin-top:.9rem; }
+.duel-chart svg { display:block; width:100%; height:150px; overflow:visible; }
+.duel-chart .grid { stroke:var(--line); stroke-width:1; }
+.duel-chart .lbl { font:600 11px 'JetBrains Mono',monospace; fill:#e6ecf5; }
+.duel-chart .axis { fill:var(--muted); font:500 10px 'JetBrains Mono',monospace; }
+.duel-chart .cross { stroke:#c7cfda; stroke-width:1; stroke-dasharray:2 3; }
+.duel-legend { display:flex; gap:1rem; font-size:.8rem; margin-top:.4rem; color:#c7cfda; }
+.duel-legend i { width:14px; height:3px; border-radius:2px; display:inline-block; vertical-align:middle; margin-right:.35rem; }
+.duel-note { font-size:.8rem; color:var(--muted); margin:.6rem 0 0; }
+
+.race.big .car-wrap { --start:72px; --reserve:600px; }
+.race.big .ghost { --start:72px; --reserve:600px; }
+
 @media (max-width:640px) {
+	.car-wrap, .ghost { --start:44px; --reserve:250px; }
+	.cat-chips, .ghost, .car-gap .flag-note { display:none; }
+	.car-gap { font-size:.66rem; }
+	.trend { left:38px; }
+	.rc-head { flex-wrap:wrap; }
+	.duel-grid { font-size:.8rem; }
 	.car-name { max-width:100px; font-size:.78rem; }
 	.car { width:46px; height:30px; }
 	.car-lane .rank { width:28px; height:28px; font-size:.9rem; }
@@ -342,6 +446,9 @@ body.bigmode #race { margin-top:1rem; }
 	.car-wrap.boost, .car, .car .wheel { animation:none; }
 	.confetti { display:none; }
 	.pluspts { animation:none; opacity:0; }
+	.track.fogged .fog { animation:none; } .track .fog { transition:none; }
+	.rc-comment li:first-child { animation:none; }
+	.track.revealing .car-lane.revealed { animation:none; }
 }
 </style>
 
@@ -360,10 +467,15 @@ body.bigmode #race { margin-top:1rem; }
 	function isFrozen(now){ return !!(FREEZE && now >= FREEZE); }
 	var TOPN = 12;
 	var POLL_MS = 12000;
+	var HIST_MS = 60000;   // historique (tendance, fantôme, catégories, duel) : 1 appel / min
 	var big = /[?&]big=1/.test(location.search);
+	var wantReveal = big && /[?&]reveal=1/.test(location.search);
 	if (big) { document.body.classList.add("bigmode"); mount.classList.add("big"); TOPN = 14; }
+	function reducedMotion(){ return !!(window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches); }
+	function narrow(){ return !!(window.matchMedia && matchMedia("(max-width:640px)").matches); }
 
 	var prevScores = {};   // account_id -> score, pour détecter les nouveaux solves
+	var prevRanks = {};    // account_id -> rang (0..) au sondage précédent : dépassements
 	// « Ta voiture » : compte du joueur connecté (équipe en mode équipes). Jamais
 	// en mode salle : l'écran de la salle n'est l'équipe de personne.
 	var ME = null, meLane = null, lastLead = null, lastMyRank = null, lastTeams = null;
@@ -409,13 +521,19 @@ body.bigmode #race { margin-top:1rem; }
 		function p(n){return (n<10?"0":"")+n;}
 		return (d>0? d+"j " : "") + p(h)+":"+p(m)+":"+p(s);
 	}
+	function hhmm(ts){ var d=new Date(ts); function p(n){return (n<10?"0":"")+n;} return p(d.getHours())+":"+p(d.getMinutes()); }
+	function fire(name, detail){ try { window.dispatchEvent(new CustomEvent(name, { detail: detail })); } catch (e) {} }
 
 	// Ossature
 	mount.innerHTML =
 		'<div class="rc-head"><span class="rc-title">Grille en course</span>'
+		+ (big ? '' : '<span class="rc-hint">clique deux karts pour un duel</span>')
 		+ '<span class="rc-clock" id="rc-clock">—</span></div>'
+		+ '<ul class="rc-comment" id="rc-comment" role="log" aria-live="polite" aria-label="Commentaires de course"></ul>'
 		+ '<div class="lights" id="rc-lights" hidden></div>'
 		+ '<div class="track" id="rc-track" role="list" aria-label="Grille de course"><div class="startline"></div><div class="finishline"></div></div>'
+		+ '<div id="rc-pack-box"></div>'
+		+ '<div id="rc-duel-box"></div>'
 		+ '<div id="rc-podium"></div>'
 		+ '<div class="sr-only" id="rc-live" role="status" aria-live="polite"></div>';
 
@@ -423,6 +541,9 @@ body.bigmode #race { margin-top:1rem; }
 	var clockEl = document.getElementById("rc-clock");
 	var lightsEl = document.getElementById("rc-lights");
 	var podiumEl = document.getElementById("rc-podium");
+	var commentEl = document.getElementById("rc-comment");
+	var packBox = document.getElementById("rc-pack-box");
+	var duelBox = document.getElementById("rc-duel-box");
 	var lanes = {};   // account_id -> {laneEl, wrapEl}
 
 	function phase(now){
@@ -431,12 +552,31 @@ body.bigmode #race { margin-top:1rem; }
 		return "live";
 	}
 
+	// ------------------------------------------------------------ commentateur
+	// Une ligne qui raconte la course (dépassements, séries, first bloods,
+	// collines, gel). Au plus une nouvelle ligne toutes les 2.5 s ; 3 visibles.
+	var cQueue = [], cBusy = false, cSeen = {};
+	function comment(html, key){
+		if (key){ if (cSeen[key]) return; cSeen[key] = 1; }
+		cQueue.push(html); pumpComment();
+	}
+	function pumpComment(){
+		if (cBusy || !cQueue.length) return;
+		cBusy = true;
+		var li = document.createElement("li");
+		li.innerHTML = '<span class="t">' + hhmm(Date.now()) + '</span> · ' + cQueue.shift();
+		commentEl.insertBefore(li, commentEl.firstChild);
+		while (commentEl.children.length > 3) commentEl.removeChild(commentEl.lastChild);
+		setTimeout(function(){ cBusy = false; pumpComment(); }, 2500);
+	}
+
 	function renderClock(now){
 		var ph = phase(now);
 		clockEl.className = "rc-clock" + (ph==="live"?" live":ph==="done"?" done":"") + (isFrozen(now)?" frozen":"");
 		if (ph==="pre"){ clockEl.innerHTML = "DÉPART DANS <b>"+fmt(START-now)+"</b>"; }
 		else if (ph==="live"){ clockEl.innerHTML = END ? "TEMPS RESTANT <b>"+fmt(END-now)+"</b>" : "EN COURSE"; }
 		else { clockEl.innerHTML = "ARRIVÉE — course terminée"; }
+		if (revealing) return;   // la révélation pilote elle-même les feux
 		// feux de départ (mode fun) dans les 6 dernières secondes avant le départ
 		if (ph==="pre" && START-now <= 6000){
 			lightsEl.hidden = false;
@@ -452,48 +592,192 @@ body.bigmode #race { margin-top:1rem; }
 		}
 	}
 
+	// ------------------------------------------------ brouillard du gel
+	var fogWas = null;
+	function ensureFog(){
+		var f = track.querySelector(".fog");
+		if (!f){
+			f = document.createElement("div"); f.className = "fog"; f.setAttribute("aria-hidden", "true");
+			f.innerHTML = "<span>❄ positions figées" + (FREEZE ? " à " + hhmm(FREEZE) : "") + "</span>";
+			track.appendChild(f);
+		}
+		return f;
+	}
+	function renderFog(now){
+		// Le brouillard reste après la clôture tant que la révélation n'a pas eu lieu.
+		var on = isFrozen(now) && !revealDone;
+		ensureFog();
+		track.classList.toggle("fogged", on);
+		if (fogWas === false && on) comment("❄ <b>Scores gelés</b> : le brouillard tombe sur la piste.", "freeze");
+		fogWas = on;
+	}
+
+	// ------------------------------------------------ historique (top N)
+	// /api/v1/scoreboard/top/N donne les solves datés du top N : tendance sur 1 h,
+	// fantôme à −30 min, catégories touchées, séries, courbes du duel.
+	var hist = {};        // account_id -> [{t, s}] score cumulé
+	var solvesBy = {};    // account_id -> [{t, cid}]
+	var cats = {};        // challenge_id -> catégorie
+	var flagStep = 100;   // valeur médiane d'un challenge : seuil « à 1 flag »
+	var trendBy = {}, ghostBy = {}, catsBy = {};
+	function scoreAt(id, t){
+		var h = hist[id]; if (!h) return null;
+		var s = 0; for (var i=0;i<h.length && h[i].t<=t;i++) s = h[i].s; return s;
+	}
+	function refreshChallenges(){
+		fetch(URLROOT + "/api/v1/challenges", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (!j || !j.success || !Array.isArray(j.data)) return;
+				var vals = [];
+				j.data.forEach(function(c){ cats[c.id] = c.category; if (c.value > 0) vals.push(c.value); });
+				if (vals.length){ vals.sort(function(a,b){return a-b;}); flagStep = vals[Math.floor(vals.length/2)]; }
+				computeDerived();
+			})
+			.catch(function(){ /* challenges non visibles (anonyme) : pas de catégories */ });
+	}
+	function refreshHistory(){
+		fetch(URLROOT + "/api/v1/scoreboard/top/" + TOPN, {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(j){
+				if (!j || !j.success || !j.data) return;
+				var next = {}, sol = {};
+				Object.keys(j.data).forEach(function(k){
+					var d = j.data[k]; if (!d || d.id == null) return;
+					var list = (d.solves || []).map(function(x){ return {t:Date.parse(x.date), v:Number(x.value)||0, cid:x.challenge_id}; })
+						.filter(function(x){ return !isNaN(x.t); }).sort(function(a,b){ return a.t-b.t; });
+					var s = 0; next[d.id] = list.map(function(x){ s += x.v; return {t:x.t, s:s}; });
+					sol[d.id] = list.filter(function(x){ return x.cid != null; });
+				});
+				hist = next; solvesBy = sol;
+				computeDerived();
+			})
+			.catch(function(){ /* pas d'historique : ni tendance ni fantôme */ });
+	}
+	var streakAt = {}, derivedOnce = false;
+	function computeDerived(){
+		if (!lastTeams) return;
+		var now = Date.now();
+		var ref = isFrozen(now) ? FREEZE : now;   // l'historique public s'arrête au gel
+		var top = lastTeams.slice(0, TOPN);
+		// tendance : rang il y a 1 h parmi le top actuel
+		var past = top.map(function(t){ return {id:t.account_id, s:scoreAt(t.account_id, ref - 3600e3)}; })
+			.filter(function(x){ return x.s != null; })
+			.sort(function(a,b){ return b.s - a.s; });
+		var pastRank = {}; past.forEach(function(x,i){ pastRank[x.id] = i; });
+		trendBy = {}; ghostBy = {}; catsBy = {};
+		var lead = top.length ? top[0].score : 0;
+		top.forEach(function(t, i){
+			var id = t.account_id;
+			if (pastRank[id] != null && past.length === top.length) trendBy[id] = pastRank[id] - i;
+			var s30 = scoreAt(id, ref - 1800e3);
+			if (s30 != null && lead > 0) ghostBy[id] = Math.min(1, s30 / lead);
+			var cs = {}; (solvesBy[id] || []).forEach(function(x){ if (cats[x.cid]) cs[cats[x.cid]] = 1; });
+			catsBy[id] = Object.keys(cs).sort();
+			// série : 3 flags ou plus en 10 min
+			var recent = (solvesBy[id] || []).filter(function(x){ return x.t > ref - 600e3; }).length;
+			if (recent >= 3 && !(streakAt[id] > ref - 600e3)){
+				streakAt[id] = ref;
+				if (derivedOnce) comment("<b>" + esc(t.name) + "</b> enchaîne : " + recent + " flags en 10 min.");
+			}
+		});
+		if (Object.keys(hist).length) derivedOnce = true;
+		if (!revealing) decorate(lastTeams);
+	}
+
+	// ------------------------------------------------ piste
+	function laneHeight(){ return big ? 74 : (narrow() ? 50 : 58); }
+	function makeLane(t){
+		var lane = document.createElement("div");
+		lane.className = "car-lane";
+		lane.setAttribute("data-account", t.account_id);
+		var h = hue(t.name);
+		lane.innerHTML = '<span class="rank"></span><span class="trend" hidden></span>'
+			+ '<div class="ghost" hidden>' + kartSVG(h) + '</div>'
+			+ '<div class="car-wrap">'
+			+ kartSVG(h) + '<span class="car-name"></span> <span class="car-score"></span>'
+			+ '<span class="car-gap"></span><span class="cat-chips"></span>'
+			+ '<span class="koth-hill" hidden></span><span class="fb-drop" hidden>🩸</span></div>';
+		if (!big){
+			lane.tabIndex = 0;
+			lane.addEventListener("click", function(){ pickDuel(t.account_id); });
+			lane.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); pickDuel(t.account_id); } });
+		}
+		track.appendChild(lane);
+		return { lane:lane, wrap:lane.querySelector(".car-wrap"),
+			rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
+			score:lane.querySelector(".car-score"), koth:lane.querySelector(".koth-hill"),
+			fb:lane.querySelector(".fb-drop"), gap:lane.querySelector(".car-gap"),
+			chips:lane.querySelector(".cat-chips"), trend:lane.querySelector(".trend"),
+			ghost:lane.querySelector(".ghost"), h:h };
+	}
+
+	// écarts, tendance, fantôme, catégories : tout ce qui décore une voie
+	function decorate(teams){
+		var top = teams.slice(0, TOPN), lead = top.length ? top[0].score : 0;
+		top.forEach(function(t, i){
+			var L = lanes[t.account_id]; if (!L) return;
+			var gapTxt = "", cls = "car-gap", title = "";
+			if (i === 0){
+				if (top[1]){ gapTxt = esc("+" + (t.score - top[1].score)); cls += " lead"; title = "avance sur le 2ᵉ"; }
+			} else {
+				var ahead = top[i-1], d = ahead.score - t.score;
+				gapTxt = esc("−" + (lead - t.score));
+				title = "à " + (lead - t.score) + " pts du leader, " + d + " pts de " + ahead.name;
+				if (d === 0){ gapTxt += '<span class="flag-note"> · ex æquo</span>'; cls += " close"; }
+				else if (d <= flagStep){ gapTxt += '<span class="flag-note"> · à 1 flag</span>'; cls += " close"; }
+			}
+			L.gap.className = cls; L.gap.innerHTML = gapTxt; L.gap.title = title;
+			var tr = trendBy[t.account_id];
+			if (tr){ L.trend.hidden = false; L.trend.className = "trend " + (tr > 0 ? "up" : "down");
+				L.trend.textContent = (tr > 0 ? "▲" : "▼") + Math.abs(tr); L.trend.title = (tr > 0 ? "+" : "−") + Math.abs(tr) + " place(s) en 1 h"; }
+			else { L.trend.hidden = true; }
+			var g = ghostBy[t.account_id], p = lead > 0 ? t.score / lead : 0;
+			if (g != null && p - g > 0.03){ L.ghost.hidden = false; L.ghost.style.setProperty("--g", g.toFixed(4)); L.ghost.title = "il y a 30 min"; }
+			else { L.ghost.hidden = true; }
+			var cs = catsBy[t.account_id] || [];
+			L.chips.innerHTML = cs.slice(0, 3).map(function(c){ return '<i title="' + esc(c) + '">' + esc(String(c).slice(0,3)) + '</i>'; }).join("")
+				+ (cs.length > 3 ? '<i title="' + esc(cs.slice(3).join(", ")) + '">+' + (cs.length-3) + '</i>' : "");
+			var base = ordinal(i+1) + (ME != null && String(t.account_id) === String(ME) ? " (toi)" : "") + ", " + t.name + ", " + t.score + " points";
+			if (i > 0) base += ", " + (lead - t.score) + " points derrière le leader";
+			if (tr) base += ", " + (tr > 0 ? "gagne " : "perd ") + Math.abs(tr) + " place(s) en une heure";
+			if (cs.length) base += ", catégories : " + cs.join(", ");
+			L.lane.setAttribute("aria-label", base);
+		});
+	}
+
 	function layout(teams){
 		lastTeams = teams;
-		var laneH = big ? 74 : 58;
+		if (revealing) return;   // la révélation garde la main sur la piste
+		var laneH = laneHeight();
 		var top = teams.slice(0, TOPN);
 		var rest = teams.length - top.length;
-		var n = top.length;
 		var rows = top.length + (rest>0 ? 1 : 0);
 		track.style.height = Math.max(rows,1)*laneH + 20 + "px";
-		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
+		var reduced = reducedMotion();
+		var lead = top.length ? top[0].score : 0;
+		var frozen = isFrozen(Date.now()) && !revealDone;
 
 		top.forEach(function(t, i){
-			// grille de course : positions étagées par rang (leader devant ~72 %,
-			// dernier près du départ ~12 %). Un changement de rang = kart qui
-			// avance/recule sur la piste, la transition CSS anime le dépassement.
-			var xpct = n > 1 ? (12 + (1 - i/(n-1)) * 60) : 72;
+			// position = score / score du leader : l'écart sur la piste est l'écart
+			// réel en points. Un changement de rang fait glisser la voie (transition top).
+			var p = lead > 0 ? Math.max(0, Math.min(1, t.score / lead)) : 0;
 			var L = lanes[t.account_id];
-			if (!L){
-				var lane = document.createElement("div");
-				lane.className = "car-lane";
-				var h = hue(t.name);
-				lane.innerHTML = '<span class="rank"></span><div class="car-wrap">'
-					+ kartSVG(h) + '<span class="car-name"></span> <span class="car-score"></span>'
-					+ '<span class="koth-hill" hidden></span><span class="fb-drop" hidden>🩸</span></div>';
-				track.appendChild(lane);
-				L = lanes[t.account_id] = { lane:lane, wrap:lane.querySelector(".car-wrap"),
-					rank:lane.querySelector(".rank"), name:lane.querySelector(".car-name"),
-					score:lane.querySelector(".car-score"), koth:lane.querySelector(".koth-hill"),
-					fb:lane.querySelector(".fb-drop"), h:h };
-			}
+			if (!L){ L = lanes[t.account_id] = makeLane(t); }
 			if (fbPending[t.account_id] != null){
 				var pend = fbPending[t.account_id]; delete fbPending[t.account_id];
 				if (Date.now() - pend < 60000) setTimeout(function(id){ flashFb(id); }, 50, t.account_id);
 			}
 			L.lane.style.top = (i*laneH) + "px";
 			var isMe = ME != null && String(t.account_id) === String(ME);
-			L.lane.className = "car-lane" + (i===0 ? " leader" : "") + (isMe ? " mine" : "");
+			L.lane.className = "car-lane" + (i===0 ? " leader" : "") + (isMe ? " mine" : "")
+				+ (duelSel.indexOf(String(t.account_id)) >= 0 ? " duel-pick" : "")
+				+ (frozen && p > 0.45 ? " in-fog" : "");
 			L.lane.setAttribute("role", "listitem");
-			L.lane.setAttribute("aria-label", ordinal(i+1) + (isMe ? " (toi)" : "") + ", " + t.name + ", " + t.score + " points");
 			var tag = L.lane.querySelector(".you-tag");
 			if (isMe && !tag){ tag = document.createElement("span"); tag.className = "you-tag"; tag.textContent = "toi"; L.name.after(tag); }
 			else if (!isMe && tag){ tag.remove(); }
-			L.wrap.style.left = xpct + "%";
+			L.wrap.style.setProperty("--p", p.toFixed(4));
 			L.rank.className = "rank" + (i===0?" g1":i===1?" g2":i===2?" g3":"");
 			L.rank.textContent = (i+1);
 			L.name.textContent = t.name;
@@ -501,6 +785,10 @@ body.bigmode #race { margin-top:1rem; }
 			if (L.koth){ var hh = kothBy[t.account_id]; if (hh){ L.koth.hidden=false; L.koth.innerHTML='<span>'+esc(hh)+'</span>'; } else { L.koth.hidden=true; L.koth.textContent=''; } }
 			// boost si le score a monté depuis le dernier poll (mode fun)
 			var was = prevScores[t.account_id];
+			// Fonds vivants : un écho vert sur le radar (js/nctf-fx.js), même sans mode fun.
+			if (was != null && t.score > was){
+				try { window.dispatchEvent(new CustomEvent("nctf:score", { detail: { account_id: t.account_id, delta: t.score - was } })); } catch (e) {}
+			}
 			if (was != null && t.score > was && !reduced){
 				var wrap = L.wrap;
 				wrap.classList.remove("boost"); void wrap.offsetWidth; wrap.classList.add("boost");
@@ -508,19 +796,31 @@ body.bigmode #race { margin-top:1rem; }
 				var pp=document.createElement("span"); pp.className="pluspts"; pp.textContent="+"+(t.score-was); wrap.appendChild(pp);
 				setTimeout(function(){ var fl=wrap.querySelector(".flame"); if(fl) fl.remove(); if(pp) pp.remove(); wrap.classList.remove("boost"); }, 1300);
 			}
+			// commentateur : dépassements dans le top N
+			var pr = prevRanks[t.account_id];
+			if (pr != null && i < pr){
+				var passed = top.filter(function(o){ var q = prevRanks[o.account_id]; return q != null && q < pr && q >= i && String(o.account_id) !== String(t.account_id); });
+				if (i === 0) comment("🏁 <b>" + esc(t.name) + "</b> prend la tête" + (passed[0] ? " devant " + esc(passed[0].name) : "") + " !");
+				else if (passed.length === 1) comment("<b>" + esc(t.name) + "</b> dépasse " + esc(passed[0].name) + " → " + ordinal(i+1) + ".");
+				else comment("<b>" + esc(t.name) + "</b> gagne " + (pr - i) + " places → " + ordinal(i+1) + ".");
+			} else if (pr == null && Object.keys(prevRanks).length && i < TOPN){
+				comment("<b>" + esc(t.name) + "</b> entre dans le top " + TOPN + " (" + ordinal(i+1) + ").");
+			}
 		});
 		// équipes sorties du top N : on retire leur kart
 		Object.keys(lanes).forEach(function(id){
 			if (!top.some(function(t){return String(t.account_id)===String(id);})){ lanes[id].lane.remove(); delete lanes[id]; }
 		});
-		// peloton agrégé
+		// peloton agrégé : la bulle ouvre le panneau d'exploration
 		var pel = document.getElementById("rc-peloton");
 		if (rest>0){
 			if (!pel){ pel=document.createElement("div"); pel.className="peloton"; pel.id="rc-peloton";
-				pel.innerHTML='<span class="bubble"></span>'; track.appendChild(pel); }
+				pel.innerHTML='<button type="button" class="bubble" aria-expanded="false" aria-controls="rc-pack"></button>'; track.appendChild(pel);
+				pel.querySelector(".bubble").addEventListener("click", togglePack); }
 			pel.style.top = (top.length*laneH) + "px";
-			pel.querySelector(".bubble").innerHTML = "+<b>"+rest+"</b> kart"+(rest>1?"s":"")+" dans le peloton";
-			pel.querySelector(".bubble").style.left = "12%";
+			var bb = pel.querySelector(".bubble");
+			bb.innerHTML = "+<b>"+rest+"</b> kart"+(rest>1?"s":"")+" dans le peloton · explorer";
+			bb.style.left = "50%";
 		} else if (pel){ pel.remove(); }
 
 		// « toi · 47ᵉ » : ta voie épinglée sous le peloton quand tu es hors du top N
@@ -530,37 +830,179 @@ body.bigmode #race { margin-top:1rem; }
 			if (!meLane){
 				meLane = document.createElement("div");
 				meLane.innerHTML = '<span class="rank"></span><div class="car-wrap">' + kartSVG(hue(me.name))
-					+ '<span class="car-name"></span><span class="you-tag">toi</span> <span class="car-score"></span></div>';
+					+ '<span class="car-name"></span><span class="you-tag">toi</span> <span class="car-score"></span> <span class="car-gap"></span></div>';
 				track.appendChild(meLane);
 			}
 			meLane.className = "car-lane mine pinned";
 			meLane.setAttribute("role", "listitem");
+			meLane.setAttribute("data-account", me.account_id);
 			meLane.style.top = (rows*laneH) + "px";
-			// position sur la piste proportionnelle au rang dans tout le champ
-			var frac = teams.length > 1 ? 1 - myIdx/(teams.length-1) : 0;
-			meLane.querySelector(".car-wrap").style.left = (12 + frac*60) + "%";
+			meLane.querySelector(".car-wrap").style.setProperty("--p", (lead > 0 ? me.score / lead : 0).toFixed(4));
 			meLane.querySelector(".rank").textContent = myIdx + 1;
 			meLane.querySelector(".car-name").textContent = me.name;
 			meLane.querySelector(".car-score").textContent = me.score;
-			meLane.setAttribute("aria-label", ordinal(myIdx+1) + " (toi), " + me.name + ", " + me.score + " points");
+			var ahead = teams[myIdx-1];
+			var mg = meLane.querySelector(".car-gap");
+			mg.textContent = "−" + (lead - me.score) + (ahead && ahead.score - me.score <= flagStep ? " · à 1 flag du " + ordinal(myIdx) : "");
+			mg.className = "car-gap" + (ahead && ahead.score - me.score <= flagStep ? " close" : "");
+			meLane.setAttribute("aria-label", ordinal(myIdx+1) + " (toi), " + me.name + ", " + me.score + " points, " + (lead - me.score) + " points derrière le leader");
 			track.style.height = (rows+1)*laneH + 20 + "px";
 		} else if (meLane){ meLane.remove(); meLane = null; }
 
-		// lecteur d'écran : annonce du changement de tête et de ton rang
+		// lecteur d'écran : ton rang (la tête de course passe par le commentateur, lui aussi annoncé)
 		liveEl = liveEl || document.getElementById("rc-live");
 		if (liveEl){
-			var msgs = [];
-			if (teams[0] && teams[0].account_id !== lastLead){ if (lastLead !== null) msgs.push("Nouvelle tête de course : " + teams[0].name + ", " + teams[0].score + " points."); lastLead = teams[0].account_id; }
-			if (myIdx >= 0 && myIdx + 1 !== lastMyRank){ if (lastMyRank !== null) msgs.push("Ton équipe est " + ordinal(myIdx+1) + " sur " + teams.length + "."); lastMyRank = myIdx + 1; }
-			if (msgs.length) liveEl.textContent = msgs.join(" ");
+			if (teams[0]) lastLead = teams[0].account_id;
+			if (myIdx >= 0 && myIdx + 1 !== lastMyRank){ if (lastMyRank !== null) liveEl.textContent = "Ton équipe est " + ordinal(myIdx+1) + " sur " + teams.length + "."; lastMyRank = myIdx + 1; }
 		}
 
-		teams.forEach(function(t){ prevScores[t.account_id]=t.score; });
+		prevRanks = {};
+		teams.forEach(function(t, i){ prevScores[t.account_id]=t.score; prevRanks[t.account_id] = i; });
+		decorate(teams);
+		if (packOpen) renderPack();
+		if (duelSel.length === 2) renderDuel();
 	}
 
+	// ------------------------------------------------ peloton explorable
+	var packOpen = false, packBin = null;
+	function togglePack(){
+		packOpen = !packOpen;
+		var bb = track.querySelector("#rc-peloton .bubble"); if (bb) bb.setAttribute("aria-expanded", packOpen ? "true" : "false");
+		if (packOpen) renderPack(); else packBox.innerHTML = "";
+	}
+	function renderPack(){
+		var teams = lastTeams || []; if (!teams.length){ packBox.innerHTML = ""; return; }
+		var max = Math.max(1, teams[0].score), NB = Math.min(40, Math.max(8, Math.ceil(teams.length / 6)));
+		var bins = []; for (var i=0;i<NB;i++) bins.push([]);
+		teams.forEach(function(t, r){ var b = Math.min(NB-1, Math.floor(t.score / max * NB)); bins[b].push({t:t, r:r}); });
+		var peak = Math.max.apply(null, bins.map(function(b){ return b.length; }));
+		var myBin = -1, cut = teams[Math.min(TOPN, teams.length) - 1];
+		bins.forEach(function(b, i){ if (b.some(function(x){ return ME != null && String(x.t.account_id) === String(ME); })) myBin = i; });
+		var W = 1000, H = 100, bw = W / NB, svg = '';
+		svg += '<line class="base" x1="0" y1="' + H + '" x2="' + W + '" y2="' + H + '"/>';
+		bins.forEach(function(b, i){
+			if (!b.length) return;
+			var h = Math.max(3, b.length / peak * (H - 14)), x = i * bw + 1, w = Math.max(1, bw - 2);   // 2 px d'écart entre barres
+			var lo = Math.round(i / NB * max), hi = Math.round((i+1) / NB * max);
+			svg += '<path class="bin' + (i === myBin ? ' me' : '') + '" data-bin="' + i + '" tabindex="0" role="button" aria-label="de ' + lo + ' à ' + hi + ' points : ' + b.length + ' équipe' + (b.length > 1 ? 's' : '') + (i === myBin ? ', dont la tienne' : '') + '"'
+				+ ' d="M' + x + ' ' + H + ' V' + (H - h + 4) + ' q0 -4 4 -4 h' + Math.max(0, w - 8) + ' q4 0 4 4 V' + H + ' z"/>';
+		});
+		if (cut){ var cx = cut.score / max * W; svg += '<line class="cut" x1="' + cx + '" y1="0" x2="' + cx + '" y2="' + H + '"/><text class="axis" x="' + (cx + 4) + '" y="10">top ' + TOPN + ' ≥ ' + cut.score + '</text>'; }
+		if (myBin >= 0) svg += '<text class="axis" x="' + ((myBin + .5) * bw) + '" y="' + (H + 22) + '" text-anchor="middle" style="fill:var(--yellow)">toi</text>';
+		svg += '<text class="axis" x="0" y="' + (H + 12) + '">0 pt</text><text class="axis" x="' + W + '" y="' + (H + 12) + '" text-anchor="end">' + max + ' pts</text>';
+		packBox.innerHTML = '<section class="rc-pack" id="rc-pack" aria-label="Répartition des équipes par score"><h4>Peloton · ' + teams.length + ' équipes</h4>'
+			+ '<svg viewBox="0 -4 ' + W + ' ' + (H + 28) + '" preserveAspectRatio="none" role="group" aria-label="Nombre d\'équipes par tranche de score">' + svg + '</svg>'
+			+ '<div class="rc-tip" hidden></div><ul class="pack-list" aria-live="polite"></ul></section>';
+		var sec = packBox.firstChild, tip = sec.querySelector(".rc-tip"), list = sec.querySelector(".pack-list");
+		function show(i){
+			packBin = i;
+			var b = bins[i] || [];
+			list.innerHTML = b.slice(0, 40).map(function(x){
+				var me = ME != null && String(x.t.account_id) === String(ME);
+				return '<li' + (me ? ' class="me"' : '') + '><span class="r">' + ordinal(x.r + 1) + '</span><a href="' + esc(x.t.account_url || "#") + '">' + esc(x.t.name) + '</a><span class="s">' + x.t.score + '</span></li>';
+			}).join("") + (b.length > 40 ? '<li class="text-muted">… et ' + (b.length - 40) + ' autres</li>' : "");
+		}
+		sec.querySelectorAll(".bin").forEach(function(el){
+			var i = Number(el.getAttribute("data-bin"));
+			function hover(){ var r = el.getBoundingClientRect(), s = sec.getBoundingClientRect();
+				tip.hidden = false; tip.textContent = el.getAttribute("aria-label"); tip.style.left = (r.left - s.left + r.width/2) + "px"; tip.style.top = (r.top - s.top) + "px"; }
+			el.addEventListener("mouseenter", hover); el.addEventListener("focus", hover);
+			el.addEventListener("mouseleave", function(){ tip.hidden = true; }); el.addEventListener("blur", function(){ tip.hidden = true; });
+			el.addEventListener("click", function(){ show(i); });
+			el.addEventListener("keydown", function(e){ if (e.key === "Enter" || e.key === " "){ e.preventDefault(); show(i); } });
+		});
+		show(packBin != null ? packBin : (myBin >= 0 ? myBin : NB - 1));
+	}
+
+	// ------------------------------------------------ duel
+	var duelSel = [];
+	var DUEL_COL = ["#b38a00", "#5b8fe8"];   // validés (dataviz) sur --panel en sombre
+	function pickDuel(id){
+		if (revealing) return;
+		id = String(id);
+		var k = duelSel.indexOf(id);
+		if (k >= 0) duelSel.splice(k, 1); else { duelSel.push(id); if (duelSel.length > 2) duelSel.shift(); }
+		Object.keys(lanes).forEach(function(a){ lanes[a].lane.classList.toggle("duel-pick", duelSel.indexOf(String(a)) >= 0); });
+		if (duelSel.length === 2) renderDuel(); else duelBox.innerHTML = "";
+	}
+	function closeDuel(){ duelSel = []; duelBox.innerHTML = ""; Object.keys(lanes).forEach(function(a){ lanes[a].lane.classList.remove("duel-pick"); }); }
+	document.addEventListener("keydown", function(e){ if (e.key === "Escape" && duelSel.length) closeDuel(); });
+	function renderDuel(){
+		var teams = lastTeams || [];
+		var A = null, B = null, ra = -1, rb = -1;
+		teams.forEach(function(t, i){ if (String(t.account_id) === duelSel[0]){ A = t; ra = i; } if (String(t.account_id) === duelSel[1]){ B = t; rb = i; } });
+		if (!A || !B){ closeDuel(); return; }
+		function row(k, va, vb, winA){
+			return '<div class="v' + (winA === true ? ' win' : '') + '">' + va + '</div><div class="k">' + k + '</div><div class="v b' + (winA === false ? ' win' : '') + '">' + vb + '</div>';
+		}
+		var fa = (solvesBy[A.account_id] || []).length, fb = (solvesBy[B.account_id] || []).length;
+		var la = (hist[A.account_id] || []).slice(-1)[0], lb = (hist[B.account_id] || []).slice(-1)[0];
+		var ca = catsBy[A.account_id] || [], cb = catsBy[B.account_id] || [];
+		var html = '<section class="rc-duel" aria-label="Duel"><button type="button" class="close-duel" aria-label="Fermer le duel">×</button><h4>Duel</h4><div class="duel-grid">'
+			+ '<div class="who"><i style="background:' + DUEL_COL[0] + '"></i>' + esc(A.name) + '</div><div class="k">vs</div><div class="who" style="justify-content:flex-end">' + esc(B.name) + '<i style="background:' + DUEL_COL[1] + '"></i></div>'
+			+ row("rang", ordinal(ra+1), ordinal(rb+1), ra === rb ? null : ra < rb)
+			+ row("score", A.score, B.score, A.score === B.score ? null : A.score > B.score)
+			+ row("écart", A.score >= B.score ? "+" + (A.score - B.score) : "", B.score > A.score ? "+" + (B.score - A.score) : "", null)
+			+ (hist[A.account_id] && hist[B.account_id] ? row("flags", fa, fb, fa === fb ? null : fa > fb) + row("dernier flag", la ? hhmm(la.t) : "—", lb ? hhmm(lb.t) : "—", null) : "")
+			+ (ca.length || cb.length ? row("catégories", esc(ca.join(" · ")) || "—", esc(cb.join(" · ")) || "—", null) : "")
+			+ '</div>';
+		var ha = hist[A.account_id], hb = hist[B.account_id];
+		if (ha && hb && (ha.length || hb.length)){
+			html += '<div class="duel-chart"><svg viewBox="0 0 1000 150" preserveAspectRatio="none" role="img" aria-label="Score cumulé de ' + esc(A.name) + ' et ' + esc(B.name) + ' dans le temps"></svg><div class="rc-tip" hidden></div></div>'
+				+ '<div class="duel-legend"><span><i style="background:' + DUEL_COL[0] + '"></i>' + esc(A.name) + '</span><span><i style="background:' + DUEL_COL[1] + '"></i>' + esc(B.name) + '</span></div>';
+		} else {
+			html += '<p class="duel-note">Courbes disponibles pour deux équipes du top ' + TOPN + ' (l\'historique public ne couvre que le top).</p>';
+		}
+		duelBox.innerHTML = html + '</section>';
+		duelBox.querySelector(".close-duel").addEventListener("click", closeDuel);
+		var svgEl = duelBox.querySelector(".duel-chart svg");
+		if (svgEl) drawDuelChart(svgEl, [A, B], [ha, hb]);
+	}
+	function drawDuelChart(svgEl, who, series){
+		var now = Date.now(), t1 = isFrozen(now) ? FREEZE : now;
+		var t0 = START || Math.min.apply(null, series.map(function(h){ return h.length ? h[0].t : t1; }));
+		var smax = Math.max(1, Math.max.apply(null, series.map(function(h){ return h.length ? h[h.length-1].s : 0; })));
+		var W = 1000, H = 130, PADR = 150;   // place à droite pour l'étiquette directe
+		function X(t){ return (t - t0) / Math.max(1, t1 - t0) * (W - PADR); }
+		function Y(s){ return H - s / smax * (H - 10); }
+		var g = '<line class="grid" x1="0" y1="' + H + '" x2="' + (W - PADR) + '" y2="' + H + '"/><line class="grid" x1="0" y1="' + Y(smax) + '" x2="' + (W - PADR) + '" y2="' + Y(smax) + '" stroke-dasharray="2 4"/>'
+			+ '<text class="axis" x="0" y="' + (H + 14) + '">' + hhmm(t0) + '</text><text class="axis" x="' + (W - PADR) + '" y="' + (H + 14) + '" text-anchor="end">' + hhmm(t1) + '</text>'
+			+ '<text class="axis" x="4" y="' + (Y(smax) - 3) + '">' + smax + ' pts</text>';
+		series.forEach(function(h, k){
+			var pts = [[X(t0), Y(0)]], s = 0;
+			h.forEach(function(p){ pts.push([X(p.t), Y(s)]); s = p.s; pts.push([X(p.t), Y(s)]); });   // marches : un flag = une marche
+			pts.push([X(t1), Y(s)]);
+			g += '<polyline fill="none" stroke="' + DUEL_COL[k] + '" stroke-width="2" stroke-linejoin="round" vector-effect="non-scaling-stroke" points="' + pts.map(function(p){ return p[0].toFixed(1) + "," + p[1].toFixed(1); }).join(" ") + '"/>'
+				+ '<text class="lbl" x="' + (W - PADR + 8) + '" y="' + (Y(s) + 4 + (k ? 12 : 0) * (Math.abs(Y(series[0].length ? series[0][series[0].length-1].s : 0) - Y(s)) < 14 ? 1 : 0)) + '">' + esc(String(who[k].name).slice(0, 16)) + '</text>';
+		});
+		g += '<line class="cross" x1="0" y1="0" x2="0" y2="' + H + '" visibility="hidden"/>';
+		svgEl.innerHTML = g;
+		var cross = svgEl.querySelector(".cross"), tip = svgEl.parentNode.querySelector(".rc-tip");
+		svgEl.addEventListener("mousemove", function(e){
+			var r = svgEl.getBoundingClientRect(), fx = (e.clientX - r.left) / r.width * W;
+			if (fx > W - PADR){ cross.setAttribute("visibility", "hidden"); tip.hidden = true; return; }
+			var t = t0 + fx / (W - PADR) * (t1 - t0);
+			cross.setAttribute("x1", fx); cross.setAttribute("x2", fx); cross.setAttribute("visibility", "visible");
+			function at(h){ var s = 0; for (var i=0;i<h.length && h[i].t<=t;i++) s = h[i].s; return s; }
+			tip.hidden = false; tip.style.left = (e.clientX - r.left) + "px"; tip.style.top = "8px";
+			tip.innerHTML = hhmm(t) + " · " + esc(who[0].name) + " " + at(series[0]) + " · " + esc(who[1].name) + " " + at(series[1]);
+		});
+		svgEl.addEventListener("mouseleave", function(){ cross.setAttribute("visibility", "hidden"); tip.hidden = true; });
+	}
+
+	// ------------------------------------------------ podium & révélation
+	var revealing = false, revealDone = !wantReveal;
 	function podium(teams){
 		if (phase(Date.now())!=="done" || !teams.length){ podiumEl.innerHTML=""; track.classList.remove("done"); return; }
 		track.classList.add("done");
+		if (!revealDone){
+			// Finale : le podium attend la révélation lancée par l'organisateur.
+			if (!podiumEl.querySelector(".reveal-cta")){
+				podiumEl.innerHTML = '<button type="button" class="reveal-cta">Révéler le classement final (R)</button>';
+				podiumEl.querySelector(".reveal-cta").addEventListener("click", reveal);
+			}
+			return;
+		}
 		if (podiumEl.dataset.done) return; podiumEl.dataset.done="1";
 		var t = teams.slice(0,3), order=[1,0,2];
 		var html='<div class="podium">';
@@ -568,8 +1010,7 @@ body.bigmode #race { margin-top:1rem; }
 			html += '<div class="step '+cls+'"><div class="who">'+esc(p.name)+'</div><div class="bar">'+(idx+1)+'</div></div>'; });
 		html += '</div>';
 		podiumEl.innerHTML = html;
-		var reduced = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches;
-		if (!reduced) confetti();
+		if (!reducedMotion()) confetti();
 	}
 	function confetti(){
 		var cols=["#d21034","#ffce00","#006a4e","#ffffff"];
@@ -583,6 +1024,47 @@ body.bigmode #race { margin-top:1rem; }
 		track.appendChild(box);
 		setTimeout(function(){ box.remove(); }, 5000);
 	}
+	// Révélation finale (mode projecteur, /scoreboard?big=1&reveal=1, touche R) :
+	// feux rouges, le brouillard se lève, puis les karts rejoignent leur place du
+	// dernier au premier, noms dévoilés un à un ; l'éclair frappe le vainqueur.
+	function reveal(){
+		if (revealing || revealDone || !lastTeams || !lastTeams.length) return;
+		podiumEl.innerHTML = "";
+		if (reducedMotion()){ revealDone = true; renderFog(Date.now()); layout(lastTeams); podium(lastTeams); return; }
+		revealing = true;
+		var top = lastTeams.slice(0, TOPN), lead = top[0].score;
+		track.classList.add("revealing");
+		top.forEach(function(t){ var L = lanes[t.account_id]; if (L){ L.lane.classList.remove("revealed", "leader", "in-fog"); L.wrap.style.setProperty("--p", "0"); } });
+		comment("🎬 <b>Révélation</b> du classement final…");
+		lightsEl.hidden = false; lightsEl.className = "lights"; lightsEl.innerHTML = "";
+		for (var i=0;i<5;i++) (function(i){ setTimeout(function(){
+			var html=""; for (var k=0;k<5;k++) html += '<span class="lamp'+(k<=i?" on":"")+'"></span>'; lightsEl.innerHTML = html; }, i*900); })(i);
+		setTimeout(function(){
+			lightsEl.className = "lights go";
+			track.classList.add("fog-clear");
+			var at = 700;   // du dernier au 4ᵉ : 0.8 s chacun ; le podium : 2 s chacun
+			for (var k = top.length - 1; k >= 0; k--) (function(k, at){
+				setTimeout(function(){
+					var t = top[k], L = lanes[t.account_id]; if (!L) return;
+					L.lane.classList.add("revealed"); if (k === 0) L.lane.classList.add("leader");
+					L.wrap.style.setProperty("--p", (lead > 0 ? t.score / lead : 0).toFixed(4));
+					if (k < 3) comment("<b>" + esc(t.name) + "</b> termine " + ordinal(k+1) + " avec " + t.score + " points.");
+					if (k === 0){
+						// l'éclair frappe le vainqueur une fois son kart arrivé (transition de 1.1 s)
+						setTimeout(function(){ fire("nctf:kartstrike", { account_id: t.account_id }); }, 1150);
+						setTimeout(function(){
+							revealing = false; revealDone = true;
+							track.classList.remove("revealing", "fog-clear"); lightsEl.hidden = true;
+							renderFog(Date.now()); layout(lastTeams); podium(lastTeams);
+						}, 2800);
+					}
+				}, at);
+			})(k, at), at += (k < 3 ? 2000 : 800);
+		}, 5 * 900);
+	}
+	document.addEventListener("keydown", function(e){
+		if (big && (e.key === "r" || e.key === "R") && !/input|textarea/i.test((e.target.tagName||""))) reveal();
+	});
 
 	function applyKothBadges(){
 		Object.keys(lanes).forEach(function(id){
@@ -592,6 +1074,7 @@ body.bigmode #race { margin-top:1rem; }
 			else { L.koth.hidden=true; L.koth.textContent=''; }
 		});
 	}
+	var kothSeen = null;
 	function refreshKoth(){
 		// Qui tient une colline (King of the Hill). Endpoint public, vide sous gel.
 		// 403/404/absent => aucun badge (le KotH peut ne pas être configuré).
@@ -600,9 +1083,11 @@ body.bigmode #race { margin-top:1rem; }
 			.then(function(j){
 				var next={};
 				if (j && j.success && Array.isArray(j.data)){
-					j.data.forEach(function(d){ if(d && d.account_id!=null){ next[d.account_id]=d.hill; } });
+					j.data.forEach(function(d){ if(d && d.account_id!=null){ next[d.account_id]=d.hill;
+						if (kothSeen && kothSeen[d.account_id] !== d.hill) comment("👑 <b>" + esc(d.name || "") + "</b> prend la colline " + esc(d.hill) + ".");
+					} });
 				}
-				kothBy=next; applyKothBadges();
+				kothSeen = next; kothBy=next; applyKothBadges();
 			})
 			.catch(function(){ /* pas de KotH : aucun badge */ });
 	}
@@ -638,18 +1123,32 @@ body.bigmode #race { margin-top:1rem; }
 					fbRun.style.setProperty("--fb-dur", Math.max(18, 6 * list.length + 8) + "s");
 				}
 				var next = {};
-				list.forEach(function(d){ next[d.solve_id] = d.account_id; });
+				list.forEach(function(d){ next[d.solve_id] = d; });
 				if (fbSeen !== null){
-					Object.keys(next).forEach(function(id){ if(!(id in fbSeen)) flashFb(next[id]); });
+					Object.keys(next).forEach(function(id){
+						if (id in fbSeen) return;
+						var d = next[id];
+						flashFb(d.account_id);
+						comment("🩸 <b>" + esc(d.name) + "</b> ouvre " + esc(d.challenge) + (d.category ? " (" + esc(d.category) + ")" : "") + ".", "fb" + id);
+						// l'éclair du kart (js/nctf-fx.js) ; dédoublonné par solve_id avec le ruban HUD
+						fire("nctf:firstblood", d);
+					});
 				}
 				fbSeen = next;
 			})
 			.catch(function(){ /* plugin absent : pas de ticker */ });
 	}
+	// Un first blood vu d'abord par le ruban HUD (toast SSE) : commentaire aussi.
+	window.addEventListener("nctf:firstblood", function(e){
+		var d = e.detail || {};
+		if (d.solve_id != null && d.name) comment("🩸 <b>" + esc(d.name) + "</b> ouvre " + esc(d.challenge || "") + (d.category ? " (" + esc(d.category) + ")" : "") + ".", "fb" + d.solve_id);
+		if (d.account_id != null) flashFb(d.account_id);
+	});
 
 	function tick(){
 		var now = Date.now();
 		renderClock(now);
+		renderFog(now);
 		if (frozenBanner) frozenBanner.hidden = !isFrozen(now);
 	}
 
@@ -658,7 +1157,7 @@ body.bigmode #race { margin-top:1rem; }
 			.then(function(r){ return r.ok ? r.json() : null; })
 			.then(function(j){
 				if (!j || !j.success || !Array.isArray(j.data)) return;
-				var teams = j.data.map(function(d){ return {account_id:d.account_id, name:d.name, score:Number(d.score)||0}; });
+				var teams = j.data.map(function(d){ return {account_id:d.account_id, name:d.name, score:Number(d.score)||0, account_url:d.account_url}; });
 				if (!teams.length){
 					// pas encore de score : on GARDE la table (état vide serveur) et on
 					// rend un message d'attente lisible dans la piste (hauteur auto,
@@ -669,12 +1168,15 @@ body.bigmode #race { margin-top:1rem; }
 						+ '<div class="waiting">En attente des premiers scores…</div>';
 					return;
 				}
+				var w = track.querySelector(".waiting"); if (w) w.remove();
 				// on a des scores -> on révèle la course et on cache la table
 				if (mount.hasAttribute("hidden")){
 					mount.hidden=false; mount.setAttribute("aria-hidden","false");
 					if (tableBox && !big) tableBox.hidden=true;
 				}
+				var first = !lastTeams;
 				layout(teams); podium(teams);
+				if (first){ refreshHistory(); }
 			})
 			.catch(function(){ /* on garde la table en repli */ });
 	}
@@ -690,14 +1192,18 @@ body.bigmode #race { margin-top:1rem; }
 	});
 	// plein écran au clavier (mode salle)
 	document.addEventListener("keydown", function(e){ if(e.key==="f" && !/input|textarea/i.test((e.target.tagName||""))){ if(document.fullscreenElement) document.exitFullscreen(); else document.documentElement.requestFullscreen&&document.documentElement.requestFullscreen(); } });
+	// changement de largeur (téléphone <-> bureau) : hauteur des voies
+	var rsT = null;
+	window.addEventListener("resize", function(){ clearTimeout(rsT); rsT = setTimeout(function(){ if (lastTeams && !revealing) layout(lastTeams); }, 200); });
 
-	// horloge chaque seconde ; scores toutes les 12s ; pause si onglet caché
-	tick(); refresh(); refreshKoth(); refreshFirstBloods();
+	// horloge chaque seconde ; scores toutes les 12s ; historique chaque minute ; pause si onglet caché
+	tick(); refresh(); refreshKoth(); refreshFirstBloods(); refreshChallenges();
 	var clockTimer=setInterval(tick,1000), pollTimer=setInterval(refresh,POLL_MS);
 	var kothTimer=setInterval(refreshKoth,POLL_MS), fbTimer=setInterval(refreshFirstBloods,POLL_MS);
+	var histTimer=setInterval(function(){ if (!document.hidden) refreshHistory(); }, HIST_MS);
 	document.addEventListener("visibilitychange", function(){
 		if (document.hidden){ clearInterval(pollTimer); pollTimer=null; }
-		else if (!pollTimer){ refresh(); refreshKoth(); refreshFirstBloods(); pollTimer=setInterval(refresh,POLL_MS); }
+		else if (!pollTimer){ refresh(); refreshKoth(); refreshFirstBloods(); refreshHistory(); pollTimer=setInterval(refresh,POLL_MS); }
 	});
 })();
 </script>
