@@ -41,6 +41,7 @@ hints:
 
 tags:
   - blockchain
+  - hard
 
 # challenge-id (HMAC / requirements wiring): blockchain-escrowd-proxy
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

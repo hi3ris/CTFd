@@ -81,6 +81,7 @@ hints:
 tags:
   - ml
   - web
+  - medium
 
 # challenge-id (for HMAC / requirements wiring): ml-pickle-rce
 # No prerequisites; standalone.

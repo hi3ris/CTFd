@@ -41,6 +41,7 @@ hints:
 
 tags:
   - cloud
+  - medium
 
 # challenge-id (HMAC / requirements wiring): cloud-artifacts-imds
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

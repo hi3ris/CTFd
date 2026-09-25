@@ -68,6 +68,7 @@ hints:
 
 tags:
   - reverse
+  - medium
 
 files:
   - vmcheck

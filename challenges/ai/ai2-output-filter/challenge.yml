@@ -78,6 +78,7 @@ hints:
 tags:
   - ai
   - served
+  - medium
 state: visible
 requirements:
   - ai1-naive-guard

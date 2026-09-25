@@ -41,6 +41,7 @@ hints:
 
 tags:
   - os
+  - hard
 
 # challenge-id (HMAC / requirements wiring): os-nyx-vfs
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

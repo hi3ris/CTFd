@@ -73,6 +73,7 @@ hints:
 
 tags:
   - crypto
+  - medium
 
 # Files handed to players. Only capture.json is distributed; the solution/
 # directory (writeup, solver, generator) is NOT shipped.

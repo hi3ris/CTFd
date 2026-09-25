@@ -41,6 +41,7 @@ hints:
 
 tags:
   - web
+  - medium
 
 # challenge-id (HMAC / requirements wiring): web-cms-jwtconf
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

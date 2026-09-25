@@ -41,6 +41,7 @@ hints:
 
 tags:
   - ai
+  - hard
 
 # challenge-id (HMAC / requirements wiring): ai-retriever-inject
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

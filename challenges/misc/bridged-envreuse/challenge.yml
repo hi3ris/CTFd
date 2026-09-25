@@ -41,6 +41,7 @@ hints:
 
 tags:
   - misc
+  - medium
 
 # challenge-id (HMAC / requirements wiring): misc-bridged-envreuse
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

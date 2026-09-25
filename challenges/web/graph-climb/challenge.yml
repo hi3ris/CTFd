@@ -45,6 +45,7 @@ hints:
 tags:
   - web
   - cve
+  - hard
 
 # challenge-id (HMAC / requirements wiring): web-graph-climb
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

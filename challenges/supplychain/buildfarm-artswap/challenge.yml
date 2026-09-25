@@ -41,6 +41,7 @@ hints:
 
 tags:
   - supplychain
+  - medium
 
 # challenge-id (HMAC / requirements wiring): supplychain-buildfarm-artswap
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

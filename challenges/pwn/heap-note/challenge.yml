@@ -75,6 +75,7 @@ hints:
 tags:
   - pwn
   - glibc-2.31
+  - medium
 
 files:
   - handout/chall

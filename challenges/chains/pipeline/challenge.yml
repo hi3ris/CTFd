@@ -42,6 +42,7 @@ hints:
 tags:
   - chains
   - cve
+  - hard
 
 # challenge-id (HMAC / requirements wiring): chains-pipeline
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

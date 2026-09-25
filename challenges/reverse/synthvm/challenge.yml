@@ -79,6 +79,7 @@ hints:
 
 tags:
   - reverse
+  - hard
 
 files:
   - synthvm

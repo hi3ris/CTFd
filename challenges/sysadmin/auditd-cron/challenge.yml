@@ -41,6 +41,7 @@ hints:
 
 tags:
   - sysadmin
+  - medium
 
 # challenge-id (HMAC / requirements wiring): sysadmin-auditd-cron
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

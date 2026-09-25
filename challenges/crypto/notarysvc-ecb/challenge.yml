@@ -41,6 +41,7 @@ hints:
 
 tags:
   - crypto
+  - medium
 
 # challenge-id (HMAC / requirements wiring): crypto-notarysvc-ecb
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

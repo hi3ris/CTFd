@@ -41,6 +41,7 @@ hints:
 
 tags:
   - web
+  - hard
 
 # challenge-id (HMAC / requirements wiring): web-webhook-relay
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

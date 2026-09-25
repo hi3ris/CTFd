@@ -41,6 +41,7 @@ hints:
 
 tags:
   - pwn
+  - hard
 
 # challenge-id (HMAC / requirements wiring): pwn-parserd-canary
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"

@@ -80,6 +80,7 @@ hints:
 tags:
   - crypto
   - custom-protocol
+  - medium
 
 files:
   - handout/SPEC.md

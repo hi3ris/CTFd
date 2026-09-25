@@ -61,6 +61,7 @@ hints:
 tags:
   - crypto
   - file-format
+  - medium
 
 files:
   - public/SPEC.md

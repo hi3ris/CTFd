@@ -41,6 +41,7 @@ hints:
 
 tags:
   - ml
+  - hard
 
 # challenge-id (HMAC / requirements wiring): ml-scorer-poison
 connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
