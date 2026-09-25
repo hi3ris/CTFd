@@ -70,17 +70,22 @@ contradictoire, votes 3-0 sauf indication). Chaque piste note ce qui la rend
 neuve **par rapport à ce qui existe déjà** dans `challenges/`, sa faisabilité
 sous Bedrock-sans-GPU / instance-par-équipe, le niveau et l'effort.
 
-- [ ] **Empoisonnement d'outils MCP** _(AI — la piste la plus nettement neuve)_ ★★★
-      Classe distincte de l'injection de prompt : les instructions malveillantes
-      vivent dans les **descriptions / schémas / métadonnées d'outils** MCP, lues
-      et suivies par le LLM. Variantes non couvertes par notre chaîne 4-niveaux :
-      full-schema poisoning, tool shadowing, name squatting, description
-      poisoning, rug-pull (définitions modifiées en session), denial-of-wallet. - **Version statique (présélection, sans Bedrock)** : auditer un lot de
-      manifestes MCP, trouver le serveur piégé et forger l'appel — pas d'appel
-      LLM, tient à 300 joueurs. - **Version agentique (finale)** : agent organisateur sur Nova + serveur
-      MCP « légitime » détenant le flag ; l'équipe déclare/modifie un serveur
-      que l'agent consomme. Coûte plusieurs appels Bedrock → finale (10 éq.). - Réf. à **dépasser** (changer cibles/formats, ne pas recopier) :
-      DVMCP (`harishsg993010/damn-vulnerable-MCP-server`), `canack/bad-mcp`. - Effort moyen · risque : fiabilité du tool-calling Nova, non-déterminisme.
+- [~] **Empoisonnement d'outils MCP** _(AI — la piste la plus nettement neuve)_ ★★★
+  **Version statique FAITE** : `challenges/ai/mcp-manifest-audit/` (host MCP
+  offline déterministe, sans modèle ni réseau ; name-squatting + tool
+  shadowing + description poisoning ; flag révélé uniquement via l'appel
+  subverti, non grep-able). La **version agentique (finale, Bedrock/Nova)**
+  reste au backlog ci-dessous.
+  Classe distincte de l'injection de prompt : les instructions malveillantes
+  vivent dans les **descriptions / schémas / métadonnées d'outils** MCP, lues
+  et suivies par le LLM. Variantes non couvertes par notre chaîne 4-niveaux :
+  full-schema poisoning, tool shadowing, name squatting, description
+  poisoning, rug-pull (définitions modifiées en session), denial-of-wallet. - **Version statique (présélection, sans Bedrock)** : auditer un lot de
+  manifestes MCP, trouver le serveur piégé et forger l'appel — pas d'appel
+  LLM, tient à 300 joueurs. - **Version agentique (finale)** : agent organisateur sur Nova + serveur
+  MCP « légitime » détenant le flag ; l'équipe déclare/modifie un serveur
+  que l'agent consomme. Coûte plusieurs appels Bedrock → finale (10 éq.). - Réf. à **dépasser** (changer cibles/formats, ne pas recopier) :
+  DVMCP (`harishsg993010/damn-vulnerable-MCP-server`), `canack/bad-mcp`. - Effort moyen · risque : fiabilité du tool-calling Nova, non-déterminisme.
 
 - [ ] **Injection indirecte « aveugle » (modèle LLMail-Inject)** _(AI — finale)_ ★★★
       Format à retour **par drapeaux** : l'attaquant envoie **un** e-mail, ne voit

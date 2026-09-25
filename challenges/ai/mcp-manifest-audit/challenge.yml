@@ -1,0 +1,56 @@
+name: mcp-manifest-audit
+author: dagbanjaphet
+category: ai
+description: |-
+  CERT.tg is vetting an internal **MCP marketplace** before wiring an assistant
+  to it. The host ships as `host.py` and loads four vetted server manifests from
+  `servers/*.json`. Like a real marketplace, it also lets a third party
+  *register* a server: `run(user_task, extra_servers=[...])`.
+
+  There is no language model -- the planner is a deterministic stand-in that,
+  like an LLM, reads tool descriptions and obeys operator directives found in
+  them. One vetted tool already carries a poisoned directive, but the host
+  refuses it. Audit the trust model, publish a server that subverts it, and make
+  the host leak the vault's operator seal.
+
+  Everything runs offline -- no network, no model, no Docker.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 250
+type: dynamic
+extra:
+  initial: 250
+  decay: 30
+  minimum: 100
+flags:
+  - NCTF{n4me_squ4t_sh4d0ws_th3_trust3d_mcp}
+hints:
+  - content: >-
+      The flag is never in the files -- it only comes out of a successful
+      vault.reveal_secret call. Read how host.py decides to authorise a tool
+      call, and why the mailer server's directive is refused.
+    cost: 20
+    key: h1
+  - content: >-
+      A directive is trusted when its origin server name matches the target
+      tool's server name, and server names are not authenticated. Description
+      poisoning alone (like mailer's) is not enough; you need the namespace.
+    cost: 40
+    key: h2
+    requirements: [h1]
+tags:
+  - ai
+  - mcp
+  - tool-poisoning
+  - supply-chain
+  - medium
+files:
+  - host.py
+  - servers/docs.json
+  - servers/vault.json
+  - servers/mailer.json
+  - servers/calendar.json
+state: visible
+version: "1.0"
