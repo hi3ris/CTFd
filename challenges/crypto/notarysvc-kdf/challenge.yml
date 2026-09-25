@@ -13,7 +13,7 @@ description: |
   Flag format: `NCTF{...}`
 
 # Dynamic scoring.
-value: 500
+value: 250
 extra:
   docker_image: ctf-crypto-notarysvc-kdf:latest
   internal_port: 8080

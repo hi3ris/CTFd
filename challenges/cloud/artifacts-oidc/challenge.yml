@@ -13,7 +13,7 @@ description: |
   Flag format: `NCTF{...}`
 
 # Dynamic scoring.
-value: 500
+value: 300
 extra:
   docker_image: ctf-cloud-artifacts-oidc:latest
   internal_port: 8080
