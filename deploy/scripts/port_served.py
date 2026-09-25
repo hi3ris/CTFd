@@ -51,7 +51,7 @@ PROTO = {
     "uploadssrf": "web/cms-uploadssrf",
     "protopoll": "web/forum-protopoll",
     "xxe": "web/forum-xxe",
-    "ssrf-deser": "web/cms-ssrf-deser",
+    "ssrf-deser": "misc/bridged-deser",
     "deser": "misc/bridged-deser",
     "envreuse": "misc/bridged-envreuse",
     "artswap": "supplychain/buildfarm-artswap",
