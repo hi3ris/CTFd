@@ -20,6 +20,25 @@ Légende : 🖥️ action sur une machine de déploiement · 🧑 décision / ac
 - Thème `hibris`, KotH, scoreboard « La Course », board challenges (compteur +
   vue par auteur + super-catégorie « Mise en jambe »), plomberie e-mail SMTP.
 
+## Revue qualité des challenges — état d'application
+
+Détail dans `challenge-review.md` (constats) et `innovative-challenges-todo.md`
+(pistes). Résumé :
+
+- **§1 Dédup** ✅ appliqué : 1 skin par primitive, 505 → 350 (2 épreuves
+  réellement distinctes préservées).
+- **§2 Indices trop généreux** ✅ appliqué : dernier indice rendu directionnel
+  sur les 26 familles templatées + `graphql-introspection-maze`, `synthvm`.
+- **§3 Résistance LLM des statiques** ✅ volet indices (7 statiques à forte
+  valeur) ; 🖥️🧑 **volet structurel parké** (oracle serveur, flag offline non
+  récupérable, reverse « écart aux specs ») — voir la section dédiée ci-dessous.
+- **§4 Calibration** ✅ appliqué : 155 tags de difficulté ajoutés ; canoniques
+  mono-étape sur-cotés recalés (450-500 → 250-300).
+- **§5 Descriptions mensongères** ✅ appliqué (commit antérieur).
+- **Deep-research** : MCP statique ✅ (`challenges/ai/mcp-manifest-audit/`) ;
+  restent 🖥️🧑 au backlog : MCP agentique, LLMail-inject aveugle, ML statique,
+  catégorie ICS/OT, reverse durci, composante physique on-site (finale).
+
 ## À faire par un opérateur 🖥️ (machine avec AWS + Docker)
 
 1. **Apply AWS** : `cd deploy && make phase-setup` puis, aux dates,
