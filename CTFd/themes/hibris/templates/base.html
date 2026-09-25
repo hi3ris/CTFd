@@ -18,6 +18,8 @@
     <!-- base component styles -->
     <link rel="stylesheet" href="{{ url_for('views.themes', path='css/main.css') }}">
     <link rel="stylesheet" href="{{ url_for('views.themes', path='css/core.css') }}">
+    <!-- « Fonds vivants » : orage, radar, circuit, pluie chiffrée, aurore (js/nctf-fx.js) -->
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/nctf-fx.css') }}">
 
     {% block stylesheets %}{% endblock %}
     {{ Plugins.styles }}
@@ -41,6 +43,15 @@
             --muted:  #9aa4b2;
             --link:   #f9d77e;   /* or doux (vitrine --color-link) */
             --radius: 8px;
+            --red-text: #ff4d6d; /* rouge lisible en petit texte (6:1) ; --red ne fait que 3.8:1 */
+            --gold:   #ffe27a;   /* or du classement (utilisé par .car-score, jamais défini avant) */
+            /* Fonds vivants (js/nctf-fx.js) */
+            --bolt-core: #fff7cc;
+            --flash: rgba(255,206,0,.08);
+            --aurora-green:  rgba(0,106,78,.38);
+            --aurora-yellow: rgba(255,206,0,.16);
+            --aurora-red:    rgba(210,16,52,.30);
+            --cipher: rgba(154,164,178,.22);
         }
         html { scroll-behavior: smooth; }
         body {
@@ -209,7 +220,7 @@
         .term-body .p { color: var(--green-b); } /* $ prompt */
         .term-body .cmd { color: #c7cfda; }
         .term-body .code { display: inline-block; padding: .05rem .5rem; border-radius: 5px; font-weight: 500; }
-        .term-body .fail { color: var(--red); }
+        .term-body .fail { color: var(--red-text); }
         .term-body .warn { color: var(--yellow); }
         .term-body .ok   { color: var(--green-b); }
         .term-body .msg  { color: var(--fg); margin: .35rem 0 .9rem; font-family: 'Lato', sans-serif; }
@@ -278,7 +289,7 @@
             box-shadow: 0 0 8px var(--green-b); animation: hudPulse 1.8s ease-in-out infinite; }
         .hud-bar.frozen .dot { background: #7fb2ff; box-shadow: 0 0 8px #7fb2ff; }
         @keyframes hudPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
-        .hud-bar .fb .k { color: var(--red); }
+        .hud-bar .fb .k { color: var(--red-text); }
         .hud-bar .fb .v { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
         .hud-bar .fb.fresh .v { animation: hudFb 1.2s ease-in-out 4; }
         @keyframes hudFb { 50% { color: var(--red); } }
@@ -502,18 +513,46 @@
                     var d = j.data[0];
                     fbVal.textContent = d.name + " · " + d.challenge;
                     fbSeg.hidden = false;
-                    if (fbLast !== null && fbLast !== d.solve_id) { fbSeg.classList.remove("fresh"); void fbSeg.offsetWidth; fbSeg.classList.add("fresh"); }
+                    if (fbLast !== null && fbLast !== d.solve_id) {
+                        fbSeg.classList.remove("fresh"); void fbSeg.offsetWidth; fbSeg.classList.add("fresh");
+                        // Fonds vivants : l'orage frappe la tuile, le radar affiche un écho rouge.
+                        try { window.dispatchEvent(new CustomEvent("nctf:firstblood", { detail: d })); } catch (e) { /* vieux navigateur */ }
+                    }
                     fbLast = d.solve_id;
                 })
                 .catch(function () { /* plugin absent : segment caché */ });
         }
         fbPoll(); setInterval(function () { if (!document.hidden) fbPoll(); }, 45000);
+
+        // Le plugin annonce chaque first blood par une notification SSE (toast
+        // « 🩸 First blood »), qui vide aussi le cache de /recent. Dès qu'un tel
+        // toast apparaît, on relit /recent : l'éclair tombe en ~1 s au lieu
+        // d'attendre le prochain sondage de 45 s. Aucun flux SSE en plus.
+        var fbSoon = null;
+        function onToast(n) {
+            if (n.nodeType === 1 && /first blood/i.test(n.textContent || "")) {
+                clearTimeout(fbSoon); fbSoon = setTimeout(fbPoll, 400);
+            }
+        }
+        function watchToasts(box) {
+            // ezToast crée le conteneur ET y insère le premier toast dans la même
+            // exécution : ce toast est déjà là quand on commence à observer.
+            Array.prototype.forEach.call(box.children, onToast);
+            new MutationObserver(function (muts) {
+                muts.forEach(function (m) { Array.prototype.forEach.call(m.addedNodes, onToast); });
+            }).observe(box, { childList: true });
+        }
+        new MutationObserver(function (muts, obs) {
+            var box = document.getElementById("ezq--notifications-toast-container");
+            if (box) { obs.disconnect(); watchToasts(box); }
+        }).observe(document.body, { childList: true });
     })();
     </script>
 
     <script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
     <script defer src="{{ url_for('views.themes', path='js/core.js') }}"></script>
     <script defer src="{{ url_for('views.themes', path='js/helpers.js') }}"></script>
+    <script defer src="{{ url_for('views.themes', path='js/nctf-fx.js') }}"></script>
 
     {% block entrypoint %}
     <script defer src="{{ url_for('views.themes', path='js/pages/main.js') }}"></script>

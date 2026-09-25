@@ -501,6 +501,10 @@ body.bigmode #race { margin-top:1rem; }
 			if (L.koth){ var hh = kothBy[t.account_id]; if (hh){ L.koth.hidden=false; L.koth.innerHTML='<span>'+esc(hh)+'</span>'; } else { L.koth.hidden=true; L.koth.textContent=''; } }
 			// boost si le score a monté depuis le dernier poll (mode fun)
 			var was = prevScores[t.account_id];
+			// Fonds vivants : un écho vert sur le radar (js/nctf-fx.js), même sans mode fun.
+			if (was != null && t.score > was){
+				try { window.dispatchEvent(new CustomEvent("nctf:score", { detail: { account_id: t.account_id, delta: t.score - was } })); } catch (e) {}
+			}
 			if (was != null && t.score > was && !reduced){
 				var wrap = L.wrap;
 				wrap.classList.remove("boost"); void wrap.offsetWidth; wrap.classList.add("boost");
