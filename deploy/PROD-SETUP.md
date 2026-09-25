@@ -80,9 +80,16 @@ présélection**.
      (`www` → `ctftogo.ctfd.io`, ancien hébergement CTFd.io) et se déclarent
      autoritaires. La délégation publique est bien Cloudflare, mais un résolveur
      de FAI togolais (constaté chez GVA) a renvoyé ces vieilles réponses pour
-     `www.ctf.tg` (certificat `*.ctfd.io`, site tiers). **Demander à nic.tg de
-     supprimer la zone `ctf.tg` de ces serveurs** ; poser le DS (ci-dessus) rend
-     ces réponses invalides pour les résolveurs validants.
+     `www.ctf.tg` (certificat `*.ctfd.io`, site tiers). **Cause confirmée le
+     2026-09-25 : `ns1.nic.tg` et `tld.cafe.tg` sont aussi 2 des 8 serveurs du
+     TLD `.tg` et répondent en autoritaire avec cette vieille zone au lieu de
+     déléguer vers Cloudflare** (les 6 autres délèguent correctement). ~1
+     résolution non cachée sur 4 échoue dans le monde, presque toutes chez
+     Togo Telecom. **Demander à nic.tg de supprimer la zone `ctf.tg` de
+     `ns1.nic.tg`, `tld.cafe.tg`, `ns1.gouv.tg`, `ns2.gouv.tg`** (demande prête
+     hors git : `~/.config/nctf26/nic-tg-request.txt`). Contrôle avant/après :
+     `deploy/scripts/dns-delegation-check.sh` (sortie 0 = tous les serveurs du
+     TLD délèguent vers Cloudflare) — à mettre dans la check-list du jour J.
 
    **Règles WAF personnalisées à contrôler avant l'ouverture** (le script n'y
    touche pas ; tableau de bord Sécurité → WAF → Règles personnalisées) :
