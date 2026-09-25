@@ -345,6 +345,65 @@
             .challenge-button:hover::after, .btn:hover::after, main { animation: none; }
             main { opacity: 1; transform: none; }
         }
+
+        /* ================================================================
+           NCTF26 — Finitions v2 : accessibilité clavier, barre de défilement
+           thématique, et "console d'accès" pour les pages d'authentification.
+           Purement additif, aucune animation nouvelle.
+           ================================================================ */
+        /* Anneau de focus clavier lisible (jaune Togo). :focus-visible ne
+           s'affiche qu'au clavier, jamais au clic souris — pas de gêne. */
+        a:focus-visible, button:focus-visible, .btn:focus-visible,
+        .nav-link:focus-visible, .challenge-submit:focus-visible,
+        .challenge-button:focus-visible, [tabindex]:focus-visible,
+        input:focus-visible, select:focus-visible, textarea:focus-visible,
+        summary:focus-visible {
+            outline: 2px solid var(--yellow);
+            outline-offset: 3px;
+            border-radius: 5px;
+        }
+
+        /* Barre de défilement dans l'esprit console (Firefox + WebKit) */
+        html { scrollbar-width: thin; scrollbar-color: #24303f #05070d; }
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: #05070d; }
+        ::-webkit-scrollbar-thumb {
+            background: #1c2431; border-radius: 8px;
+            border: 3px solid #05070d;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #2b3a4d; }
+        ::-webkit-scrollbar-corner { background: #05070d; }
+
+        /* Console d'accès : les pages login / inscription / reset — sobres et
+           un peu vides — reçoivent un panneau cadré (liseré tricolore + label
+           moniteur), au lieu d'un formulaire flottant. Ciblé par la classe de
+           route sur <body>, donc sans effet ailleurs. */
+        body.ep-auth-login .container > .row > [class*="col-"],
+        body.ep-auth-register .container > .row > [class*="col-"],
+        body.ep-auth-reset_password .container > .row > [class*="col-"],
+        body.ep-auth-confirm .container > .row > [class*="col-"] {
+            position: relative;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-top: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+            border-radius: var(--radius);
+            padding: 2rem 1.75rem 1.75rem;
+            margin-top: -1.25rem;
+            box-shadow: 0 22px 50px rgba(0,0,0,0.5);
+        }
+        body.ep-auth-login .container > .row > [class*="col-"]::before,
+        body.ep-auth-register .container > .row > [class*="col-"]::before,
+        body.ep-auth-reset_password .container > .row > [class*="col-"]::before,
+        body.ep-auth-confirm .container > .row > [class*="col-"]::before {
+            content: "// accès sécurisé";
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .68rem; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 1rem;
+        }
+        /* rapproche le panneau du hero pour une composition plus intentionnelle */
+        body[class*="ep-auth-"] .jumbotron { margin-bottom: 1.5rem; }
     </style>
 
     <script type="text/javascript">
@@ -362,7 +421,7 @@
 
     {{ Configs.theme_header }}
 </head>
-<body>
+<body class="{% if request.endpoint %}ep-{{ request.endpoint|replace('.', '-') }}{% endif %}">
 
     <div class="hud-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
 
