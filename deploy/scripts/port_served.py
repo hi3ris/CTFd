@@ -11,7 +11,7 @@ For each sibling this copies the prototype's app.py / requirements.txt / solve.p
 reuses the prototype's hints, and writes a class writeup adapted to the slug.
 
     python3 deploy/scripts/port_served.py            # port all mapped siblings
-    python3 deploy/scripts/port_served.py --only crypto/sessiond-ecb ...
+    python3 deploy/scripts/port_served.py --only crypto/notarysvc-ecb ...
 
 Idempotent: re-running refreshes the ported files.
 """
@@ -30,34 +30,38 @@ try:
 except ImportError:
     sys.exit("pip install pyyaml")
 
-# suffix -> prototype "cat/slug" (verified implementations)
+# suffix -> prototype "cat/slug" (le skin canonique conservé après dédup).
+# NB : la matrice de clones a été retirée ; ces prototypes servent au portage
+# ponctuel (--only), pas à re-générer en masse.
 PROTO = {
-    "ecb": "crypto/sealbox-ecb",
-    "kdf": "crypto/kdf-slip",
-    "nonce": "crypto/nonce-climb",
-    "padoracle": "crypto/oracle-cascade",
-    "signext": "crypto/sealbox-signext",
-    "jwtconf": "web/jwt-relay",
-    "authbypass": "web/forum-authbypass",
+    "ecb": "crypto/notarysvc-ecb",
+    "kdf": "crypto/notarysvc-kdf",
+    "nonce": "crypto/notarysvc-nonce",
+    "padoracle": "crypto/notarysvc-padoracle",
+    "signext": "crypto/notarysvc-signext",
+    "jwtconf": "web/cms-jwtconf",
+    "authbypass": "web/cms-authbypass",
     "sqli2": "web/forum-sqli2",
-    "oidc": "cloud/oidc-forge",
-    "imds": "cloud/backup-imds",
-    "prefix": "cloud/backup-prefix",
-    "presign": "cloud/backup-presign",
-    "envexec": "cloud/backup-envexec",
+    "oidc": "cloud/artifacts-oidc",
+    "imds": "cloud/artifacts-imds",
+    "prefix": "cloud/artifacts-prefix",
+    "presign": "cloud/artifacts-presign",
+    "envexec": "cloud/artifacts-envexec",
     "smuggle": "web/cms-smuggle",
     "uploadssrf": "web/cms-uploadssrf",
     "protopoll": "web/forum-protopoll",
     "xxe": "web/forum-xxe",
-    "ssrf-deser": "misc/ingestd-deser",
+    "ssrf-deser": "web/cms-ssrf-deser",
+    "deser": "misc/bridged-deser",
+    "envreuse": "misc/bridged-envreuse",
     "artswap": "supplychain/buildfarm-artswap",
     "depconf": "supplychain/buildfarm-depconf",
     "postinstall": "supplychain/buildfarm-postinstall",
     "hijack": "supplychain/buildfarm-depconf",
-    "cap": "sysadmin/schedd-cap",
-    "cron": "sysadmin/schedd-cron",
-    "systemd": "sysadmin/schedd-systemd",
-    "protoparse": "misc/proto-fuzz-live",
+    "cap": "sysadmin/auditd-cap",
+    "cron": "sysadmin/auditd-cron",
+    "systemd": "sysadmin/auditd-systemd",
+    "protoparse": "misc/bridged-protoparse",
 }
 
 

@@ -11,7 +11,7 @@
 #
 #   deploy/scripts/lot5.sh                 # tous les servis "IMPLEMENTED", rapport seul
 #   deploy/scripts/lot5.sh --flip          # + flip state: visible sur ceux qui passent
-#   deploy/scripts/lot5.sh --only web/jwt-relay crypto/oracle-cascade
+#   deploy/scripts/lot5.sh --only web/cms-jwtconf crypto/notarysvc-padoracle
 #   deploy/scripts/lot5.sh --all           # tous les servis (même les STUB : échoueront)
 #   deploy/scripts/lot5.sh --keep          # ne détruit pas les conteneurs (debug)
 #

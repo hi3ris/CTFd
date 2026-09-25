@@ -8,6 +8,17 @@ de conception qui te reviennent.
 > Méthode : chaque finding a été re-vérifié par diff/`md5sum` réel avant d'être
 > retenu. Les findings non reproduits ont été écartés (voir §7).
 
+> **✅ DÉDUP APPLIQUÉE (§1).** Sur demande, les clones ont été retirés : **153
+> épreuves supprimées** (116 octet-pour-octet + 37 variantes reformulées
+> auto-déclarées « Variante de la classe X » ou à très faible diff), **1 skin
+> canonique conservé par primitive**. Catalogue : **505 → 352**. Deux épreuves
+> partageant un suffixe mais réellement distinctes ont été **préservées**
+> (`leaky-prefix` — forensic S3 statique ; `oracle-encoding-smuggle` — oracle IA),
+> confirmées par un gros diff normalisé (91 / 86 lignes vs ~0-24 pour les clones).
+> Références mises à jour (`port_served.py` PROTO → skins survivants, carte
+> auteurs régénérée). Les §2-§5 (indices, résistance IA, calibration,
+> descriptions) restent des décisions de conception, non appliquées.
+
 ## 1. Constat principal — le nombre de challenges est gonflé par du clonage
 
 **~160 épreuves sont des copies octet-pour-octet d'une même primitive, au seul
