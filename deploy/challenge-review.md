@@ -117,6 +117,16 @@ points sur la vraie résistance.
 **Reco** : aligner la description sur le vrai bug, **ou** implémenter la vuln
 annoncée.
 
+> **✅ RÉSOLU (§5).** Les trois épreuves étaient des **clones** au nom/à la
+> description mensongers (proto-desync = clone `cms-smuggle` ; rbac-climb =
+> clone `auditd-systemd` ; build-hijack = clone `buildfarm-depconf`). Elles ont
+> été **supprimées à la dédup** (§1, commit `43af35b`) : la description
+> mensongère disparaît avec le clone. Les skins canoniques conservés
+> (`web/cms-smuggle`, `sysadmin/auditd-systemd`, `supplychain/buildfarm-depconf`)
+> **annoncent le vrai bug** (vérifié : smuggling→cache→auth ; injection d'env
+> →systemd→sudo→root ; dérive de lockfile→confusion de dépendance→hook). Aucune
+> description mensongère ne subsiste dans le set dédupliqué.
+
 ## 6. Flags statiques partageables (offline)
 
 Beaucoup d'épreuves **offline** (`type: dynamic`, non servies) utilisent un
