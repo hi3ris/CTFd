@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      KDF faible : brute-force 0000-9999, K=SHA256('nctf-kdf-'+seed), vérifie HMAC(K,'guest') contre le jeton observé, puis forge HMAC(K,'admin').
+      L'espace des graines est minuscule (10⁴) : brute-force hors-ligne la graine en confrontant chaque clé candidate au jeton que /login t'a donné, puis, la clé retrouvée, forge le jeton du rôle admin.
     cost: 40
     key: h2
     requirements: [h1]

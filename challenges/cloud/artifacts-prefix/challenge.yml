@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Credential fuité : public/backup-notes.txt contient deploy_secret=AKIA... ; /assume?secret=... rend un jeton de rôle qui lit /get?key=private/flag (X-Role-Token).
+      Un objet du préfixe public traîne un secret de déploiement. Sers-t'en pour assumer un rôle, puis lis l'objet privé avec le jeton obtenu.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      logtool porte cap_dac_read_search : /exec?bin=logtool&args=--read=/flag.txt.
+      Un des binaires porte une capability de lecture qui outrepasse les permissions de fichier (cap_dac_read_search). Sers-t'en pour faire lire le fichier de flag.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Fais signer une PUT pour hooks/postdeploy (préfixe privilégié), écris le sentinel « emit-flag », déclenche /deploy, puis lis /get?key=artifacts/deploy.log.
+      L'émetteur ne borne pas vraiment le préfixe : fais-toi signer une PUT vers un chemin privilégié (hors uploads/), dépose la charge qui déclenche l'émission du flag au déploiement, puis relis le journal produit.
     cost: 40
     key: h2
     requirements: [h1]

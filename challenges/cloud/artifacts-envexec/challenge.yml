@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Passe env.INIT_HOOK avec une valeur bidon : l'erreur fuite le registre des hooks (dont un hook debug « reveal »). Rejoue avec INIT_HOOK=reveal.
+      Le runtime ne filtre pas les clés d'env : injecte une clé de hook non documentée. Une valeur invalide fait fuiter le registre des hooks — l'un d'eux est un hook de debug qui révèle le flag.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      SSRF -> IMDS : /fetch?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/backup-role donne un Token de rôle, puis /objects/flag avec X-Role-Token.
+      SSRF vers l'IMDS du cloud : fais fetcher l'adresse de métadonnées interne pour récupérer les credentials d'un rôle, puis rejoue ce jeton de rôle sur l'accès aux objets protégés.
     cost: 40
     key: h2
     requirements: [h1]

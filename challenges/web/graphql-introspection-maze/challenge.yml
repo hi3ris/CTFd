@@ -57,13 +57,14 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      The mutation is `redeemWarrant(warrant: NodeRef!): ControlPlane`. A
-      `NodeRef` decodes as `NR1_<base64url>` of 5 bytes: kind, ordinal
-      (little-endian), version `0x01`, then an additive checksum
-      `(sum + 0x5A) & 0xFF`. Forge one whose kind byte is the WARRANT kind
-      (not the `0x21`/`0x22` you can read -- brute the single byte; it's
-      `0x2A`). Redeeming it flips your session to ROOT, then
-      `controlPlane { flag }` returns.
+      The mutation you reached takes a `NodeRef!`, and no field ever returns
+      the reference it wants -- you build it. A `NodeRef` is
+      `NR1_<base64url>` of a few bytes (a kind, an ordinal, a version byte and
+      a trailing checksum); reverse that layout from the readable ids the API
+      does hand back. The catch: the WARRANT kind byte is never one you can
+      read, so brute the single kind byte until the server accepts the
+      warrant. Redeeming a valid one flips your session to ROOT, and the flag
+      lives on the control-plane object.
     cost: 75
     key: h3
     requirements: [h2]

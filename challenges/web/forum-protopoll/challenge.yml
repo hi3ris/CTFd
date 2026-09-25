@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      POST /settings {"render_hook":"emit-flag"} pollue le config partagé, puis GET /render.
+      Le merge des settings ne filtre pas les clés : injecte une clé de configuration non prévue qui installe un hook de rendu émettant le flag, puis déclenche le rendu.
     cost: 40
     key: h2
     requirements: [h1]

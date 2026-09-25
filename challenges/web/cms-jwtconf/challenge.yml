@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Confusion RS256/HS256 : le vérificateur réutilise la clé publique RSA comme secret HMAC. Forge un jeton HS256 signé avec les octets exacts du PEM de /pubkey, role=admin.
+      Confusion d'algorithme RS256→HS256 : le vérificateur réutilise la clé publique RSA comme secret HMAC. Signe toi-même un jeton HS256 (rôle admin) en prenant la clé publique publiée comme secret.
     cost: 40
     key: h2
     requirements: [h1]

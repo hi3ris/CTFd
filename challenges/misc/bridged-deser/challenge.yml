@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      SSRF via /fetch?url=/internal/rpc avec body={"__class__":"FlagDumper"}.
+      SSRF vers le RPC interne : le fetcher atteint un endpoint interne qui désérialise ce qu'on lui envoie. Fais-lui instancier la classe qui dumpe le flag.
     cost: 40
     key: h2
     requirements: [h1]

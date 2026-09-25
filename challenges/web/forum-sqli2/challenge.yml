@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Injection SQL de second ordre : enregistre un nom = payload UNION (zzz' UNION SELECT flag FROM secret-- -), connecte-toi, puis /dashboard interpole le nom stocké.
+      Injection SQL de second ordre : le login est paramétré, mais ton nom d'utilisateur stocké est réinterpolé sans échappement plus tard (tableau de bord). Enregistre un nom qui porte une charge UNION exfiltrant le flag, puis déclenche la page qui le réutilise.
     cost: 40
     key: h2
     requirements: [h1]

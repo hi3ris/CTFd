@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Publie via POST /publish un paquet dont postinstall=emit-flag, puis GET /install?pkg=<nom> — la sortie contient le flag.
+      N'importe qui peut publier ici : publie un paquet dont le hook post-install émet le flag, puis fais-le installer — la sortie du hook contient le flag.
     cost: 40
     key: h2
     requirements: [h1]

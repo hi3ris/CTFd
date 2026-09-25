@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Extension de longueur SHA-256 : depuis (msg,sig) forge le MAC de msg||glue||'&op=grantflag' en reprenant l'état SHA-256; brute-force la longueur du secret.
+      Length-extension SHA-256 : SHA256(secret||msg) laisse prolonger le message sans connaître le secret, en reprenant l'état interne du hash. Ajoute l'opération qui accorde le flag et brute-force la longueur du secret.
     cost: 40
     key: h2
     requirements: [h1]

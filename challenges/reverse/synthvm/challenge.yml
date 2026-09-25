@@ -58,7 +58,8 @@ hints:
   - content: >-
       Two traps in the lift. (1) The opcode dispatch is REMAPPED AT RUNTIME: an
       init routine builds a 256-entry permutation with a keyed Fisher-Yates over
-      xorshift32 (seed `0x1F3D5B79`), so program bytes != internal opcodes -- the
+      xorshift32 whose seed you recover from that init routine, so program bytes
+      != internal opcodes -- the
       static switch does not line up until you apply it. (2) Immediates use a
       home-grown varint whose continuation flag is the LOW bit (not LEB128). Also:
       an unreferenced dead-code block inverts to a plausible-but-wrong key -- a
@@ -67,12 +68,13 @@ hints:
     key: h2
     requirements: [h1]
   - content: >-
-      The round function (17 rounds) is
-      `out = ROL8( SBOX[(in + carry) & 0xff], rot_r ) ^ c_{r,i}`, with the carry
-      chaining on the OUTPUT byte and `SBOX` a second Fisher-Yates bijection
-      (seed `0xC0FFEE42`). Read `IV_r` / `rot_r` / the XOR constants / target
-      `T[]` out of the instruction stream and invert round 16 -> 0 starting from
-      `T[]`.
+      The validator is a keyed round function (17 rounds): each round is an
+      S-box substitution, then a byte rotate, XORed with a per-round constant,
+      with the carry chaining on the OUTPUT byte. Both the S-box and the opcode
+      permutation are keyed bijections whose seeds live in the binary. Pull the
+      per-round rotation amounts, the XOR constants and the target bytes out of
+      the instruction stream, then invert the rounds (16 -> 0) from the target
+      back to the key.
     cost: 75
     key: h3
     requirements: [h2]

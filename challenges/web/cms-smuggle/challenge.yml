@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      POST /ingest avec une ligne SMUGGLED GET /admin/flag (traitée comme requête pipelinée de confiance), puis GET /page?p=/admin/flag.
+      Le découpage naïf du corps te laisse glisser une pseudo-requête pipelinée traitée comme de confiance : fais-la viser la route admin du flag, puis récupère le résultat côté lecture.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Dépose un `backup` (action emit-flag) dans /opt/tools, puis GET /run-cron.
+      Détournement de PATH : le cron root appelle `backup` sans chemin absolu, et un dossier inscriptible passe avant le vrai binaire. Dépose ton propre `backup` qui émet le flag, puis laisse le cron tourner.
     cost: 40
     key: h2
     requirements: [h1]

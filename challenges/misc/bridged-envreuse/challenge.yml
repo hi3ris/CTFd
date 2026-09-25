@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Lis WORKER_HMAC_SECRET dans /debug/env, signe emit-flag, POST /task.
+      L'endpoint de debug expose l'environnement, dont le secret HMAC du worker. Récupère-le, signe la tâche qui émet le flag, et soumets-la.
     cost: 40
     key: h2
     requirements: [h1]

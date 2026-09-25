@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Contrôle d'accès cassé : l'autorisation vient de l'en-tête client X-Account-Role. Forge X-Account-Role: admin sur POST /api/users/<ton uid> avec {"role":"admin"} (mass-assign), puis /flag.
+      Contrôle d'accès cassé : l'autorisation se fie à un en-tête fourni par le client, et l'API de mise à jour de compte accepte un champ de rôle non filtré (mass-assignment). Combine les deux pour te promouvoir admin.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      ECB cut-and-paste : obtiens un bloc = ECB('admin'+padding) via name, puis aligne un token pour que le dernier bloc soit la valeur de role, et recolle les blocs.
+      ECB cut-and-paste : chaque bloc de 16 octets chiffre indépendamment. Fais produire par le service un bloc qui encode la valeur de rôle voulue, puis réaligne et recolle les blocs de ton token pour l'y substituer.
     cost: 40
     key: h2
     requirements: [h1]

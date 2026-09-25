@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      DOCTYPE avec <!ENTITY x SYSTEM "file:///flag.txt">, référence &x; dans le corps sur POST /import.
+      XXE classique : l'import résout les entités externes SYSTEM. Déclare une entité qui lit le fichier de flag local et référence-la dans le corps du document importé.
     cost: 40
     key: h2
     requirements: [h1]

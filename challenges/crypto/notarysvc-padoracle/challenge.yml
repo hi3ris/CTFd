@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Oracle de padding AES-CBC : récupère l'état intermédiaire d'un bloc (déchiffrement octet par octet), puis forge IV = I XOR pad("role=admin") (CBC-R). Pas besoin de la clé.
+      Oracle de padding AES-CBC : le bit fuité par /whoami permet de récupérer l'état intermédiaire octet par octet, sans la clé. De là, fabrique (CBC-R) un cryptogramme qui déchiffre vers le rôle admin.
     cost: 40
     key: h2
     requirements: [h1]

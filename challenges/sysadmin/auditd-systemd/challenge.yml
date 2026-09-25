@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      POST /set-env BACKUP_ARGS=--dump-secrets, puis GET /start.
+      Injection d'environnement systemd : le drop-in d'env éditable n'est pas filtré. Ajoute une variable qui modifie les arguments du service pour lui faire dumper les secrets, puis (re)démarre l'unit.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      artifact='on-deploy: emit-flag' + provenance {builder:trusted-builder, digest:sha256(artifact)} sur POST /deploy.
+      La provenance n'est pas signée, seulement des champs recopiables : soumets un artefact malveillant (déclenchant l'émission du flag au déploiement) accompagné d'une provenance forgée qui se fait passer pour le builder de confiance.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Lecture hors-borne : le parser fait confiance au champ len. Envoie une petite valeur mais len=0x0200 : la réponse déborde sur le buffer voisin qui contient le flag.
+      Lecture hors-borne : le parser fait confiance au champ de longueur sans le borner à la taille réelle. Envoie une petite valeur mais une longueur déclarée trop grande : la réponse déborde sur le buffer voisin où réside le flag.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Misconfig alg:none : forge un jeton non signé {alg:none} avec groups=[platform-admin], troisième segment vide. Aucune clé requise.
+      Le vérificateur accepte alg:none : un jeton dont la signature est vide passe. Reste à te placer, dans la charge utile, dans le groupe privilégié qui débloque le flag.
     cost: 40
     key: h2
     requirements: [h1]

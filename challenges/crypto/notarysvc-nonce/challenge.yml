@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      Nonce ECDSA réutilisé : r identique => k puis d se récupèrent (k=(z1-z2)/(s1-s2), d=(s1*k-z1)/r mod n). Signe la commande admin toi-même.
+      Nonce ECDSA réutilisé : deux signatures au même r partagent le même k, ce qui suffit à remonter à la clé privée. Une fois d récupérée, signe toi-même la commande admin.
     cost: 40
     key: h2
     requirements: [h1]

@@ -34,7 +34,7 @@ hints:
     cost: 20
     key: h1
   - content: >-
-      POST /publish-public internal-lib en version > 1.0.0 avec buildhook=emit-flag, puis GET /resolve?name=internal-lib.
+      Confusion de dépendances : le résolveur préfère la version la plus élevée. Publie sur le registre public le paquet interne dans une version supérieure au lockfile, avec un buildhook qui émet le flag, puis déclenche la résolution.
     cost: 40
     key: h2
     requirements: [h1]
