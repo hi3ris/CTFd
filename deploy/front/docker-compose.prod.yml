@@ -90,7 +90,7 @@ services:
   # Bedrock with the front's instance role (AI_BACKEND=bedrock, no GPU node).
   ai-gateway:
     build:
-      context: ./ai-gateway
+      context: ../ai-gateway
     image: ctfd-ai-gateway:latest
     restart: always
     ports:

@@ -50,9 +50,42 @@ présélection**.
    (`scripts/cloudflare-ips.sh --tfvars`) + `terraform apply`. Détails :
    `deploy/scripts/cloudflare-origin-tls.sh`. Ancien mode : `make tls-init`. Vérifier `https://ctf.tg/` en 200, certificat valide.
 
-   **Réglages de la zone Cloudflare à contrôler avant l'ouverture** (le script
-   applique les deux premiers ; les règles WAF se gèrent dans le tableau de bord,
-   Sécurité → WAF → Règles personnalisées) :
+   **Durcissement de la zone (plan Free) — `scripts/cloudflare-zone-hardening.sh`**
+   (relançable ; `--check` = lecture seule ; jeton via
+   `set -a; . ~/.config/nctf26/cloudflare.env; set +a`). Posé le 2026-09-25 :
+
+   - HSTS 1 an + `nosniff` à la bordure (nginx les envoie déjà, la bordure les
+     garantit aussi sur les pages d'erreur Cloudflare) ; TLS 1.2 mini, 0-RTT off.
+   - **WAF managé** : le « Cloudflare Managed Free Ruleset » est déployé (il ne
+     l'était pas : aucune règle managée n'était active). Vérifié : l'API CTFd
+     (`PATCH /api/v1/configs`) passe.
+   - **Rate limiting** (1 seule règle sur Free) : 30 `POST` / 10 s / IP sur
+     `/login`, `/register`, `/reset_password`, `/confirm` → block 10 s. Attention
+     aux CGNAT des opérateurs togolais : ne pas descendre en dessous (CTFd limite
+     déjà à 10 / 5 s par IP côté application).
+   - Redirection `www` → apex à la bordure (301) sans toucher l'origine.
+   - **DNSSEC** : signé côté Cloudflare, statut `pending` tant que le **DS n'est
+     pas posé au registre .tg** (nic.tg). DS à transmettre :
+     `ctf.tg. 3600 IN DS 2371 13 2 C455E031E8A10295C75BD66250D7AB6C6024A8D158B39AEF16685B9483308926`
+     (le script l'affiche). Sans DS, DNSSEC est sans effet.
+   - **DMARC** `p=quarantine` avec rapports gérés par Cloudflare
+     (`rua=…@dmarc-reports.cloudflare.net`, gratuit) ; SPF apex réparé (des
+     guillemets parasites `''` cassaient l'enregistrement) et étendu à SES.
+   - DNS nettoyé : `playground.ctf.tg` → `34.179.165.24` (IP Google Cloud qui
+     n'appartient à personne de connu, ne répondait pas : **risque de takeover
+     de sous-domaine**) supprimé ; CNAME Mailgun `email.ctf.tg` passé en
+     DNS-only.
+   - ⚠️ **Zone périmée sur les anciens serveurs** : `ns1.nic.tg`, `ns1.gouv.tg`,
+     `ns2.gouv.tg` et `tld.cafe.tg` servent encore une vieille zone `ctf.tg`
+     (`www` → `ctftogo.ctfd.io`, ancien hébergement CTFd.io) et se déclarent
+     autoritaires. La délégation publique est bien Cloudflare, mais un résolveur
+     de FAI togolais (constaté chez GVA) a renvoyé ces vieilles réponses pour
+     `www.ctf.tg` (certificat `*.ctfd.io`, site tiers). **Demander à nic.tg de
+     supprimer la zone `ctf.tg` de ces serveurs** ; poser le DS (ci-dessus) rend
+     ces réponses invalides pour les résolveurs validants.
+
+   **Règles WAF personnalisées à contrôler avant l'ouverture** (le script n'y
+   touche pas ; tableau de bord Sécurité → WAF → Règles personnalisées) :
 
    - Bot Fight Mode **désactivé** et niveau de sécurité **medium** : sinon les
      scripts des joueurs (curl, python-requests, ctfcli) sont défiés ou bloqués,
@@ -189,6 +222,26 @@ MAIL_TLS=true
 Prérequis SES : domaine `ctf.tg` vérifié (DKIM signé) **et** sortie de sandbox
 accordée (sinon envoi limité aux adresses vérifiées, 200/jour). Demander la prod
 dès maintenant.
+
+**État SES au 2026-09-25 (fait, région `eu-west-3`) :**
+
+- Identité de domaine `ctf.tg` créée, **DKIM vérifié** (3 CNAME Easy DKIM en
+  DNS-only chez Cloudflare), MAIL FROM personnalisé `ses.ctf.tg` (MX + SPF
+  posés) → alignement SPF **et** DKIM pour DMARC.
+- Utilisateur IAM `nctf26-ses-smtp` (droit `ses:SendEmail`/`SendRawEmail`
+  restreint aux expéditeurs `*@ctf.tg`) ; identifiants SMTP dérivés dans
+  `~/.config/nctf26/ses-smtp.env` (600, hors git) et déjà écrits dans
+  `front/.env` (local + front). `make mail-test TO=success@simulator.amazonses.com`
+  → **OK** (le simulateur SES marche même en sandbox).
+- **Sortie de sandbox demandée** (cas TRANSACTIONAL, ~300 inscriptions le soir
+  d'ouverture) : statut `PENDING`, réponse AWS sous 24 h en général, par e-mail.
+  Tant que c'est `PENDING`, seuls le simulateur et les adresses vérifiées
+  reçoivent : l'adresse de l'opérateur a été ajoutée comme identité, **cliquer
+  le lien de vérification SES reçu par e-mail** pour pouvoir se faire un
+  `make mail-test` réel. Vérifier : `aws sesv2 get-account --region eu-west-3`
+  (`ProductionAccessEnabled`).
+- **Ne passer `verify_emails=ON` qu'une fois la prod SES accordée** ; le
+  preflight le rappelle (WARN tant que c'est off).
 
 Puis `make deploy` (le compose passe ces variables au conteneur CTFd). Étapes
 manuelles côté opérateur : créer le compte Brevo, générer la **clé SMTP**,
