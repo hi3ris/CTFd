@@ -1,0 +1,43 @@
+name: hull-cipher
+author: dagbanjaphet
+category: ppc
+description: |-
+  `points.txt` lists a few hundred 2-D points, each tagged with a single
+  character. Most of the tags are noise. A small subset of the points, read in
+  the right geometric order, spells the flag.
+
+  Recover that order and read off the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{convex_hull_walks_the_perimeter_ccw}
+hints:
+  - content: >-
+      The meaningful points are exactly the ones on the outer boundary of the
+      cloud; the rest sit strictly inside and can be ignored.
+    cost: 10
+    key: h1
+  - content: >-
+      Compute the convex hull, orient it counter-clockwise, start from the
+      bottom-most (then left-most) vertex, and concatenate the tags of the hull
+      vertices in that order.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - ppc
+  - geometry
+  - convex-hull
+  - easy
+files:
+  - points.txt
+state: visible
+version: "0.1"

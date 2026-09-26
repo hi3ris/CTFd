@@ -1,0 +1,13 @@
+# Local run notes for chains-citadel (STUB).
+#   docker build -t ctf-chains-citadel:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  chains-citadel:
+    image: ctf-chains-citadel:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

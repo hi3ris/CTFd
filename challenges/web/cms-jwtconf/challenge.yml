@@ -1,0 +1,50 @@
+name: cms-jwtconf
+author: ctf-2026
+category: web
+type: team_instance
+description: |
+  Confusion d'algorithme JWT -> forge -> endpoint interne exposé.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 400
+extra:
+  docker_image: ctf-web-cms-jwtconf:latest
+  internal_port: 8080
+  initial: 400
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: web-cms-jwtconf
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      Le service publie de quoi vérifier ses jetons. Que se passe-t-il si tu changes l'algorithme de signature déclaré dans l'en-tête ?
+    cost: 20
+    key: h1
+  - content: >-
+      Confusion d'algorithme RS256→HS256 : le vérificateur réutilise la clé publique RSA comme secret HMAC. Signe toi-même un jeton HS256 (rôle admin) en prenant la clé publique publiée comme secret.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - web
+  - medium
+
+# challenge-id (HMAC / requirements wiring): web-cms-jwtconf
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end (ported); Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

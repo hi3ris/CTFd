@@ -1,0 +1,52 @@
+name: trail-of-keys
+author: dagbanjaphet
+category: cloud
+description: |-
+  A CloudTrail export (`cloudtrail.json`) from one busy hour on the
+  `kekeli-prod` account, plus an object (`exfil-notes.json`) that one session
+  wrote to a scratch bucket. Someone read a sensitive secret and walked it out.
+
+  Trace who did it, then open what they left behind. The flag is inside.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{cloudtrail_traced_the_asia_session}
+hints:
+  - content: >-
+      Filter for `GetSecretValue`. More than one session reads a secret, but
+      only one reads the sensitive `prod/customer-export` one. Note the caller's
+      temporary access key.
+    cost: 15
+    key: h1
+  - content: >-
+      Temporary session credentials start with `ASIA`. Confirm the same access
+      key later did the `PutObject` that dropped the notes file — that ties the
+      session to the exfiltration.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The dropped object is XOR-sealed with SHA256 of that ASIA access key.
+      Recompute the keystream and XOR the base64 ciphertext.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - cloud
+  - aws
+  - cloudtrail
+  - incident-response
+  - medium
+files:
+  - cloudtrail.json
+  - exfil-notes.json
+state: visible
+version: "0.1"

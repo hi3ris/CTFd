@@ -1,0 +1,84 @@
+# Backlog de challenges SERVIS à combinaisons de vulnérabilités.
+#
+# Chaque entrée = un challenge servi (per-team flag, état live, aucun artefact
+# téléchargeable) combinant AU MOINS DEUX vulnérabilités chaînées. C'est la
+# direction anti-solve-IA (cf. deploy/ai-resistance-audit.md) : déplacer le poids
+# du tableau vers le servi.
+#
+# Ce fichier alimente le générateur de squelettes :
+#     make scaffold-backlog          # stampe TOUS les squelettes (STUBS cachés)
+#     python3 deploy/scripts/scaffold_served.py --manifest deploy/served-backlog.yml
+#
+# Un squelette est un STUB (state: hidden, app placeholder, solveur non
+# implémenté). La session de build remplit la vuln + le solveur, vérifie l'exploit
+# en local (Docker), puis flip state: visible. RIEN ici n'est un challenge fini :
+# c'est le plan de travail, pas 40 challenges livrés.
+#
+# `summary` reste au niveau design (classe + chaîne), jamais un payload.
+# `cve` (optionnel) : tag cve-ancré ; l'id ira dans un indice payant, pas l'énoncé.
+
+# ── Les 6 chaînes nommées du blueprint (deploy/challenge-chains-blueprint.md) ──
+- { name: chains/vaultboard, points: 500, title: Vaultboard, cve: true, summary: "SSRF -> jeton scopé interne -> objet mal-ACLé (web -> cloud -> objets)." }
+- { name: chains/clinic, points: 450, title: Clinic, summary: "Jeton de session prévisible -> IDOR export -> action admin (auth -> IDOR -> admin)." }
+- { name: chains/pipeline, points: 550, title: Pipeline, cve: true, summary: "Confusion de dépendance / dérive de lockfile -> hook de build exécuté -> RCE runner." }
+- { name: chains/citadel, points: 600, title: Citadel, summary: "Foothold web -> priv-esc user (credential réutilisé) -> priv-esc root (SUID/sudo)." }
+- { name: chains/tokenforge, points: 500, title: Token Forge, summary: "Oracle crypto -> cookie admin forgé -> endpoint caché avec SSTI/désérialisation." }
+- { name: chains/relay, points: 500, title: Relay, summary: "Reverse d'un protocole binaire maison -> commande cachée -> bug mémoire exploité." }
+
+# ── Web (chaînes à 2 vulns) ──
+- { name: web/cache-split, points: 500, title: Cache Split, summary: "Request smuggling -> empoisonnement de cache -> contournement d'auth." }
+- { name: web/render-pivot, points: 450, title: Render Pivot, summary: "Contournement d'upload -> SSRF via le moteur de rendu -> lecture metadata interne." }
+- { name: web/graph-climb, points: 450, title: Graph Climb, cve: true, summary: "Introspection GraphQL -> IDOR -> mass-assignment vers rôle admin." }
+- { name: web/proto-desync, points: 550, title: Proto Desync, summary: "Désync HTTP/2 -> vol de requête -> reprise de session privilégiée." }
+- { name: web/jwt-relay, points: 400, title: JWT Relay, summary: "Confusion d'algorithme JWT -> forge -> endpoint interne exposé." }
+
+# ── Cloud (chaînes) ──
+- { name: cloud/keychain-climb, points: 500, title: Keychain Climb, cve: true, summary: "SSRF -> IMDS -> assume-role -> lecture d'objet privé." }
+- { name: cloud/oidc-forge, points: 500, title: OIDC Forge, summary: "Mauvaise config OIDC -> jeton forgé -> API privilégiée." }
+- { name: cloud/bucket-pivot, points: 450, title: Bucket Pivot, summary: "Préfixe public -> credential fuité -> escalade de rôle." }
+- { name: cloud/func-inject, points: 500, title: Func Inject, cve: true, summary: "Injection d'env dans une fonction -> exécution -> vol de secret de plateforme." }
+
+# ── Pwn (chaînes) ──
+- { name: pwn/heap-relay, points: 550, title: Heap Relay, summary: "Reverse d'un protocole -> overflow de tas -> shell." }
+- { name: pwn/format-pivot, points: 500, title: Format Pivot, summary: "Fuite d'info -> format string -> ROP -> lecture du flag." }
+- { name: pwn/uaf-ladder, points: 550, title: UAF Ladder, summary: "Use-after-free -> primitive d'écriture -> détournement de flux -> exécution." }
+- { name: pwn/sandbox-break, points: 600, title: Sandbox Break, summary: "Bug logique d'un bac à sable -> évasion -> exécution hôte." }
+
+# ── Reverse (chaînes) ──
+- { name: reverse/vm-escape, points: 550, title: VM Escape, summary: "Reverse d'une VM maison -> bug d'instruction -> évasion et exécution." }
+- { name: reverse/license-forge, points: 450, title: License Forge, summary: "Reverse d'un contrôle de licence -> forge -> déblocage d'un canal admin." }
+
+# ── Crypto (chaînes) ──
+- { name: crypto/oracle-cascade, points: 500, title: Oracle Cascade, summary: "Oracle de padding -> cookie forgé -> endpoint admin atteint." }
+- { name: crypto/nonce-climb, points: 450, title: Nonce Climb, summary: "Réutilisation de nonce -> récupération de clé -> forge de jeton signé." }
+- { name: crypto/kdf-slip, points: 500, title: KDF Slip, cve: true, summary: "Dérivation de clé faible -> prédiction -> reprise de session privilégiée." }
+
+# ── Misc / désérialisation (chaînes) ──
+- { name: misc/deserial-chain, points: 500, title: Deserial Chain, cve: true, summary: "SSRF -> RPC interne -> désérialisation non sûre -> exécution." }
+- { name: misc/proto-fuzz-live, points: 450, title: Proto Fuzz Live, summary: "Parser d'un protocole maison -> état corrompu -> lecture hors-borne." }
+
+# ── Supplychain (chaînes) ──
+- { name: supplychain/build-hijack, points: 550, title: Build Hijack, cve: true, summary: "Dérive de lockfile -> paquet attaquant -> hook post-install exécuté." }
+- { name: supplychain/artifact-swap, points: 500, title: Artifact Swap, summary: "Provenance forgée -> substitution d'artefact -> exécution au déploiement." }
+
+# ── IA (chaînes servies) ──
+- { name: ai/prompt-pivot, points: 500, title: Prompt Pivot, summary: "Injection indirecte -> abus d'outil -> exfiltration de données internes." }
+- { name: ai/tool-ladder, points: 550, title: Tool Ladder, summary: "Contournement de garde-fou -> chaîne d'outils -> action privilégiée." }
+
+# ── ML (chaînes) ──
+- { name: ml/model-swap, points: 500, title: Model Swap, cve: true, summary: "Upload de modèle -> pipeline -> désérialisation pickle -> exécution." }
+- { name: ml/feature-inject, points: 450, title: Feature Inject, summary: "Injection dans le pré-traitement -> empoisonnement -> exfiltration." }
+
+# ── Blockchain (chaînes) ──
+- { name: blockchain/reentry-chain, points: 550, title: Reentry Chain, summary: "Rejeu de signature -> réentrance -> drain de fonds gardés." }
+- { name: blockchain/proxy-climb, points: 500, title: Proxy Climb, summary: "Collision de storage proxy -> écrasement d'admin -> action privilégiée." }
+
+# ── Sysadmin (chaînes) ──
+- { name: sysadmin/rbac-climb, points: 500, title: RBAC Climb, summary: "Injection d'env -> unit systemd -> sudo mal configuré -> root." }
+- { name: sysadmin/secret-slip, points: 450, title: Secret Slip, summary: "Fuite de state -> réutilisation de secret -> rotation détournée." }
+
+# ── Extensions (à activer si on vise vraiment haut) ──
+- { name: web/webhook-relay, points: 450, title: Webhook Relay, summary: "Validation de webhook contournée -> SSRF -> service interne." }
+- { name: cloud/queue-poison, points: 500, title: Queue Poison, summary: "Message empoisonné -> worker -> désérialisation -> exécution." }
+- { name: pwn/rop-diner, points: 500, title: ROP Diner, summary: "Fuite de canari -> overflow -> chaîne ROP -> exécution." }
+- { name: crypto/sign-slip, points: 450, title: Sign Slip, summary: "Vérification de signature faible -> forge -> action admin." }

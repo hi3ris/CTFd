@@ -1,0 +1,86 @@
+name: "SRAM Retention"
+author: "ctf-team"
+category: forensics
+description: |
+  Nous avons extrait un vidage mémoire d'un microcontrôleur **Aetheris AE-32**
+  mort après une chute de tension. Le firmware avait planqué une clé dans le
+  « coffre » SRAM de la puce, mais dans le vidage la clé est éparpillée et noyée
+  dans le bruit de rétention — elle n'est pas stockée d'un seul tenant.
+
+  Nous avons récupéré une fiche technique partielle (`AE32_SRAM_datasheet.md`).
+  Elle explique comment interpréter le format. Lisez-la attentivement : quelques
+  champs ne signifient pas ce qu'on croirait au premier abord.
+
+  `samples/` contient plusieurs vidages au même format, avec leur contenu décodé
+  dans `samples/KNOWN.txt`, pour valider votre parseur avant de le lancer sur la
+  vraie image.
+
+  Récupérez la clé depuis `retention.dump`. Elle est déjà au format du flag.
+
+  Notes :
+    * `strings` vous tendra quelque chose qui ressemble à un flag. Ce n'en est
+      pas un : la vraie clé ne s'obtient qu'en suivant la fiche technique.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{...}  (lettres minuscules et underscores).
+
+# STATIC, downloadable forensics artifact: the challenge IS the memory dump plus
+# its invented datasheet, so the flag is baked into the captured bytes. No served
+# component and no per-team HMAC flag. flag.py documents the per-team scheme for
+# platform uniformity only.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 350
+type: dynamic
+extra:
+  initial: 350
+  decay: 40
+  minimum: 120
+
+flags:
+  - "NCTF{sram_retention_bank_interleave}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Tout est dans `AE32_SRAM_datasheet.md` — mais il faut le lire finement. La
+      clé n'est pas contiguë : le registre est réparti en bancs. Validez d'abord
+      votre parseur sur `samples/` (résultats attendus dans `KNOWN.txt`).
+    cost: 20
+    key: h1
+  - content: >-
+      Parsez l'en-tête de 8 octets, puis la table de bases de bancs (u16 LE).
+      Deux champs piègent : les offsets de bancs sont mesurés depuis la FIN du
+      fichier (`phys = taille - entrée`), et le checksum d'en-tête ne couvre que
+      l'en-tête (7 octets), pas tout le fichier. Chaque banc commence par le tag
+      `BNK` + identifiant.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      La clé est entrelacée en round-robin : l'octet `k` se trouve dans le banc
+      logique `k % NBANKS`, slot `j = k // NBANKS`, à l'offset intra-banc
+      `4 + j*STRIDE`. Dé-entrelacez dans cet ordre pour reconstruire le flag.
+    cost: 55
+    key: h3
+    requirements: [h2]
+
+files:
+  - retention.dump
+  - AE32_SRAM_datasheet.md
+  - samples/sample_01.dump
+  - samples/sample_02.dump
+  - samples/sample_03.dump
+  - samples/sample_04.dump
+  - samples/sample_05.dump
+  - samples/sample_06.dump
+  - samples/KNOWN.txt
+
+tags:
+  - forensics
+  - medium
+
+connection_info: null

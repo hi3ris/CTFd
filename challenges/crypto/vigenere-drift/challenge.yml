@@ -1,0 +1,49 @@
+name: vigenere-drift
+author: dagbanjaphet
+category: crypto
+description: |-
+  `cipher.txt` is an intercepted English memorandum enciphered with a repeating
+  polyalphabetic key. It is longer than it looks and the recovery token is
+  hidden somewhere inside it.
+
+  The scheme is not a textbook repeating-key cipher: identical plaintext letters
+  seldom encipher to the same symbol, even at the same key position. Recover the
+  plaintext and read the token.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{progressive_key_drift_still_falls_to_chi_squared}
+hints:
+  - content: >-
+      It is a Vigenere cipher with a regular, public twist: on top of the
+      repeating base key, the effective shift increases by one after every full
+      period of the key. The drift is deterministic, so it can be subtracted
+      back out.
+    cost: 10
+    key: h1
+  - content: >-
+      For a guessed key length L, the shift on the n-th letter is
+      (base[n mod L] + floor(n / L)) mod 26. Subtracting the known floor(n / L)
+      term leaves a constant unknown per column, so recover each column's base
+      offset by chi-squared against English letter frequencies. Sweep L and stop
+      when the plaintext contains "NCTF{".
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - crypto
+  - classical
+  - vigenere
+  - easy
+files:
+  - cipher.txt
+state: visible
+version: "0.1"

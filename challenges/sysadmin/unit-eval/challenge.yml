@@ -1,0 +1,57 @@
+name: unit-eval
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  A snapshot of a systemd-driven report job: a template unit
+  (`report@.service`), the timer that runs it (`report.timer`), the shell script
+  it calls (`genreport.sh`), and its config (`report.conf`). Each run prints one
+  report token to the journal.
+
+  Reconstruct the exact token the enabled instance emits.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{systemd_eval_4be97a1216f568a4}
+hints:
+  - content: >-
+      The unit is a template (`report@.service`). To know what token gets
+      printed you first need to know which instance actually runs — the timer
+      names it.
+    cost: 15
+    key: h1
+  - content: >-
+      The instance name flows into the script as `$1` and is used to build
+      `label=report-<instance>-<SITE_ID>` (via `eval`). The printed token is
+      `sha256(label + BUILD_KEY)` truncated to 16 hex chars, with `SITE_ID` and
+      `BUILD_KEY` coming from `report.conf`.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Enabled instance is `main`, so
+      `label = "report-main-kekeli-prod-07"`; concatenate `BUILD_KEY`
+      (`dev-build-key-not-secret`) with no separator, sha256 it, take the first
+      16 hex chars, wrap as `NCTF{systemd_eval_<hex>}`.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - sysadmin
+  - systemd
+  - shell
+  - medium
+files:
+  - etc/systemd/system/report@.service
+  - etc/systemd/system/report.timer
+  - usr/local/bin/genreport.sh
+  - etc/report/report.conf
+state: visible
+version: "0.1"

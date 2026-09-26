@@ -1,0 +1,50 @@
+name: acl-firewall
+author: dagbanjaphet
+category: networking
+description: |-
+  You are handed a firewall's access-control list and a batch of candidate
+  flows (`ruleset.json`). The device evaluates its rules top-to-bottom and stops
+  at the first match; anything unmatched is dropped.
+
+  Work out which flows the device actually lets through. Each flow carries a
+  one-character `tag`; the accepted flows, read in ascending `id` order, spell
+  the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{acl_first_match_wins_default_deny}
+hints:
+  - content: >-
+      A flow matches a rule only if src, dst, protocol and destination port all
+      match ("any" is a wildcard). CIDRs are prefix matches, not exact IPs.
+    cost: 10
+    key: h1
+  - content: >-
+      Order matters: apply rules top-to-bottom and take the action of the FIRST
+      rule that matches. A more-specific deny placed above a broad allow wins.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      If no rule matches, the flow is denied (implicit default-deny). Collect
+      the allowed flows, sort them by `id`, and concatenate their `tag` fields.
+    cost: 20
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - firewall
+  - acl
+  - easy
+files:
+  - ruleset.json
+state: visible
+version: "0.1"

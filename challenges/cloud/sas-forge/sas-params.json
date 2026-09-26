@@ -1,0 +1,25 @@
+{
+  "account": "kekelistorage",
+  "container": "private-releases",
+  "blob": "media-svc/RELEASE_NOTES.enc",
+  "signedVersion": "2020-12-06",
+  "signedResource": "b",
+  "canonicalizedResource_hint": "/blob/{account}/{container}/{blob}",
+  "sas_query_params": {
+    "sp": "r",
+    "st": "",
+    "se": "2026-12-31T23:59:59Z",
+    "si": "",
+    "sip": "",
+    "spr": "https",
+    "sv": "2020-12-06",
+    "sr": "b",
+    "sst": "",
+    "ses": "",
+    "rscc": "",
+    "rscd": "",
+    "rsce": "",
+    "rscl": "",
+    "rsct": ""
+  }
+}

@@ -1,0 +1,43 @@
+name: member-ids
+author: dagbanjaphet
+category: ml
+description: |-
+  `shadow_eval.npz` is an evaluation table for a model: for each record it lists
+  an id, the model's per-record loss, and a one-character tag. Some of these
+  records were part of the model's training set and some were not. Figure out
+  which records the model was trained on; their tags, read in the right order,
+  spell the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{loss_gap_outs_the_training_set}
+hints:
+  - content: >-
+      Plot the `loss` values. A model treats data it has already seen very
+      differently from data it has not -- the histogram is not uniform.
+    cost: 10
+    key: h1
+  - content: >-
+      Members sit in the low-loss cluster (well below ~0.4). Select those
+      records, then read their `tag` characters in ascending `record_id` order.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - ml
+  - membership-inference
+  - privacy
+  - easy
+files:
+  - shadow_eval.npz
+  - README.md
+state: visible
+version: "0.1"

@@ -1,0 +1,49 @@
+name: knapsack-locker
+author: dagbanjaphet
+category: ppc
+description: |-
+  `items.txt` gives a capacity, a list of items (each with a weight and a
+  value), and a `CIPHER` blob. Only the single correct number derived from the
+  items unlocks the cipher; get it wrong and you get garbage.
+
+  Compute that number, unlock the blob, read the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{knapsack_optimum_unlocks_the_vault}
+hints:
+  - content: >-
+      Each item is take-it-or-leave-it and total weight must not exceed the
+      capacity. The magic number is the maximum total value you can carry.
+    cost: 15
+    key: h1
+  - content: >-
+      This is 0/1 knapsack. Use the classic 1-D DP over capacities, iterating
+      each capacity downward so every item is used at most once.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Take the optimal value V, form the SHA-256 keystream from the decimal
+      string of V (append a 4-byte block counter and concatenate digests), then
+      XOR it against the CIPHER bytes to get the flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ppc
+  - dynamic-programming
+  - knapsack
+  - medium
+files:
+  - items.txt
+state: visible
+version: "0.1"

@@ -1,0 +1,50 @@
+name: tokenforge
+author: ctf-2026
+category: chains
+type: team_instance
+description: |
+  Oracle crypto -> cookie admin forgé -> endpoint caché avec SSTI/désérialisation.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 500
+extra:
+  docker_image: ctf-chains-tokenforge:latest
+  internal_port: 8080
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: chains-tokenforge
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      Le cookie est le rôle chiffré par un keystream réutilisé. Que révèle un plaintext connu ?
+    cost: 20
+    key: h1
+  - content: >-
+      Récupère le keystream depuis le cookie guest (role=guest), forge role=admin, puis /console avec obj __class__=FlagDumper.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - chains
+  - hard
+
+# challenge-id (HMAC / requirements wiring): chains-tokenforge
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end; flip to visible after Lot-5 Docker rehearsal; Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

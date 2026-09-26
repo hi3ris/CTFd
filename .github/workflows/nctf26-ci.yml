@@ -1,0 +1,118 @@
+name: NCTF26 CI
+
+# Verifie la partie NCTF26 du fork (infra, scripts, challenges). Les tests CTFd
+# amont (lint, bases de donnees, themes) ont leurs propres workflows.
+on:
+  push:
+    paths:
+      - "deploy/**"
+      - "challenges/**"
+      - ".github/workflows/nctf26-ci.yml"
+  pull_request:
+    paths:
+      - "deploy/**"
+      - "challenges/**"
+      - ".github/workflows/nctf26-ci.yml"
+  workflow_dispatch:
+    inputs:
+      lot5_all:
+        description: "Lot-5 complet (tous les servis IMPLEMENTED, ~1 h)"
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nctf26-ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  terraform:
+    name: Terraform fmt + validate
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: "1.9.8"
+      - name: fmt
+        run: terraform -chdir=deploy/terraform fmt -check -recursive -diff
+      - name: validate (sans backend distant)
+        run: |
+          terraform -chdir=deploy/terraform init -backend=false -input=false
+          terraform -chdir=deploy/terraform validate -no-color
+      - name: validate bootstrap
+        run: |
+          terraform -chdir=deploy/terraform/bootstrap init -backend=false -input=false
+          terraform -chdir=deploy/terraform/bootstrap validate -no-color
+
+  shell:
+    name: Scripts shell
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v5
+      - name: bash -n
+        run: |
+          for f in deploy/*.sh deploy/scripts/*.sh challenges/*/*/entrypoint.sh challenges/*/*/app/entrypoint.sh; do
+            [ -f "$f" ] && bash -n "$f" || true
+          done
+          for f in deploy/*.sh deploy/scripts/*.sh; do bash -n "$f"; done
+      - name: shellcheck (deploy/)
+        run: shellcheck -S warning -e SC1090,SC1091,SC2016,SC2029 deploy/*.sh deploy/scripts/*.sh
+
+  challenges:
+    name: challenge.yml
+    runs-on: ubuntu-latest
+    outputs:
+      changed_served: ${{ steps.changed.outputs.list }}
+    steps:
+      - uses: actions/checkout@v5
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml
+      - name: validation statique
+        run: python3 deploy/scripts/check_challenges.py
+      - name: servis modifies (pour le Lot-5)
+        id: changed
+        run: |
+          if [ "${{ github.event_name }}" = pull_request ]; then
+            base="origin/${{ github.base_ref }}"
+          else
+            base="${{ github.event.before }}"
+            git cat-file -e "$base" 2>/dev/null || base="HEAD~1"
+          fi
+          list=$(git diff --name-only "$base"...HEAD -- challenges/ 2>/dev/null \
+                 | awk -F/ 'NF>=3 {print $2"/"$3}' | sort -u \
+                 | while read -r rel; do
+                     y="challenges/$rel/challenge.yml"
+                     [ -f "$y" ] && grep -q 'type: team_instance' "$y" && grep -q IMPLEMENTED "$y" && echo "$rel"
+                   done | tr '\n' ' ')
+          echo "list=$list" >> "$GITHUB_OUTPUT"
+          echo "servis modifies : ${list:-aucun}"
+
+  lot5:
+    name: Lot-5 (servis modifies)
+    needs: challenges
+    if: needs.challenges.outputs.changed_served != '' || inputs.lot5_all
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    steps:
+      - uses: actions/checkout@v5
+      - uses: actions/setup-python@v6
+        with:
+          python-version: "3.12"
+      - run: pip install pyyaml requests numpy
+      - name: rehearsal
+        env:
+          BUILD_TIMEOUT: "600"
+        run: |
+          if [ "${{ inputs.lot5_all }}" = true ]; then
+            deploy/scripts/lot5.sh
+          else
+            # shellcheck disable=SC2086
+            deploy/scripts/lot5.sh --only ${{ needs.challenges.outputs.changed_served }}
+          fi

@@ -1,0 +1,13 @@
+# Local run notes for ml-feature-inject (STUB).
+#   docker build -t ctf-ml-feature-inject:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  ml-feature-inject:
+    image: ctf-ml-feature-inject:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

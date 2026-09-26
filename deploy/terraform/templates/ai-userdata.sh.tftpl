@@ -1,0 +1,97 @@
+#!/usr/bin/env bash
+# Noeud IA : pilotes NVIDIA + Ollama, servant le modele des challenges de
+# type prompt injection.
+set -euo pipefail
+
+export DEBIAN_FRONTEND=noninteractive
+
+apt-get update
+apt-get install -y --no-install-recommends ca-certificates curl jq
+
+# --- Pilotes NVIDIA ----------------------------------------------------------
+# Le paquet serveur d'Ubuntu suffit : Ollama embarque son propre runtime CUDA.
+apt-get install -y ubuntu-drivers-common
+ubuntu-drivers install --gpgpu || apt-get install -y nvidia-driver-535-server
+
+# Charger le module maintenant, avant tout usage GPU (nvidia-smi, warm-up Ollama).
+# Echec explicite plutot que de laisser le modele tomber en CPU ou nvidia-smi
+# planter plus bas sous `set -euo pipefail`. Cas nouveau-conflit -> reboot requis.
+modprobe nvidia || { echo "ECHEC : module noyau nvidia non chargeable (reboot probablement requis)" >&2; exit 1; }
+
+# --- Ollama ------------------------------------------------------------------
+curl -fsSL https://ollama.com/install.sh | sh
+
+# Par defaut Ollama n'ecoute que sur 127.0.0.1. Le plugin CTFd tourne sur le
+# front, donc il faut ecouter sur le reseau prive. Le groupe de securite
+# n'autorise que le front sur ce port.
+mkdir -p /etc/systemd/system/ollama.service.d
+cat > /etc/systemd/system/ollama.service.d/override.conf <<'EOF'
+[Service]
+Environment="OLLAMA_HOST=0.0.0.0:11434"
+# Garde le modele charge en VRAM entre deux questions : sans ca, chaque joueur
+# inactif quelques minutes paie un rechargement complet.
+Environment="OLLAMA_KEEP_ALIVE=-1"
+# Requetes servies en parallele. Le T4 (16 Go) tient largement 8 sessions
+# concurrentes sur un modele 8B quantifie.
+Environment="OLLAMA_NUM_PARALLEL=8"
+# File d'attente : au-dela, Ollama repond 503 plutot que de s'effondrer.
+# Le plugin CTFd traduit ce 503 en "modele occupe, reessayez".
+Environment="OLLAMA_MAX_QUEUE=256"
+EOF
+
+# `enable --now` ne fait rien si le service tourne deja - et l'installateur
+# Ollama vient precisement de le demarrer. Sans restart, le drop-in ci-dessus
+# n'est jamais lu et Ollama reste sur 127.0.0.1 : le front ne peut pas
+# l'atteindre, et toute la categorie IA est morte le jour J.
+systemctl daemon-reload
+systemctl enable ollama
+systemctl restart ollama
+
+# --- Pre-chargement du modele ------------------------------------------------
+# Plusieurs Go a telecharger : autant le faire au boot, pas pendant l'epreuve.
+for _ in $(seq 1 30); do
+  if curl -sf http://127.0.0.1:11434/api/tags >/dev/null; then break; fi
+  sleep 5
+done
+
+ollama pull "${ollama_model}"
+
+# Une premiere inference force le chargement en VRAM, pour que le premier
+# joueur ne paie pas la latence de mise en cache.
+curl -sf http://127.0.0.1:11434/api/generate \
+  -d "{\"model\":\"${ollama_model}\",\"prompt\":\"ok\",\"stream\":false}" \
+  >/dev/null || true
+
+# --- Verifications avant de signaler le noeud comme pret ----------------------
+# Le marqueur declenche la suite du deploiement : il ne doit etre ecrit que si
+# le noeud est reellement utilisable. Un `|| true` ici rendrait le controle
+# decoratif.
+
+PRIVATE_IP=$(hostname -I | awk '{print $1}')
+
+# 1. Ollama ecoute-t-il bien sur le reseau prive, et pas seulement en local ?
+if ! curl -sf "http://$${PRIVATE_IP}:11434/api/tags" >/dev/null; then
+  echo "ECHEC: Ollama n'ecoute pas sur $${PRIVATE_IP}:11434" >&2
+  exit 1
+fi
+
+# 2. Le modele est-il reellement charge ?
+if ! ollama list | grep -q "${ollama_model}"; then
+  echo "ECHEC: modele ${ollama_model} absent" >&2
+  exit 1
+fi
+
+# 3. Le GPU est-il vu, et le modele tourne-t-il dessus plutot que sur le CPU ?
+# Un fallback CPU silencieux passerait le reste des controles tout en rendant
+# la piste IA inutilisable sous charge.
+if ! nvidia-smi > /var/log/nvidia-smi-boot.log 2>&1; then
+  echo "ECHEC: nvidia-smi indisponible, pas de GPU exploitable" >&2
+  exit 1
+fi
+
+if ! ollama ps | grep -qi 'gpu'; then
+  echo "AVERTISSEMENT: le modele ne semble pas reside sur le GPU" >&2
+  ollama ps >&2
+fi
+
+touch /var/lib/cloud/ctfd-ai-provisioned

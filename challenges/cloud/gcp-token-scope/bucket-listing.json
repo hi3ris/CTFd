@@ -1,0 +1,25 @@
+{
+  "buckets": [
+    {
+      "name": "kekeli-ci-cache",
+      "objects": [
+        "cache/deps.tar",
+        "cache/build-123.log"
+      ]
+    },
+    {
+      "name": "kekeli-public-web",
+      "objects": [
+        "index.html",
+        "style.css"
+      ]
+    },
+    {
+      "name": "kekeli-prod-artifacts",
+      "objects": [
+        "releases/media-svc-1.4.2.tar.gz",
+        "releases/RELEASE_TOKEN.enc"
+      ]
+    }
+  ]
+}

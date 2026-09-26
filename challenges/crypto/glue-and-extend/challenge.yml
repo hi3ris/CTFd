@@ -1,0 +1,55 @@
+name: glue-and-extend
+author: dagbanjaphet
+category: crypto
+description: |-
+  A gateway seals payloads under a key derived from a shared secret and the
+  command being run. `token.txt` gives us one authorized command with its tag,
+  the admin suffix the gateway later tacked on to elevate that command, and the
+  flag payload sealed under the elevated command's key.
+
+  We never learn the secret. Recover the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{merkle_damgard_length_extension_forges_the_tag}
+hints:
+  - content: >-
+      The tag is SHA256(secret || command). SHA-256 is a Merkle-Damgard hash:
+      its output is exactly the internal state after absorbing the message and
+      its padding. Think about what that lets you do with an existing tag.
+    cost: 20
+    key: h1
+  - content: >-
+      This is a hash length-extension attack. Load the given tag as SHA-256's
+      chaining state, then continue hashing the admin suffix as if it followed
+      the original message plus its glue padding. You must know the length that
+      was already hashed to set the final length field correctly.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The secret length is unknown but small: brute-force it (1..64). For each
+      guess, build the SHA-256 glue padding for (secret_len + len(command)),
+      continue the hash over the suffix, and use the resulting digest as the key
+      to a SHA-256 counter-mode keystream XORed with the sealed payload. Stop
+      when the plaintext is "NCTF{...}".
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - crypto
+  - hash
+  - length-extension
+  - hard
+files:
+  - token.txt
+state: visible
+version: "0.1"

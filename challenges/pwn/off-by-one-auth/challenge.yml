@@ -1,0 +1,44 @@
+name: off-by-one-auth
+author: dagbanjaphet
+category: pwn
+description: |-
+  You are given a single x86-64 Linux binary, `chall`. It asks how many bytes
+  you want to send (up to 32), reads them, and then decides whether you are
+  authorized. By default you are denied.
+
+  Become authorized and read what the program prints.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{off_by_one_authorized_true_1337}
+hints:
+  - content: >-
+      Look closely at the bounds of the loop that copies your input versus the
+      size of the destination buffer, especially at the largest length the
+      program lets you request.
+    cost: 10
+    key: h1
+  - content: >-
+      The copy loop uses `i <= n`, so requesting the maximum (32) writes one
+      byte past the buffer, onto the low byte of the authorized flag. Send 33
+      bytes; the extra non-zero byte flips the gate.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - pwn
+  - off-by-one
+  - stack
+  - easy
+files:
+  - chall
+state: visible
+version: "0.1"

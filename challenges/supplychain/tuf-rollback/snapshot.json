@@ -1,0 +1,20 @@
+{
+  "signatures": [
+    {
+      "keyid": "acme-tuf",
+      "sig": "de:ad"
+    }
+  ],
+  "signed": {
+    "_type": "snapshot",
+    "meta": {
+      "targets.json": {
+        "hashes": {
+          "sha256": "fb48ff44516528d324a01a8341068a5182dcd8bb820444886954b141f482ec44"
+        },
+        "version": 5
+      }
+    },
+    "version": 5
+  }
+}

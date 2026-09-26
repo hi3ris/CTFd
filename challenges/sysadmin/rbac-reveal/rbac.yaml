@@ -1,0 +1,25 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: Role
+metadata:
+  name: app-reader
+  namespace: kekeli
+rules:
+  # Over-permissive: reads EVERY secret in the namespace. Should be limited to
+  # resourceNames: ["app-api"] at most.
+  - apiGroups: [""]
+    resources: ["secrets"]
+    verbs: ["get", "list", "watch"]
+---
+apiVersion: rbac.authorization.k8s.io/v1
+kind: RoleBinding
+metadata:
+  name: app-reader-binding
+  namespace: kekeli
+subjects:
+  - kind: ServiceAccount
+    name: app
+    namespace: kekeli
+roleRef:
+  kind: Role
+  name: app-reader
+  apiGroup: rbac.authorization.k8s.io

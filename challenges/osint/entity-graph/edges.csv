@@ -1,0 +1,17 @@
+src,dst,relation
+h_seed,e1,same_email
+e1,h_cobra,same_email
+h_cobra,p1,same_phone
+p1,dev1,same_device
+dev1,w1,owns_wallet
+w1,dom1,registered_by
+dom1,person_true,confirmed_aka
+h_seed,h_ghost,mentions
+h_ghost,person_decoy1,similar_name
+h_ghost,e2,follows
+e2,person_decoy1,same_email
+h_cobra,person_decoy2,similar_name
+p1,person_decoy2,mentions
+h_noise1,dom_noise,mentions
+dom_noise,person_noise,registered_by
+h_noise1,person_noise,follows

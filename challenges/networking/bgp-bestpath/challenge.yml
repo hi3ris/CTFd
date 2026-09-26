@@ -1,0 +1,51 @@
+name: bgp-bestpath
+author: dagbanjaphet
+category: networking
+description: |-
+  A router's incoming BGP table (`bgp_rib.json`) lists several candidate routes
+  for each destination prefix, with the usual path attributes. The router
+  installs exactly one route per prefix.
+
+  Figure out which route wins for each prefix. Every route carries a
+  one-character `label`; the winning routes, read in ascending prefix order,
+  spell the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{bgp_bestpath_localpref_beats_aspath_len}
+hints:
+  - content: >-
+      BGP does not just pick the shortest AS path. It runs an ordered decision
+      process; the first tie-broken attribute decides the winner.
+    cost: 10
+    key: h1
+  - content: >-
+      Order used here: highest LOCAL_PREF first, then shortest AS_PATH, then
+      lowest ORIGIN (igp<egp<incomplete), then lowest MED, then lowest peer_id.
+      LOCAL_PREF outranks AS_PATH length.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      For each prefix, sort its routes by that tuple, take the winner's `label`,
+      then order the prefixes numerically and concatenate.
+    cost: 20
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - bgp
+  - routing
+  - easy
+files:
+  - bgp_rib.json
+state: visible
+version: "0.1"

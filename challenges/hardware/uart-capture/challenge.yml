@@ -1,0 +1,45 @@
+name: uart-capture
+author: dagbanjaphet
+category: hardware
+description: |-
+  We tapped a serial line with a logic analyzer and dumped the samples to
+  `capture.csv`. Each row is one time step: `time_ns` is the timestamp, `d0_uart`
+  is the level on the data line, and `d1_refclk` is a second probe we clipped on
+  by mistake. Somewhere on that line a short ASCII message was transmitted.
+
+  Recover the message. The flag is the transmitted text.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{uart_8n1_lsb_first_125k}
+hints:
+  - content: >-
+      `d1_refclk` is a red herring - it is a free-running probe with no framing.
+      All the data is on `d0_uart`. The line sits high when idle; a byte begins
+      when it drops low.
+    cost: 10
+    key: h1
+  - content: >-
+      It is asynchronous UART, 8N1: 1 start bit (low), 8 data bits LSB-first, 1
+      stop bit (high), no parity. Recover the bit period from the shortest run
+      of a constant level, and the sample period from `time_ns`.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - hardware
+  - uart
+  - logic-analyzer
+  - beginner
+files:
+  - capture.csv
+state: visible
+version: "0.1"

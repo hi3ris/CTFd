@@ -1,0 +1,1926 @@
+{
+  "decision": [
+    "highest local_pref",
+    "shortest as_path",
+    "lowest origin (igp<egp<incomplete)",
+    "lowest med",
+    "lowest peer_id"
+  ],
+  "rib": [
+    {
+      "prefix": "198.51.100.132/30",
+      "routes": [
+        {
+          "peer_id": 84,
+          "local_pref": 200,
+          "as_path": [
+            64514,
+            64601,
+            64744
+          ],
+          "origin": "igp",
+          "med": 31,
+          "label": "n"
+        },
+        {
+          "peer_id": 46,
+          "local_pref": 300,
+          "as_path": [
+            64696,
+            64721
+          ],
+          "origin": "egp",
+          "med": 133,
+          "label": "_"
+        },
+        {
+          "peer_id": 11,
+          "local_pref": 100,
+          "as_path": [
+            64958,
+            64924,
+            64823
+          ],
+          "origin": "igp",
+          "med": 47,
+          "label": "5"
+        },
+        {
+          "peer_id": 27,
+          "local_pref": 100,
+          "as_path": [
+            64850,
+            64863,
+            64741
+          ],
+          "origin": "igp",
+          "med": 10,
+          "label": "b"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.64/30",
+      "routes": [
+        {
+          "peer_id": 77,
+          "local_pref": 200,
+          "as_path": [
+            64895,
+            64679,
+            64545,
+            64994,
+            64922,
+            64646,
+            64868
+          ],
+          "origin": "igp",
+          "med": 18,
+          "label": "m"
+        },
+        {
+          "peer_id": 75,
+          "local_pref": 200,
+          "as_path": [
+            64819,
+            64572
+          ],
+          "origin": "igp",
+          "med": 41,
+          "label": "h"
+        },
+        {
+          "peer_id": 91,
+          "local_pref": 200,
+          "as_path": [
+            64883,
+            64799,
+            64663,
+            64598
+          ],
+          "origin": "igp",
+          "med": 27,
+          "label": "9"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.140/30",
+      "routes": [
+        {
+          "peer_id": 93,
+          "local_pref": 150,
+          "as_path": [
+            64973,
+            64663,
+            64800
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "s"
+        },
+        {
+          "peer_id": 39,
+          "local_pref": 150,
+          "as_path": [
+            64899,
+            64825,
+            64522
+          ],
+          "origin": "igp",
+          "med": 220,
+          "label": "9"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.40/30",
+      "routes": [
+        {
+          "peer_id": 55,
+          "local_pref": 200,
+          "as_path": [
+            64939,
+            64882
+          ],
+          "origin": "egp",
+          "med": 97,
+          "label": "e"
+        },
+        {
+          "peer_id": 54,
+          "local_pref": 200,
+          "as_path": [
+            64552,
+            64616,
+            64989,
+            64828,
+            64818,
+            64907
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "m"
+        },
+        {
+          "peer_id": 61,
+          "local_pref": 200,
+          "as_path": [
+            64577,
+            64930,
+            64795,
+            64587,
+            64682,
+            64657,
+            64890
+          ],
+          "origin": "igp",
+          "med": 16,
+          "label": "7"
+        },
+        {
+          "peer_id": 31,
+          "local_pref": 200,
+          "as_path": [
+            64875,
+            64926,
+            64996,
+            64532,
+            64725,
+            64597,
+            64815
+          ],
+          "origin": "igp",
+          "med": 49,
+          "label": "8"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.144/30",
+      "routes": [
+        {
+          "peer_id": 20,
+          "local_pref": 300,
+          "as_path": [
+            64583,
+            64545,
+            64565,
+            64792,
+            64620
+          ],
+          "origin": "incomplete",
+          "med": 62,
+          "label": "p"
+        },
+        {
+          "peer_id": 19,
+          "local_pref": 150,
+          "as_path": [
+            64985
+          ],
+          "origin": "igp",
+          "med": 44,
+          "label": "w"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.36/30",
+      "routes": [
+        {
+          "peer_id": 34,
+          "local_pref": 100,
+          "as_path": [
+            64700,
+            64853,
+            64716
+          ],
+          "origin": "igp",
+          "med": 29,
+          "label": "v"
+        },
+        {
+          "peer_id": 19,
+          "local_pref": 100,
+          "as_path": [
+            64815,
+            64571,
+            64714
+          ],
+          "origin": "igp",
+          "med": 1,
+          "label": "q"
+        },
+        {
+          "peer_id": 54,
+          "local_pref": 300,
+          "as_path": [
+            64754,
+            64727,
+            64875,
+            64636,
+            64723
+          ],
+          "origin": "igp",
+          "med": 36,
+          "label": "b"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.56/30",
+      "routes": [
+        {
+          "peer_id": 48,
+          "local_pref": 150,
+          "as_path": [
+            64763,
+            64903,
+            64950
+          ],
+          "origin": "igp",
+          "med": 174,
+          "label": "6"
+        },
+        {
+          "peer_id": 60,
+          "local_pref": 150,
+          "as_path": [
+            64794,
+            64517,
+            64547
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "a"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.80/30",
+      "routes": [
+        {
+          "peer_id": 35,
+          "local_pref": 150,
+          "as_path": [
+            64824,
+            64930,
+            64722
+          ],
+          "origin": "igp",
+          "med": 135,
+          "label": "z"
+        },
+        {
+          "peer_id": 94,
+          "local_pref": 150,
+          "as_path": [
+            64686,
+            64660,
+            64955
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "c"
+        },
+        {
+          "peer_id": 29,
+          "local_pref": 150,
+          "as_path": [
+            64706,
+            64613,
+            64951
+          ],
+          "origin": "igp",
+          "med": 183,
+          "label": "7"
+        },
+        {
+          "peer_id": 13,
+          "local_pref": 150,
+          "as_path": [
+            64892,
+            64638,
+            64606
+          ],
+          "origin": "igp",
+          "med": 118,
+          "label": "x"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.60/30",
+      "routes": [
+        {
+          "peer_id": 58,
+          "local_pref": 300,
+          "as_path": [
+            64771,
+            64900,
+            64556
+          ],
+          "origin": "incomplete",
+          "med": 13,
+          "label": "t"
+        },
+        {
+          "peer_id": 69,
+          "local_pref": 100,
+          "as_path": [
+            64933
+          ],
+          "origin": "igp",
+          "med": 6,
+          "label": "x"
+        },
+        {
+          "peer_id": 33,
+          "local_pref": 150,
+          "as_path": [
+            64923,
+            64659,
+            64697
+          ],
+          "origin": "igp",
+          "med": 45,
+          "label": "x"
+        },
+        {
+          "peer_id": 74,
+          "local_pref": 100,
+          "as_path": [
+            64909,
+            64810
+          ],
+          "origin": "igp",
+          "med": 37,
+          "label": "8"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.176/30",
+      "routes": [
+        {
+          "peer_id": 14,
+          "local_pref": 150,
+          "as_path": [
+            64803,
+            64525,
+            64924
+          ],
+          "origin": "igp",
+          "med": 260,
+          "label": "w"
+        },
+        {
+          "peer_id": 52,
+          "local_pref": 150,
+          "as_path": [
+            64643,
+            64995,
+            64987
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "}"
+        },
+        {
+          "peer_id": 49,
+          "local_pref": 150,
+          "as_path": [
+            64950,
+            64775,
+            64646
+          ],
+          "origin": "igp",
+          "med": 264,
+          "label": "7"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.92/30",
+      "routes": [
+        {
+          "peer_id": 57,
+          "local_pref": 150,
+          "as_path": [
+            64777,
+            64762,
+            64574
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "p"
+        },
+        {
+          "peer_id": 43,
+          "local_pref": 150,
+          "as_path": [
+            64616,
+            64873,
+            64544
+          ],
+          "origin": "igp",
+          "med": 208,
+          "label": "8"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.168/30",
+      "routes": [
+        {
+          "peer_id": 81,
+          "local_pref": 200,
+          "as_path": [
+            64767,
+            64848
+          ],
+          "origin": "igp",
+          "med": 43,
+          "label": "x"
+        },
+        {
+          "peer_id": 61,
+          "local_pref": 100,
+          "as_path": [
+            64950,
+            64975
+          ],
+          "origin": "igp",
+          "med": 50,
+          "label": "5"
+        },
+        {
+          "peer_id": 71,
+          "local_pref": 300,
+          "as_path": [
+            64682,
+            64649,
+            64527,
+            64865
+          ],
+          "origin": "incomplete",
+          "med": 37,
+          "label": "e"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.136/30",
+      "routes": [
+        {
+          "peer_id": 49,
+          "local_pref": 200,
+          "as_path": [
+            64732,
+            64695,
+            64768,
+            64751,
+            64805
+          ],
+          "origin": "igp",
+          "med": 24,
+          "label": "b"
+        },
+        {
+          "peer_id": 30,
+          "local_pref": 200,
+          "as_path": [
+            64950,
+            64905,
+            64946,
+            64828
+          ],
+          "origin": "igp",
+          "med": 14,
+          "label": "6"
+        },
+        {
+          "peer_id": 17,
+          "local_pref": 200,
+          "as_path": [
+            64635,
+            64705
+          ],
+          "origin": "egp",
+          "med": 140,
+          "label": "a"
+        },
+        {
+          "peer_id": 30,
+          "local_pref": 200,
+          "as_path": [
+            64627,
+            64583,
+            64658,
+            64882,
+            64600,
+            64953,
+            64805
+          ],
+          "origin": "igp",
+          "med": 13,
+          "label": "7"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.76/30",
+      "routes": [
+        {
+          "peer_id": 48,
+          "local_pref": 200,
+          "as_path": [
+            64740,
+            64534
+          ],
+          "origin": "igp",
+          "med": 48,
+          "label": "o"
+        },
+        {
+          "peer_id": 86,
+          "local_pref": 200,
+          "as_path": [
+            64635,
+            64909,
+            64942,
+            64969,
+            64592
+          ],
+          "origin": "igp",
+          "med": 35,
+          "label": "q"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.28/30",
+      "routes": [
+        {
+          "peer_id": 17,
+          "local_pref": 200,
+          "as_path": [
+            64978,
+            64799,
+            64770,
+            64502,
+            64589,
+            64520
+          ],
+          "origin": "igp",
+          "med": 14,
+          "label": "x"
+        },
+        {
+          "peer_id": 66,
+          "local_pref": 200,
+          "as_path": [
+            64586,
+            64650
+          ],
+          "origin": "egp",
+          "med": 143,
+          "label": "p"
+        },
+        {
+          "peer_id": 25,
+          "local_pref": 200,
+          "as_path": [
+            64635,
+            64948,
+            64557,
+            64727
+          ],
+          "origin": "igp",
+          "med": 3,
+          "label": "9"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.108/30",
+      "routes": [
+        {
+          "peer_id": 92,
+          "local_pref": 100,
+          "as_path": [
+            64621,
+            64706
+          ],
+          "origin": "igp",
+          "med": 19,
+          "label": "v"
+        },
+        {
+          "peer_id": 12,
+          "local_pref": 300,
+          "as_path": [
+            64874,
+            64812
+          ],
+          "origin": "igp",
+          "med": 146,
+          "label": "_"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.88/30",
+      "routes": [
+        {
+          "peer_id": 57,
+          "local_pref": 200,
+          "as_path": [
+            64632,
+            64701,
+            64988,
+            64561,
+            64663
+          ],
+          "origin": "igp",
+          "med": 44,
+          "label": "n"
+        },
+        {
+          "peer_id": 49,
+          "local_pref": 200,
+          "as_path": [
+            64603,
+            64701
+          ],
+          "origin": "egp",
+          "med": 187,
+          "label": "l"
+        },
+        {
+          "peer_id": 60,
+          "local_pref": 200,
+          "as_path": [
+            64980,
+            64837,
+            64775,
+            64648
+          ],
+          "origin": "igp",
+          "med": 0,
+          "label": "w"
+        },
+        {
+          "peer_id": 87,
+          "local_pref": 200,
+          "as_path": [
+            64923,
+            64882,
+            64970,
+            64692,
+            64524,
+            64635,
+            64728
+          ],
+          "origin": "igp",
+          "med": 48,
+          "label": "w"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.116/30",
+      "routes": [
+        {
+          "peer_id": 47,
+          "local_pref": 150,
+          "as_path": [
+            64780,
+            64977,
+            64669
+          ],
+          "origin": "igp",
+          "med": 82,
+          "label": "v"
+        },
+        {
+          "peer_id": 11,
+          "local_pref": 150,
+          "as_path": [
+            64504,
+            64864,
+            64618
+          ],
+          "origin": "igp",
+          "med": 93,
+          "label": "9"
+        },
+        {
+          "peer_id": 30,
+          "local_pref": 150,
+          "as_path": [
+            64596,
+            64757,
+            64939
+          ],
+          "origin": "igp",
+          "med": 160,
+          "label": "b"
+        },
+        {
+          "peer_id": 85,
+          "local_pref": 150,
+          "as_path": [
+            64854,
+            64849,
+            64792
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "e"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.112/30",
+      "routes": [
+        {
+          "peer_id": 85,
+          "local_pref": 200,
+          "as_path": [
+            64967,
+            64758,
+            64608,
+            64848
+          ],
+          "origin": "igp",
+          "med": 45,
+          "label": "z"
+        },
+        {
+          "peer_id": 24,
+          "local_pref": 200,
+          "as_path": [
+            64813,
+            64673
+          ],
+          "origin": "igp",
+          "med": 49,
+          "label": "b"
+        },
+        {
+          "peer_id": 84,
+          "local_pref": 200,
+          "as_path": [
+            64815,
+            64833,
+            64546,
+            64844,
+            64732,
+            64837,
+            64554
+          ],
+          "origin": "igp",
+          "med": 25,
+          "label": "6"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.100/30",
+      "routes": [
+        {
+          "peer_id": 68,
+          "local_pref": 200,
+          "as_path": [
+            64695,
+            64549,
+            64868,
+            64794,
+            64982,
+            64613,
+            64891
+          ],
+          "origin": "igp",
+          "med": 50,
+          "label": "5"
+        },
+        {
+          "peer_id": 46,
+          "local_pref": 200,
+          "as_path": [
+            64879,
+            64690
+          ],
+          "origin": "egp",
+          "med": 167,
+          "label": "e"
+        },
+        {
+          "peer_id": 23,
+          "local_pref": 200,
+          "as_path": [
+            64592,
+            64602,
+            64593,
+            64766
+          ],
+          "origin": "igp",
+          "med": 23,
+          "label": "q"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.44/30",
+      "routes": [
+        {
+          "peer_id": 44,
+          "local_pref": 150,
+          "as_path": [
+            64554,
+            64927,
+            64823
+          ],
+          "origin": "igp",
+          "med": 216,
+          "label": "9"
+        },
+        {
+          "peer_id": 85,
+          "local_pref": 150,
+          "as_path": [
+            64794,
+            64900,
+            64866
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "s"
+        },
+        {
+          "peer_id": 41,
+          "local_pref": 150,
+          "as_path": [
+            64746,
+            64844,
+            64756
+          ],
+          "origin": "igp",
+          "med": 119,
+          "label": "6"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.96/30",
+      "routes": [
+        {
+          "peer_id": 24,
+          "local_pref": 100,
+          "as_path": [
+            64832
+          ],
+          "origin": "igp",
+          "med": 40,
+          "label": "q"
+        },
+        {
+          "peer_id": 15,
+          "local_pref": 100,
+          "as_path": [
+            64527,
+            64661
+          ],
+          "origin": "igp",
+          "med": 19,
+          "label": "x"
+        },
+        {
+          "peer_id": 36,
+          "local_pref": 150,
+          "as_path": [
+            64523,
+            64630
+          ],
+          "origin": "igp",
+          "med": 29,
+          "label": "6"
+        },
+        {
+          "peer_id": 72,
+          "local_pref": 300,
+          "as_path": [
+            64605,
+            64858,
+            64501,
+            64858,
+            64502
+          ],
+          "origin": "egp",
+          "med": 94,
+          "label": "r"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.156/30",
+      "routes": [
+        {
+          "peer_id": 55,
+          "local_pref": 200,
+          "as_path": [
+            64614,
+            64656,
+            64916
+          ],
+          "origin": "igp",
+          "med": 28,
+          "label": "w"
+        },
+        {
+          "peer_id": 33,
+          "local_pref": 300,
+          "as_path": [
+            64622,
+            64960,
+            64965,
+            64666,
+            64875
+          ],
+          "origin": "igp",
+          "med": 88,
+          "label": "h"
+        },
+        {
+          "peer_id": 94,
+          "local_pref": 150,
+          "as_path": [
+            64524,
+            64725,
+            64698
+          ],
+          "origin": "igp",
+          "med": 47,
+          "label": "9"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.24/30",
+      "routes": [
+        {
+          "peer_id": 18,
+          "local_pref": 300,
+          "as_path": [
+            64990,
+            64908,
+            64894,
+            64677,
+            64987
+          ],
+          "origin": "incomplete",
+          "med": 145,
+          "label": "g"
+        },
+        {
+          "peer_id": 42,
+          "local_pref": 150,
+          "as_path": [
+            64696,
+            64678,
+            64562
+          ],
+          "origin": "igp",
+          "med": 16,
+          "label": "v"
+        },
+        {
+          "peer_id": 60,
+          "local_pref": 100,
+          "as_path": [
+            64774
+          ],
+          "origin": "igp",
+          "med": 30,
+          "label": "7"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.160/30",
+      "routes": [
+        {
+          "peer_id": 29,
+          "local_pref": 200,
+          "as_path": [
+            64526,
+            64853
+          ],
+          "origin": "egp",
+          "med": 52,
+          "label": "_"
+        },
+        {
+          "peer_id": 78,
+          "local_pref": 200,
+          "as_path": [
+            64522,
+            64677,
+            64703,
+            64871
+          ],
+          "origin": "igp",
+          "med": 39,
+          "label": "x"
+        },
+        {
+          "peer_id": 85,
+          "local_pref": 200,
+          "as_path": [
+            64533,
+            64766,
+            64599,
+            64718,
+            64637
+          ],
+          "origin": "igp",
+          "med": 40,
+          "label": "6"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.72/30",
+      "routes": [
+        {
+          "peer_id": 43,
+          "local_pref": 200,
+          "as_path": [
+            64980,
+            64824
+          ],
+          "origin": "igp",
+          "med": 31,
+          "label": "b"
+        },
+        {
+          "peer_id": 48,
+          "local_pref": 300,
+          "as_path": [
+            64580,
+            64685,
+            64514,
+            64830
+          ],
+          "origin": "incomplete",
+          "med": 1,
+          "label": "l"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.104/30",
+      "routes": [
+        {
+          "peer_id": 13,
+          "local_pref": 150,
+          "as_path": [
+            64789,
+            64597,
+            64962
+          ],
+          "origin": "igp",
+          "med": 211,
+          "label": "7"
+        },
+        {
+          "peer_id": 30,
+          "local_pref": 150,
+          "as_path": [
+            64547,
+            64801,
+            64520
+          ],
+          "origin": "igp",
+          "med": 142,
+          "label": "x"
+        },
+        {
+          "peer_id": 73,
+          "local_pref": 150,
+          "as_path": [
+            64656,
+            64530,
+            64792
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "f"
+        },
+        {
+          "peer_id": 22,
+          "local_pref": 150,
+          "as_path": [
+            64908,
+            64629,
+            64675
+          ],
+          "origin": "igp",
+          "med": 164,
+          "label": "w"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.148/30",
+      "routes": [
+        {
+          "peer_id": 82,
+          "local_pref": 200,
+          "as_path": [
+            64866,
+            64683,
+            64909,
+            64594,
+            64745,
+            64635,
+            64794
+          ],
+          "origin": "igp",
+          "med": 22,
+          "label": "n"
+        },
+        {
+          "peer_id": 80,
+          "local_pref": 200,
+          "as_path": [
+            64921,
+            64904,
+            64775,
+            64634,
+            64746
+          ],
+          "origin": "igp",
+          "med": 45,
+          "label": "x"
+        },
+        {
+          "peer_id": 32,
+          "local_pref": 200,
+          "as_path": [
+            64719,
+            64628
+          ],
+          "origin": "egp",
+          "med": 81,
+          "label": "a"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.68/30",
+      "routes": [
+        {
+          "peer_id": 17,
+          "local_pref": 150,
+          "as_path": [
+            64589,
+            64642,
+            64597
+          ],
+          "origin": "igp",
+          "med": 136,
+          "label": "n"
+        },
+        {
+          "peer_id": 22,
+          "local_pref": 150,
+          "as_path": [
+            64947,
+            64580,
+            64887
+          ],
+          "origin": "igp",
+          "med": 150,
+          "label": "b"
+        },
+        {
+          "peer_id": 17,
+          "local_pref": 150,
+          "as_path": [
+            64984,
+            64934,
+            64756
+          ],
+          "origin": "igp",
+          "med": 214,
+          "label": "8"
+        },
+        {
+          "peer_id": 95,
+          "local_pref": 150,
+          "as_path": [
+            64611,
+            64682,
+            64501
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "_"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.128/30",
+      "routes": [
+        {
+          "peer_id": 28,
+          "local_pref": 150,
+          "as_path": [
+            64653,
+            64897,
+            64894
+          ],
+          "origin": "igp",
+          "med": 143,
+          "label": "v"
+        },
+        {
+          "peer_id": 94,
+          "local_pref": 150,
+          "as_path": [
+            64795,
+            64815,
+            64989
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "s"
+        },
+        {
+          "peer_id": 40,
+          "local_pref": 150,
+          "as_path": [
+            64506,
+            64680,
+            64527
+          ],
+          "origin": "igp",
+          "med": 241,
+          "label": "8"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.0/30",
+      "routes": [
+        {
+          "peer_id": 99,
+          "local_pref": 200,
+          "as_path": [
+            64888
+          ],
+          "origin": "igp",
+          "med": 21,
+          "label": "z"
+        },
+        {
+          "peer_id": 80,
+          "local_pref": 300,
+          "as_path": [
+            64609,
+            64685,
+            64773,
+            64714,
+            64644
+          ],
+          "origin": "incomplete",
+          "med": 138,
+          "label": "N"
+        },
+        {
+          "peer_id": 45,
+          "local_pref": 200,
+          "as_path": [
+            64844
+          ],
+          "origin": "igp",
+          "med": 45,
+          "label": "b"
+        },
+        {
+          "peer_id": 94,
+          "local_pref": 150,
+          "as_path": [
+            64590
+          ],
+          "origin": "igp",
+          "med": 22,
+          "label": "b"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.152/30",
+      "routes": [
+        {
+          "peer_id": 23,
+          "local_pref": 150,
+          "as_path": [
+            64890,
+            64838,
+            64749
+          ],
+          "origin": "igp",
+          "med": 251,
+          "label": "n"
+        },
+        {
+          "peer_id": 95,
+          "local_pref": 150,
+          "as_path": [
+            64867,
+            64679,
+            64523
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "t"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.16/30",
+      "routes": [
+        {
+          "peer_id": 58,
+          "local_pref": 200,
+          "as_path": [
+            64923,
+            64851,
+            64834,
+            64666
+          ],
+          "origin": "igp",
+          "med": 50,
+          "label": "5"
+        },
+        {
+          "peer_id": 24,
+          "local_pref": 200,
+          "as_path": [
+            64580,
+            64638
+          ],
+          "origin": "igp",
+          "med": 104,
+          "label": "{"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.164/30",
+      "routes": [
+        {
+          "peer_id": 38,
+          "local_pref": 150,
+          "as_path": [
+            64670,
+            64968,
+            64906
+          ],
+          "origin": "igp",
+          "med": 125,
+          "label": "x"
+        },
+        {
+          "peer_id": 91,
+          "local_pref": 150,
+          "as_path": [
+            64554,
+            64894,
+            64925
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "l"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.8/30",
+      "routes": [
+        {
+          "peer_id": 48,
+          "local_pref": 150,
+          "as_path": [
+            64867,
+            64539,
+            64714
+          ],
+          "origin": "igp",
+          "med": 107,
+          "label": "6"
+        },
+        {
+          "peer_id": 14,
+          "local_pref": 150,
+          "as_path": [
+            64868,
+            64518,
+            64832
+          ],
+          "origin": "igp",
+          "med": 165,
+          "label": "5"
+        },
+        {
+          "peer_id": 58,
+          "local_pref": 150,
+          "as_path": [
+            64686,
+            64805,
+            64503
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "T"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.84/30",
+      "routes": [
+        {
+          "peer_id": 15,
+          "local_pref": 100,
+          "as_path": [
+            64732,
+            64895
+          ],
+          "origin": "igp",
+          "med": 8,
+          "label": "x"
+        },
+        {
+          "peer_id": 44,
+          "local_pref": 300,
+          "as_path": [
+            64674,
+            64978,
+            64753
+          ],
+          "origin": "incomplete",
+          "med": 104,
+          "label": "a"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.32/30",
+      "routes": [
+        {
+          "peer_id": 47,
+          "local_pref": 150,
+          "as_path": [
+            64680,
+            65000,
+            64612
+          ],
+          "origin": "igp",
+          "med": 295,
+          "label": "m"
+        },
+        {
+          "peer_id": 37,
+          "local_pref": 150,
+          "as_path": [
+            64656,
+            64715,
+            64952
+          ],
+          "origin": "igp",
+          "med": 171,
+          "label": "7"
+        },
+        {
+          "peer_id": 72,
+          "local_pref": 150,
+          "as_path": [
+            64587,
+            64968,
+            64888
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "_"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.52/30",
+      "routes": [
+        {
+          "peer_id": 80,
+          "local_pref": 200,
+          "as_path": [
+            64711,
+            64955,
+            64780,
+            64886,
+            64639,
+            64566
+          ],
+          "origin": "igp",
+          "med": 4,
+          "label": "v"
+        },
+        {
+          "peer_id": 18,
+          "local_pref": 200,
+          "as_path": [
+            64877,
+            64733
+          ],
+          "origin": "igp",
+          "med": 114,
+          "label": "p"
+        },
+        {
+          "peer_id": 90,
+          "local_pref": 200,
+          "as_path": [
+            64582,
+            64521,
+            64936,
+            64869,
+            64886,
+            64512
+          ],
+          "origin": "igp",
+          "med": 7,
+          "label": "z"
+        },
+        {
+          "peer_id": 46,
+          "local_pref": 200,
+          "as_path": [
+            64686,
+            64526,
+            64952,
+            64770,
+            64823,
+            64706,
+            64995
+          ],
+          "origin": "igp",
+          "med": 17,
+          "label": "9"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.12/30",
+      "routes": [
+        {
+          "peer_id": 69,
+          "local_pref": 150,
+          "as_path": [
+            64888
+          ],
+          "origin": "igp",
+          "med": 30,
+          "label": "9"
+        },
+        {
+          "peer_id": 98,
+          "local_pref": 200,
+          "as_path": [
+            64703
+          ],
+          "origin": "igp",
+          "med": 32,
+          "label": "8"
+        },
+        {
+          "peer_id": 61,
+          "local_pref": 300,
+          "as_path": [
+            64689,
+            64821,
+            64643
+          ],
+          "origin": "egp",
+          "med": 98,
+          "label": "F"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.172/30",
+      "routes": [
+        {
+          "peer_id": 25,
+          "local_pref": 200,
+          "as_path": [
+            64855,
+            64565
+          ],
+          "origin": "igp",
+          "med": 60,
+          "label": "n"
+        },
+        {
+          "peer_id": 54,
+          "local_pref": 200,
+          "as_path": [
+            64675,
+            64913,
+            64731,
+            64997
+          ],
+          "origin": "igp",
+          "med": 26,
+          "label": "b"
+        },
+        {
+          "peer_id": 15,
+          "local_pref": 200,
+          "as_path": [
+            64675,
+            64964,
+            64861,
+            64924,
+            64823,
+            64679,
+            64971
+          ],
+          "origin": "igp",
+          "med": 2,
+          "label": "v"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.20/30",
+      "routes": [
+        {
+          "peer_id": 10,
+          "local_pref": 150,
+          "as_path": [
+            64553,
+            64810,
+            64912
+          ],
+          "origin": "igp",
+          "med": 97,
+          "label": "5"
+        },
+        {
+          "peer_id": 44,
+          "local_pref": 150,
+          "as_path": [
+            64777,
+            64540,
+            64915
+          ],
+          "origin": "igp",
+          "med": 162,
+          "label": "m"
+        },
+        {
+          "peer_id": 97,
+          "local_pref": 150,
+          "as_path": [
+            64840,
+            64720,
+            64700
+          ],
+          "origin": "igp",
+          "med": 5,
+          "label": "b"
+        },
+        {
+          "peer_id": 17,
+          "local_pref": 150,
+          "as_path": [
+            64959,
+            64905,
+            64694
+          ],
+          "origin": "igp",
+          "med": 272,
+          "label": "b"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.48/30",
+      "routes": [
+        {
+          "peer_id": 69,
+          "local_pref": 300,
+          "as_path": [
+            64963,
+            64771,
+            64790,
+            64797,
+            64956
+          ],
+          "origin": "egp",
+          "med": 148,
+          "label": "t"
+        },
+        {
+          "peer_id": 15,
+          "local_pref": 200,
+          "as_path": [
+            64658
+          ],
+          "origin": "igp",
+          "med": 25,
+          "label": "w"
+        },
+        {
+          "peer_id": 30,
+          "local_pref": 150,
+          "as_path": [
+            64887
+          ],
+          "origin": "igp",
+          "med": 50,
+          "label": "8"
+        },
+        {
+          "peer_id": 62,
+          "local_pref": 200,
+          "as_path": [
+            64835,
+            64993
+          ],
+          "origin": "igp",
+          "med": 18,
+          "label": "m"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.124/30",
+      "routes": [
+        {
+          "peer_id": 52,
+          "local_pref": 200,
+          "as_path": [
+            64999,
+            64869
+          ],
+          "origin": "igp",
+          "med": 55,
+          "label": "t"
+        },
+        {
+          "peer_id": 24,
+          "local_pref": 200,
+          "as_path": [
+            64533,
+            64702,
+            64950,
+            64987,
+            64717,
+            64934,
+            64830
+          ],
+          "origin": "igp",
+          "med": 31,
+          "label": "z"
+        },
+        {
+          "peer_id": 88,
+          "local_pref": 200,
+          "as_path": [
+            64882,
+            64873,
+            64789,
+            64702
+          ],
+          "origin": "igp",
+          "med": 21,
+          "label": "w"
+        },
+        {
+          "peer_id": 30,
+          "local_pref": 200,
+          "as_path": [
+            64727,
+            64874,
+            64667,
+            64808
+          ],
+          "origin": "igp",
+          "med": 44,
+          "label": "b"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.4/30",
+      "routes": [
+        {
+          "peer_id": 80,
+          "local_pref": 200,
+          "as_path": [
+            64538,
+            64582
+          ],
+          "origin": "igp",
+          "med": 23,
+          "label": "C"
+        },
+        {
+          "peer_id": 58,
+          "local_pref": 200,
+          "as_path": [
+            64827,
+            64764,
+            64884,
+            64849,
+            64591
+          ],
+          "origin": "igp",
+          "med": 36,
+          "label": "x"
+        }
+      ]
+    },
+    {
+      "prefix": "198.51.100.120/30",
+      "routes": [
+        {
+          "peer_id": 83,
+          "local_pref": 200,
+          "as_path": [
+            64901,
+            64639
+          ],
+          "origin": "igp",
+          "med": 36,
+          "label": "6"
+        },
+        {
+          "peer_id": 25,
+          "local_pref": 300,
+          "as_path": [
+            64713,
+            64655,
+            64875
+          ],
+          "origin": "egp",
+          "med": 100,
+          "label": "a"
+        }
+      ]
+    }
+  ]
+}

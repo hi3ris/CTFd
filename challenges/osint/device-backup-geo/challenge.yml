@@ -1,0 +1,56 @@
+name: device-backup-geo
+author: dagbanjaphet
+category: osint
+description: |-
+  Saisie d'un téléphone : la sauvegarde exportée contient plusieurs bases
+  SQLite (SMS, historique de localisation, journal des antennes, photos
+  géotaggées).
+
+  Le suspect a noté quelque chose de sensible dans une note chiffrée. La clé se
+  cache dans ses propres déplacements : recoupez ses messages et ses positions
+  pour retrouver où il se trouvait au moment clé, puis déchiffrez la note.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{device_backup_geo_rendezvous_pinned}
+hints:
+  - content: >-
+      Un SMS fixe un rendez-vous à une date et une heure UTC précises. C'est
+      l'instant qui compte.
+    cost: 22
+    key: h1
+  - content: >-
+      Dans `location.sqlite`, retrouvez le point GPS dont l'horodatage
+      correspond EXACTEMENT à l'heure du rendez-vous. Ses coordonnées forment la
+      clé. La photo géotaggée à Kara est un leurre.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      La table `notes` de `messages.sqlite` contient un blob chiffré par flux
+      XOR. Clé = la chaîne `"{lat:.6f},{lon:.6f}"` du point de rendez-vous ;
+      keystream = concat(sha256(cle || counter_be32)). Déchiffrez pour lire le
+      token.
+    cost: 60
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - geolocation
+  - sqlite
+  - hard
+files:
+  - backup/messages.sqlite
+  - backup/location.sqlite
+  - backup/celltower.sqlite
+  - backup/photos.sqlite
+state: visible
+version: "0.1"

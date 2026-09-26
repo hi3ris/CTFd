@@ -1,0 +1,51 @@
+name: git-repo-backdoor
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On a exfiltré un dépôt Git interne, livré ici sous forme d'archive tar du
+  dépôt nu (`acme-service.git.tar`). L'historique a l'air anodin, mais un commit
+  y a glissé quelque chose qui ne devrait pas s'y trouver.
+
+  Reconstituez le dépôt, retrouvez la modification piégée et récupérez le flag
+  qu'elle dissimule.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{g1t_hook_backdoor_in_post_checkout_2ab8}
+hints:
+  - content: >-
+      C'est un vrai dépôt Git nu : les objets sont sous `objects/xx/yyyy...`,
+      compressés en zlib. `HEAD` et `refs/heads/main` vous donnent le point de
+      départ pour parcourir l'historique.
+    cost: 22
+    key: h1
+  - content: >-
+      Un des commits ajoute un fichier qui n'était pas là au départ, dans un
+      répertoire de hooks versionnés (`.githooks/`). Regardez ce que fait ce
+      script au checkout.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le hook `post-checkout` fait `echo <base64> | base64 -d | sh`. Décodez la
+      chaîne base64 : elle exporte une variable contenant le flag.
+    cost: 67
+    key: h3
+    requirements: [h2]
+tags:
+  - supplychain
+  - git
+  - backdoor
+  - hard
+files:
+  - acme-service.git.tar
+state: visible
+version: "0.1"

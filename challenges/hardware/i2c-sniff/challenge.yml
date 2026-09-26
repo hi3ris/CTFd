@@ -1,0 +1,52 @@
+name: i2c-sniff
+author: dagbanjaphet
+category: hardware
+description: |-
+  We clipped a two-wire probe onto an I2C bus and captured `SCL` and `SDA` while
+  a controller wrote a short string to a peripheral. `i2c_capture.csv` holds the
+  oversampled bus state, one row per time step.
+
+  Decode the transaction and recover the string that was written. The flag is
+  that string.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{i2c_start_addr_ack_stop_ok}
+hints:
+  - content: >-
+      On I2C, `SDA` is only allowed to change while `SCL` is low, and is valid
+      while `SCL` is high. A transfer is framed by a START and a STOP condition,
+      which are the special cases where `SDA` moves while `SCL` is high.
+    cost: 15
+    key: h1
+  - content: >-
+      START = SDA falls while SCL is high; STOP = SDA rises while SCL is high.
+      Between them, sample `SDA` on each `SCL` rising edge. Group the bits into
+      units of 9: 8 data bits MSB-first plus a 9th ACK bit.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The very first byte after START is `(7-bit address << 1) | R/W` (drop it
+      and its ACK). Every byte after that, minus its ACK bit, is one ASCII
+      character of the payload until the STOP condition.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - hardware
+  - i2c
+  - logic-analyzer
+  - medium
+files:
+  - i2c_capture.csv
+state: visible
+version: "0.1"

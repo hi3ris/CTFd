@@ -1,0 +1,50 @@
+{% extends "base.html" %}
+
+{% block stylesheets %}
+	<link rel="stylesheet" href="{{ url_for('views.themes', path='css/challenge-board.css') }}">
+	<style>
+		#nctf-chal-toolbar { display:flex; flex-wrap:wrap; align-items:center; justify-content:space-between; gap:.75rem; }
+		#nctf-chal-toolbar .nctf-progress-wrap { flex:1 1 220px; min-width:220px; }
+		#nctf-chal-toolbar .nctf-progress-label { font-size:.9rem; font-weight:600; margin-bottom:.25rem; }
+		#nctf-chal-toolbar .nctf-progress-track { height:8px; border-radius:4px; background:rgba(127,127,127,.25); overflow:hidden; }
+		#nctf-chal-toolbar .nctf-progress-fill { height:100%; width:0; border-radius:4px; background:#27ae60; transition:width .4s ease; }
+		#nctf-chal-toolbar .nctf-view-switch .btn.active { background:#27ae60; border-color:#27ae60; color:#fff; }
+		#challenges-board .nctf-group .category-header h3 { border-bottom:1px solid rgba(127,127,127,.25); padding-bottom:.3rem; }
+	</style>
+{% endblock %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>Challenges</h1>
+	</div>
+</div>
+
+<div class="modal fade" id="challenge-window" tabindex="-1" role="dialog">
+</div>
+
+<div class="container">
+	<div class="row">
+		<div class="col-md-12">
+			{% include "components/errors.html" %}
+		</div>
+	</div>
+
+	<div id='challenges-board'>
+		<div class="min-vh-50 d-flex align-items-center">
+			<div class="text-center w-100">
+				<i class="fas fa-circle-notch fa-spin fa-3x fa-fw spinner"></i>
+			</div>
+		</div>
+	</div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+{% endblock %}
+
+{% block entrypoint %}
+	<script defer src="{{ url_for('views.themes', path='js/pages/challenges.js') }}"></script>
+	<script>window.CHALLENGE_AUTHORS_URL = "{{ url_for('views.themes', path='js/pages/challenge-authors.json') }}";</script>
+	<script defer src="{{ url_for('views.themes', path='js/pages/challenge-extras.min.js') }}"></script>
+{% endblock %}

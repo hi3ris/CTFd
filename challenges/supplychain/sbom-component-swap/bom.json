@@ -1,0 +1,85 @@
+{
+  "bomFormat": "CycloneDX",
+  "specVersion": "1.5",
+  "version": 1,
+  "metadata": {
+    "component": {
+      "type": "application",
+      "name": "acme-suite"
+    }
+  },
+  "components": [
+    {
+      "type": "library",
+      "name": "libjpeg-turbo",
+      "version": "3.0.1",
+      "purl": "pkg:generic/libjpeg-turbo@3.0.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "aa913f310493956d3da6fe2367bde1596f08cd6c7ee9ba49364498cbaa8e9052"
+        }
+      ],
+      "properties": [
+        {
+          "name": "blob",
+          "value": "component-libjpeg-turbo.bin"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "zlib",
+      "version": "1.3",
+      "purl": "pkg:generic/zlib@1.3",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "bda0ebc9b69130d5e3b2b265d534438224836233c17578d0a81ffe0873b55382"
+        }
+      ],
+      "properties": [
+        {
+          "name": "blob",
+          "value": "component-zlib.bin"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "acme-updater",
+      "version": "2.4.0",
+      "purl": "pkg:generic/acme-updater@2.4.0",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "cb512bc9c1addaa11efd905a870dc559818497eac0cfdfdb23e1d30cfac0892b"
+        }
+      ],
+      "properties": [
+        {
+          "name": "blob",
+          "value": "component-acme-updater.bin"
+        }
+      ]
+    },
+    {
+      "type": "library",
+      "name": "openssl",
+      "version": "3.2.1",
+      "purl": "pkg:generic/openssl@3.2.1",
+      "hashes": [
+        {
+          "alg": "SHA-256",
+          "content": "3b5bc334cc146940dd32aef456a09aa3a2b5c6931d7c2c296026d61a208c7fc4"
+        }
+      ],
+      "properties": [
+        {
+          "name": "blob",
+          "value": "component-openssl.bin"
+        }
+      ]
+    }
+  ]
+}

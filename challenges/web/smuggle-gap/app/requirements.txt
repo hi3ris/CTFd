@@ -1,0 +1,5 @@
+# The edge proxy and the internal app are pure Python stdlib -- no runtime
+# third-party dependencies. `requests` is listed only because the reference
+# solver may optionally use it; the shipped solver is stdlib-only, so this file
+# can be installed or skipped without affecting the service.
+requests==2.32.3

@@ -1,0 +1,36 @@
+{
+  "Name": "kekeli-media-prod",
+  "KeyCount": 6,
+  "Contents": [
+    {
+      "Key": "assets/public/logo.txt",
+      "Size": 42,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "assets/public/banner.txt",
+      "Size": 45,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "assets/public/press-kit.txt",
+      "Size": 41,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "assets/public-backup/db-snapshot-note.txt",
+      "Size": 123,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "internal/roadmap.txt",
+      "Size": 32,
+      "StorageClass": "STANDARD"
+    },
+    {
+      "Key": "internal/old-ctf-note.txt",
+      "Size": 49,
+      "StorageClass": "STANDARD"
+    }
+  ]
+}

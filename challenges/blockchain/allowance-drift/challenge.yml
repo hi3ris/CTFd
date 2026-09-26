@@ -1,0 +1,39 @@
+name: allowance-drift
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You get a hand-rolled ERC20 (`DriftToken.sol`) and `token_state.json`
+  (a victim's balance, the allowance you hold on them, and a sealed note
+  `cipher_hex`). Work out how to drain the victim and unlock the note.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{allowance_never_decremented}
+hints:
+  - content: >-
+      Read transferFrom line by line. What bookkeeping does a correct ERC20 do that this one skips?
+    cost: 10
+    key: h1
+  - content: >-
+      The allowance is never reduced, so you can reuse it. Draining takes ceil(victim_balance / your_allowance) calls -- seed the keystream with that count and XOR cipher_hex.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - blockchain
+  - evm
+  - erc20
+  - easy
+files:
+  - DriftToken.sol
+  - token_state.json
+state: visible
+version: "0.1"

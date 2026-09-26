@@ -1,0 +1,70 @@
+{
+  "Roles": [
+    {
+      "RoleName": "lambda-exec-role",
+      "Arn": "arn:aws:iam::444455556666:role/lambda-exec-role",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "AttachedManagedPolicies": [
+        {
+          "PolicyName": "read-prod-secret",
+          "PolicyArn": "arn:aws:iam::444455556666:policy/read-prod-secret"
+        }
+      ]
+    },
+    {
+      "RoleName": "break-glass-admin",
+      "Arn": "arn:aws:iam::444455556666:role/break-glass-admin",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "AWS": "arn:aws:iam::444455556666:root"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "AttachedManagedPolicies": [
+        {
+          "PolicyName": "read-prod-secret",
+          "PolicyArn": "arn:aws:iam::444455556666:policy/read-prod-secret"
+        }
+      ]
+    },
+    {
+      "RoleName": "lambda-logs-role",
+      "Arn": "arn:aws:iam::444455556666:role/lambda-logs-role",
+      "AssumeRolePolicyDocument": {
+        "Version": "2012-10-17",
+        "Statement": [
+          {
+            "Effect": "Allow",
+            "Principal": {
+              "Service": "lambda.amazonaws.com"
+            },
+            "Action": "sts:AssumeRole"
+          }
+        ]
+      },
+      "AttachedManagedPolicies": [
+        {
+          "PolicyName": "write-logs-only",
+          "PolicyArn": "arn:aws:iam::444455556666:policy/write-logs-only"
+        }
+      ]
+    }
+  ]
+}

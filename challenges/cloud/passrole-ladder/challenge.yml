@@ -1,0 +1,57 @@
+name: passrole-ladder
+author: dagbanjaphet
+category: cloud
+description: |-
+  An IAM dump from an AWS account: users (`iam-users.json`), roles
+  (`iam-roles.json`), the customer-managed policy documents
+  (`iam-policies.json`), and a production secret sealed for the handout
+  (`prod-secret.json`). You start as the low-privileged user `mallory`.
+
+  Find the privilege-escalation path that lets mallory reach the secret, then
+  recover it. The flag is the secret.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{passrole_lambda_became_admin}
+hints:
+  - content: >-
+      mallory cannot read the secret directly. Look at what her policy DOES let
+      her do to other services, and which roles she is allowed to hand off.
+    cost: 20
+    key: h1
+  - content: >-
+      She can create and invoke Lambda functions and `iam:PassRole` certain
+      roles to Lambda. The winning role is one she can pass, that trusts
+      `lambda.amazonaws.com`, AND whose policy can read the target secret. Two
+      of the three roles are dead ends.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Once you identify the execution role, the secret's XOR keystream is
+      SHA256 of that role's ARN. Recompute and XOR the base64 ciphertext.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - cloud
+  - aws
+  - iam
+  - privilege-escalation
+  - passrole
+  - hard
+files:
+  - iam-users.json
+  - iam-roles.json
+  - iam-policies.json
+  - prod-secret.json
+state: visible
+version: "0.1"

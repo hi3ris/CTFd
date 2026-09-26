@@ -1,0 +1,23 @@
+# Local run notes for authors / playtesters. In production the platform
+# instancier injects TEAM_SECRET per team; this compose file is only for a
+# local build + smoke test.
+#
+#   docker compose up --build
+#   # then, from the solution dir:
+#   python3 solution/solve.py 127.0.0.1 9007
+#
+services:
+  padding-oracle-lite:
+    build:
+      context: .
+    image: ctf-padding-oracle-lite:latest
+    ports:
+      - "9007:9007"
+    environment:
+      # local demo value ONLY -- never ship this
+      TEAM_SECRET: "local-demo-team-secret"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 128m

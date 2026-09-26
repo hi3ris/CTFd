@@ -1,0 +1,50 @@
+name: queue-poison
+author: ctf-2026
+category: cloud
+type: team_instance
+description: |
+  Message empoisonné -> worker -> désérialisation -> exécution.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 500
+extra:
+  docker_image: ctf-cloud-queue-poison:latest
+  internal_port: 8080
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: cloud-queue-poison
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      Les messages nomment leur classe dans __class__ et le worker l'instancie. Que se passe-t-il si tu envoies une classe inconnue ?
+    cost: 20
+    key: h1
+  - content: >-
+      L'erreur fuite le registre (dont un gadget FlagDumper). Enfile {"__class__":"FlagDumper"}, lance POST /work, puis lis GET /results.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - cloud
+  - hard
+
+# challenge-id (HMAC / requirements wiring): cloud-queue-poison
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end; flip to visible after Lot-5 Docker rehearsal; Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

@@ -1,0 +1,50 @@
+name: meshd-fmt
+author: ctf-2026
+category: pwn
+type: team_instance
+description: |
+  Fuite d'info -> format string -> ROP -> lecture du flag.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 500
+extra:
+  docker_image: ctf-pwn-meshd-fmt:latest
+  internal_port: 8080
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: pwn-meshd-fmt
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      TODO: cheap hint narrowing the vulnerability class.
+    cost: 20
+    key: h1
+  - content: >-
+      TODO: dearer hint (mechanism / advisory id / patch diff).
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - pwn
+  - hard
+
+# challenge-id (HMAC / requirements wiring): pwn-meshd-fmt
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: hidden  # STUB -- flip to visible once the vuln + solver are implemented and Lot-5 verified
+version: "0.1"

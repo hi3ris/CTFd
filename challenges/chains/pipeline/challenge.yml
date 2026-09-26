@@ -1,0 +1,51 @@
+name: pipeline
+author: ctf-2026
+category: chains
+type: team_instance
+description: |
+  Confusion de dépendance / dérive de lockfile -> hook de build exécuté -> RCE runner.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 550
+extra:
+  docker_image: ctf-chains-pipeline:latest
+  internal_port: 8080
+  initial: 550
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: chains-pipeline
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      Le résolveur choisit-il la version la plus haute entre lockfile privé et registre public ?
+    cost: 20
+    key: h1
+  - content: >-
+      publish-public internal-lib 99.0.0 buildhook=install-runner:emit-flag -> /build -> /run.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - chains
+  - cve
+  - hard
+
+# challenge-id (HMAC / requirements wiring): chains-pipeline
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end; flip to visible after Lot-5 Docker rehearsal; Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

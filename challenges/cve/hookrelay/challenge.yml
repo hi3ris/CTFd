@@ -1,0 +1,98 @@
+name: hookrelay
+author: ctf-2026
+category: cve
+type: team_instance
+description: |
+  **Hookrelay** is the CI platform team's internal *mirror healthcheck*. Paste a
+  Git repository URL and the agent runs a shallow mirror clone to report whether
+  the remote is reachable:
+
+      POST /check     repo=https://git.internal/team/repo.git
+
+  The agent runs an **old release of a popular Python Git library** and clones
+  whatever URL you hand it, from its own position inside the CI network. The
+  library version it pins has a known, published flaw in how it treats the URL
+  before passing it to `git`.
+
+  This instance's flag sits in a file on the agent's filesystem that **no route
+  serves** — the healthcheck never reads it. Get the agent to read it for you.
+
+  The mirror agent prints the library version it runs in its footer. Identify the
+  flaw that version carries, and turn a "repository URL" into something the agent
+  executes.
+
+  Stuck? Hints are available (they cost a few points), including the exact
+  advisory id.
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (medium-hard). Live exploitation of a real CVE on a per-team
+# instance; the flag never ships in an artifact.
+value: 350
+extra:
+  docker_image: ctf-cve-hookrelay:latest
+  internal_port: 8080
+  initial: 350
+  decay: 25
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED challenge; the flag is derived per team, so no static flag ships here.
+# The container writes it to /flag.txt at boot from the injected TEAM_SECRET as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "cve-hookrelay")[:24] + "}"
+# (see flag.py). Reachable only via the CVE-2022-24439 command execution. The
+# platform's per-account flag class recomputes and validates each team's flag.
+flags:
+  - type: team_hmac
+    content: cve-hookrelay
+
+# Progressive, point-costing hints. The vuln detail + advisory id live here, not
+# in the description: they have to be paid for.
+hints:
+  - content: >-
+      The footer names the library and its version (`GitPython 3.1.29`). Look up
+      that exact version's security advisory: the flaw is in how the URL passed
+      to `clone_from` is handled before it reaches `git`. It is not a bug in
+      `git` itself.
+    cost: 25
+    key: h1
+  - content: >-
+      This is **CVE-2022-24439**: GitPython &lt; 3.1.30 does not validate the
+      clone URL, so a URL using git's `ext::` remote transport is run as a shell
+      command. The fix (3.1.30) added `allow_unsafe_protocols` / `allow_unsafe_options`,
+      both defaulting to False — read that patch diff to see exactly what was
+      previously allowed.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Submit a `repo` of the form `ext::sh -c <command>`. The clone "fails", but
+      the command already ran, and `git`'s stderr — which the healthcheck prints
+      back to you — is your read channel. Send the flag file to stderr, e.g.
+      `ext::sh -c cat<IFS>/flag.txt<IFS>1>&2` (mind shell word-splitting; the
+      reference solver in `solution/` shows a robust payload).
+    cost: 60
+    key: h3
+    requirements: [h2]
+
+tags:
+  - cve
+  - web
+  - rce
+  - medium
+
+# challenge-id (for HMAC / requirements wiring): cve-hookrelay
+# Prerequisite chain: none. Standalone challenge.
+
+# Served challenge: the instancier starts one container per team and injects
+# FLAG / CHALLENGE_SECRET. Only port 8080 (the public healthcheck) is published;
+# /flag.txt is on-disk only, reachable through the CVE. connection_info is
+# templated with the team's host:port.
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile in this directory; must be named ctf-<name>
+# so `make push-images` picks it up. Live-exploit verification is a Lot 5
+# rehearsal gate (needs Docker), like every served challenge.

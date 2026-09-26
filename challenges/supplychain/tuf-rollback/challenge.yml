@@ -1,0 +1,58 @@
+name: tuf-rollback
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On vous donne les métadonnées d'un dépôt de mises à jour façon TUF
+  (`timestamp.json`, `snapshot.json`, `targets-v*.json`) et les artefacts
+  correspondants (`targets/`). Le client a peut-être été poussé à installer une
+  version qu'il n'aurait pas dû.
+
+  Raisonnez sur les métadonnées, identifiez la release piégée qui a été épinglée
+  et récupérez le flag qu'elle contient.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{tuf_rollback_pinned_evil_release_b0a2}
+hints:
+  - content: >-
+      Dans TUF, le rôle `timestamp` (le plus frais) indique quelle version de
+      `snapshot` est censée être courante. Comparez-la à la version du
+      `snapshot.json` réellement servi.
+    cost: 15
+    key: h1
+  - content: >-
+      Le snapshot servi est plus ancien que celui annoncé par le timestamp :
+      c'est une attaque par rollback. Ce vieux snapshot épingle une ancienne
+      version des `targets`.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Chargez le `targets-v<N>.json` épinglé par le snapshot périmé, suivez sa
+      cible jusqu'à l'artefact dans `targets/`, et décodez la valeur base64 dans
+      `agent.py`.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - supplychain
+  - tuf
+  - rollback
+  - medium
+files:
+  - timestamp.json
+  - snapshot.json
+  - targets-v5.json
+  - targets-v8.json
+  - targets/updater-agent-2.0.1.tgz
+  - targets/updater-agent-2.1.0.tgz
+state: visible
+version: "0.1"

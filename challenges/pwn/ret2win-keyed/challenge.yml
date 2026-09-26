@@ -1,0 +1,50 @@
+name: ret2win-keyed
+author: dagbanjaphet
+category: pwn
+description: |-
+  You are given a single x86-64 Linux binary, `chall`. It prints a token that
+  changes every run, then reads some input. Buried in the binary is a routine
+  that decodes and prints a flag, but only if it is called the right way.
+
+  Call it correctly and capture the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{rdi_controlled_reveal_key_passed}
+hints:
+  - content: >-
+      There is an obvious stack overflow (no canary, no PIE) and a reveal
+      routine. But look at that routine's signature — it takes an argument and
+      compares it to the printed token.
+    cost: 15
+    key: h1
+  - content: >-
+      The first integer argument travels in RDI. A bare ret2win leaves RDI
+      unset. You need to set RDI to the token before entering the routine.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Find the overflow offset to the saved return address, then chain a
+      `pop rdi; ret` gadget (the binary ships one) loaded with the leaked token,
+      followed by the reveal routine's address.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - pwn
+  - ret2win
+  - rop
+  - medium
+files:
+  - chall
+state: visible
+version: "0.1"

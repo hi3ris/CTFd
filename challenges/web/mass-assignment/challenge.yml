@@ -1,0 +1,52 @@
+name: mass-assignment
+author: dagbanjaphet
+category: web
+description: |-
+  A profile service ships as source, plus the user store and a captured request
+  from the mobile app updating a display name. An admin-only endpoint returns
+  the flag; the captured account is a plain member.
+
+  Endpoints (from the source):
+
+      PATCH /api/me         -> update your profile
+      GET   /api/me/flag    -> admins only; returns the flag
+
+  No live service. Figure out the body that turns the shipped member into an
+  admin, then reproduce what the flag endpoint would return.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{mass_assignment_promoted_me_to_admin_role}
+hints:
+  - content: >-
+      Compare the captured request body with the record it echoed back. How
+      does the handler decide which fields you are allowed to change?
+    cost: 15
+    key: h1
+  - content: >-
+      PATCH /api/me merges your entire JSON body into the user record with no
+      allowlist. The record has is_admin and role fields -- promote yourself by
+      sending both {"is_admin": true, "role": "admin"}. The flag endpoint keys
+      its unseal on exactly that assignment, so both fields are required.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - web
+  - mass-assignment
+  - authz
+  - easy
+files:
+  - app.py
+  - users.json
+  - capture.http
+state: visible
+version: "0.1"

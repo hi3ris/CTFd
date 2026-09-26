@@ -1,0 +1,20 @@
+{
+  "signatures": [
+    {
+      "keyid": "acme-tuf",
+      "sig": "de:ad"
+    }
+  ],
+  "signed": {
+    "_type": "targets",
+    "targets": {
+      "updater-agent-2.0.1.tgz": {
+        "hashes": {
+          "sha256": "164f6c5f3cc9ffb1c1e5ca98a41561870887c3564558057f7dcb1a16e5c511b2"
+        },
+        "length": 184
+      }
+    },
+    "version": 5
+  }
+}

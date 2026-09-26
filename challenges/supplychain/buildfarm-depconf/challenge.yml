@@ -1,0 +1,50 @@
+name: buildfarm-depconf
+author: ctf-2026
+category: supplychain
+type: team_instance
+description: |
+  Dérive de lockfile -> confusion de dépendance -> hook de build exécuté.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 550
+extra:
+  docker_image: ctf-supplychain-buildfarm-depconf:latest
+  internal_port: 8080
+  initial: 550
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: supplychain-buildfarm-depconf
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      Le résolveur interroge aussi un registre public en plus du lockfile. Sur quel critère choisit-il la version gagnante ?
+    cost: 20
+    key: h1
+  - content: >-
+      Confusion de dépendances : le résolveur préfère la version la plus élevée. Publie sur le registre public le paquet interne dans une version supérieure au lockfile, avec un buildhook qui émet le flag, puis déclenche la résolution.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - supplychain
+  - medium
+
+# challenge-id (HMAC / requirements wiring): supplychain-buildfarm-depconf
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end; flip to visible after Lot-5 Docker rehearsal; Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

@@ -1,0 +1,50 @@
+name: forum-sqli2
+author: ctf-2026
+category: web
+type: team_instance
+description: |
+  Injection SQL de second ordre -> contournement d'auth -> action admin.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 450
+extra:
+  docker_image: ctf-web-forum-sqli2:latest
+  internal_port: 8080
+  initial: 450
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: web-forum-sqli2
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      L'injection au login échoue (requêtes paramétrées). Où ton nom d'utilisateur est-il réutilisé plus tard ?
+    cost: 20
+    key: h1
+  - content: >-
+      Injection SQL de second ordre : le login est paramétré, mais ton nom d'utilisateur stocké est réinterpolé sans échappement plus tard (tableau de bord). Enregistre un nom qui porte une charge UNION exfiltrant le flag, puis déclenche la page qui le réutilise.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - web
+  - medium
+
+# challenge-id (HMAC / requirements wiring): web-forum-sqli2
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end (ported); Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

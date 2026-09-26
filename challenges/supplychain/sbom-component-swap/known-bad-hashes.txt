@@ -1,0 +1,5 @@
+# Known-bad artifact hashes (SHA-256) - internal SOC feed
+e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855  empty-placeholder
+5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9  test-vector-a
+cb512bc9c1addaa11efd905a870dc559818497eac0cfdfdb23e1d30cfac0892b  acme-updater-backdoor
+6b86b273ff34fce19d6b804eff5a3f5747ada4eaa22f1d49c01e52ddb7875b4b  test-vector-b

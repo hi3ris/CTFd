@@ -1,0 +1,38 @@
+name: tap-code
+author: dagbanjaphet
+category: warmup
+description: |-
+  `taps.txt` is a list of two-digit numbers. Each number is a row then a
+  column in this 5x5 letter square (read across, then down):
+
+  ```
+      1 2 3 4 5
+    1 A B C D E
+    2 F G H I J
+    3 L M N O P
+    4 Q R S T U
+    5 V W X Y Z
+  ```
+
+  So `44` is row 4, column 4 = `T`. A double space separates words.
+  Decode it, then lowercase and join the words with underscores as the
+  flag body.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{tap_code_polybius}
+tags:
+  - warmup
+  - classical
+  - tap-code
+  - beginner
+files:
+  - taps.txt
+state: visible
+version: "0.1"

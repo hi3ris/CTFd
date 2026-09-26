@@ -1,0 +1,44 @@
+name: shell-lock
+author: dagbanjaphet
+category: reverse
+description: |-
+  `lock.sh` is a small self-decrypting shell script. Run it with the right
+  password and it prints the flag; run it wrong and it says "access denied".
+  Nothing in the file is readable at a glance.
+
+  Recover the flag. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{sh3ll_self_d3crypt_pe3led}
+hints:
+  - content: >-
+      Two variables hold everything: `_k` (a hex string) and `_b` (base64). The
+      script rebuilds the password from `_k` before the gate. Trace what the
+      first `perl` line does to `_k`.
+    cost: 10
+    key: h1
+  - content: >-
+      `_k` is the password obfuscated by a single-byte XOR then hex-encoded --
+      trace the perl line to recover the XOR byte and de-obfuscate it. `_b` is
+      then the base64 of the flag XORed with that password (repeated); reverse
+      those two steps to reveal it.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - reverse
+  - shell
+  - easy
+files:
+  - lock.sh
+state: visible
+version: "0.1"

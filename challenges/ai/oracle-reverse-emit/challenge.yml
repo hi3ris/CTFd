@@ -1,0 +1,50 @@
+name: oracle-reverse-emit
+author: dagbanjaphet
+category: ai
+description: |-
+  **RedactBot** ships as `oracle.py` with a `respond(prompt)` entry point. It
+  will happily talk about its internal diagnostic code, but a data-loss-
+  prevention layer scrubs the response before you ever see it, so straight
+  requests come back `[REDACTED-BY-DLP]`.
+
+  Runs fully offline -- no network, no real model. Get the code out intact by
+  calling the shipped oracle. The code is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{r3v3rs3d_0utput_dodg3s_th3_r3d4ct0r}
+hints:
+  - content: >-
+      The oracle is not hiding the code from you -- something downstream is
+      erasing it on the way out. Think about what shape that redactor matches.
+    cost: 10
+    key: h1
+  - content: >-
+      The redactor only recognises a literal NCTF{...} token. The oracle also
+      accepts formatting directives in your request.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Ask for the code "reversed". The reversed string does not match the
+      redactor's pattern, so it passes through. Reverse it back yourself.
+    cost: 20
+    key: h3
+    requirements: [h2]
+tags:
+  - ai
+  - output-filter
+  - guardrail-bypass
+  - easy
+files:
+  - oracle.py
+state: visible
+version: "0.1"

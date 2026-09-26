@@ -1,0 +1,16 @@
+version: "3.8"
+services:
+  api:
+    image: kekeli/internal-api:staging
+    env_file: .env
+    environment:
+      - APP_JWT_SECRET=${APP_JWT_SECRET}
+    ports:
+      - "8080:8080"
+    command: ["python", "-m", "app.session"]
+  db:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_USER: api
+      POSTGRES_PASSWORD: api
+      POSTGRES_DB: api

@@ -1,0 +1,13 @@
+# Local run notes for chains-pipeline (STUB).
+#   docker build -t ctf-chains-pipeline:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  chains-pipeline:
+    image: ctf-chains-pipeline:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

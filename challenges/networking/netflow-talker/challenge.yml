@@ -1,0 +1,51 @@
+name: netflow-talker
+author: dagbanjaphet
+category: networking
+description: |-
+  A NetFlow collector exported a batch of flow records (`flows.csv`): one row per
+  flow with the usual 5-tuple plus packet and byte counters and millisecond
+  timestamps. One host clearly dominates the traffic.
+
+  Find the host that stands out, look at how it behaves across its flows, and
+  read the message it leaves behind. That is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{netflow_top_talker_exfil_over_high_ports}
+hints:
+  - content: >-
+      Flow records are meant to be aggregated. Group by source address and sum
+      the byte counters to find the "top talker" — the single host moving the
+      most data.
+    cost: 15
+    key: h1
+  - content: >-
+      Once you have the top talker, look only at its flows. They all target one
+      collector on unusually high destination ports, one flow per port.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Sort that host's flows by start time (first_ms). Each destination port is
+      40000 + a byte: chr(dport - 40000) gives one character. Read them in time
+      order to spell the flag. Other hosts also touch high ports — ignore them.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - netflow
+  - traffic-analysis
+  - medium
+files:
+  - flows.csv
+state: visible
+version: "0.1"

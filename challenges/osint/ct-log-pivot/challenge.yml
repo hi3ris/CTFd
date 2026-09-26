@@ -1,0 +1,56 @@
+name: ct-log-pivot
+author: dagbanjaphet
+category: osint
+description: |-
+  Reconnaissance sur le domaine `cert.tg`. On vous remet la zone DNS publique
+  (`cert.tg.zone`), l'enregistrement WHOIS (`whois.txt`), un extrait de journal
+  de transparence des certificats (`ct-log.txt`) et un cache de résolveur DNS
+  (`resolver_cache.txt`).
+
+  L'opérateur n'a pas publié tous ses hôtes. Retrouvez celui qui ne figure nulle
+  part dans la zone, lisez ce qu'il expose et récupérez le flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{ct_log_san_leaked_shadow_subdomain}
+hints:
+  - content: >-
+      La zone DNS ne liste que les hôtes « officiels ». Les certificats émis,
+      eux, trahissent des noms d'hôtes que l'on voulait garder discrets.
+    cost: 22
+    key: h1
+  - content: >-
+      Dans `ct-log.txt`, listez les SAN se terminant par `cert.tg` sur les
+      certificats VALIDES. Ignorez les wildcards `*.cert.tg`, les certificats
+      expirés et les autres domaines. Un seul sous-domaine n'est pas dans la zone.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Ce sous-domaine fantôme possède un enregistrement TXT dans
+      `resolver_cache.txt` de la forme `nctf-b32=<base32>`. Décodez le base32
+      (alphabet RFC4648 standard) pour obtenir le flag. Les autres TXT sont des
+      leurres.
+    cost: 60
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - dns
+  - certificate-transparency
+  - easy
+files:
+  - cert.tg.zone
+  - whois.txt
+  - ct-log.txt
+  - resolver_cache.txt
+state: visible
+version: "0.1"

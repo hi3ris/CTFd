@@ -1,0 +1,57 @@
+name: reseau-pyramide
+author: dagbanjaphet
+category: web
+type: team_instance
+description: |-
+  **KékéliCash** est une plateforme de marketing de réseau (« MLM »).
+  _Simulation : argent fictif, aucune valeur, et aucun SMS n'est jamais envoyé —
+  le numéro n'est qu'une chaîne._
+
+  Vous héritez d'un compte distributeur (`ROOT`) avec un peu de capital. La
+  plateforme verse des commissions en remontant la chaîne de parrainage quand un
+  membre s'active. Pour vous inscrire il faut un numéro togolais... mais rien ne
+  le vérifie.
+
+  Objectif : **battre l'économie**. Le jeu honnête fait perdre de l'argent (la
+  maison prélève l'essentiel de chaque achat), donc inscrire une armée de faux
+  filleuls ne rapporte rien en soi. Trouvez la faille de **logique métier**,
+  faites gonfler votre solde au-delà du jackpot, et la plateforme vous remet le
+  drapeau sur `/flag`.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 400
+extra:
+  docker_image: ctf-web-reseau-pyramide:latest
+  internal_port: 8080
+  initial: 400
+  decay: 30
+  minimum: 100
+flags:
+  - type: team_hmac
+    content: web-reseau-pyramide
+hints:
+  - content: >-
+      Le numéro non vérifié n'est que la porte : il te donne autant de comptes
+      que tu veux, mais chaque achat enrichit surtout la maison. Cherche plutôt
+      un mouvement d'argent qui n'est pas conservé — une opération qui crédite
+      sans débiter l'équivalent ailleurs.
+    cost: 30
+    key: h1
+  - content: >-
+      Deux endroits trahissent l'économie : une prime qui n'est versée qu'« une
+      fois » mais que rien ne marque comme payée, et un remboursement qui rend
+      l'achat sans reprendre la commission déjà versée au parrain. L'un ou
+      l'autre, répété entre tes propres comptes, dépasse le jackpot.
+    cost: 60
+    key: h2
+    requirements: [h1]
+tags:
+  - web
+  - business-logic
+  - mlm
+  - medium
+connection_info: "http://{host}:{port}/  (instance par équipe ; bouton « launch »)"
+state: visible  # IMPLEMENTED + locally verified end-to-end; Lot-5 rehearsal passed 2026-09-26 (CI: build + solver -> flag OK)
+version: "1.0"

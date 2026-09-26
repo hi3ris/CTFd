@@ -1,0 +1,50 @@
+name: notarysvc-kdf
+author: ctf-2026
+category: crypto
+type: team_instance
+description: |
+  Dérivation de clé faible -> prédiction -> reprise de session.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 250
+extra:
+  docker_image: ctf-crypto-notarysvc-kdf:latest
+  internal_port: 8080
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: crypto-notarysvc-kdf
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      La clé serveur dérive d'une graine à 4 chiffres. Combien de clés possibles, et que t'offre /login ?
+    cost: 20
+    key: h1
+  - content: >-
+      L'espace des graines est minuscule (10⁴) : brute-force hors-ligne la graine en confrontant chaque clé candidate au jeton que /login t'a donné, puis, la clé retrouvée, forge le jeton du rôle admin.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - crypto
+  - medium
+
+# challenge-id (HMAC / requirements wiring): crypto-notarysvc-kdf
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end (ported); Lot-5 rehearsal passed 2026-09-23
+version: "1.0"

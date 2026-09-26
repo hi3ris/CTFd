@@ -1,0 +1,50 @@
+name: alias-slip
+author: dagbanjaphet
+category: sysadmin
+description: |-
+  A snapshot of a small nginx-served site: the site config `nginx.conf` and the
+  document tree it serves (under `webroot/`). One private directory is supposed
+  to be unreachable, yet a stale backup inside it holds the admin token. No file
+  contains the flag literally.
+
+  Read the config, find the way in, recover the admin token, and wrap it as
+  `NCTF{nginx_alias_offbyslash_<token>}`.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{nginx_alias_offbyslash_a7f3c0de91}
+hints:
+  - content: >-
+      Compare each `location` prefix with its `alias` target very carefully —
+      one pair does not agree on trailing slashes.
+    cost: 10
+    key: h1
+  - content: >-
+      When a `location` has no trailing slash but its `alias` does, nginx lets a
+      request like `/assets../` climb out of the aliased directory into its
+      siblings. The `config/` directory is a sibling of `assets/`; a `.bak`
+      lives there. Resolve the path against `webroot/`, read `ADMIN_API_TOKEN`,
+      and wrap it as `NCTF{nginx_alias_offbyslash_<token>}`.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - sysadmin
+  - nginx
+  - path-traversal
+  - easy
+files:
+  - nginx.conf
+  - webroot/srv/kekeli/public/index.html
+  - webroot/srv/kekeli/public/assets/logo.txt
+  - webroot/srv/kekeli/public/config/settings.py.bak
+state: visible
+version: "0.1"

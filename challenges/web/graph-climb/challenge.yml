@@ -1,0 +1,54 @@
+name: graph-climb
+author: ctf-2026
+category: web
+type: team_instance
+description: |
+  Introspection GraphQL -> IDOR -> mass-assignment vers rôle admin.
+
+  This instance's flag is on the service's filesystem, served by no route.
+  Exploit the service to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring.
+value: 450
+extra:
+  docker_image: ctf-web-graph-climb:latest
+  internal_port: 8080
+  initial: 450
+  decay: 25
+  minimum: 100
+
+# SERVED challenge; per-team flag, no static flag ships here.
+flags:
+  - type: team_hmac
+    content: web-graph-climb
+
+# Progressive, point-costing hints. Fill these when the vuln is implemented; the
+# CVE id (if any) goes in a paid hint, never in the description.
+hints:
+  - content: >-
+      L'introspection est ouverte. Regarde les mutations disponibles et les
+      champs de l'utilisateur — lesquels peux-tu écrire ?
+    cost: 20
+    key: h1
+  - content: >-
+      Chaîne : introspection -> IDOR sur user(id) -> mass-assignment via
+      updateUser(id, patch) qui écrit role. Promeus ton viewer (id 1000) en
+      admin puis lis viewer { flag }.
+    cost: 40
+    key: h2
+    requirements: [h1]
+
+tags:
+  - web
+  - cve
+  - hard
+
+# challenge-id (HMAC / requirements wiring): web-graph-climb
+connection_info: "http://{host}:{port}/  (per-team instance; use the 'launch' button)"
+
+state: visible  # IMPLEMENTED + locally verified end-to-end (ported); Lot-5 rehearsal passed 2026-09-23
+version: "1.0"
