@@ -53,5 +53,5 @@ tags:
   - mlm
   - medium
 connection_info: "http://{host}:{port}/  (instance par équipe ; bouton « launch »)"
-state: hidden  # IMPLEMENTED + locally verified end-to-end (logic; Flask+solveur); flip to visible after Lot-5 Docker rehearsal
+state: visible  # IMPLEMENTED + locally verified end-to-end; Lot-5 rehearsal passed 2026-09-26 (CI: build + solver -> flag OK)
 version: "1.0"
