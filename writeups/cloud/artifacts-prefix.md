@@ -1,6 +1,6 @@
 # artifacts-prefix
 
-**Catégorie** cloud · **Points** 450 · **Auteur** ctf-2026
+**Catégorie** cloud · **Points** 300 · **Auteur** ctf-2026
 
 # cloud-artifacts-prefix — solution
 

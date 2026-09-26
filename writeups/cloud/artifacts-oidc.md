@@ -1,6 +1,6 @@
 # artifacts-oidc
 
-**Catégorie** cloud · **Points** 500 · **Auteur** ctf-2026
+**Catégorie** cloud · **Points** 300 · **Auteur** ctf-2026
 
 # cloud-artifacts-oidc — solution
 

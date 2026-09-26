@@ -116,26 +116,85 @@ def _by_category(items):
     return cats
 
 
+def _redacted_section(c):
+    """The per-challenge block on a category page (anchor, heading, meta, body)."""
+    body = [f'<a id="{c["slug"]}"></a>', "", f"## {c['name']}", ""]
+    meta = []
+    if c["value"] is not None:
+        meta.append(f"{c['value']} pts")
+    if c["author"]:
+        meta.append(f"auteur : {c['author']}")
+    if meta:
+        body += ["_" + " · ".join(meta) + "_", ""]
+    if c["readme"]:
+        body += [shift_headings(redact(c["readme"], c["flags"]), 2).rstrip(), ""]
+    else:
+        body += ["_Pas de writeup publié pour ce challenge._", ""]
+    return "\n".join(body)
+
+
+def _pack_category(cat, chals, budget):
+    """Split a category's sections into parts under `budget` bytes.
+
+    Returns (parts, route_of): parts is a list of {route, chals}; route_of maps
+    slug -> its part route. The first part keeps the bare `<cat>` route (so
+    existing links hold), overflow goes to `<cat>-2`, `<cat>-3`, ...
+    """
+    groups, cur, cur_size = [], [], 0
+    for c in chals:
+        sz = len(_redacted_section(c).encode()) + 1
+        if sz > budget:
+            raise SystemExit(
+                f"writeup de `{c['name']}` ({sz} o) dépasse à lui seul la limite de "
+                f"page ({budget} o) ; raccourcir son solution/README.md"
+            )
+        if cur and cur_size + sz > budget:
+            groups.append(cur)
+            cur, cur_size = [], 0
+        cur.append(c)
+        cur_size += sz
+    if cur:
+        groups.append(cur)
+    parts, route_of = [], {}
+    for i, grp in enumerate(groups):
+        route = f"{INDEX_ROUTE}/{cat}" + ("" if i == 0 else f"-{i + 1}")
+        parts.append({"route": route, "chals": grp})
+        for c in grp:
+            route_of[c["slug"]] = route
+    return parts, route_of
+
+
 def build_pages(items, ctf_name="NCTF26", intro=None):
-    """[{route, title, content, menu}] : the index first, then one page per category."""
+    """[{route, title, content, menu}] : the index first, then category pages.
+
+    A category that would exceed the DB TEXT cap is split into `<cat>`,
+    `<cat>-2`, ... and the index links each challenge to its part.
+    """
     cats = _by_category(items)
     n = len(items)
+    # Leave headroom for each category page's own header + back-link + joins.
+    budget = MAX_PAGE_BYTES - 800
+    packed = {cat: _pack_category(cat, chals, budget) for cat, chals in cats.items()}
+
     lines = [
         f"# Writeups {ctf_name}",
         "",
         intro
         or (
-            f"**{n} challenges**, **{len(cats)} catégories**. Une page par catégorie, une "
-            "section par challenge : vulnérabilité, étapes, ce qu'il fallait voir. Les "
-            f"flags réels sont masqués (`{PLACEHOLDER}`), les solveurs ne sont pas publiés."
+            f"**{n} challenges**, **{len(cats)} catégories**. Une page par catégorie "
+            "(scindée si besoin), une section par challenge : vulnérabilité, étapes, ce "
+            f"qu'il fallait voir. Les flags réels sont masqués (`{PLACEHOLDER}`), les "
+            "solveurs ne sont pas publiés."
         ),
         "",
     ]
     for cat, chals in cats.items():
-        lines += [f"## {cat} ({len(chals)})", ""]
+        parts, route_of = packed[cat]
+        suffix = f" — {len(parts)} parties" if len(parts) > 1 else ""
+        lines += [f"## {cat} ({len(chals)}){suffix}", ""]
         lines += ["| challenge | pts | auteur | writeup |", "| --- | --- | --- | --- |"]
         for c in chals:
-            link = f"/{INDEX_ROUTE}/{cat}#{c['slug']}"
+            link = f"/{route_of[c['slug']]}#{c['slug']}"
             has = "[writeup](%s)" % link if c["readme"] else "_pas de writeup_"
             lines.append(
                 f"| `{c['name']}` | {c['value'] if c['value'] is not None else ''} | "
@@ -150,37 +209,26 @@ def build_pages(items, ctf_name="NCTF26", intro=None):
             "menu": True,
         }
     ]
-    for cat, chals in cats.items():
-        body = [
-            f"# Writeups — {cat}",
-            "",
-            f"[← Index des writeups](/{INDEX_ROUTE}) · {len(chals)} challenges",
-            "",
-        ]
-        for c in chals:
-            body += [f'<a id="{c["slug"]}"></a>', "", f"## {c['name']}", ""]
-            meta = []
-            if c["value"] is not None:
-                meta.append(f"{c['value']} pts")
-            if c["author"]:
-                meta.append(f"auteur : {c['author']}")
-            if meta:
-                body += ["_" + " · ".join(meta) + "_", ""]
-            if c["readme"]:
-                body += [
-                    shift_headings(redact(c["readme"], c["flags"]), 2).rstrip(),
-                    "",
-                ]
-            else:
-                body += ["_Pas de writeup publié pour ce challenge._", ""]
-        pages.append(
-            {
-                "route": f"{INDEX_ROUTE}/{cat}",
-                "title": f"Writeups — {cat}",
-                "content": "\n".join(body),
-                "menu": False,
-            }
-        )
+    for cat in cats:
+        parts, _ = packed[cat]
+        for i, part in enumerate(parts):
+            ptitle = cat if len(parts) == 1 else f"{cat} ({i + 1}/{len(parts)})"
+            body = [
+                f"# Writeups — {ptitle}",
+                "",
+                f"[← Index des writeups](/{INDEX_ROUTE}) · {len(part['chals'])} challenges",
+                "",
+            ]
+            for c in part["chals"]:
+                body.append(_redacted_section(c))
+            pages.append(
+                {
+                    "route": part["route"],
+                    "title": f"Writeups — {ptitle}",
+                    "content": "\n".join(body),
+                    "menu": False,
+                }
+            )
     for p in pages:
         size = len(p["content"].encode())
         if size > MAX_PAGE_BYTES:

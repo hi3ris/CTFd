@@ -1,6 +1,6 @@
 # notarysvc-kdf
 
-**Catégorie** crypto · **Points** 500 · **Auteur** ctf-2026
+**Catégorie** crypto · **Points** 250 · **Auteur** ctf-2026
 
 # crypto-notarysvc-kdf — solution
 
