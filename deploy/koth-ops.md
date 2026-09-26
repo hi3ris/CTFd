@@ -107,6 +107,42 @@ que le plugin traduit en points pleins/moitié. Ajouter les collines à
 `make local-koth` en câble une (The Armory) en local sur le port 28902.
 Détails et solveurs : `challenges/koth/boot2root/README.md`.
 
+## Colline « Réseau Fortune » (finale — le réseau le plus riche tient la couronne)
+
+`challenges/koth/reseau-fortune/` est une colline **économique** : une arène MLM
+fictive (KékéliCash) partagée par toutes les équipes. Chaque équipe rejoint avec
+son **jeton KotH** (`POST /api/join {token}`), reçoit un compte distributeur seedé
+et cherche une faille de logique métier pour enrichir son réseau (numéro non
+vérifié = sybil, mais le jeu honnête perd de l'argent ; bugs : prime non
+idempotente, remboursement sans reprise de commission). Le `/king` renvoie le
+jeton de **l'équipe la plus riche à l'instant t** ; le scorer couronne donc le
+réseau le plus riche. Aucun flag, aucun SMS, argent fictif.
+
+```bash
+docker build -t ctf-koth-reseau-fortune challenges/koth/reseau-fortune
+# via son compose : SCORER_SECRET=$KOTH_SCORER_SECRET  (interne :8080)
+```
+
+Entrée `KOTH_HILLS` (finale) — points modérés, l'arène étant très rentable une
+fois la faille trouvée :
+
+```json
+{
+  "id": "koth-reseau-fortune",
+  "name": "Réseau Fortune",
+  "url": "http://koth-reseau-fortune:8080",
+  "player_url": "https://ctf.exemple.tg/koth-reseau-fortune",
+  "points": 3
+}
+```
+
+Griefing borné (on n'aide que le code de parrainage qu'on nomme, on ne débite que
+ses propres comptes). Poser un **rate-limit au front** sur `/api/*` pour que le
+gagnant soit la meilleure automatisation, pas le plus gros débit. Leviers de
+durcissement (TOCTOU, cycle de parrainage) : voir `solution/README.md`. Finale
+uniquement (à 300 en présélection, préférer la version jeopardy isolée
+`challenges/web/reseau-pyramide/`).
+
 ## Configurer le plugin CTFd
 
 Variables d'environnement sur le conteneur **CTFd** :

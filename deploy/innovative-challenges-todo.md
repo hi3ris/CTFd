@@ -144,6 +144,19 @@ résistante aux LLM, car domaine peu représenté dans les corpus) : un challeng
 serait à la fois local, spectaculaire et neuf — à concevoir avec la connaissance
 métier de l'équipe CERT.tg, sans référence externe à recopier.
 
+- [x] **Réseau pyramidal / MLM (fraude anti-vérification)** — FAIT, angle
+      togolais réalisé. Plateforme MLM fictive « KékéliCash » : inscription par
+      numéro togolais **non vérifié** (sybil), commissions multi-niveaux,
+      l'économie est conservée (la maison prélève) donc le jeu honnête perd —
+      seuls des **bugs de logique métier** (prime non idempotente, remboursement
+      sans reprise de commission) rendent le gain positif. Deux formes : - Présélection : `challenges/web/reseau-pyramide/` — jeopardy servi isolé
+      (`team_instance`), flag team_hmac au franchissement du jackpot ; validé
+      hors-ligne (Flask + solveur), 2 chemins d'exploit. - Finale : `challenges/koth/reseau-fortune/` — colline KotH partagée, le
+      `/king` couronne le **réseau le plus riche** (scorer existant, zéro
+      modif plugin) ; validé hors-ligne. Doc : `deploy/koth-ops.md`.
+      Portée défensive directe (les arnaques pyramidales sont un fléau régional)
+      et résistant aux LLM (domaine métier peu représenté).
+
 ### Priorité de sélection (synthèse)
 
 - **Présélection (300, sans coût Bedrock)** : MCP statique (audit de manifestes),
