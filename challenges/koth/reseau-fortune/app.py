@@ -29,6 +29,11 @@ app = Flask(__name__)
 app.secret_key = os.urandom(16)
 
 SCORER_SECRET = os.environ.get("SCORER_SECRET", "")
+# Shared arena: a light per-IP rate limit on /api/* protects every team from one
+# team flooding the box. Generous by default (does not hinder legit exploitation);
+# lower RATE_PER_MIN in ops if needed. Also put a rate limit at the front proxy.
+RATE_PER_MIN = int(os.environ.get("RATE_PER_MIN", "1200"))
+_RATE = {}  # ip -> [window_start_min, count]
 
 # --- economy constants (FCFA, integers) ------------------------------------
 SEED = 50_000
@@ -101,6 +106,29 @@ def _public(acc):
         "commissions": acc["commissions"],
         "net_gain": _net_gain(acc),
     }
+
+
+@app.before_request
+def _rate_limit():
+    # Only throttle player API calls; leave "/", "/king" and static alone.
+    if not request.path.startswith("/api/"):
+        return None
+    ip = (
+        (request.headers.get("X-Forwarded-For", request.remote_addr or "?"))
+        .split(",")[0]
+        .strip()
+    )
+    window = int(time.time() // 60)
+    with _LOCK:
+        slot = _RATE.get(ip)
+        if not slot or slot[0] != window:
+            _RATE[ip] = [window, 0]
+            slot = _RATE[ip]
+        slot[1] += 1
+        over = slot[1] > RATE_PER_MIN
+    if over:
+        return jsonify(error="trop de requêtes, réessaie dans une minute"), 429
+    return None
 
 
 # --- routes -----------------------------------------------------------------

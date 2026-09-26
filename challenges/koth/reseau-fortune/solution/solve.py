@@ -12,10 +12,21 @@ Usage:
 If scorer_secret is given, the script confirms /king crowns our token.
 """
 import sys
+import time
 
 import requests
 
 PRIME = 3_000
+
+
+def _post(s, url, **kw):
+    """POST with a small backoff if the arena's rate limit (429) kicks in."""
+    for _ in range(1000):
+        r = s.post(url, **kw)
+        if r.status_code != 429:
+            return r
+        time.sleep(1.0)
+    return r
 
 
 def solve(base, token, scorer_secret=None, target=1_000_000):
@@ -23,25 +34,27 @@ def solve(base, token, scorer_secret=None, target=1_000_000):
     s = requests.Session()
 
     # join the shared arena with our KotH token -> seeded distributor account
-    s.post(f"{base}/api/join", json={"token": token}).raise_for_status()
+    _post(s, f"{base}/api/join", json={"token": token}).raise_for_status()
     root = s.get(f"{base}/api/me").json()["code"]
 
     # register + fund + activate one filleul under us (phone never verified)
-    reg = s.post(
-        f"{base}/api/register", json={"phone": "22890000002", "parrain_code": root}
+    reg = _post(
+        s, f"{base}/api/register", json={"phone": "22890000002", "parrain_code": root}
     )
     reg.raise_for_status()
     filleul_code = reg.json()["code"]
-    s.post(
-        f"{base}/api/transfer", json={"to_code": filleul_code, "montant": 5_000}
+    _post(
+        s, f"{base}/api/transfer", json={"to_code": filleul_code, "montant": 5_000}
     ).raise_for_status()
-    s.post(f"{base}/api/login", json={"phone": "22890000002"}).raise_for_status()
-    s.post(f"{base}/api/buy", json={"product": "starter", "qty": 1}).raise_for_status()
+    _post(s, f"{base}/api/login", json={"phone": "22890000002"}).raise_for_status()
+    _post(
+        s, f"{base}/api/buy", json={"product": "starter", "qty": 1}
+    ).raise_for_status()
 
     # back to our root, replay the bonus past the target gain
-    s.post(f"{base}/api/join", json={"token": token}).raise_for_status()
+    _post(s, f"{base}/api/join", json={"token": token}).raise_for_status()
     while s.get(f"{base}/api/me").json()["net_gain"] < target:
-        s.post(f"{base}/api/bonus/activation", json={"filleul_code": filleul_code})
+        _post(s, f"{base}/api/bonus/activation", json={"filleul_code": filleul_code})
 
     gain = s.get(f"{base}/api/me").json()["net_gain"]
     print(f"net_gain={gain}")
