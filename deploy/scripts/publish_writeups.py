@@ -146,7 +146,8 @@ def _pack_category(cat, chals, budget):
         if sz > budget:
             raise SystemExit(
                 f"writeup de `{c['name']}` ({sz} o) dépasse à lui seul la limite de "
-                f"page ({budget} o) ; raccourcir son solution/README.md"
+                f"page ({MAX_PAGE_BYTES} o = TEXT MariaDB 64 Ko) ; raccourcir son "
+                "solution/README.md"
             )
         if cur and cur_size + sz > budget:
             groups.append(cur)
@@ -173,7 +174,7 @@ def build_pages(items, ctf_name="NCTF26", intro=None):
     cats = _by_category(items)
     n = len(items)
     # Leave headroom for each category page's own header + back-link + joins.
-    budget = MAX_PAGE_BYTES - 800
+    budget = max(1, MAX_PAGE_BYTES - 800)
     packed = {cat: _pack_category(cat, chals, budget) for cat, chals in cats.items()}
 
     lines = [
