@@ -1,0 +1,13 @@
+# Local run notes for cloud-artifacts-presign (STUB).
+#   docker build -t ctf-cloud-artifacts-presign:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  cloud-artifacts-presign:
+    image: ctf-cloud-artifacts-presign:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

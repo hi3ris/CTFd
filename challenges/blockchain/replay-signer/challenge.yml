@@ -1,0 +1,45 @@
+name: replay-signer
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You captured two withdrawal requests signed by the same treasury key
+  (`signatures.json`) and the source of the authorizer
+  (`SignedTreasury.sol`). The vault note in `cipher_hex` is sealed with
+  that key. Recover it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{same_nonce_leaks_the_whole_key}
+hints:
+  - content: >-
+      Compare the two signatures carefully. What component do they share, and what does an ECDSA signer promise never to repeat?
+    cost: 25
+    key: h1
+  - content: >-
+      Equal r means the same nonce k. From two signatures over different messages you can solve for k, then the private key d.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      z_i = keccak256(message_i) mod n. k=(z1-z2)/(s1-s2), d=(s1*k-z1)/r mod n. Seed keystream with d (32 bytes) and XOR cipher_hex.
+    cost: 70
+    key: h3
+    requirements: [h2]
+tags:
+  - blockchain
+  - evm
+  - ecdsa
+  - hard
+files:
+  - SignedTreasury.sol
+  - signatures.json
+state: visible
+version: "0.1"

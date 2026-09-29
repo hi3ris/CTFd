@@ -1,0 +1,48 @@
+name: wire-tap
+author: dagbanjaphet
+category: misc
+description: |-
+  We captured a single serialized message off the wire (`message.bin`) but the
+  application's schema went missing. `strings` gives you nothing useful. Recover
+  the structure from the bytes themselves and pull out the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{protobuf_is_just_tagged_varints}
+hints:
+  - content: >-
+      This is Protocol Buffers wire format. Every field is a varint key
+      (`field_number << 3 | wire_type`) followed by a payload. You do not need
+      the `.proto`; `protoc --decode_raw` or a hand-written varint reader works.
+    cost: 15
+    key: h1
+  - content: >-
+      Decode the top-level fields. One varint field is a single-byte key, and a
+      nested (length-delimited) message holds a length-delimited byte string.
+      That byte string is the flag XORed with the key byte.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Read field 2 of the outer message as the key, descend into field 4, take
+      its field 2 bytes, and XOR each byte with the key to get printable ASCII.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - misc
+  - protobuf
+  - reverse-engineering
+  - medium
+files:
+  - message.bin
+state: visible
+version: "0.1"

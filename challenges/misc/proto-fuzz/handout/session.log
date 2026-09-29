@@ -1,0 +1,31 @@
+# Captured FZLP/1 session (benign, verbatim). Lines prefixed ">" are
+# client->server, lines prefixed "<" are server->client. Nothing is exploited
+# here -- this is a normal provisioning poke, provided so you can see the
+# framing exactly as the server produced it.
+
+< FZLP/1 ready
+> PING
+< PONG
+> HELP
+< verbs: PING STAT CFG HELP SU
+> STAT
+< STAT ch0=00 ch1=00 ch2=00 mask=0x00 reserved_admin_ch=0x07
+> CFG 1
+> 01
+> STAT
+< OK mask=0x01
+> PING
+< PONG
+> DUMP
+< ERR locked: maintenance channel not armed
+> SU root
+< ERR: SU disabled on this build; channels are provisioned via CFG
+> PING
+< PONG
+
+# Operator's aside jotted under the capture:
+#   "Careful reading this back: I typed CFG 1, then one entry (01), then STAT --
+#    but STAT produced NO reply, and the 'OK mask=0x01' only showed up after it.
+#    The next PING answered fine. It's as if CFG 1 consumed my STAT line as part
+#    of the config. The wiki says CFG <n> reads n entry lines... apparently not
+#    exactly n. Buffer thing? Ignoring it for now."

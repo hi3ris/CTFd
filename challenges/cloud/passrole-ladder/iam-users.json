@@ -1,0 +1,24 @@
+{
+  "Users": [
+    {
+      "UserName": "mallory",
+      "Arn": "arn:aws:iam::444455556666:user/mallory",
+      "AttachedManagedPolicies": [
+        {
+          "PolicyName": "ci-lambda-deployer",
+          "PolicyArn": "arn:aws:iam::444455556666:policy/ci-lambda-deployer"
+        }
+      ]
+    },
+    {
+      "UserName": "reporting-bot",
+      "Arn": "arn:aws:iam::444455556666:user/reporting-bot",
+      "AttachedManagedPolicies": [
+        {
+          "PolicyName": "read-metrics-only",
+          "PolicyArn": "arn:aws:iam::444455556666:policy/read-metrics-only"
+        }
+      ]
+    }
+  ]
+}

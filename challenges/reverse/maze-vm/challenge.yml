@@ -1,0 +1,88 @@
+name: maze-vm
+author: challenge-team
+category: reverse
+description: |-
+  We recovered a small self-contained "gate" binary, `chall`. It refuses to
+  explain itself: feed it the one input it accepts and it hands you the flag;
+  feed it anything else and it just says "Denied."
+
+  There is NO flag string and NO passphrase string in the binary: only enough
+  to recognize the correct input once it reaches the gate. The accepted input
+  is itself the secret -- when it validates, the binary prints it back to you
+  inside the flag wrapper. Recover that input.
+
+  The artifact is a native x86-64 Linux ELF. No network access is required;
+  everything you need is inside the file.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the validation logic locally (explicitly allowed by the guardrails
+# for RE). No plaintext flag or passphrase is present -- only target = F(pass),
+# the transformed image the embedded program compares against. Static flag.
+#
+# Invented ISA (not DER/protobuf/known-VM, and deliberately unlike synthvm):
+#   - a stack + small-register HYBRID machine driven by a THREADED
+#     (computed-goto) dispatch loop rather than a switch,
+#   - a byte-oriented opcode set including a modular-multiply (MULMOD) and a
+#     whole-array BYTE-PERMUTE (PERM) as the only cross-byte mixing step,
+#   - LIGHT anti-analysis: the bytecode is stored rolling-XOR obfuscated and
+#     decoded in memory at startup (self-synchronizing keystream), so the
+#     at-rest bytes differ from what runs. No debugger tricks: fully static.
+# The transform is a bijection over the 16-byte input, so exactly one input
+# validates. The checker is unrolled, so the work is in lifting/reasoning
+# about the program, not a tiny loop. See src/gen.py for the full spec
+# (dev-only, NOT shipped).
+#
+# Distinct from synthvm (different dispatch model, different anti-analysis,
+# different opcode set, and the flag is DERIVED/printed on success rather than
+# being the raw input compared to a target). Standalone: no 'requirements'
+# chain. Nothing served: no connection_info.
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 45
+  minimum: 150
+
+flags:
+  - NCTF{m4ze_vm_thr34d3d}
+
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The validation is not ordinary compiled code: the binary carries an
+      embedded program plus an interpreter that runs it to decide. Work out how
+      that machine fetches and dispatches its own instructions (a threaded /
+      computed-goto loop) and what each opcode does before you trust any listing.
+    cost: 25
+    key: h1
+  - content: >-
+      The embedded program is stored scrambled and only unpacked in memory at
+      startup, so the bytes at rest are not the bytes that run. Reproduce the
+      unpacking first: a rolling-XOR keystream,
+      `key = seed; plain = o ^ key; key = (key*mul + o) mod 256`. The blob is
+      prefixed with the magic `MZVMv1`.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Every arithmetic step is per-byte (add / modular-multiply / xor / rotate)
+      and the ONLY cross-byte mixing is one whole-array byte permutation -- so
+      each output byte depends on exactly one input byte. Reimplement the VM as
+      an oracle and brute-force each of the 16 input positions (16 x 256 evals)
+      until its output byte matches the embedded target.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+tags:
+  - reverse
+  - hard
+
+files:
+  - chall

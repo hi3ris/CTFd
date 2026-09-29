@@ -1,0 +1,78 @@
+name: "Audio FSK"
+author: "ctf-team"
+category: forensics
+description: |
+  Nous avons intercepté une courte liaison descendante RF et enregistré la bande
+  de base démodulée dans un fichier WAV (`transmission.wav`). Elle transporte des
+  données, mais l'émetteur n'utilise pas un paramétrage standard : les outils
+  génériques, pointés dessus avec leurs réglages par défaut, ne donnent rien.
+
+  Lisez `SIGNAL_BRIEF.md` : il décrit la disposition de la trame et vous laisse
+  récupérer les constantes de couche physique depuis l'enregistrement lui-même.
+
+  Démodulez la liaison descendante principale, réassemblez la trame et lisez le
+  payload. Le flag est intégré au texte du payload. Tout est résoluble par
+  traitement du signal — inutile d'écouter l'audio.
+
+  Attention : un leurre bien plus faible apparaît plus tard dans l'enregistrement
+  et se décode « trop facilement ». La vraie liaison, elle, est vérifiable.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{...}  (lettres minuscules, chiffres et underscores).
+
+# This is a STATIC, downloadable forensics artifact: the challenge IS the WAV
+# recording, so the flag is baked into the modulated bitstream. No served
+# component and no per-team HMAC flag (see deploy/anti-llm-guardrails.md, the
+# reverse/forensics static-artifact exception).
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 45
+  minimum: 150
+
+flags:
+  - "NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Ne l'écoutez pas — analysez-le. L'information est portée par la manière
+      dont la FRÉQUENCE du son varie dans le temps, pas par son amplitude. Un
+      spectrogramme (ou une FFT de la salve la plus forte) révèle la structure.
+    cost: 25
+    key: h1
+  - content: >-
+      C'est du FSK binaire : deux tonalités, une par bit. Mesurez les deux
+      fréquences ET le débit (bauds) DEPUIS le signal — les valeurs ne sont pas
+      standard, d'où l'échec de `minimodem` par défaut. La trame suit
+      préambule → mot de synchro → longueur → payload → CRC-8, sans bits
+      start/stop UART.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Phase continue, 96 bauds (500 échantillons/symbole @ 48 kHz), mark (bit 1)
+      à 1855 Hz, space (bit 0) à 3145 Hz, MSB-first, mot de synchro `0x9E3A`,
+      CRC-8 (poly 0x07, init 0x00) sur LEN‖payload. Échantillonnez le tiers
+      central de chaque symbole et testez les deux polarités tonalité→bit
+      jusqu'à ce que le CRC valide.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+files:
+  - transmission.wav
+  - SIGNAL_BRIEF.md
+
+tags:
+  - forensics
+  - audio
+  - hard
+
+connection_info: null

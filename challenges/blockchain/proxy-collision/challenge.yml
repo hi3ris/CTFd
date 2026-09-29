@@ -1,0 +1,40 @@
+name: proxy-collision
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You get an upgradeable `Proxy.sol`, its `Logic.sol` implementation, and
+  a raw storage dump of the proxy (`proxy_storage.json`). One slot holds
+  the note you want. Work out the storage layout to read it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{delegatecall_hits_slot0}
+hints:
+  - content: >-
+      delegatecall runs the logic code but uses the PROXY's storage. Line up the slot numbers of both contracts.
+    cost: 15
+    key: h1
+  - content: >-
+      Logic.value sits at slot 0 -- the same slot as Proxy.implementation. A write through the proxy clobbers slot 0. Read that slot as ASCII (mind the decoy in slot 3).
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - blockchain
+  - evm
+  - delegatecall
+  - medium
+files:
+  - Proxy.sol
+  - Logic.sol
+  - proxy_storage.json
+state: visible
+version: "0.1"

@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Regenerate storage.json for private-ledger (deterministic)."""
+
+import json
+
+
+def keccak256(msg: bytes) -> bytes:
+    rc = [
+        0x0000000000000001,
+        0x0000000000008082,
+        0x800000000000808A,
+        0x8000000080008000,
+        0x000000000000808B,
+        0x0000000080000001,
+        0x8000000080008081,
+        0x8000000000008009,
+        0x000000000000008A,
+        0x0000000000000088,
+        0x0000000080008009,
+        0x000000008000000A,
+        0x000000008000808B,
+        0x800000000000008B,
+        0x8000000000008089,
+        0x8000000000008003,
+        0x8000000000008002,
+        0x8000000000000080,
+        0x000000000000800A,
+        0x800000008000000A,
+        0x8000000080008081,
+        0x8000000000008080,
+        0x0000000080000001,
+        0x8000000080008008,
+    ]
+    rot = [
+        [0, 36, 3, 41, 18],
+        [1, 44, 10, 45, 2],
+        [62, 6, 43, 15, 61],
+        [28, 55, 25, 21, 56],
+        [27, 20, 39, 8, 14],
+    ]
+    mask = (1 << 64) - 1
+    rate = 136
+
+    def rol(x, n):
+        return ((x << n) | (x >> (64 - n))) & mask
+
+    st = [[0] * 5 for _ in range(5)]
+    m = bytearray(msg)
+    m.append(0x01)
+    while len(m) % rate != 0:
+        m.append(0x00)
+    m[-1] ^= 0x80
+
+    for off in range(0, len(m), rate):
+        block = m[off : off + rate]
+        for i in range(rate // 8):
+            st[i % 5][i // 5] ^= int.from_bytes(block[i * 8 : i * 8 + 8], "little")
+        for rnd in range(24):
+            c = [st[x][0] ^ st[x][1] ^ st[x][2] ^ st[x][3] ^ st[x][4] for x in range(5)]
+            d = [c[(x - 1) % 5] ^ rol(c[(x + 1) % 5], 1) for x in range(5)]
+            for x in range(5):
+                for y in range(5):
+                    st[x][y] ^= d[x]
+            b = [[0] * 5 for _ in range(5)]
+            for x in range(5):
+                for y in range(5):
+                    b[y][(2 * x + 3 * y) % 5] = rol(st[x][y], rot[x][y])
+            for x in range(5):
+                for y in range(5):
+                    st[x][y] = b[x][y] ^ ((~b[(x + 1) % 5][y]) & b[(x + 2) % 5][y])
+            st[0][0] ^= rc[rnd]
+    out = bytearray()
+    for i in range(rate // 8):
+        if len(out) >= 32:
+            break
+        out += (st[i % 5][i // 5]).to_bytes(8, "little")
+    return bytes(out[:32])
+
+
+PLAYER = "0x00000000000000000000000000000000c0ffee01"
+OWNER = "0x000000000000000000000000000000000badc0de"
+FLAG = "NCTF{priv8_slots_r_just_public}"
+
+
+def word_uint(v):
+    return "0x" + v.to_bytes(32, "big").hex()
+
+
+def word_addr(a):
+    return "0x" + int(a, 16).to_bytes(32, "big").hex()
+
+
+def map_slot(key_addr, base):
+    b = int(key_addr, 16).to_bytes(32, "big") + base.to_bytes(32, "big")
+    return "0x" + keccak256(b).hex()
+
+
+def main():
+    s = {}
+    s[word_uint(0)] = word_addr(OWNER)
+    s[word_uint(1)] = word_uint(4210000)
+    s[word_uint(2)] = word_uint(7)
+    s[map_slot(PLAYER, 3)] = word_uint(10**18)
+    s[map_slot(OWNER, 3)] = word_uint(2 * 10**18)
+    fb = FLAG.encode()
+    s[map_slot(PLAYER, 4)] = "0x" + (fb + b"\x00" * (32 - len(fb))).hex()
+    dec = b"NCTF{not_the_real_one_keep_going}"[:32]
+    s[map_slot(OWNER, 4)] = "0x" + (dec + b"\x00" * (32 - len(dec))).hex()
+    with open("storage.json", "w") as f:
+        json.dump(s, f, indent=2, sort_keys=True)
+        f.write("\n")
+
+
+if __name__ == "__main__":
+    main()

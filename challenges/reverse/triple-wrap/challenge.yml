@@ -1,0 +1,43 @@
+name: triple-wrap
+author: dagbanjaphet
+category: reverse
+description: |-
+  `chall` is a stripped x86-64 ELF that checks a flag. Run it and it prints a
+  flag in the banner, but submitting that one is rejected. `strings` mostly shows
+  one long gibberish blob.
+
+  Recover the real flag from the binary. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{peel_b64_rot13_x0r_layers}
+hints:
+  - content: >-
+      The flag printed in the banner is a decoy. The real flag is stored wrapped
+      in the "gibberish blob" and unwrapped at runtime before it is compared to
+      your input. Read `unwrap()`.
+    cost: 10
+    key: h1
+  - content: >-
+      The blob is three stacked layers. Peel them in reverse: base64-decode the
+      blob, XOR the bytes with the embedded key string, then apply ROT13 (it is
+      its own inverse). The key is a plain string in the binary.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - reverse
+  - encoding
+  - easy
+files:
+  - chall
+state: visible
+version: "0.1"

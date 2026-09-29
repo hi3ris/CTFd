@@ -1,0 +1,54 @@
+name: dns-chain
+author: dagbanjaphet
+category: networking
+description: |-
+  A single DNS response was captured as raw bytes (`message.bin`, with
+  `message.hex` for convenience). It answers one query and packs a pile of
+  records into the answer section.
+
+  Parse the message off the wire yourself, resolve what the queried name
+  ultimately points to, and collect the text records along the way. Put together
+  correctly they spell the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{dns_wire_format_cname_chain_txt_with_compression}
+hints:
+  - content: >-
+      This is RFC 1035 wire format: a 12-byte header (id, flags, qd/an/ns/ar
+      counts), then the question, then answer resource records (name, type,
+      class, ttl, rdlength, rdata).
+    cost: 15
+    key: h1
+  - content: >-
+      Names use compression: a label whose length byte has the top two bits set
+      (0xC0) is a 14-bit pointer to an earlier offset in the message. You must
+      follow those pointers to read owner names and CNAME targets.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Build a map of CNAME (type 5) owner->target and a map of TXT (type 16)
+      owner->string. Start at the question name, append its TXT string, follow
+      its CNAME, and repeat until the chain ends. Concatenate the TXT strings.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - dns
+  - binary-parsing
+  - medium
+files:
+  - message.bin
+  - message.hex
+state: visible
+version: "0.1"

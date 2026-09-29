@@ -1,0 +1,11 @@
+.terraform/
+*.tfstate
+*.tfstate.*
+.terraform.lock.hcl
+terraform.tfvars
+crash.log
+
+# Etat distant (opt-in) : le choix local de l'operateur et le numero de compte
+# AWS ne se commitent pas. Les .example, si.
+backend.tf
+backend.hcl

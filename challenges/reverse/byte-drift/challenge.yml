@@ -1,0 +1,43 @@
+name: byte-drift
+author: dagbanjaphet
+category: reverse
+description: |-
+  We recovered a small lock program, `chall`. It asks for a passphrase and
+  either says "unlocked" or "locked". No passphrase, no output worth keeping.
+
+  The binary is a stripped x86-64 ELF. The correct passphrase is the flag.
+  Everything you need is inside the file; no network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{inv3rt_th3_drift_by_h4nd}
+hints:
+  - content: >-
+      The flag is not stored in the file. `check()` compares a transformed copy
+      of your input against a fixed array. Read the transform, do not grep.
+    cost: 10
+    key: h1
+  - content: >-
+      Each byte is transformed by `ROL8((p[i] + (i*3 + 7)) & 0xFF, (i % 7) + 1)
+      ^ 0x5C`. That is fully invertible: `x = ROR8(target[i] ^ 0x5C, (i % 7) +
+      1); p[i] = (x - (i*3 + 7)) & 0xFF`. Invert the embedded array to read the
+      flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - reverse
+  - x86-64
+  - beginner
+files:
+  - chall
+state: visible
+version: "0.1"

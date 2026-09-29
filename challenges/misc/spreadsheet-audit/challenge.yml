@@ -1,0 +1,42 @@
+name: spreadsheet-audit
+author: dagbanjaphet
+category: misc
+description: |-
+  A finance intern swears the quarterly ledger (`ledger.xlsx`) is "just sales
+  numbers, nothing else." The auditor disagrees. Open the workbook and find
+  what the intern left in it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{hidden_columns_still_ship_data}
+hints:
+  - content: >-
+      What you see in a spreadsheet is not always what is stored. Columns can be
+      hidden and squeezed to almost nothing without being deleted. Look past the
+      visible sales figures.
+    cost: 10
+    key: h1
+  - content: >-
+      Un-hide every column (or read the file with a library such as
+      `openpyxl`). One narrow, hidden column holds a small integer per row --
+      those are Unicode code points. Map each through `chr` in row order.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - misc
+  - spreadsheet
+  - forensics
+  - easy
+files:
+  - ledger.xlsx
+state: visible
+version: "0.1"

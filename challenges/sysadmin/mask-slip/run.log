@@ -1,0 +1,323 @@
+2024-05-02T09:14:03.0Z ##[group]Run actions/checkout@v4
+2024-05-02T09:14:04.1Z Syncing repository: kekeli/webapp
+2024-05-02T09:14:05.2Z Getting Git version info
+2024-05-02T09:14:06.3Z Deleting the contents of '/home/runner/work/webapp/webapp'
+2024-05-02T09:14:07.4Z Initializing the repository
+2024-05-02T09:14:08.5Z Fetching the repository
+2024-05-02T09:14:09.6Z remote: Enumerating objects: 1284, done.
+2024-05-02T09:14:10.7Z remote: Counting objects: 100% (1284/1284), done.
+2024-05-02T09:14:11.8Z remote: Compressing objects: 100% (612/612), done.
+2024-05-02T09:14:12.9Z remote: Total 1284 (delta 703), reused 1160 (delta 579)
+2024-05-02T09:14:13.0Z Receiving objects: 100% (1284/1284), 2.14 MiB | 9.83 MiB/s, done.
+2024-05-02T09:14:14.1Z Resolving deltas: 100% (703/703), done.
+2024-05-02T09:14:15.2Z Checking out the ref
+2024-05-02T09:14:16.3Z HEAD is now at 8f3c1a2 chore: bump release pipeline
+2024-05-02T09:14:17.4Z ##[endgroup]
+2024-05-02T09:14:10.0Z ##[group]Run actions/setup-node@v4
+2024-05-02T09:14:11.1Z Attempting to download 20...
+2024-05-02T09:14:12.2Z Acquiring 20.11.1 - x64 from cached tool
+2024-05-02T09:14:13.3Z Extracting ...
+2024-05-02T09:14:14.4Z Adding to the cache ...
+2024-05-02T09:14:15.5Z Environment details
+2024-05-02T09:14:16.6Z   node: v20.11.1
+2024-05-02T09:14:17.7Z   npm: 10.2.4
+2024-05-02T09:14:18.8Z   yarn: 1.22.22
+2024-05-02T09:14:19.9Z ##[endgroup]
+2024-05-02T09:14:17.0Z ##[group]Run npm ci
+2024-05-02T09:14:18.1Z npm warn deprecated glob@7.2.3: Glob versions prior to v9 are unsupported
+2024-05-02T09:14:19.2Z npm http fetch GET 200 https://registry.npmjs.org/lodash 40ms
+2024-05-02T09:14:20.3Z npm http fetch GET 200 https://registry.npmjs.org/chalk 41ms
+2024-05-02T09:14:21.4Z npm http fetch GET 200 https://registry.npmjs.org/commander 42ms
+2024-05-02T09:14:22.5Z npm http fetch GET 200 https://registry.npmjs.org/debug 43ms
+2024-05-02T09:14:23.6Z npm http fetch GET 200 https://registry.npmjs.org/semver 44ms
+2024-05-02T09:14:24.7Z npm http fetch GET 200 https://registry.npmjs.org/glob 45ms
+2024-05-02T09:14:25.8Z npm http fetch GET 200 https://registry.npmjs.org/minimatch 46ms
+2024-05-02T09:14:26.9Z npm http fetch GET 200 https://registry.npmjs.org/yargs 47ms
+2024-05-02T09:14:27.0Z npm http fetch GET 200 https://registry.npmjs.org/rimraf 48ms
+2024-05-02T09:14:28.1Z npm http fetch GET 200 https://registry.npmjs.org/mkdirp 49ms
+2024-05-02T09:14:29.2Z npm http fetch GET 200 https://registry.npmjs.org/ansi-styles 50ms
+2024-05-02T09:14:30.3Z npm http fetch GET 200 https://registry.npmjs.org/supports-color 51ms
+2024-05-02T09:14:31.4Z npm http fetch GET 200 https://registry.npmjs.org/strip-ansi 52ms
+2024-05-02T09:14:32.5Z npm http fetch GET 200 https://registry.npmjs.org/cross-spawn 53ms
+2024-05-02T09:14:33.6Z npm http fetch GET 200 https://registry.npmjs.org/which 54ms
+2024-05-02T09:14:34.7Z npm http fetch GET 200 https://registry.npmjs.org/resolve 55ms
+2024-05-02T09:14:35.8Z npm http fetch GET 200 https://registry.npmjs.org/is-glob 56ms
+2024-05-02T09:14:36.9Z npm http fetch GET 200 https://registry.npmjs.org/picomatch 57ms
+2024-05-02T09:14:37.0Z npm http fetch GET 200 https://registry.npmjs.org/braces 58ms
+2024-05-02T09:14:38.1Z npm http fetch GET 200 https://registry.npmjs.org/fill-range 59ms
+2024-05-02T09:14:39.2Z npm http fetch GET 200 https://registry.npmjs.org/to-regex-range 60ms
+2024-05-02T09:14:40.3Z npm http fetch GET 200 https://registry.npmjs.org/readable-stream 61ms
+2024-05-02T09:14:41.4Z npm http fetch GET 200 https://registry.npmjs.org/string_decoder 62ms
+2024-05-02T09:14:42.5Z npm http fetch GET 200 https://registry.npmjs.org/safe-buffer 63ms
+2024-05-02T09:14:43.6Z npm http fetch GET 200 https://registry.npmjs.org/inherits 64ms
+2024-05-02T09:14:44.7Z npm http fetch GET 200 https://registry.npmjs.org/once 65ms
+2024-05-02T09:14:45.8Z npm http fetch GET 200 https://registry.npmjs.org/wrappy 66ms
+2024-05-02T09:14:46.9Z npm http fetch GET 200 https://registry.npmjs.org/end-of-stream 67ms
+2024-05-02T09:14:47.0Z npm http fetch GET 200 https://registry.npmjs.org/pump 68ms
+2024-05-02T09:14:48.1Z npm http fetch GET 200 https://registry.npmjs.org/duplexify 69ms
+2024-05-02T09:14:49.2Z 
+2024-05-02T09:14:50.3Z added 1 package: lodash@1.0.0
+2024-05-02T09:14:51.4Z added 2 package: chalk@2.3.7
+2024-05-02T09:14:52.5Z added 3 package: commander@3.6.2
+2024-05-02T09:14:53.6Z added 4 package: debug@4.9.9
+2024-05-02T09:14:54.7Z added 5 package: semver@5.12.4
+2024-05-02T09:14:55.8Z added 6 package: glob@6.15.11
+2024-05-02T09:14:56.9Z added 7 package: minimatch@1.18.6
+2024-05-02T09:14:57.0Z added 8 package: yargs@2.1.1
+2024-05-02T09:14:58.1Z added 9 package: rimraf@3.4.8
+2024-05-02T09:14:59.2Z added 10 package: mkdirp@4.7.3
+2024-05-02T09:15:00.3Z added 11 package: ansi-styles@5.10.10
+2024-05-02T09:15:01.4Z added 12 package: supports-color@6.13.5
+2024-05-02T09:15:02.5Z added 13 package: strip-ansi@1.16.0
+2024-05-02T09:15:03.6Z added 14 package: cross-spawn@2.19.7
+2024-05-02T09:15:04.7Z added 15 package: which@3.2.2
+2024-05-02T09:15:05.8Z added 16 package: resolve@4.5.9
+2024-05-02T09:15:06.9Z added 17 package: is-glob@5.8.4
+2024-05-02T09:15:07.0Z added 18 package: picomatch@6.11.11
+2024-05-02T09:15:08.1Z added 19 package: braces@1.14.6
+2024-05-02T09:15:09.2Z added 20 package: fill-range@2.17.1
+2024-05-02T09:15:10.3Z added 21 package: to-regex-range@3.0.8
+2024-05-02T09:15:11.4Z added 22 package: readable-stream@4.3.3
+2024-05-02T09:15:12.5Z added 23 package: string_decoder@5.6.10
+2024-05-02T09:15:13.6Z added 24 package: safe-buffer@6.9.5
+2024-05-02T09:15:14.7Z added 25 package: inherits@1.12.0
+2024-05-02T09:15:15.8Z added 26 package: once@2.15.7
+2024-05-02T09:15:16.9Z added 27 package: wrappy@3.18.2
+2024-05-02T09:15:17.0Z added 28 package: end-of-stream@4.1.9
+2024-05-02T09:15:18.1Z added 29 package: pump@5.4.4
+2024-05-02T09:15:19.2Z added 30 package: duplexify@6.7.11
+2024-05-02T09:15:20.3Z 
+2024-05-02T09:15:21.4Z added 231 packages, and audited 232 packages in 6s
+2024-05-02T09:15:22.5Z 42 packages are looking for funding
+2024-05-02T09:15:23.6Z   run `npm fund` for details
+2024-05-02T09:15:24.7Z found 0 vulnerabilities
+2024-05-02T09:15:25.8Z ##[endgroup]
+2024-05-02T09:14:24.0Z ##[group]Run npm run lint
+2024-05-02T09:14:25.1Z > webapp@1.4.0 lint
+2024-05-02T09:14:26.2Z > eslint 'src/**/*.{js,ts}'
+2024-05-02T09:14:27.3Z 
+2024-05-02T09:14:28.4Z   src/index.ts  ok
+2024-05-02T09:14:29.5Z   src/server.ts  ok
+2024-05-02T09:14:30.6Z   src/routes/health.ts  ok
+2024-05-02T09:14:31.7Z   src/routes/deploy.ts  ok
+2024-05-02T09:14:32.8Z   src/lib/config.ts  ok
+2024-05-02T09:14:33.9Z   src/lib/logger.ts  ok
+2024-05-02T09:14:34.0Z   src/lib/queue.ts  ok
+2024-05-02T09:14:35.1Z   src/db/pool.ts  ok
+2024-05-02T09:14:36.2Z   src/db/migrate.ts  ok
+2024-05-02T09:14:37.3Z 
+2024-05-02T09:14:38.4Z ✔ no lint errors
+2024-05-02T09:14:39.5Z ##[endgroup]
+2024-05-02T09:14:31.0Z ##[group]Run npm run build
+2024-05-02T09:14:32.1Z > webapp@1.4.0 build
+2024-05-02T09:14:33.2Z > webpack --mode production
+2024-05-02T09:14:34.3Z 
+2024-05-02T09:14:35.4Z asset main.9f8c2a1.js 482 KiB [emitted] [minimized] (name: main)
+2024-05-02T09:14:36.5Z asset vendors.3b7d90e.js 1.21 MiB [emitted] [minimized] (name: vendors)
+2024-05-02T09:14:37.6Z asset runtime.0a11c2f.js 3.4 KiB [emitted] [minimized] (name: runtime)
+2024-05-02T09:14:38.7Z asset index.html 1.9 KiB [emitted]
+2024-05-02T09:14:39.8Z orphan modules ./src/components/Widget00.tsx 1.00 KiB [orphan] 1 module
+2024-05-02T09:14:40.9Z orphan modules ./src/components/Widget01.tsx 1.01 KiB [orphan] 1 module
+2024-05-02T09:14:41.0Z orphan modules ./src/components/Widget02.tsx 1.02 KiB [orphan] 1 module
+2024-05-02T09:14:42.1Z orphan modules ./src/components/Widget03.tsx 1.03 KiB [orphan] 1 module
+2024-05-02T09:14:43.2Z orphan modules ./src/components/Widget04.tsx 1.04 KiB [orphan] 1 module
+2024-05-02T09:14:44.3Z orphan modules ./src/components/Widget05.tsx 1.05 KiB [orphan] 1 module
+2024-05-02T09:14:45.4Z orphan modules ./src/components/Widget06.tsx 1.06 KiB [orphan] 1 module
+2024-05-02T09:14:46.5Z orphan modules ./src/components/Widget07.tsx 1.07 KiB [orphan] 1 module
+2024-05-02T09:14:47.6Z orphan modules ./src/components/Widget08.tsx 1.08 KiB [orphan] 1 module
+2024-05-02T09:14:48.7Z orphan modules ./src/components/Widget09.tsx 1.09 KiB [orphan] 1 module
+2024-05-02T09:14:49.8Z orphan modules ./src/components/Widget10.tsx 1.10 KiB [orphan] 1 module
+2024-05-02T09:14:50.9Z orphan modules ./src/components/Widget11.tsx 1.11 KiB [orphan] 1 module
+2024-05-02T09:14:51.0Z orphan modules ./src/components/Widget12.tsx 1.12 KiB [orphan] 1 module
+2024-05-02T09:14:52.1Z orphan modules ./src/components/Widget13.tsx 1.13 KiB [orphan] 1 module
+2024-05-02T09:14:53.2Z orphan modules ./src/components/Widget14.tsx 1.14 KiB [orphan] 1 module
+2024-05-02T09:14:54.3Z orphan modules ./src/components/Widget15.tsx 1.15 KiB [orphan] 1 module
+2024-05-02T09:14:55.4Z orphan modules ./src/components/Widget16.tsx 1.16 KiB [orphan] 1 module
+2024-05-02T09:14:56.5Z orphan modules ./src/components/Widget17.tsx 1.17 KiB [orphan] 1 module
+2024-05-02T09:14:57.6Z orphan modules ./src/components/Widget18.tsx 1.18 KiB [orphan] 1 module
+2024-05-02T09:14:58.7Z orphan modules ./src/components/Widget19.tsx 1.19 KiB [orphan] 1 module
+2024-05-02T09:14:59.8Z orphan modules ./src/components/Widget20.tsx 1.20 KiB [orphan] 1 module
+2024-05-02T09:15:00.9Z orphan modules ./src/components/Widget21.tsx 1.21 KiB [orphan] 1 module
+2024-05-02T09:15:01.0Z orphan modules ./src/components/Widget22.tsx 1.22 KiB [orphan] 1 module
+2024-05-02T09:15:02.1Z orphan modules ./src/components/Widget23.tsx 1.23 KiB [orphan] 1 module
+2024-05-02T09:15:03.2Z orphan modules ./src/components/Widget24.tsx 1.24 KiB [orphan] 1 module
+2024-05-02T09:15:04.3Z orphan modules ./src/components/Widget25.tsx 1.25 KiB [orphan] 1 module
+2024-05-02T09:15:05.4Z orphan modules ./src/components/Widget26.tsx 1.26 KiB [orphan] 1 module
+2024-05-02T09:15:06.5Z orphan modules ./src/components/Widget27.tsx 1.27 KiB [orphan] 1 module
+2024-05-02T09:15:07.6Z orphan modules ./src/components/Widget28.tsx 1.28 KiB [orphan] 1 module
+2024-05-02T09:15:08.7Z orphan modules ./src/components/Widget29.tsx 1.29 KiB [orphan] 1 module
+2024-05-02T09:15:09.8Z orphan modules ./src/components/Widget30.tsx 1.30 KiB [orphan] 1 module
+2024-05-02T09:15:10.9Z orphan modules ./src/components/Widget31.tsx 1.31 KiB [orphan] 1 module
+2024-05-02T09:15:11.0Z orphan modules ./src/components/Widget32.tsx 1.32 KiB [orphan] 1 module
+2024-05-02T09:15:12.1Z orphan modules ./src/components/Widget33.tsx 1.33 KiB [orphan] 1 module
+2024-05-02T09:15:13.2Z orphan modules ./src/components/Widget34.tsx 1.34 KiB [orphan] 1 module
+2024-05-02T09:15:14.3Z orphan modules ./src/components/Widget35.tsx 1.35 KiB [orphan] 1 module
+2024-05-02T09:15:15.4Z orphan modules ./src/components/Widget36.tsx 1.36 KiB [orphan] 1 module
+2024-05-02T09:15:16.5Z orphan modules ./src/components/Widget37.tsx 1.37 KiB [orphan] 1 module
+2024-05-02T09:15:17.6Z orphan modules ./src/components/Widget38.tsx 1.38 KiB [orphan] 1 module
+2024-05-02T09:15:18.7Z orphan modules ./src/components/Widget39.tsx 1.39 KiB [orphan] 1 module
+2024-05-02T09:15:19.8Z orphan modules ./src/components/Widget40.tsx 1.40 KiB [orphan] 1 module
+2024-05-02T09:15:20.9Z orphan modules ./src/components/Widget41.tsx 1.41 KiB [orphan] 1 module
+2024-05-02T09:15:21.0Z orphan modules ./src/components/Widget42.tsx 1.42 KiB [orphan] 1 module
+2024-05-02T09:15:22.1Z orphan modules ./src/components/Widget43.tsx 1.43 KiB [orphan] 1 module
+2024-05-02T09:15:23.2Z orphan modules ./src/components/Widget44.tsx 1.44 KiB [orphan] 1 module
+2024-05-02T09:15:24.3Z orphan modules ./src/components/Widget45.tsx 1.45 KiB [orphan] 1 module
+2024-05-02T09:15:25.4Z orphan modules ./src/components/Widget46.tsx 1.46 KiB [orphan] 1 module
+2024-05-02T09:15:26.5Z orphan modules ./src/components/Widget47.tsx 1.47 KiB [orphan] 1 module
+2024-05-02T09:15:27.6Z orphan modules ./src/components/Widget48.tsx 1.48 KiB [orphan] 1 module
+2024-05-02T09:15:28.7Z orphan modules ./src/components/Widget49.tsx 1.49 KiB [orphan] 1 module
+2024-05-02T09:15:29.8Z orphan modules ./src/components/Widget50.tsx 1.50 KiB [orphan] 1 module
+2024-05-02T09:15:30.9Z orphan modules ./src/components/Widget51.tsx 1.51 KiB [orphan] 1 module
+2024-05-02T09:15:31.0Z orphan modules ./src/components/Widget52.tsx 1.52 KiB [orphan] 1 module
+2024-05-02T09:15:32.1Z orphan modules ./src/components/Widget53.tsx 1.53 KiB [orphan] 1 module
+2024-05-02T09:15:33.2Z orphan modules ./src/components/Widget54.tsx 1.54 KiB [orphan] 1 module
+2024-05-02T09:15:34.3Z orphan modules ./src/components/Widget55.tsx 1.55 KiB [orphan] 1 module
+2024-05-02T09:15:35.4Z orphan modules ./src/components/Widget56.tsx 1.56 KiB [orphan] 1 module
+2024-05-02T09:15:36.5Z orphan modules ./src/components/Widget57.tsx 1.57 KiB [orphan] 1 module
+2024-05-02T09:15:37.6Z orphan modules ./src/components/Widget58.tsx 1.58 KiB [orphan] 1 module
+2024-05-02T09:15:38.7Z orphan modules ./src/components/Widget59.tsx 1.59 KiB [orphan] 1 module
+2024-05-02T09:15:39.8Z orphan modules ./src/components/Widget60.tsx 1.60 KiB [orphan] 1 module
+2024-05-02T09:15:40.9Z orphan modules ./src/components/Widget61.tsx 1.61 KiB [orphan] 1 module
+2024-05-02T09:15:41.0Z orphan modules ./src/components/Widget62.tsx 1.62 KiB [orphan] 1 module
+2024-05-02T09:15:42.1Z orphan modules ./src/components/Widget63.tsx 1.63 KiB [orphan] 1 module
+2024-05-02T09:15:43.2Z orphan modules ./src/components/Widget64.tsx 1.64 KiB [orphan] 1 module
+2024-05-02T09:15:44.3Z orphan modules ./src/components/Widget65.tsx 1.65 KiB [orphan] 1 module
+2024-05-02T09:15:45.4Z orphan modules ./src/components/Widget66.tsx 1.66 KiB [orphan] 1 module
+2024-05-02T09:15:46.5Z orphan modules ./src/components/Widget67.tsx 1.67 KiB [orphan] 1 module
+2024-05-02T09:15:47.6Z orphan modules ./src/components/Widget68.tsx 1.68 KiB [orphan] 1 module
+2024-05-02T09:15:48.7Z orphan modules ./src/components/Widget69.tsx 1.69 KiB [orphan] 1 module
+2024-05-02T09:15:49.8Z orphan modules ./src/components/Widget70.tsx 1.70 KiB [orphan] 1 module
+2024-05-02T09:15:50.9Z orphan modules ./src/components/Widget71.tsx 1.71 KiB [orphan] 1 module
+2024-05-02T09:15:51.0Z orphan modules ./src/components/Widget72.tsx 1.72 KiB [orphan] 1 module
+2024-05-02T09:15:52.1Z orphan modules ./src/components/Widget73.tsx 1.73 KiB [orphan] 1 module
+2024-05-02T09:15:53.2Z orphan modules ./src/components/Widget74.tsx 1.74 KiB [orphan] 1 module
+2024-05-02T09:15:54.3Z orphan modules ./src/components/Widget75.tsx 1.75 KiB [orphan] 1 module
+2024-05-02T09:15:55.4Z orphan modules ./src/components/Widget76.tsx 1.76 KiB [orphan] 1 module
+2024-05-02T09:15:56.5Z orphan modules ./src/components/Widget77.tsx 1.77 KiB [orphan] 1 module
+2024-05-02T09:15:57.6Z orphan modules ./src/components/Widget78.tsx 1.78 KiB [orphan] 1 module
+2024-05-02T09:15:58.7Z orphan modules ./src/components/Widget79.tsx 1.79 KiB [orphan] 1 module
+2024-05-02T09:15:59.8Z cacheable modules ./node_modules/dep00/index.js 2.0 KiB [built] [code generated]
+2024-05-02T09:16:00.9Z cacheable modules ./node_modules/dep01/index.js 3.1 KiB [built] [code generated]
+2024-05-02T09:16:01.0Z cacheable modules ./node_modules/dep02/index.js 4.2 KiB [built] [code generated]
+2024-05-02T09:16:02.1Z cacheable modules ./node_modules/dep03/index.js 5.3 KiB [built] [code generated]
+2024-05-02T09:16:03.2Z cacheable modules ./node_modules/dep04/index.js 6.4 KiB [built] [code generated]
+2024-05-02T09:16:04.3Z cacheable modules ./node_modules/dep05/index.js 7.5 KiB [built] [code generated]
+2024-05-02T09:16:05.4Z cacheable modules ./node_modules/dep06/index.js 8.6 KiB [built] [code generated]
+2024-05-02T09:16:06.5Z cacheable modules ./node_modules/dep07/index.js 9.7 KiB [built] [code generated]
+2024-05-02T09:16:07.6Z cacheable modules ./node_modules/dep08/index.js 10.8 KiB [built] [code generated]
+2024-05-02T09:16:08.7Z cacheable modules ./node_modules/dep09/index.js 11.0 KiB [built] [code generated]
+2024-05-02T09:16:09.8Z cacheable modules ./node_modules/dep10/index.js 12.1 KiB [built] [code generated]
+2024-05-02T09:16:10.9Z cacheable modules ./node_modules/dep11/index.js 13.2 KiB [built] [code generated]
+2024-05-02T09:16:11.0Z cacheable modules ./node_modules/dep12/index.js 14.3 KiB [built] [code generated]
+2024-05-02T09:16:12.1Z cacheable modules ./node_modules/dep13/index.js 15.4 KiB [built] [code generated]
+2024-05-02T09:16:13.2Z cacheable modules ./node_modules/dep14/index.js 16.5 KiB [built] [code generated]
+2024-05-02T09:16:14.3Z cacheable modules ./node_modules/dep15/index.js 17.6 KiB [built] [code generated]
+2024-05-02T09:16:15.4Z cacheable modules ./node_modules/dep16/index.js 18.7 KiB [built] [code generated]
+2024-05-02T09:16:16.5Z cacheable modules ./node_modules/dep17/index.js 19.8 KiB [built] [code generated]
+2024-05-02T09:16:17.6Z cacheable modules ./node_modules/dep18/index.js 20.0 KiB [built] [code generated]
+2024-05-02T09:16:18.7Z cacheable modules ./node_modules/dep19/index.js 21.1 KiB [built] [code generated]
+2024-05-02T09:16:19.8Z cacheable modules ./node_modules/dep20/index.js 22.2 KiB [built] [code generated]
+2024-05-02T09:16:20.9Z cacheable modules ./node_modules/dep21/index.js 23.3 KiB [built] [code generated]
+2024-05-02T09:16:21.0Z cacheable modules ./node_modules/dep22/index.js 24.4 KiB [built] [code generated]
+2024-05-02T09:16:22.1Z cacheable modules ./node_modules/dep23/index.js 25.5 KiB [built] [code generated]
+2024-05-02T09:16:23.2Z cacheable modules ./node_modules/dep24/index.js 26.6 KiB [built] [code generated]
+2024-05-02T09:16:24.3Z cacheable modules ./node_modules/dep25/index.js 27.7 KiB [built] [code generated]
+2024-05-02T09:16:25.4Z cacheable modules ./node_modules/dep26/index.js 28.8 KiB [built] [code generated]
+2024-05-02T09:16:26.5Z cacheable modules ./node_modules/dep27/index.js 29.0 KiB [built] [code generated]
+2024-05-02T09:16:27.6Z cacheable modules ./node_modules/dep28/index.js 30.1 KiB [built] [code generated]
+2024-05-02T09:16:28.7Z cacheable modules ./node_modules/dep29/index.js 31.2 KiB [built] [code generated]
+2024-05-02T09:16:29.8Z cacheable modules ./node_modules/dep30/index.js 32.3 KiB [built] [code generated]
+2024-05-02T09:16:30.9Z cacheable modules ./node_modules/dep31/index.js 33.4 KiB [built] [code generated]
+2024-05-02T09:16:31.0Z cacheable modules ./node_modules/dep32/index.js 34.5 KiB [built] [code generated]
+2024-05-02T09:16:32.1Z cacheable modules ./node_modules/dep33/index.js 35.6 KiB [built] [code generated]
+2024-05-02T09:16:33.2Z cacheable modules ./node_modules/dep34/index.js 36.7 KiB [built] [code generated]
+2024-05-02T09:16:34.3Z cacheable modules ./node_modules/dep35/index.js 37.8 KiB [built] [code generated]
+2024-05-02T09:16:35.4Z cacheable modules ./node_modules/dep36/index.js 38.0 KiB [built] [code generated]
+2024-05-02T09:16:36.5Z cacheable modules ./node_modules/dep37/index.js 39.1 KiB [built] [code generated]
+2024-05-02T09:16:37.6Z cacheable modules ./node_modules/dep38/index.js 40.2 KiB [built] [code generated]
+2024-05-02T09:16:38.7Z cacheable modules ./node_modules/dep39/index.js 41.3 KiB [built] [code generated]
+2024-05-02T09:16:39.8Z 
+2024-05-02T09:16:40.9Z webpack 5.90.3 compiled successfully in 14213 ms
+2024-05-02T09:16:41.0Z ##[endgroup]
+2024-05-02T09:14:38.0Z ##[group]Run npm test
+2024-05-02T09:14:39.1Z > webapp@1.4.0 test
+2024-05-02T09:14:40.2Z > jest --ci
+2024-05-02T09:14:41.3Z 
+2024-05-02T09:14:42.4Z PASS src/lib/config.test.ts
+2024-05-02T09:14:43.5Z PASS src/lib/logger.test.ts
+2024-05-02T09:14:44.6Z PASS src/routes/health.test.ts
+2024-05-02T09:14:45.7Z PASS src/routes/deploy.test.ts
+2024-05-02T09:14:46.8Z PASS src/db/pool.test.ts
+2024-05-02T09:14:47.9Z PASS src/components/Widget00.test.tsx
+2024-05-02T09:14:48.0Z PASS src/components/Widget01.test.tsx
+2024-05-02T09:14:49.1Z PASS src/components/Widget02.test.tsx
+2024-05-02T09:14:50.2Z PASS src/components/Widget03.test.tsx
+2024-05-02T09:14:51.3Z PASS src/components/Widget04.test.tsx
+2024-05-02T09:14:52.4Z PASS src/components/Widget05.test.tsx
+2024-05-02T09:14:53.5Z PASS src/components/Widget06.test.tsx
+2024-05-02T09:14:54.6Z PASS src/components/Widget07.test.tsx
+2024-05-02T09:14:55.7Z PASS src/components/Widget08.test.tsx
+2024-05-02T09:14:56.8Z PASS src/components/Widget09.test.tsx
+2024-05-02T09:14:57.9Z PASS src/components/Widget10.test.tsx
+2024-05-02T09:14:58.0Z PASS src/components/Widget11.test.tsx
+2024-05-02T09:14:59.1Z PASS src/components/Widget12.test.tsx
+2024-05-02T09:15:00.2Z PASS src/components/Widget13.test.tsx
+2024-05-02T09:15:01.3Z PASS src/components/Widget14.test.tsx
+2024-05-02T09:15:02.4Z PASS src/components/Widget15.test.tsx
+2024-05-02T09:15:03.5Z PASS src/components/Widget16.test.tsx
+2024-05-02T09:15:04.6Z PASS src/components/Widget17.test.tsx
+2024-05-02T09:15:05.7Z PASS src/components/Widget18.test.tsx
+2024-05-02T09:15:06.8Z PASS src/components/Widget19.test.tsx
+2024-05-02T09:15:07.9Z PASS src/components/Widget20.test.tsx
+2024-05-02T09:15:08.0Z PASS src/components/Widget21.test.tsx
+2024-05-02T09:15:09.1Z PASS src/components/Widget22.test.tsx
+2024-05-02T09:15:10.2Z PASS src/components/Widget23.test.tsx
+2024-05-02T09:15:11.3Z PASS src/components/Widget24.test.tsx
+2024-05-02T09:15:12.4Z PASS src/components/Widget25.test.tsx
+2024-05-02T09:15:13.5Z PASS src/components/Widget26.test.tsx
+2024-05-02T09:15:14.6Z PASS src/components/Widget27.test.tsx
+2024-05-02T09:15:15.7Z PASS src/components/Widget28.test.tsx
+2024-05-02T09:15:16.8Z PASS src/components/Widget29.test.tsx
+2024-05-02T09:15:17.9Z PASS src/components/Widget30.test.tsx
+2024-05-02T09:15:18.0Z PASS src/components/Widget31.test.tsx
+2024-05-02T09:15:19.1Z PASS src/components/Widget32.test.tsx
+2024-05-02T09:15:20.2Z PASS src/components/Widget33.test.tsx
+2024-05-02T09:15:21.3Z PASS src/components/Widget34.test.tsx
+2024-05-02T09:15:22.4Z PASS src/components/Widget35.test.tsx
+2024-05-02T09:15:23.5Z PASS src/components/Widget36.test.tsx
+2024-05-02T09:15:24.6Z PASS src/components/Widget37.test.tsx
+2024-05-02T09:15:25.7Z PASS src/components/Widget38.test.tsx
+2024-05-02T09:15:26.8Z PASS src/components/Widget39.test.tsx
+2024-05-02T09:15:27.9Z PASS src/components/Widget40.test.tsx
+2024-05-02T09:15:28.0Z PASS src/components/Widget41.test.tsx
+2024-05-02T09:15:29.1Z PASS src/components/Widget42.test.tsx
+2024-05-02T09:15:30.2Z PASS src/components/Widget43.test.tsx
+2024-05-02T09:15:31.3Z PASS src/components/Widget44.test.tsx
+2024-05-02T09:15:32.4Z PASS src/components/Widget45.test.tsx
+2024-05-02T09:15:33.5Z PASS src/components/Widget46.test.tsx
+2024-05-02T09:15:34.6Z PASS src/components/Widget47.test.tsx
+2024-05-02T09:15:35.7Z PASS src/components/Widget48.test.tsx
+2024-05-02T09:15:36.8Z PASS src/components/Widget49.test.tsx
+2024-05-02T09:15:37.9Z 
+2024-05-02T09:15:38.0Z Test Suites: 55 passed, 55 total
+2024-05-02T09:15:39.1Z Tests:       181 passed, 181 total
+2024-05-02T09:15:40.2Z Snapshots:   0 total
+2024-05-02T09:15:41.3Z Time:        11.284 s
+2024-05-02T09:15:42.4Z Ran all test suites.
+2024-05-02T09:15:43.5Z ##[endgroup]
+2024-05-02T09:14:45.0Z ##[group]Run echo "using token: $DEPLOY_TOKEN"
+2024-05-02T09:14:46.1Z using token: ***
+2024-05-02T09:14:47.2Z ##[endgroup]
+2024-05-02T09:14:52.0Z ##[group]Run echo -n "$DEPLOY_TOKEN" | wc -c
+2024-05-02T09:14:53.1Z 43
+2024-05-02T09:14:54.2Z ##[endgroup]
+2024-05-02T09:14:59.0Z ##[group]Run echo -n "$DEPLOY_TOKEN" | xxd -p | tr -d '\n'; echo
+2024-05-02T09:15:00.1Z 4e4354467b63695f7365637265745f6d61736b696e675f69735f6f6e6c795f6c69746572616c5f6236347d
+2024-05-02T09:15:01.2Z ##[endgroup]
+2024-05-02T09:15:06.0Z ##[group]Run ./deploy.sh
+2024-05-02T09:15:07.1Z deploying to staging...
+2024-05-02T09:15:08.2Z rsync: sent 482 files
+2024-05-02T09:15:09.3Z restarting service webapp.service
+2024-05-02T09:15:10.4Z health check: 200 OK
+2024-05-02T09:15:11.5Z ok
+2024-05-02T09:15:12.6Z ##[endgroup]

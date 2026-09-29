@@ -1,0 +1,46 @@
+name: wav-lsb
+author: dagbanjaphet
+category: stego
+description: |-
+  A short audio clip, `tone.wav`, just plays a dull two-note hum. Our analyst
+  says the data itself hides a message. Recover it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{wav_samples_leak_one_bit}
+hints:
+  - content: >-
+      The information is not in what you hear but in the exact sample values.
+      This is a 16-bit mono PCM WAV. Think about the smallest possible change to
+      a sample.
+    cost: 15
+    key: h1
+  - content: >-
+      Least-significant-bit steganography on the audio samples. Read each 16-bit
+      little-endian sample, take its low bit, pack 8 bits per byte MSB-first.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Use Python's `wave` module: `readframes`, unpack as signed 16-bit, collect
+      `sample & 1`, group into bytes, and stop at the NUL (0x00) terminator.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - stego
+  - audio
+  - lsb
+  - medium
+files:
+  - tone.wav
+state: visible
+version: "0.1"

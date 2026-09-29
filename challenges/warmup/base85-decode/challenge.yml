@@ -1,0 +1,31 @@
+name: base85-decode
+author: dagbanjaphet
+category: warmup
+description: |-
+  `secret.txt` looks like line noise: a dense mix of letters, digits and
+  punctuation, but no spaces. It packs binary into printable ASCII more
+  tightly than the usual suspects. Decode it and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{eighty_five_printable_chars}
+hints:
+  - content: >-
+      It is Base85 (the `b85`/`Z85`-style alphabet used by Python's `base64.b85decode`). CyberChef's 'From Base85' also handles it.
+    cost: 10
+    key: h1
+tags:
+  - warmup
+  - encoding
+  - base85
+  - beginner
+files:
+  - secret.txt
+state: visible
+version: "0.1"

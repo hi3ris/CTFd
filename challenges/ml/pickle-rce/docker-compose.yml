@@ -1,0 +1,23 @@
+# Local run notes for pickle-rce (ModelHub).
+#
+#   docker compose build
+#   TEAM_SECRET=deadbeef docker compose up
+#   # then, from the solution dir:
+#   python3 solution/solve.py http://127.0.0.1:9080
+#
+# In production the instancier sets TEAM_SECRET per team and publishes the
+# mapped port as the challenge's connection_info (http://<host>:9080).
+services:
+  pickle-rce:
+    build: .
+    image: ctf-pickle-rce:latest
+    environment:
+      # Per-team secret; overridden by the instancier in production.
+      TEAM_SECRET: "${TEAM_SECRET:-local-dev-secret}"
+    ports:
+      - "9080:9080"
+    # Hardening knobs the platform applies; sane local defaults here.
+    pids_limit: 128
+    mem_limit: 256m
+    security_opt:
+      - no-new-privileges:true

@@ -1,0 +1,9 @@
+# Captured from the card kiosk (normal use):
+
+POST /card HTTP/1.1
+Content-Type: application/json
+
+{"name": "Ama"}
+
+--- response ---
+{"card": "Dear Ama, welcome to Lome!"}

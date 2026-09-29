@@ -1,0 +1,7 @@
+# /etc/cron.d/app-backup
+# Nightly backup, runs as the unprivileged 'deploy' user.
+SHELL=/bin/sh
+PATH=/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+MAILTO=ops@kekeli.internal
+
+17 2 * * *  deploy  /usr/local/bin/backup.sh >> /var/log/app/backup.log 2>&1

@@ -1,0 +1,3 @@
+# Found in kekeli-infra/terraform.tfvars.bak (dev key, do not use)
+storage_account = kekelistorage
+account_key     = a2VrZWxpLWRldi1mYWtlLXN0b3JhZ2Uta2V5LTAwMDA=

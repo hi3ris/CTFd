@@ -1,0 +1,1 @@
+PNG logo asset, safe to serve on the CDN.

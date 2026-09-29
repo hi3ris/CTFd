@@ -1,0 +1,43 @@
+name: embedding-nn
+author: dagbanjaphet
+category: ml
+description: |-
+  `embed_table.npz` holds a token embedding table and a batch of query vectors.
+  Each token has a character; each query was generated from exactly one token but
+  is not a perfect copy of its vector. Decode every query back to the token it
+  came from, in order, to read the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{cosine_hop_walks_the_token_chain}
+hints:
+  - content: >-
+      The queries are the token vectors with a little noise added. A query
+      belongs to whichever token vector it sits closest to.
+    cost: 10
+    key: h1
+  - content: >-
+      For each query row, find the embedding row with the smallest Euclidean
+      distance, map that row to its `token_char`, and read the characters in
+      query order.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - ml
+  - embeddings
+  - nearest-neighbor
+  - easy
+files:
+  - embed_table.npz
+  - README.md
+state: visible
+version: "0.1"

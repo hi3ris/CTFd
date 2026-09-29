@@ -1,0 +1,46 @@
+name: spi-eeprom
+author: dagbanjaphet
+category: hardware
+description: |-
+  A logic analyzer captured the four SPI lines (`CS`, `CLK`, `MOSI`, `MISO`)
+  while a microcontroller read a byte string out of a serial EEPROM. Each row of
+  `spi_capture.csv` is one oversampled time step. The device returned some ASCII
+  data during the transfer.
+
+  Reconstruct the bytes the EEPROM sent back. The flag is that returned text.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{spi_mode0_msb_first_eeprom}
+hints:
+  - content: >-
+      SPI is synchronous: the clock (`CLK`) tells you when a bit is valid. The
+      transfer only counts while chip-select (`CS`) is low. Bytes are shifted
+      MSB-first, 8 bits each.
+    cost: 10
+    key: h1
+  - content: >-
+      This is SPI mode 0 (CPOL=0, CPHA=0): sample `MOSI`/`MISO` on the RISING
+      edge of `CLK`. `MOSI` is the command (opcode 0x03 = READ, then a 16-bit
+      address); the answer you want is on `MISO` during the data phase that
+      follows the 3 command bytes.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - hardware
+  - spi
+  - logic-analyzer
+  - easy
+files:
+  - spi_capture.csv
+state: visible
+version: "0.1"

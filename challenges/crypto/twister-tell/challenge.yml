@@ -1,0 +1,47 @@
+name: twister-tell
+author: dagbanjaphet
+category: crypto
+description: |-
+  A token service leaked a run of its random number generator's raw 32-bit
+  outputs in `outputs.txt`. Right after that run, the same generator's next
+  outputs were used as a keystream to encrypt the flag, given in `flag.enc`
+  (hex).
+
+  Predict the keystream and decrypt.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{mt19937_untempered_then_the_future_is_yours}
+hints:
+  - content: >-
+      The generator is the standard Mersenne Twister (MT19937), the same one
+      behind Python's `random`. Its output is not the raw state -- each 32-bit
+      word passes through a fixed, reversible "tempering" transform.
+    cost: 15
+    key: h1
+  - content: >-
+      Untemper the 624 leaked outputs (invert the four tempering steps in
+      reverse order) to recover the full internal state, reload it into an
+      MT19937 with the index set to 624, then generate the following words -- the
+      keystream -- and XOR with the ciphertext.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - crypto
+  - prng
+  - mersenne-twister
+  - medium
+files:
+  - outputs.txt
+  - flag.enc
+state: visible
+version: "0.1"

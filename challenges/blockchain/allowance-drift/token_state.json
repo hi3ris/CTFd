@@ -1,0 +1,6 @@
+{
+  "note": "victim state; compute how many transferFrom calls fully drain them",
+  "victim_balance": 1000000,
+  "your_allowance": 3000,
+  "cipher_hex": "c57feaf9d0ca669bef9bc28cfe2f36eba1eb2a1f5f7290e98dbeb0283729f3413b"
+}

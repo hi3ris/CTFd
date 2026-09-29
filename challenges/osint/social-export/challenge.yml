@@ -1,0 +1,50 @@
+name: social-export
+author: dagbanjaphet
+category: osint
+description: |-
+  Deux exports de comptes ont été saisis chez un suspect : un export Telegram
+  (`telegram_export.json`) et un export Mastodon (`mastodon_export.json`).
+
+  Un des messages Telegram contient une « clé de sauvegarde » chiffrée. Le
+  suspect a une mauvaise habitude d'OPSEC qui permet de relier ses comptes et de
+  retrouver de quoi la déchiffrer. Récupérez le contenu en clair : c'est le flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{same_email_diff_handle_xor_pivot}
+hints:
+  - content: >-
+      Le suspect change de pseudo mais pas d'adresse e-mail. Un champ est commun
+      aux deux exports.
+    cost: 10
+    key: h1
+  - content: >-
+      Le message « backup key » contient un blob hexadécimal chiffré par XOR
+      répété. La clé XOR est un pseudo qu'il faut retrouver.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Reliez les deux comptes par l'e-mail identique. Le `username` Mastodon de
+      ce compte est la clé XOR. Déchiffrez le hex (XOR répété, ASCII).
+    cost: 22
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - correlation
+  - xor
+  - easy
+files:
+  - telegram_export.json
+  - mastodon_export.json
+state: visible
+version: "0.1"

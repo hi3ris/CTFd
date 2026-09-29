@@ -1,0 +1,40 @@
+name: zero-width-note
+author: dagbanjaphet
+category: stego
+description: |-
+  We intercepted this bland internal `memo.txt`. It reads like nothing, yet the
+  sender insisted it "carries everything you need". Recover the hidden message.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{zero_width_spaces_speak}
+hints:
+  - content: >-
+      The file is longer than the visible text should be. Look at the raw bytes
+      or a hex dump — there are characters between the words that do not render.
+    cost: 10
+    key: h1
+  - content: >-
+      The invisible characters are U+200B (zero-width space) and U+200C
+      (zero-width non-joiner). Treat them as bits (0 and 1), take 8 per byte
+      MSB-first, and decode as ASCII.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - stego
+  - unicode
+  - zero-width
+  - easy
+files:
+  - memo.txt
+state: visible
+version: "0.1"

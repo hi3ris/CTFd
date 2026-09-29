@@ -1,0 +1,70 @@
+{
+  "Policies": {
+    "ci-lambda-deployer": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Sid": "DeployLambdas",
+          "Effect": "Allow",
+          "Action": [
+            "lambda:CreateFunction",
+            "lambda:UpdateFunctionCode",
+            "lambda:InvokeFunction"
+          ],
+          "Resource": "*"
+        },
+        {
+          "Sid": "PassExecAndLogsRoles",
+          "Effect": "Allow",
+          "Action": "iam:PassRole",
+          "Resource": [
+            "arn:aws:iam::444455556666:role/lambda-exec-role",
+            "arn:aws:iam::444455556666:role/lambda-logs-role"
+          ],
+          "Condition": {
+            "StringEquals": {
+              "iam:PassedToService": "lambda.amazonaws.com"
+            }
+          }
+        }
+      ]
+    },
+    "read-metrics-only": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "cloudwatch:GetMetricData"
+          ],
+          "Resource": "*"
+        }
+      ]
+    },
+    "read-prod-secret": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "secretsmanager:GetSecretValue"
+          ],
+          "Resource": "arn:aws:secretsmanager:eu-west-1:444455556666:secret:prod/root-db-Ab12Cd"
+        }
+      ]
+    },
+    "write-logs-only": {
+      "Version": "2012-10-17",
+      "Statement": [
+        {
+          "Effect": "Allow",
+          "Action": [
+            "logs:CreateLogStream",
+            "logs:PutLogEvents"
+          ],
+          "Resource": "*"
+        }
+      ]
+    }
+  }
+}

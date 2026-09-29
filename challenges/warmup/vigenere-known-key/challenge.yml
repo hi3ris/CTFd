@@ -1,0 +1,26 @@
+name: vigenere-known-key
+author: dagbanjaphet
+category: warmup
+description: |-
+  `cipher.txt` was enciphered with a Vigenere cipher. The key is not a
+  secret this time -- it is `WARMUP`. Only the letters were shifted;
+  digits and punctuation were left alone. Decrypt it and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{vigenere_with_a_known_key}
+tags:
+  - warmup
+  - classical
+  - vigenere
+  - beginner
+files:
+  - cipher.txt
+state: visible
+version: "0.1"

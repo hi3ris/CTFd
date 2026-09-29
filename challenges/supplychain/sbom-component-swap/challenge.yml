@@ -1,0 +1,48 @@
+name: sbom-component-swap
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On vous donne le SBOM CycloneDX d'une release (`bom.json`), les binaires de
+  chaque composant, et un flux d'empreintes malveillantes connues
+  (`known-bad-hashes.txt`) fourni par le SOC.
+
+  Recoupez les deux, identifiez le composant compromis et récupérez le flag
+  qu'il transporte.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{sb0m_component_hash_pivot_9f4c}
+hints:
+  - content: >-
+      Chaque composant du SBOM porte un hash SHA-256 dans son champ `hashes`.
+      Comparez-les à la liste d'empreintes connues comme malveillantes.
+    cost: 10
+    key: h1
+  - content: >-
+      Un seul composant matche le flux SOC. Suivez sa propriété `blob` jusqu'au
+      fichier livré, puis décodez la valeur base64 embarquée.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - supplychain
+  - sbom
+  - cyclonedx
+  - easy
+files:
+  - bom.json
+  - known-bad-hashes.txt
+  - component-libjpeg-turbo.bin
+  - component-zlib.bin
+  - component-acme-updater.bin
+  - component-openssl.bin
+state: visible
+version: "0.1"

@@ -1,0 +1,16 @@
+id,type,label,value,note
+h_seed,handle,z3ro_237,z3ro_237@x,leaker of the CERT.tg dump
+e1,email,operateur,z3r0.lome@protomail.tg,
+h_cobra,handle,cobra_lome,cobra_lome@social,
+p1,phone,msisdn,+22890114477,
+dev1,device,imei,356938035643809,
+w1,wallet,btc,1KossiViAgbeko9xQwErTyUiOpAsDfGh,
+dom1,domain,registered,mining-togo.tg,
+person_true,person,identity,Kossivi Agbeko,identite operateur confirmee (dossier scelle)
+h_ghost,handle,ghost228,ghost228@social,
+person_decoy1,person,identity,Yao Mensah,NCTF{wrong_pivot_speculative_link}
+person_decoy2,person,identity,Ama Dede,not the operator
+e2,email,personal,yao.mensah@webmail.tg,
+h_noise1,handle,lome_foot,lome_foot@social,
+dom_noise,domain,registered,actu-togo.tg,
+person_noise,person,identity,Kodjo Ali,"journalist, unrelated"

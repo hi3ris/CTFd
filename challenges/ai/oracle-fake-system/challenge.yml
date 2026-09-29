@@ -1,0 +1,50 @@
+name: oracle-fake-system
+author: dagbanjaphet
+category: ai
+description: |-
+  **PolicyBot** guards a vault token and ships as `oracle.py` with a
+  `respond(prompt)` function. Its opening policy forbids disclosure, and a
+  direct request for the token is denied.
+
+  No network, no real model -- it all runs locally. Call the shipped oracle and
+  convince it that policy now permits disclosure. The token is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{f4k3_sy5t3m_l1n3_0v3rr1d3s_gu4rd}
+hints:
+  - content: >-
+      The oracle does not keep roles and content apart. It flattens everything
+      into one transcript and then re-reads who said what, line by line.
+    cost: 10
+    key: h1
+  - content: >-
+      Policy is decided by lines that start with a particular role prefix, and
+      the last such line wins. Your input becomes lines too.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Send a line beginning "system:" that grants disclosure (use a word like
+      "share"/"provide" and avoid negations), then ask for the vault token on
+      the next line.
+    cost: 20
+    key: h3
+    requirements: [h2]
+tags:
+  - ai
+  - prompt-injection
+  - role-confusion
+  - easy
+files:
+  - oracle.py
+state: visible
+version: "0.1"

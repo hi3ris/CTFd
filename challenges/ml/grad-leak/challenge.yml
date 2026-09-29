@@ -1,0 +1,49 @@
+name: grad-leak
+author: dagbanjaphet
+category: ml
+description: |-
+  During distributed training a worker leaked the gradients from a single step.
+  `leaked_grads.npz` contains the gradient of the loss with respect to a linear
+  layer's weight matrix, plus the upstream gradient that produced it. That step
+  used exactly one private training example. Recover that example -- its bytes are
+  the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{rank_one_grad_rebuilds_the_input}
+hints:
+  - content: >-
+      For a linear layer `y = W @ x`, the weight gradient has a very rigid shape.
+      Look at the rows of `grad_W` relative to each other.
+    cost: 15
+    key: h1
+  - content: >-
+      `dL/dW = (dL/dy) x^T`: it is the outer product of the upstream gradient and
+      the input, i.e. rank one. Every row `i` equals `dL_dy[i] * x`.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Pick any row with a nonzero `dL_dy[i]` and divide it by that scalar to get
+      `x`. Round to integers and read as ASCII.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ml
+  - gradient-leakage
+  - privacy
+  - medium
+files:
+  - leaked_grads.npz
+  - README.md
+state: visible
+version: "0.1"

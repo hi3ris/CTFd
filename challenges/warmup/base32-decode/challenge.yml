@@ -1,0 +1,30 @@
+name: base32-decode
+author: dagbanjaphet
+category: warmup
+description: |-
+  `secret.txt` holds only UPPERCASE letters `A-Z` and the digits `2-7`,
+  ending in a run of `=` padding. Decode it and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{base32_uses_more_letters}
+hints:
+  - content: >-
+      The alphabet `A-Z2-7` with `=` padding is the Base32 signature. `base32 -d` (coreutils) or CyberChef will decode it.
+    cost: 10
+    key: h1
+tags:
+  - warmup
+  - encoding
+  - base32
+  - beginner
+files:
+  - secret.txt
+state: visible
+version: "0.1"

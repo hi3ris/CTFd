@@ -1,0 +1,13 @@
+# Local run notes for ai-triage-guard (STUB).
+#   docker build -t ctf-ai-triage-guard:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  ai-triage-guard:
+    image: ctf-ai-triage-guard:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

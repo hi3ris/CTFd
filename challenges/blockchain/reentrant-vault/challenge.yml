@@ -1,0 +1,88 @@
+name: reentrant-vault
+author: dagbanjaphet
+category: blockchain
+type: team_instance
+description: |
+  **Reentrant Vault.** *(nouvelle catégorie : blockchain / EVM)*
+
+  Une instance EVM privée par équipe. Le launcher vous donne tout ce qu'il faut
+  sur `GET /` : l'URL RPC (le JSON-RPC est **proxifié sur cette même URL** en
+  POST), le `chainId`, une **clé privée de joueur déjà financée**, et l'adresse
+  du contrat **Vault**.
+
+  Le `Vault` accepte des dépôts en ETH et laisse chacun retirer son solde. Il
+  est **abondé par les dépôts d'autres utilisateurs**, donc le vider vous fait
+  partir avec bien plus que votre mise — mais sa logique de retrait n'est pas
+  aussi robuste qu'elle en a l'air.
+
+  Objectif : **drainer le Vault jusqu'à 0**. Quand son solde on-chain atteint
+  zéro, `GET /flag` renvoie le flag de votre équipe. Le flag n'est **ni**
+  on-chain **ni** dans le RPC : c'est l'**effet** (vault vidé) qui déclenche sa
+  révélation.
+
+  Points de départ : déployez votre propre contrat avec la clé fournie
+  (web3/foundry pointant sur l'URL RPC), interagissez avec le Vault, puis
+  `GET /flag` une fois le vault vidé.
+
+  Instance par équipe : chaîne, contrat et flag isolés. Bloqué ? Des indices
+  sont disponibles (ils coûtent quelques points).
+
+  Flag format : `NCTF{...}`
+
+  Connexion : `http://{host}:{port}`  (RPC en POST · `GET /` pour les infos)
+
+# Dynamic scoring (hard).
+value: 450
+extra:
+  docker_image: ctf-reentrant-vault:latest
+  internal_port: 8080
+  initial: 450
+  decay: 20
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships. The launcher derives it from the
+# injected CHALLENGE_SECRET (flag body = CHALLENGE_SECRET[:24]; see flag.py) and
+# reveals it from /flag only when the vault is drained. team_hmac validates it.
+flags:
+  - type: team_hmac
+    content: blockchain-reentrant-vault
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la vuln n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Regardez de près `withdraw()` : dans quel ORDRE fait-il les choses ? La
+      faille est un grand classique des contrats — un envoi d'ETH et une mise à
+      jour d'état dont l'ordre compte (motif « checks-effects-interactions »).
+    cost: 25
+    key: h1
+  - content: >-
+      Le contrat envoie l'ETH AVANT de remettre votre solde à zéro. Un contrat
+      attaquant dont le hook `receive()` rappelle `withdraw()` est repayé
+      plusieurs fois sur le même solde : c'est une réentrance.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Déployez un `Attacker` dont le `receive()` rappelle `Vault.withdraw()`
+      tant que le vault a des fonds ; amorcez avec un petit `deposit()`,
+      déclenchez le premier `withdraw()`, laissez la réentrance vider le vault
+      jusqu'à 0, puis `GET /flag`.
+    cost: 70
+    key: h3
+    requirements: [h2]
+
+tags:
+  - blockchain
+  - hard
+
+# challenge-id (HMAC / requirements wiring): blockchain-reentrant-vault
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile here; must be named ctf-reentrant-vault:latest
+# so `deploy/local/build-images.sh` / `make push-images` pick it up. The image
+# bundles anvil (Foundry) + web3 + solc 0.8.20.

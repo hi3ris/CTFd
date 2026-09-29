@@ -1,0 +1,66 @@
+name: "Heartbeat"
+author: "ctf-team"
+category: misc
+description: |
+  A status agent on an isolated segment "phones home" to a collector with a
+  steady stream of heartbeat datagrams. Every heartbeat looks the same: a fixed
+  banner and a plain counter. The blue team read them all and found nothing
+  worth reporting.
+
+  We still think this box was leaking. We pulled a capture of the beacon off the
+  wire -- recover whatever it smuggled out and submit it.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format: NCTF{...}  (lowercase letters and underscores inside).
+
+# STATIC, downloadable artifact: the challenge IS the capture, and the answer is
+# carried by the capture itself (no served component, no per-team HMAC flag).
+# gen.py rebuilds capture.pcap deterministically and is NOT a handout.
+# flag.py documents the per-team scheme for platform uniformity only.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 40
+  minimum: 100
+
+flags:
+  - "NCTF{silence_between_beats_speaks}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant).
+hints:
+  - content: >-
+      Le contenu des datagrammes est volontairement inerte : décoder, XOR-er ou
+      comparer les charges utiles ne mène nulle part, et le compteur `seq=` n'est
+      qu'un 0,1,2,... Le secret n'est pas dans ce qui est envoyé, mais dans une
+      autre dimension de la capture.
+    cost: 15
+    key: h1
+  - content: >-
+      Regardez QUAND chaque datagramme arrive : les intervalles entre paquets
+      consécutifs forment deux groupes nets séparés par un vide (distribution
+      bimodale). Un intervalle court et un intervalle long -- deux symboles.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Intervalle court = bit 0, intervalle long = bit 1. Triez les intervalles
+      et coupez au plus grand vide pour trouver le seuil. Lisez les bits dans
+      l'ordre, MSB en premier, 8 bits par octet -> ASCII. (Avec N caractères :
+      8N intervalles, 8N+1 datagrammes.)
+    cost: 45
+    key: h3
+    requirements: [h2]
+
+files:
+  - capture.pcap
+
+tags:
+  - misc
+  - medium
+
+connection_info: null

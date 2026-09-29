@@ -1,0 +1,49 @@
+name: path-traversal-archive
+author: dagbanjaphet
+category: web
+description: |-
+  An "Asset CDN" serves files from its public web root. You get the handler
+  source and a snapshot of the whole deployment directory (webroot.tar.gz).
+  Something sensitive lives just outside the folder that is meant to be public.
+
+  Endpoint (from the source):
+
+      GET /download?file=<name>   -> returns a file from the web root
+
+  No live service. Use the shipped snapshot to reach the file the server would
+  hand you.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{dot_dot_slash_reads_the_service_secret}
+hints:
+  - content: >-
+      The handler joins your file name onto the web root and never checks that
+      the result stays inside it. Unpack webroot.tar.gz and look at what sits
+      beside the public folder.
+    cost: 10
+    key: h1
+  - content: >-
+      From deploy/public, climb one directory with ../ and read the file under
+      deploy/private. The flag is in there.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - web
+  - path-traversal
+  - lfi
+  - easy
+files:
+  - app.py
+  - webroot.tar.gz
+state: visible
+version: "0.1"

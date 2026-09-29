@@ -1,0 +1,55 @@
+name: mem-struct
+author: dagbanjaphet
+category: forensics
+description: |-
+  We captured a raw memory dump (`memdump.bin`) from a process that was holding a
+  secret in RAM. Running `strings` on it turns up something flag-shaped, but the
+  responders swear that is a plant.
+
+  The real secret is stored the way the program actually kept it in memory: a
+  small record that points at it. Find the record, follow it, and reveal the
+  flag.
+
+  The record is a 16-byte little-endian struct:
+
+  ```
+  offset  0  uint32 magic  = 0x0FF5E7ED
+  offset  4  uint32 xor_key
+  offset  8  uint32 flag_off   (absolute offset of the secret in this dump)
+  offset 12  uint32 flag_len
+  ```
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{struct_0ffs3t_p01nt3r_ch4s3}
+hints:
+  - content: >-
+      The flag you can read with `strings` is the decoy. Ignore it. Search the
+      raw bytes for the record's magic value instead (little-endian, so the bytes
+      ED E7 F5 0F).
+    cost: 15
+    key: h1
+  - content: >-
+      Once you find the struct, seek to `flag_off` and read `flag_len` bytes.
+      They are not plaintext: XOR each byte with the repeating 4-byte
+      little-endian `xor_key` (byte i uses key byte i mod 4). That gives the flag.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - forensics
+  - memory
+  - binary
+  - medium
+files:
+  - memdump.bin
+state: visible
+version: "0.1"

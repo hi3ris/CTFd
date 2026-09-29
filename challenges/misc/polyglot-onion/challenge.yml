@@ -1,0 +1,80 @@
+# ctfcli challenge definition
+# Challenge ID (for requirements wiring / HMAC namespace): misc-polyglot-onion
+# Pure downloadable challenge with a STATIC flag (no served container), per the
+# authoring rules: offline artifact challenges may carry a static flag here.
+#
+# The handout `keepsake.png` is a nested polyglot ("onion"): a genuinely valid
+# PNG image with a ZIP appended after IEND; the zip's single entry is Ascii85
+# text; that decodes to a gzip stream; which decompresses to a bzip2 stream;
+# which decompresses to a POSIX tar whose one member holds the flag. NONE of the
+# layers declares the encoding of the layer beneath it -- each step is deduced
+# from magic bytes / structure. The flag exists only at the innermost layer;
+# it never appears verbatim in the handout (verified by gen.py). See gen.py in
+# this directory for the deterministic build (dev-only, NOT shipped).
+#
+# requirements: none (standalone; not part of a prerequisite chain)
+
+name: "polyglot-onion"
+author: "ctf-authoring"
+category: "misc"
+type: "dynamic"
+
+description: |-
+  A courier dropped off a single file and nothing else. It opens as an
+  perfectly ordinary picture - your viewer renders it, `file` agrees, done.
+
+  Except the picture weighs more than a picture should. And under it there is
+  another perfectly ordinary file. And under *that* one, another. It's an
+  onion: every skin is a real, self-respecting file that behaves as if it were
+  the whole story - and not one of them tells you what the next one is. The
+  bytes do.
+
+  Peel it all the way down. The center is waiting.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format: NCTF{...}
+
+value: 250
+extra:
+  initial: 250
+  decay: 30
+  minimum: 100
+
+connection_info: "Download keepsake.png - no server needed. Everything is inside the file."
+
+files:
+  - keepsake.png
+
+flags:
+  - "NCTF{magic_byt3s_unm4sk_3v3ry_l4y3r}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant).
+hints:
+  - content: >-
+      Chaque couche est un fichier valide qui ne dit rien de la suivante : ce
+      sont la structure et les octets de signature (« magic bytes ») en tête de
+      chaque bloc qui trahissent le format. À chaque étape : identifiez,
+      extrayez, recommencez.
+    cost: 15
+    key: h1
+  - content: >-
+      L'image est un PNG complet, mais des octets continuent APRÈS le chunk
+      `IEND` : découpez cette traîne. Vous y trouverez une archive (signature
+      `PK`) dont l'unique membre est du texte encadré `<~ ... ~>` (Ascii85).
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Après l'Ascii85, suivez les magic bytes couche par couche : `1f 8b` =
+      gzip, `BZh` = bzip2, puis `ustar` (offset 257) = archive tar. Décompressez
+      dans cet ordre et extrayez le membre du tar : le flag est au centre.
+    cost: 40
+    key: h3
+    requirements: [h2]
+
+tags:
+  - misc
+  - medium
+
+state: visible

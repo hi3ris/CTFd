@@ -1,0 +1,13 @@
+# Local run notes for crypto-notarysvc-signext (STUB).
+#   docker build -t ctf-crypto-notarysvc-signext:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  crypto-notarysvc-signext:
+    image: ctf-crypto-notarysvc-signext:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

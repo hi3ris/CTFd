@@ -1,0 +1,51 @@
+name: crc-forge
+author: dagbanjaphet
+category: reverse
+description: |-
+  `chall` is a stripped x86-64 ELF. It reads a flag and answers "checksums
+  match" or "checksum mismatch". The flag characters are not in the file.
+
+  Recover the flag it will accept. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{crc32_le4ks_ev3ry_byt3}
+hints:
+  - content: >-
+      The binary never stores the flag. It stores a table of 32-bit checksums,
+      one per character position, and recomputes them from your input. Identify
+      the checksum function (poly 0xEDB88320 → CRC32).
+    cost: 15
+    key: h1
+  - content: >-
+      Each table entry is `crc32(bytes([i & 0xFF, flag[i]]))` — it depends on
+      exactly one flag byte. CRC32 is not one-way over such a tiny input: for
+      each position, brute-force all 256 bytes and keep the one whose CRC matches
+      the stored value. The position salt makes each byte unique.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The table is a raw little-endian uint32 array in .rodata. If you cannot
+      locate it precisely, slide a 4-byte-aligned window across the file, decode
+      consecutive entries with the local index as the salt, and keep the run that
+      starts with NCTF{ and ends with }.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - reverse
+  - crc32
+  - medium
+files:
+  - chall
+state: visible
+version: "0.1"

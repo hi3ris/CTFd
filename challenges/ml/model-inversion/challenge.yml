@@ -1,0 +1,103 @@
+name: model-inversion
+author: dagbanjaphet
+category: ml
+description: |
+  **AEGIS-VAULT recall service.** The vault has *memorised* one sealed record --
+  24 attribute bytes (each 0..255) fixed when your instance was provisioned. A
+  public API will only ever tell you, for a probe vector you supply, how strongly
+  the vault **recalls** it: a two-class confidence `OTHER / SEALED`. It will
+  never show you the record.
+
+  Your task: **recover the sealed record the model memorized**, then hand it back
+  to prove you have it.
+
+  The service is the oracle. `POST /submit` **verifies the effect, not a payload
+  shape**: it compares the record you return against the memorised one and emits
+  the flag **only** when they match within a small tolerance. `POST /query`
+  returns confidences and nothing else -- the record is never in a response and
+  never in a downloadable artifact.
+
+  You are given the scoring model **white-box** (`model.py` and `weights.npz` in
+  the handout: the embedding and the exact code the oracle runs) -- everything
+  except the memorised record itself. The model is common to every team; only the
+  memorised record and the flag are per-team, so a record read off someone else's
+  instance is useless.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: `NCTF{...}`
+
+value: 500
+type: team_instance
+extra:
+  docker_image: ctf-model-inversion:latest
+  internal_port: 8080
+  initial: 500
+  decay: 25
+  minimum: 100
+
+# Served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "ml-model-inversion")[:24] + "}"
+# emitted by the running instance ONLY after /submit confirms (server side) that
+# the submitted record matches the memorised per-team record within L-inf
+# tolerance (effect verification, authoring rule #1). The embedding/metric are
+# common to all teams (the artifact IS the challenge); only the memorised record
+# and the flag are per-team, both derived from CHALLENGE_SECRET at start-up.
+# flag.py reproduces the flag from TEAM_SECRET so CTFd's custom HMAC flag class
+# can validate per team.
+flags:
+  - type: team_hmac
+    content: ml-model-inversion
+
+# Progressive hints (chained unlock, growing cost). The inversion technique is
+# NOT in the description -- it is paid for here.
+hints:
+  - content: >-
+      `/query` returns exact confidences (no noise), and the SEALED confidence is
+      a smooth two-class output. Turn it back into a raw score: invert the
+      softmax/sigmoid so you read the underlying logit instead of a probability.
+    cost: 25
+    key: h1
+  - content: >-
+      That logit is **linear in the sealed record**. Subtract a baseline probe
+      (all-zeros) to cancel the bias, then probe one coordinate at a time
+      (`p = 255*e_i`) to read a vector. But watch out: the confidence is a
+      **similarity** through the metric, not a per-attribute readout -- the
+      coordinate response is not that attribute's value.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The vector you read is `u = M*(r/255)` with `M = E^T E` from `weights.npz`
+      (symmetric, **not** diagonal). Solve the linear system: `r = 255 * M^-1 * u`,
+      round to bytes, clip to 0..255. Baseline + 24 unit-direction probes (25
+      queries) recover it exactly; assuming the identity metric fails by ~200.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+# Handout artifacts delivered to players (white-box: the embedding weights and
+# the exact scoring code, minus the memorised record). No flag and no record are
+# present in any of these; both are emitted/derived only by the live instance.
+files:
+  - handout/README.md
+  - handout/model.py
+  - handout/weights.npz
+tags:
+  - ml
+  - hard
+
+connection_info: http://{host}:8080/
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-model-inversion:latest so
+# `make push-images` finds it. CPU-only; no GPU or model download required.
+# The team-common embedding is built deterministically at image build
+# (app/build_model.py, fixed seed), so no pre-baked secret is trusted.
+# --- Prerequisite chain ----------------------------------------------------
+# Standalone (no prerequisite). If wired into an ML track later, prerequisites
+# are attached by challenge ID at import time, e.g.:
+#     requirements:
+#       - ml-<earlier-challenge-id>

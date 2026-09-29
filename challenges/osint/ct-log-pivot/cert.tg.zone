@@ -1,0 +1,16 @@
+$ORIGIN cert.tg.
+$TTL 3600
+@       IN SOA  ns1.cert.tg. hostmaster.cert.tg. (
+                2025061001 7200 3600 1209600 3600 )
+@       IN NS   ns1.cert.tg.
+@       IN NS   ns2.cert.tg.
+@       IN A    41.207.180.10
+www     IN A    41.207.180.10
+blog    IN A    41.207.180.12
+mail    IN A    41.207.180.20
+@       IN MX   10 mail.cert.tg.
+ns1     IN A    41.207.180.2
+ns2     IN A    41.207.180.3
+vpn     IN A    41.207.180.30
+portail IN CNAME www.cert.tg.
+@       IN TXT  "v=spf1 mx -all"

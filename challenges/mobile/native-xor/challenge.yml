@@ -1,0 +1,46 @@
+name: native-xor
+author: dagbanjaphet
+category: mobile
+description: |-
+  `nativegame.apk` validates its flag in a bundled native library. We recovered
+  the decompiled JNI routine and the encrypted blob it compares against
+  (`assets/enc.bin`). The routine transforms your input and checks it against
+  that blob.
+
+  Recover the input the native check accepts. It is the flag. No device
+  required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{n4t1v3_x0r_t4bl3_unr0ll3d}
+hints:
+  - content: >-
+      The native check is fully described in `lib/arm64-v8a/decompiled_native.c`
+      — including the substitution box and the XOR key. It compares a transform
+      of your input against `assets/enc.bin`.
+    cost: 20
+    key: h1
+  - content: >-
+      Encode was `enc[i] = SBOX[((flag[i] + i) ^ KEY[i % len(KEY)]) & 0xFF]`.
+      Every step is invertible: build SBOX_INV, then
+      `flag[i] = (SBOX_INV[enc[i]] ^ KEY[i%len]) - i (mod 256)`.
+    cost: 45
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - native-jni
+  - easy
+files:
+  - nativegame.apk
+state: visible
+version: "0.1"

@@ -1,0 +1,46 @@
+name: deploy
+on:
+  push:
+    branches: [main]
+
+jobs:
+  ship:
+    runs-on: ubuntu-latest
+    env:
+      DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install deps
+        run: npm ci
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Build
+        run: npm run build
+
+      - name: Test
+        run: npm test
+
+      - name: Echo token (masked)
+        run: |
+          echo "using token: $DEPLOY_TOKEN"
+
+      - name: Debug token length
+        run: |
+          echo -n "$DEPLOY_TOKEN" | wc -c
+
+      # BAD: a hex dump of the secret is NOT masked. GitHub only masks the
+      # literal secret string, so any encoding of it (hex here) prints in clear.
+      - name: Debug token (hex fingerprint)
+        run: |
+          echo -n "$DEPLOY_TOKEN" | xxd -p | tr -d '\n'; echo
+
+      - name: Deploy
+        run: ./deploy.sh

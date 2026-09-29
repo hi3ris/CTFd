@@ -1,0 +1,40 @@
+name: block-oracle
+author: dagbanjaphet
+category: blockchain
+description: |-
+  A lottery seals its pot for whoever guesses the winning ticket. You
+  get `BlockLottery.sol` and `draw.json` (the exact block context of the
+  draw plus the sealed pot `cipher_hex`). Predict the ticket and open the
+  pot.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{blockhash_is_not_randomness}
+hints:
+  - content: >-
+      Where does draw() get its 'randomness'? Are any of those inputs actually secret?
+    cost: 10
+    key: h1
+  - content: >-
+      It's keccak256(abi.encodePacked(timestamp, number, prevrandao)) = three 32-byte words hashed. All three are given. Compute it and seed the keystream over cipher_hex.
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - blockchain
+  - evm
+  - randomness
+  - easy
+files:
+  - BlockLottery.sol
+  - draw.json
+state: visible
+version: "0.1"

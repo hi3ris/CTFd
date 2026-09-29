@@ -1,0 +1,51 @@
+name: pip-postinstall-hook
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On vous remet une archive source Python (`acme-license-check-1.0.0.tar.gz`)
+  récupérée depuis un miroir PyPI douteux. `pip install` exécute du code à
+  l'installation, et celui-ci semble avoir été volontairement rendu illisible.
+
+  Analysez l'archive SANS l'installer, comprenez ce que le hook d'installation
+  ferait, et récupérez le flag qu'il dépose.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{p1p_postinstall_deobfuscated_5b90}
+hints:
+  - content: >-
+      Un sdist peut exécuter du code arbitraire via `setup.py`. Regardez la
+      classe de commande `install` personnalisée (`cmdclass`).
+    cost: 15
+    key: h1
+  - content: >-
+      Le payload est stocké encodé : une chaîne hex passée dans
+      `bytes.fromhex`, puis XOR octet-par-octet avec une clé. La clé ET le blob
+      sont tous les deux dans le fichier.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Reproduisez la transformation à la main (ne lancez PAS setup.py) :
+      hex-décodez `_B`, XOR chaque octet avec `_K`. Le code obtenu écrit le flag
+      dans un fichier.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - supplychain
+  - pip
+  - deobfuscation
+  - medium
+files:
+  - acme-license-check-1.0.0.tar.gz
+state: visible
+version: "0.1"

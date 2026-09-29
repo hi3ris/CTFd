@@ -1,0 +1,75 @@
+name: ai0-leaked-transcript
+author: dagbanjaphet
+category: ai
+description: |
+  **HelixDesk** is Nimbus Robotics' internal support assistant. Someone
+  exported one of its chat transcripts to JSON and shared the handout
+  `transcript.json` in the wrong channel.
+
+  In the visible conversation the assistant politely refuses to reveal anything
+  sensitive. But an export is more than the words that were on screen. Somewhere
+  in that file sits an internal "audit-handoff token" the assistant was told
+  never to disclose -- and it is the flag, only lightly obfuscated. Recover it.
+
+  This is Level 0 of the AI track: zero inference, no live model, no service.
+  Everything you need is in the single handout `transcript.json`.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format: `NCTF{...}`
+
+# Dynamic scoring (easy).
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 30
+  minimum: 50
+
+# Pure downloadable challenge with a STATIC artifact and STATIC flag. Per the
+# authoring rules, a static flag in challenge.yml is fine here (no server, no
+# per-team dynamic flag, no Dockerfile, no flag.py). The flag never depends on
+# a payload shape -- the artifact simply carries it, lightly obfuscated.
+flags:
+  - NCTF{sy5t3m_pr0mpt_r3v34l3d}
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la vuln n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      La conversation visible n'est pas tout : un export sérialise aussi la
+      configuration d'exécution. Regardez au-delà de `conversation.messages` —
+      fouillez les champs de métadonnées du JSON.
+    cost: 10
+    key: h1
+  - content: >-
+      Le prompt système fuité (dans `metadata.runtime_config.system_prompt`)
+      contient DEUX jetons base64. L'un est marqué DEPRECATED / ROTATED OUT :
+      ignorez-le. Prenez le jeton « current ».
+    cost: 10
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le bon jeton est du base64. Décodez-le : vous obtenez le flag écrit à
+      l'envers. Inversez la chaîne pour lire `NCTF{...}`.
+    cost: 15
+    key: h3
+    requirements: [h2]
+
+tags:
+  - ai
+  - beginner
+
+files:
+  - public/transcript.json
+
+# --- Prerequisite chain ----------------------------------------------------
+# This is the ROOT of the AI category. It gates the rest of the AI track: the
+# other AI challenges declare a requirement on this challenge's ID.
+#
+# Prerequisites are wired by challenge ID at import time. Downstream AI
+# challenges should carry (in ctfcli/CTFd import metadata):
+#     requirements:
+#       - ai0-leaked-transcript   (par NOM nu, pas le label HMAC)
+#
+# This root challenge itself has no prerequisites.

@@ -1,0 +1,9 @@
+# Expected decoded vault contents for each sample dump.
+# Use these to validate your parser before running on retention.dump.
+# filename	decoded_vault
+sample_01.dump	HELLO_AE32_WORLD
+sample_02.dump	retention-check-abc
+sample_03.dump	bank0/bank1/bank2
+sample_04.dump	AE-32 register file
+sample_05.dump	deinterleave_me_now_ok
+sample_06.dump	vault=noncontiguous

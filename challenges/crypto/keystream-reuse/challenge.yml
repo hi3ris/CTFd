@@ -1,0 +1,53 @@
+name: keystream-reuse
+author: dagbanjaphet
+category: crypto
+description: |-
+  `messages.txt` holds 25 intercepted ciphertexts, one hex string per line. They
+  were all produced by the same sloppy encryptor on the same day. Exactly one of
+  the underlying messages contains the flag.
+
+  Recover it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{never_reuse_a_one_time_pad_keystream}
+hints:
+  - content: >-
+      All 25 messages were XORed with the very same keystream (a many-time pad).
+      XORing any two ciphertexts cancels the key: c_i XOR c_j = m_i XOR m_j.
+    cost: 15
+    key: h1
+  - content: >-
+      Use the space trick. In English text, XORing a space (0x20) with a letter
+      flips its case, staying an ASCII letter. So for each column, the
+      ciphertext byte that yields the most ASCII letters when XORed against the
+      other ciphertexts is almost certainly a space; that pins the keystream
+      byte (key = c XOR 0x20).
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Recover the keystream column by column with the space heuristic, XOR it
+      back into every ciphertext, and search the recovered plaintexts for
+      "NCTF{...}". With 25 messages the middle columns (where the flag sits) are
+      recovered cleanly.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - crypto
+  - xor
+  - many-time-pad
+  - medium
+files:
+  - messages.txt
+state: visible
+version: "0.1"

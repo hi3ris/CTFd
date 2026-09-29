@@ -1,0 +1,22 @@
+# Local run notes for cve-hookrelay.
+#
+#   docker build -t ctf-cve-hookrelay:latest .
+#   docker compose up
+#   # then browse http://localhost:8080/
+#
+# Only 8080 (the public HTTP service) is published. The flag file (/flag.txt)
+# and the clone worker are reachable only through the CVE-2022-24439 exploit --
+# that is the point.
+#
+# Smoke-test the exploit end-to-end with the reference solver:
+#   python3 solution/solve.py http://localhost:8080
+services:
+  cve-hookrelay:
+    image: ctf-cve-hookrelay:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      # Per team at deploy time. flag = NCTF{ HMAC_SHA256(TEAM_SECRET, id)[:24] }
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

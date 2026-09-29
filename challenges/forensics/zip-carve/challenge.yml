@@ -1,0 +1,53 @@
+name: zip-carve
+author: dagbanjaphet
+category: forensics
+description: |-
+  We recovered a ZIP archive (`archive.zip`) from a departing employee's USB
+  stick. Listing it shows a single, boring file — but the archive on disk is
+  larger than that one file can explain.
+
+  Something else was packed in and then hidden from the listing. Recover it and
+  read the token inside.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{orphan3d_l0cal_h34d3r_c4rv3d}
+hints:
+  - content: >-
+      A ZIP tool builds its file list from an index at the END of the archive.
+      That index can lie. Compare the size of the archive to the size of the one
+      file it claims to contain.
+    cost: 10
+    key: h1
+  - content: >-
+      Each file also has its own header earlier in the stream, starting with the
+      bytes `PK\x03\x04`. Scan the raw file for every such signature — one of
+      them belongs to a member the central directory never lists.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The hidden member is DEFLATE-compressed (method 8 in its local header), so
+      `strings` shows nothing. Parse the local file header for the compressed
+      size, then inflate the raw deflate payload (e.g. Python
+      `zlib.decompress(data, -15)`).
+    cost: 15
+    key: h3
+    requirements: [h2]
+tags:
+  - forensics
+  - file-carving
+  - zip
+  - easy
+files:
+  - archive.zip
+state: visible
+version: "0.1"

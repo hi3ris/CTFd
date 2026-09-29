@@ -1,0 +1,56 @@
+name: gcp-token-scope
+author: dagbanjaphet
+category: cloud
+description: |-
+  A leaked GCP service-account key (`sa-key.json`) for a CI helper, the project
+  IAM policy (`iam-policy.json`), a bucket inventory (`bucket-listing.json`), and
+  one private object sealed for the handout (`release-token.json`).
+
+  Work out what a token from this key can actually read, then open the object it
+  should never have reached. The flag is that object.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{sa_token_scope_read_the_bucket}
+hints:
+  - content: >-
+      A service-account key mints a token that carries the SA's project roles.
+      Find the binding for this SA's `client_email` in the IAM policy and note
+      how broad it is.
+    cost: 15
+    key: h1
+  - content: >-
+      The binding is `roles/storage.objectViewer` at the whole project, not one
+      bucket. So the token reads every bucket, including the private
+      `kekeli-prod-artifacts` one. Find the `.enc` object there.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The sealed object's XOR keystream is SHA256 of the key's `private_key_id`.
+      Recompute and XOR the base64 ciphertext.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - cloud
+  - gcp
+  - iam
+  - service-account
+  - gcs
+  - medium
+files:
+  - sa-key.json
+  - iam-policy.json
+  - bucket-listing.json
+  - release-token.json
+state: visible
+version: "0.1"

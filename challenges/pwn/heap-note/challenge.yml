@@ -1,0 +1,94 @@
+name: heap-note
+author: dagbanjaphet
+category: pwn
+description: |
+  A tiny note-taking service on a **pinned glibc 2.31** (Ubuntu 20.04,
+  `2.31-0ubuntu9.18`). You can `alloc`, `free`, `edit` and `view` up to 16
+  fixed-slot notes.
+
+  There is **no downloadable flag**. The binary you get is byte-identical to the
+  one the service runs, and it contains no flag. Winning means actually
+  **hijacking control flow into `win()`** -- the service verifies that *effect*
+  and only then prints this team's flag (read from the process environment at
+  runtime, never from a file). A stack `ret2win` is not available; the input
+  paths are all length-bounded. This is a heap problem.
+
+  The handout ships the exact `libc.so.6` and `ld-2.31.so` the service uses, so
+  your offsets offline match the offsets online.
+
+  Decoy warning: there is one hard-coded `NCTF{...}` string inside the binary.
+  By this event's rules a constant baked into a shipped artifact is never a real
+  flag -- it is unreachable and reads no environment. Don't submit it; don't
+  waste time on it.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format: `NCTF{...}`
+
+value: 350
+type: team_instance
+extra:
+  docker_image: ctf-heap-note:latest
+  internal_port: 9022
+  initial: 350
+  decay: 25
+  minimum: 100
+
+# This challenge is served per-team. The flag is dynamic:
+#   flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-heap-note")[:24] + "}"
+# and is emitted by the running instance only after control flow reaches win().
+# The static entry below is a placeholder for the demo TEAM_SECRET used in local
+# builds; CTFd validates the real per-team flag via the custom HMAC flag class,
+# so no static flag is shipped to production.
+flags:
+  - type: team_hmac
+    content: pwn-heap-note
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). La classe de
+# bug n'est PAS nommée dans la description : elle se paie ici.
+hints:
+  - content: >-
+      Testez le cycle de vie d'un slot après `free` : le slot n'est pas remis à
+      zéro, et ni `edit` ni `view` ne vérifient qu'il est encore vivant. Vous
+      pouvez donc **lire** un chunk libéré (fuite) et **écrire** dedans -- un
+      use-after-free.
+    cost: 20
+    key: h1
+  - content: >-
+      Les petites tailles passent par le tcache, et sur glibc 2.31 (avant le
+      safe-linking) le pointeur `fd` d'un chunk libéré est stocké **en clair**.
+      Un edit-after-free sur ce `fd` empoisonne la liste tcache : la prochaine
+      allocation de cette taille vous rend un chunk à **l'adresse de votre
+      choix**.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Fuyez d'abord une adresse libc en lisant le `fd`/`bk` d'un chunk assez gros
+      pour finir en unsorted bin. Puis empoisonnez le tcache pour obtenir une
+      allocation sur un pointeur de fonction (p.ex. `__free_hook`) et écrivez-y
+      l'adresse de `win()` ; déclenchez-le pour détourner le flux d'exécution.
+    cost: 50
+    key: h3
+    requirements: [h2]
+
+tags:
+  - pwn
+  - glibc-2.31
+  - medium
+
+files:
+  - handout/chall
+  - handout/libc.so.6
+  - handout/ld-2.31.so
+
+# challenge-id (for HMAC / requirements wiring): pwn-heap-note
+# No prerequisites; standalone.
+
+connection_info: nc {host} 9022
+
+state: visible
+version: "0.1"
+
+# Served challenge -- image must be named ctf-heap-note:latest so
+# `make push-images` finds it.

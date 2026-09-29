@@ -1,0 +1,48 @@
+name: twin-palette
+author: dagbanjaphet
+category: stego
+description: |-
+  `mosaic.png` is a small blocky picture built from a colour palette. It looks
+  ordinary, and every filter we throw at the pixels comes back clean. Recover
+  the hidden flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{twin_palette_indices_encode}
+hints:
+  - content: >-
+      The pixels look clean because two different values map to the same colour.
+      Do not look at the rendered RGB — look at the raw palette index of each
+      pixel.
+    cost: 15
+    key: h1
+  - content: >-
+      The palette stores each colour twice, at index 2k and 2k+1. So the low bit
+      of a pixel's index is invisible but free to carry data. Read that low bit
+      for each pixel.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Load the image in palette mode, take `index & 1` for every pixel in
+      order, pack 8 bits per byte MSB-first, and stop at the NUL terminator.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - stego
+  - palette
+  - png
+  - medium
+files:
+  - mosaic.png
+state: visible
+version: "0.1"

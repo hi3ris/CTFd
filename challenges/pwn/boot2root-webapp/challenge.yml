@@ -1,0 +1,109 @@
+name: boot2root-webapp
+author: dagbanjaphet
+category: pwn
+type: team_instance
+description: |
+  **boot2root-webapp** -- *SnapNote*, a full Linux box in a single per-team
+  container. Break into the note-preview web app, escalate all the way to
+  **root**, and read `/root/flag`.
+
+  You are handed only a running host: `http://{host}:{port}`. A small "sticky
+  notes" preview service is listening. There are no downloads and no source:
+  everything you need is *on the box* once you land your first shell.
+
+  Your objective, end to end:
+
+    1. Find and exploit the web service to get **code execution as an
+       unprivileged service account**.
+    2. From there, work through the machine's local misconfigurations to move up
+       to more privileged accounts and finally to **root**. This is a multi-stage
+       local privilege-escalation chain -- expect to pivot through more than one
+       account and to combine more than one weakness. Enumerate.
+    3. As root, read `/root/flag`.
+
+  The flag lives **only** in `/root/flag`, owned by `root` and mode `400`: it is
+  not world-readable, it is not in any environment variable you can reach as the
+  service user, and it is **not** baked into the image. There is no shortcut and
+  no "verify" endpoint that hands it to you -- the win condition is the effect of
+  actually reading that file as root. If you can `cat /root/flag`, you have
+  rooted the box.
+
+  Per-team instance: each team gets its own container and its own flag, so
+  nothing you find can be replayed against another team.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format: `NCTF{...}`
+
+  Connect:  `http://{host}:{port}`
+
+# Dynamic scoring (hard).
+value: 500
+extra:
+  docker_image: ctf-boot2root-webapp:latest
+  internal_port: 8080
+  initial: 500
+  decay: 20
+  minimum: 100
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships in this file. The container derives it
+# at runtime from the injected per-challenge secret as:
+#     flag = "NCTF{" + HMAC_SHA256(TEAM_SECRET, "pwn-boot2root-webapp")[:24] + "}"
+# (equivalently "NCTF{" + CHALLENGE_SECRET[:24] + "}"; see flag.py). The
+# platform's team_hmac flag class recomputes and validates each team's flag on
+# submission, so `flags` carries only the challenge-id label, not a value.
+flags:
+  - type: team_hmac
+    content: pwn-boot2root-webapp
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la chaîne n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Le corps de la note que vous prévisualisez est rendu **comme un gabarit**
+      côté serveur : ce que vous saisissez EST le template. Une injection de
+      gabarit (`{{ ... }}`) qui atteint les globals du moteur vous donne une
+      exécution de code comme compte de service.
+    cost: 25
+    key: h1
+  - content: >-
+      Cherchez un binaire SUID (`find / -perm -4000 -type f 2>/dev/null`). Il
+      concatène l'un de ses arguments dans une commande shell sans le nettoyer :
+      un argument du type `x; votre_commande #` exécute votre commande sous le
+      compte propriétaire du SUID (le `#` neutralise la fin de la ligne).
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Une **capability** de fichier est le dernier maillon
+      (`getcap -r / 2>/dev/null`). Un interpréteur porte `cap_setuid+ep` mais
+      n'est exécutable que par le compte de l'étape 2. Depuis ce compte :
+      `setuid(0)` puis lisez `/root/flag`.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+# No handout: this is a black-box boot2root. Nothing is shipped to the player;
+# the whole challenge lives in the running container. (No `files:` on purpose --
+# shipping the image contents would reveal the intended chain.)
+
+tags:
+  - pwn
+  - boot2root
+  - linux
+  - hard
+
+# challenge-id (for HMAC / requirements wiring): pwn-boot2root-webapp
+# No prerequisites; standalone.
+
+# Served challenge: the platform instancier starts one container per team,
+# injects FLAG / CHALLENGE_SECRET, and templates connection_info with the team's
+# host:port.
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile in this directory; must be named
+# ctf-boot2root-webapp:latest so `make push-images` picks it up.

@@ -1,0 +1,52 @@
+name: eui64-slaac
+author: dagbanjaphet
+category: networking
+description: |-
+  A stateless address-autoconfig (SLAAC) inventory (`hosts.json`) lists 29
+  interfaces, each with a MAC address, a single shared /64 prefix, and a
+  one-character `tag`. The interface identifiers were "omitted on purpose".
+
+  Reconstruct each host's full IPv6 address, put the hosts in the right order,
+  and read the tags in that order to recover the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{eui64_slaac_ll_bit_flip}
+hints:
+  - content: >-
+      SLAAC builds the low 64 bits of an IPv6 address from the MAC. The mapping
+      has a standard name: EUI-64.
+    cost: 10
+    key: h1
+  - content: >-
+      EUI-64: insert the bytes ff:fe between the OUI (first three MAC octets)
+      and the NIC (last three), and flip the universal/local bit (0x02) of the
+      first octet. That gives the 64-bit interface identifier.
+    cost: 10
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Build each host's full 128-bit address (prefix + interface id), sort the
+      hosts ascending by that address, then concatenate the `tag` fields in
+      sorted order. The bit flip changes the sort, so a raw-MAC sort gives the
+      wrong string.
+    cost: 15
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - ipv6
+  - eui64
+  - beginner
+files:
+  - hosts.json
+state: visible
+version: "0.1"

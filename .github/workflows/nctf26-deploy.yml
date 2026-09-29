@@ -1,0 +1,84 @@
+name: NCTF26 deploy (front)
+
+# CD : chaque push sur une branche de deploiement met le front a jour via
+# SSM Run Command (deploy/scripts/front-update.sh). Aucune cle AWS stockee :
+# GitHub OIDC -> role ctf-github-deploy (deploy/terraform/github-oidc.tf).
+#
+# Gel pendant l'epreuve : variable de depot DEPLOY_FREEZE=1 (Settings >
+# Secrets and variables > Actions > Variables). Le job est alors saute.
+on:
+  push:
+    branches: [master, claude/ctf-platform-free-ptiggj]
+    paths:
+      - "CTFd/**"
+      - "migrations/**"
+      - "deploy/front/**"
+      - "deploy/scripts/front-update.sh"
+      - "deploy/scripts/install-backup-timer.sh"
+      - "deploy/scripts/backup.sh"
+      - "Dockerfile"
+      - "docker-entrypoint.sh"
+      - "requirements.txt"
+      - "manage.py"
+      - ".github/workflows/nctf26-deploy.yml"
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency:
+  group: nctf26-front-deploy
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    name: front-update.sh via SSM
+    if: vars.DEPLOY_FREEZE != '1'
+    runs-on: ubuntu-latest
+    environment: production
+    timeout-minutes: 45
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION || 'eu-west-3' }}
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: ${{ vars.AWS_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ env.AWS_REGION }}
+      - name: front en ligne ?
+        id: front
+        run: |
+          id=$(aws ec2 describe-instances \
+                --filters Name=tag:Name,Values=ctf-front Name=instance-state-name,Values=running \
+                --query 'Reservations[].Instances[].InstanceId' --output text)
+          if [ -z "$id" ] || [ "$id" = None ]; then
+            echo "Aucun front en cours (phase off) : rien a deployer."
+            echo "id=" >> "$GITHUB_OUTPUT"; exit 0
+          fi
+          ping=$(aws ssm describe-instance-information --filters Key=InstanceIds,Values="$id" \
+                  --query 'InstanceInformationList[0].PingStatus' --output text)
+          echo "front $id (SSM: $ping)"
+          [ "$ping" = Online ] || { echo "Agent SSM hors ligne sur $id"; exit 1; }
+          echo "id=$id" >> "$GITHUB_OUTPUT"
+      - name: front-update.sh ${{ github.sha }}
+        if: steps.front.outputs.id != ''
+        run: |
+          cat > params.json <<JSON
+          {"commands": ["sudo -u ubuntu -H bash -lc 'cd /opt/ctfd/CTFd && git fetch --prune origin && git checkout -q ${{ github.sha }} && deploy/scripts/front-update.sh ${{ github.sha }}'"],
+           "executionTimeout": ["1800"]}
+          JSON
+          cmd=$(aws ssm send-command --instance-ids "${{ steps.front.outputs.id }}" \
+                  --document-name AWS-RunShellScript --comment "deploy ${{ github.sha }}" \
+                  --parameters file://params.json --query Command.CommandId --output text)
+          echo "commande SSM $cmd"
+          for _ in $(seq 1 180); do
+            sleep 10
+            st=$(aws ssm get-command-invocation --command-id "$cmd" \
+                   --instance-id "${{ steps.front.outputs.id }}" --query Status --output text 2>/dev/null || echo Pending)
+            case "$st" in Pending|InProgress|Delayed) continue ;; esac
+            break
+          done
+          aws ssm get-command-invocation --command-id "$cmd" --instance-id "${{ steps.front.outputs.id }}" \
+            --query '[StandardOutputContent, StandardErrorContent]' --output text
+          echo "statut : $st"
+          [ "$st" = Success ]

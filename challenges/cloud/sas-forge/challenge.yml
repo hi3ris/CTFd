@@ -1,0 +1,58 @@
+name: sas-forge
+author: dagbanjaphet
+category: cloud
+description: |-
+  An Azure Storage account key leaked into a backup (`leaked-account-key.txt`),
+  a working SAS URL for a public sample blob (`sas-example.txt`), the container
+  inventory (`blob-index.json`), the SAS parameters for a private blob
+  (`sas-params.json`), and that private blob sealed for the handout
+  (`flag-blob.enc`).
+
+  Reach the private blob offline, then open it. The flag is inside.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{forged_service_sas_with_leaked_key}
+hints:
+  - content: >-
+      A Service SAS is not fetched from Azure — it is computed locally. The `sig`
+      query parameter is an HMAC over a fixed set of SAS fields, keyed by the
+      storage account key. You have the key.
+    cost: 20
+    key: h1
+  - content: >-
+      Rebuild the Service SAS StringToSign for signedVersion 2020-12-06 (the
+      field order matters, and the canonicalized resource is
+      `/blob/<account>/<container>/<blob>`). HMAC-SHA256 it with the
+      base64-decoded account key and base64 the result to get the `sig`.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The sealed blob's XOR keystream is SHA256 of the base64 `sig` string you
+      forged for THIS blob. Recompute and XOR the base64 ciphertext.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - cloud
+  - azure
+  - sas
+  - hmac
+  - hard
+files:
+  - leaked-account-key.txt
+  - sas-example.txt
+  - blob-index.json
+  - sas-params.json
+  - flag-blob.enc
+state: visible
+version: "0.1"

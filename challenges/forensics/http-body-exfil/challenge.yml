@@ -1,0 +1,57 @@
+name: http-body-exfil
+author: dagbanjaphet
+category: forensics
+description: |-
+  A workstation kept "phoning home" to a metrics endpoint that our asset
+  inventory does not recognise. We captured its traffic (`capture.pcap`) during
+  the incident window.
+
+  Something was smuggled out of the network inside that traffic. Reassemble it,
+  read the note that left the building, and submit the token it contains.
+
+  Notes:
+    * The capture also contains ordinary web browsing.
+    * The uploads are not sent in order.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{ch4nk3d_p0st_b0dy_r34ss3mbl3d}
+hints:
+  - content: >-
+      Ignore the GET requests to well-known sites. The interesting traffic is a
+      repeated HTTP POST to a single host that is not a real CDN. Look at the
+      request bodies, not the URLs.
+    cost: 15
+    key: h1
+  - content: >-
+      Each POST to `cdn-metrics.example/collect` carries an `X-Seq:` header and a
+      short base64 body. The packets are shuffled on the wire — sort the bodies
+      by `X-Seq`, concatenate them into one string, then base64-decode. The
+      `exfil-token:` line in the recovered note is the flag.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      In Wireshark: `http.request.method == "POST" && http contains
+      "cdn-metrics"`. Export each body, order by X-Seq (0..N), glue and
+      `base64 -d`. A separate POST to paste.example is an unrelated decoy.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - forensics
+  - network
+  - pcap
+  - medium
+files:
+  - capture.pcap
+state: visible
+version: "0.1"

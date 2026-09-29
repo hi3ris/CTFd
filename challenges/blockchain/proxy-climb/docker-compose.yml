@@ -1,0 +1,13 @@
+# Local run notes for blockchain-proxy-climb (STUB).
+#   docker build -t ctf-blockchain-proxy-climb:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  blockchain-proxy-climb:
+    image: ctf-blockchain-proxy-climb:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

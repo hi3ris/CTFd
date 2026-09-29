@@ -1,0 +1,13 @@
+# Local run notes for ml-scorer-poison (STUB).
+#   docker build -t ctf-ml-scorer-poison:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  ml-scorer-poison:
+    image: ctf-ml-scorer-poison:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

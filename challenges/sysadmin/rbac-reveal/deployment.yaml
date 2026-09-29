@@ -1,0 +1,27 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: api
+  namespace: kekeli
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: api
+  template:
+    metadata:
+      labels:
+        app: api
+    spec:
+      serviceAccountName: app
+      containers:
+        - name: api
+          image: kekeli/internal-api:staging
+          volumeMounts:
+            - name: creds
+              mountPath: /etc/creds
+              readOnly: true
+      volumes:
+        - name: creds
+          secret:
+            secretName: app-api

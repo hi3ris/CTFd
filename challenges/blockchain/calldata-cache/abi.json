@@ -1,0 +1,22 @@
+[
+  {
+    "type": "function",
+    "name": "store",
+    "inputs": [
+      {
+        "name": "id",
+        "type": "uint256"
+      },
+      {
+        "name": "who",
+        "type": "address"
+      },
+      {
+        "name": "note",
+        "type": "string"
+      }
+    ],
+    "outputs": [],
+    "stateMutability": "nonpayable"
+  }
+]

@@ -1,0 +1,5 @@
+{
+  "_comment": "Exfiltrated object kekeli-scratch/tmp/notes.bin (sealed for handout).",
+  "seal": "XOR keystream = SHA256(<ASIA access key of the session that read the target secret>)",
+  "ciphertext_b64": "cpq9VbqNAg25obe19OU+D6fbYKxFgF3h/5qLppG9WjxPyJwIazYqvA=="
+}

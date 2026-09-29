@@ -1,0 +1,13 @@
+# Local run notes for blockchain-escrowd-proxy (STUB).
+#   docker build -t ctf-blockchain-escrowd-proxy:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  blockchain-escrowd-proxy:
+    image: ctf-blockchain-escrowd-proxy:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

@@ -1,0 +1,5 @@
+{
+  "note": "vault ciphertext; XOR key = keccak256(exploit calldata)",
+  "cipher_hex": "0330b021f2048814d6a071d0e27c211c3c991964a42c1cdea7beca246a4efe1560e4acd6d0d7f6",
+  "attacker_you_control": "0x00000000000000000000000000000000a77ac6e5"
+}

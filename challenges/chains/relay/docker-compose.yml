@@ -1,0 +1,13 @@
+# Local run notes for chains-relay (STUB).
+#   docker build -t ctf-chains-relay:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  chains-relay:
+    image: ctf-chains-relay:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

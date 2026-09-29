@@ -1,0 +1,87 @@
+name: synthvm
+author: challenge-team
+category: reverse
+description: |-
+  We pulled a "license core", `synthvm`, off a device. Enter the key it accepts
+  and it prints "Access granted"; the key you enter IS the flag. Recover the
+  exact input that passes.
+
+  There is NO flag string in the binary; grep/strings will not hand you anything.
+
+  The binary is a stripped x86-64 ELF. No network access is required;
+  everything you need is inside the file.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+
+# Static downloadable reverse challenge: the artifact IS the challenge and it
+# carries the flag logic locally (explicitly allowed by the guardrails for RE).
+# The flag never appears in plaintext in the binary - only its round-transformed
+# image is stored (as CMPI immediates). Static flag below.
+#
+# Invented ISA (not DER/protobuf/known-VM): an 80-opcode register+stack machine
+# with:
+#   - a RUNTIME-REMAPPED opcode dispatch (keyed Fisher-Yates over xorshift32),
+#     so program bytes != internal opcodes,
+#   - a custom varint whose continuation flag is the LOW bit (not LEB128),
+#   - an invented 8-bit S-box (a full bijection from a second seed),
+#   - carry feedback that chains on the OUTPUT byte, and branch operands that
+#     are ABSOLUTE program offsets.
+# The ~6000-instruction check is fully unrolled so the difficulty is in lifting
+# and reasoning about the program, not in a small loop. See src/gen.py for the
+# full spec (dev-only, not shipped).
+#
+# Single out-of-distribution VM challenge for this set (cap: 1). Standalone:
+# no 'requirements' chain. Nothing served: no connection_info.
+
+value: 500
+type: dynamic
+extra:
+  initial: 500
+  decay: 45
+  minimum: 150
+
+flags:
+  - NCTF{synthvm_d1sp4tch_rem4pped_at_runtime}
+
+# Progressive hints (chained unlock, growing cost). The technique is NOT in the
+# description -- it is paid for here.
+hints:
+  - content: >-
+      The key is not checked with ordinary code: the binary ships a bespoke
+      register+stack bytecode machine (~80 opcodes) and a long, fully-unrolled
+      program that validates it. Write a disassembler / tracer for that VM and
+      lift the program.
+    cost: 25
+    key: h1
+  - content: >-
+      Two traps in the lift. (1) The opcode dispatch is REMAPPED AT RUNTIME: an
+      init routine builds a 256-entry permutation with a keyed Fisher-Yates over
+      xorshift32 whose seed you recover from that init routine, so program bytes
+      != internal opcodes -- the
+      static switch does not line up until you apply it. (2) Immediates use a
+      home-grown varint whose continuation flag is the LOW bit (not LEB128). Also:
+      an unreferenced dead-code block inverts to a plausible-but-wrong key -- a
+      reachability check refutes it.
+    cost: 50
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The validator is a keyed round function (17 rounds): each round is an
+      S-box substitution, then a byte rotate, XORed with a per-round constant,
+      with the carry chaining on the OUTPUT byte. Both the S-box and the opcode
+      permutation are keyed bijections whose seeds live in the binary. Pull the
+      per-round rotation amounts, the XOR constants and the target bytes out of
+      the instruction stream, then invert the rounds (16 -> 0) from the target
+      back to the key.
+    cost: 75
+    key: h3
+    requirements: [h2]
+
+tags:
+  - reverse
+  - hard
+
+files:
+  - synthvm

@@ -1,0 +1,54 @@
+name: subnet-reach
+author: dagbanjaphet
+category: networking
+description: |-
+  You have a router's forwarding table and a batch of probe packets
+  (`routing.json`), plus the address of one target host. The router forwards
+  each packet according to its table; some destinations leave the router toward
+  other next hops, some are dropped, and some are delivered onto the target's
+  own segment.
+
+  Determine which packets actually reach the target host. Each packet has a
+  one-character `tag`; the packets that reach the host, read in ascending `id`
+  order, spell the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{longest_prefix_match_wins_and_null0_drops}
+hints:
+  - content: >-
+      A destination can match several routes at once (the default route, a /8, a
+      /16, a /24, a /25, a /32...). Routers pick exactly one.
+    cost: 15
+    key: h1
+  - content: >-
+      The chosen route is the one with the longest matching prefix. A packet
+      reaches the target host only when that best route's action is "local";
+      "gw:..." forwards it elsewhere and "null0" black-holes it.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Watch the more-specific overrides inside the local /24: a /25 covering the
+      upper half points at a gateway, and a /32 is a null0 black hole. Collect
+      the "local" packets, sort by `id`, concatenate the tags.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - routing
+  - subnetting
+  - medium
+files:
+  - routing.json
+state: visible
+version: "0.1"

@@ -1,0 +1,83 @@
+name: "Evasion Timeline"
+author: "ctf-team"
+category: forensics
+description: |
+  L'EDR d'un poste de la finance est resté silencieux pendant une tempête
+  d'alertes, et une chasse ultérieure a exhumé un autorun égaré et un appel vers
+  un hôte à faible réputation. Nous avons exporté la télémétrie Sysmon du poste
+  pour le triage : `sysmon.jsonl`, un événement JSON par ligne (processus,
+  réseau, chargement d'image, fichier, registre, DNS).
+
+  Au premier coup d'œil, l'arbre des processus paraît propre — chaque processus
+  remonte à un parent Windows normal. Mais quelque chose s'est glissé sous le
+  couvert d'un processus de confiance. Ne vous fiez pas aux noms ni aux chemins
+  d'image : trouvez le processus intrus et extrayez l'indicateur qu'il dissimule.
+
+  Lisez `TRIAGE_BRIEF.md` pour le scénario et la référence des champs Sysmon.
+
+  Notes :
+    * Le journal est surtout du bruit bénin (démarrage, services, session
+      utilisateur) d'une vraie session de travail. L'anomalie est une seule
+      relation entre événements, pas un événement isolé.
+    * Plus d'un processus a été lancé avec une ligne de commande encodée, et les
+      administrateurs encodent aussi leurs commandes. Ce qui « se décode en
+      flag » sans se justifier par les faits n'est pas forcément le bon.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{...}  (lettres minuscules, chiffres et underscores).
+
+# This is a STATIC, downloadable forensics artifact: the challenge IS the log
+# export, so the flag is baked into the telemetry. No served component and no
+# per-team HMAC flag (see the forensics static-artifact exception in the
+# wave-2 authoring rules). gen.py rebuilds the log deterministically and is kept
+# out of the player bundle; files: ships only the handout.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 400
+type: dynamic
+extra:
+  initial: 400
+  decay: 45
+  minimum: 120
+
+flags:
+  - "NCTF{ppid_sp00f_dead_parent_6284}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      Ne vous fiez pas aux noms ni aux chemins d'image. L'anomalie est une
+      RELATION entre événements survenus à des instants différents, pas un
+      événement isolé. Reconstruisez la chronologie de la filiation des
+      processus.
+    cost: 20
+    key: h1
+  - content: >-
+      Indexez les créations (EventID 1) et les terminaisons (EventID 5) de
+      processus par `ProcessGuid`. Pour chaque enfant, vérifiez que son parent
+      (`ParentProcessGuid`) était encore VIVANT à la naissance de l'enfant. Un
+      seul événement viole cette règle.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le PowerShell malveillant revendique comme parent un `wermgr.exe`
+      (PID 6284) déjà terminé 28 s plus tôt — un parent mort ne peut engendrer
+      d'enfant (PPID spoofing, MITRE T1134.004). Décodez son `-EncodedCommand`
+      (base64 d'UTF-16LE) : le flag est à l'intérieur.
+    cost: 60
+    key: h3
+    requirements: [h2]
+
+files:
+  - sysmon.jsonl
+  - TRIAGE_BRIEF.md
+
+tags:
+  - forensics
+  - medium
+
+connection_info: null

@@ -1,0 +1,26 @@
+name: url-encoding
+author: dagbanjaphet
+category: warmup
+description: |-
+  `encoded.txt` is a string full of `%` signs followed by two hex
+  digits, like you would see stuffed into a web address. Decode it back
+  to plain text and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{percent_encoding_for_urls}
+tags:
+  - warmup
+  - web
+  - encoding
+  - beginner
+files:
+  - encoded.txt
+state: visible
+version: "0.1"

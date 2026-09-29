@@ -1,0 +1,46 @@
+name: auth-timeline
+author: dagbanjaphet
+category: forensics
+description: |-
+  A public-facing server was compromised overnight. All we salvaged before the
+  box was reimaged is its `auth.log`. It is mostly internet background noise,
+  but one intruder actually got in and ran a command.
+
+  Reconstruct what happened, find the command the intruder ran, and recover the
+  string it left behind. That string is your flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{brut3f0rc3_th3n_succ3ss_0n_r00t}
+hints:
+  - content: >-
+      Lots of IPs fail to log in a handful of times. Only one hammers the server
+      with dozens of failures and then succeeds. Group the failures by source
+      address.
+    cost: 10
+    key: h1
+  - content: >-
+      Once you have the attacker IP, find its `Accepted password` line and note
+      the sshd process id in brackets. The `audit[<same pid>]` line later logs a
+      command with a base64 argument — decode that argument. Other sessions have
+      base64 too, but only the attacker's decodes to the flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - forensics
+  - log-analysis
+  - correlation
+  - easy
+files:
+  - auth.log
+state: visible
+version: "0.1"

@@ -1,0 +1,151 @@
+{
+  "prefix": "2001:db8:ac1d:64::/64",
+  "note": "SLAAC autoconfig inventory; interface IDs omitted on purpose.",
+  "hosts": [
+    {
+      "host": "node-07",
+      "mac": "40:d2:0f:5c:fd:02",
+      "tag": "i"
+    },
+    {
+      "host": "node-23",
+      "mac": "cd:f1:8e:8f:d3:61",
+      "tag": "_"
+    },
+    {
+      "host": "node-13",
+      "mac": "6a:d5:30:1c:e2:53",
+      "tag": "a"
+    },
+    {
+      "host": "node-14",
+      "mac": "8c:ad:cc:70:89:e2",
+      "tag": "a"
+    },
+    {
+      "host": "node-24",
+      "mac": "d7:b4:d5:83:a5:3f",
+      "tag": "f"
+    },
+    {
+      "host": "node-06",
+      "mac": "38:87:84:9e:fc:aa",
+      "tag": "u"
+    },
+    {
+      "host": "node-04",
+      "mac": "2d:b6:66:82:e6:09",
+      "tag": "{"
+    },
+    {
+      "host": "node-16",
+      "mac": "96:3b:1b:df:59:ec",
+      "tag": "_"
+    },
+    {
+      "host": "node-09",
+      "mac": "46:3d:8f:17:55:3b",
+      "tag": "4"
+    },
+    {
+      "host": "node-00",
+      "mac": "0c:19:c2:16:06:6b",
+      "tag": "N"
+    },
+    {
+      "host": "node-03",
+      "mac": "2d:58:1d:07:32:db",
+      "tag": "F"
+    },
+    {
+      "host": "node-11",
+      "mac": "4b:ef:f9:ae:15:49",
+      "tag": "s"
+    },
+    {
+      "host": "node-10",
+      "mac": "45:22:91:6d:b9:65",
+      "tag": "_"
+    },
+    {
+      "host": "node-28",
+      "mac": "f9:1d:21:ad:31:76",
+      "tag": "}"
+    },
+    {
+      "host": "node-08",
+      "mac": "40:f1:c0:70:3e:f4",
+      "tag": "6"
+    },
+    {
+      "host": "node-27",
+      "mac": "ef:86:ba:c0:a8:bf",
+      "tag": "p"
+    },
+    {
+      "host": "node-12",
+      "mac": "54:72:3e:b9:ed:1f",
+      "tag": "l"
+    },
+    {
+      "host": "node-25",
+      "mac": "ea:a9:18:a2:2b:f8",
+      "tag": "l"
+    },
+    {
+      "host": "node-19",
+      "mac": "ab:82:09:2e:44:70",
+      "tag": "_"
+    },
+    {
+      "host": "node-22",
+      "mac": "cc:d9:66:df:af:cf",
+      "tag": "t"
+    },
+    {
+      "host": "node-18",
+      "mac": "a4:9c:21:c9:5d:15",
+      "tag": "l"
+    },
+    {
+      "host": "node-15",
+      "mac": "8d:f0:1f:de:ce:82",
+      "tag": "c"
+    },
+    {
+      "host": "node-05",
+      "mac": "3b:a8:96:49:98:aa",
+      "tag": "e"
+    },
+    {
+      "host": "node-20",
+      "mac": "c3:fb:98:f1:07:8a",
+      "tag": "b"
+    },
+    {
+      "host": "node-02",
+      "mac": "14:9e:61:6a:97:78",
+      "tag": "T"
+    },
+    {
+      "host": "node-26",
+      "mac": "e9:fd:3d:9b:c6:af",
+      "tag": "i"
+    },
+    {
+      "host": "node-21",
+      "mac": "cc:29:9a:f0:52:fa",
+      "tag": "i"
+    },
+    {
+      "host": "node-01",
+      "mac": "16:be:48:93:1f:b2",
+      "tag": "C"
+    },
+    {
+      "host": "node-17",
+      "mac": "9c:6a:1e:d9:86:a7",
+      "tag": "l"
+    }
+  ]
+}

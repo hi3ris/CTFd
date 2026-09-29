@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <title>{{ Configs.ctf_name }}</title>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#00040d">
+
+    <link rel="shortcut icon" href="{{ Configs.ctf_small_icon }}" type="image/x-icon">
+
+    <!-- Fonts aligned to the NCTF vitrine: Tourney (display), Lato (body), JetBrains Mono (terminal/flags) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Tourney:wght@600;800&family=Lato:wght@400;700&family=JetBrains+Mono:wght@500&display=swap">
+
+    <!-- FontAwesome + offline webfonts (icons must load before the component styles) -->
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/fonts.css') }}">
+    <!-- base component styles -->
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/main.css') }}">
+    <link rel="stylesheet" href="{{ url_for('views.themes', path='css/core.css') }}">
+
+    {% block stylesheets %}{% endblock %}
+    {{ Plugins.styles }}
+
+    <style>
+        /* ================================================================
+           NCTF — aligné sur la vitrine CERT.tg : noir terminal, tricolore
+           Togo exact (rouge/jaune/vert), Tourney en display, Lato en corps,
+           JetBrains Mono pour flags/points. Sobre, pas "CTFd".
+           ================================================================ */
+        :root {
+            --red:    #d21034;   /* Togo rouge (danger / accent principal) */
+            --yellow: #ffce00;   /* Togo jaune */
+            --green:  #006a4e;   /* Togo vert */
+            --green-b:#17b06b;   /* vert "résolu" plus clair */
+            --bg:     #00040d;
+            --panel:  #0b0f18;
+            --raised: #0f1420;
+            --line:   #1c2431;
+            --fg:     #ffffff;
+            --muted:  #9aa4b2;
+            --link:   #f9d77e;   /* or doux (vitrine --color-link) */
+            --radius: 8px;
+        }
+        html { scroll-behavior: smooth; }
+        body {
+            margin: 0;
+            font-family: 'Lato', system-ui, sans-serif;
+            color: var(--fg);
+            background-color: var(--bg);
+            background-image:
+                radial-gradient(1100px 560px at 84% -8%, rgba(210,16,52,0.10), transparent 60%),
+                radial-gradient(820px 480px at 8% 112%, rgba(0,106,78,0.12), transparent 62%);
+            background-attachment: fixed;
+        }
+
+        h1, h2, h3, h4, h5, .navbar-brand, .h1, .h2, .h3 {
+            font-family: 'Tourney', system-ui, sans-serif;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--fg);
+        }
+        h1, .h1 { font-size: clamp(2rem, 5vw, 3rem); line-height: 1.04; }
+        /* section headers get a thin Togo tricolour underline */
+        h2::after {
+            content: ""; display: block; width: 2.6rem; height: 3px; margin-top: .4rem;
+            background: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%);
+        }
+
+        /* Navbar: black with a tricolour bottom edge */
+        .navbar {
+            background-color: rgba(0,2,8,0.94) !important;
+            border-bottom: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+            backdrop-filter: blur(5px);
+        }
+        .navbar-brand { font-size: 1.35rem; color: var(--fg) !important; letter-spacing: 2px; }
+        .navbar .nav-link { color: #c7cfda !important; font-weight: 700; letter-spacing: .4px; font-family: 'Lato', sans-serif; }
+        .navbar .nav-link:hover { color: var(--yellow) !important; }
+
+        a { color: var(--link); transition: color .15s ease; }
+        a:hover { color: #ffffff; }
+
+        code, kbd, samp, .font-mono { font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+        /* Buttons */
+        .btn { font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: .4px; border-radius: var(--radius);
+               transition: transform .12s ease, box-shadow .12s ease, filter .12s; }
+        .btn-primary { background-color: var(--red); border-color: var(--red); color: #fff; }
+        .btn-primary:hover, .btn-primary:focus { filter: brightness(1.08); transform: translateY(-2px);
+               box-shadow: 0 8px 22px rgba(210,16,52,0.35); }
+        .btn-secondary, .btn-info { background-color: var(--green); border-color: var(--green); color: #fff; }
+        .btn-secondary:hover, .btn-info:hover { transform: translateY(-2px); filter: brightness(1.12); }
+        .btn-warning { background-color: var(--yellow); border-color: var(--yellow); color: #1a1400; }
+        /* Flag submit button (modal): high-contrast red, not the low-contrast default */
+        .challenge-submit {
+            background-color: var(--red); border: 1px solid var(--red); color: #fff;
+            font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: .4px;
+            border-radius: var(--radius); padding: .375rem 1rem; width: 100%;
+            transition: filter .12s ease, transform .12s ease;
+        }
+        .challenge-submit:hover, .challenge-submit:focus { filter: brightness(1.08); transform: translateY(-1px); }
+
+        /* Panels / cards / challenge tiles */
+        .card, .modal-content, .jumbotron, .challenge-button, .challenge {
+            background-color: var(--panel) !important;
+            border: 1px solid var(--line) !important;
+            border-radius: var(--radius) !important;
+            color: var(--fg);
+        }
+        .challenge-button, .challenge {
+            border-top: 3px solid var(--line) !important;
+            transition: transform .14s ease, box-shadow .14s ease, border-color .14s;
+        }
+        .challenge-button:hover, .challenge:hover {
+            transform: translateY(-4px);
+            border-top-color: var(--red) !important;
+            box-shadow: 0 16px 34px rgba(0,0,0,0.55);
+        }
+        /* points / values read as terminal data */
+        .challenge .challenge-value, .challenge-button .challenge-value,
+        .badge, .score, .place { font-family: 'JetBrains Mono', monospace; }
+
+        /* Solved = Togo green, terminal-style badge (echoes the vitrine).
+           The board JS marks solved tiles with .solved-challenge; keep both selectors in sync. */
+        .solved, .solved .challenge-button,
+        .solved-challenge, .challenge-button.solved-challenge { background-color: rgba(23,176,107,0.08) !important; }
+        .solved .challenge-button, .challenge.solved,
+        .solved-challenge, .challenge-button.solved-challenge { border-top-color: var(--green-b) !important; }
+        .badge { border: 1px solid #2b3a4d; }
+        .solved .badge, .solved-challenge .badge { background-color: rgba(23,176,107,0.35); border-color: var(--green-b); color: #fff; }
+
+        /* Tables / scoreboard */
+        table { color: var(--fg); }
+        .table thead th { border-bottom: 2px solid var(--red); text-transform: uppercase; letter-spacing: .5px;
+            font-family: 'JetBrains Mono', monospace; font-size: .8rem; color: var(--muted); }
+        .table td, .table th { border-color: var(--line); }
+        .table-striped tbody tr:nth-of-type(odd) { background-color: rgba(255,255,255,0.02); }
+
+        /* Hero / jumbotron */
+        .jumbotron {
+            background:
+                radial-gradient(760px 320px at 50% -30%, rgba(210,16,52,0.14), transparent 70%),
+                var(--panel) !important;
+            border-top: 4px solid transparent !important;
+            border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+            text-align: center;
+        }
+
+        .form-control { background-color: #060a12; border: 1px solid var(--line); color: var(--fg); }
+        .form-control:focus { border-color: var(--yellow); box-shadow: 0 0 0 .15rem rgba(255,206,0,0.22);
+            background-color: #060a12; color: var(--fg); }
+
+        /* Footer : noir, liseré sobre. Le tricolore vit sur le ruban d'état
+           (.hud-bar::before, animé) juste en dessous — un seul suffit. */
+        .footer {
+            background-color: #00030a;
+            color: var(--muted);
+            border-top: 1px solid var(--line);
+            padding: 1rem 0;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .82rem;
+        }
+        .footer a { color: var(--link); }
+        .footer a:hover { color: #fff; }
+
+        ::selection { background: var(--red); color: #fff; }
+
+        /* --- Light glitch on the brand + terminal caret (echoes the vitrine) --- */
+        .navbar-brand { position: relative; animation: brandGlitch 7s steps(1) infinite; }
+        .navbar-brand::after { content: "_"; color: var(--yellow); margin-left: .12ch; animation: caretBlink 1.1s steps(1) infinite; }
+        @keyframes brandGlitch {
+            0%, 95.5%, 100% { text-shadow: none; transform: translate3d(0,0,0); }
+            96%   { text-shadow: -2px 0 var(--red), 2px 0 var(--green);  transform: translate3d(1px,0,0); }
+            96.6% { text-shadow: 2px 0 var(--red), -2px 0 var(--green);  transform: translate3d(-1px,0,0); }
+            97.2% { text-shadow: 1px 0 var(--yellow), -1px 0 var(--red); transform: translate3d(1px,0,0); }
+            97.8% { text-shadow: none; transform: none; }
+        }
+        @keyframes caretBlink { 0%,50% { opacity: 1; } 50.01%,100% { opacity: 0; } }
+        @media (prefers-reduced-motion: reduce) {
+            .navbar-brand { animation: none; }
+            .navbar-brand::after { animation: none; }
+        }
+
+        /* Organizer credit in the footer */
+        .org-credit { display: inline-flex; align-items: center; gap: .5rem; opacity: .85; }
+        .org-credit img { height: 22px; width: auto; filter: brightness(1.05); }
+        .org-credit:hover { opacity: 1; }
+
+        /* --- Error pages: fake terminal window, on-brand, no "CTFd" tells --- */
+        .term-error { min-height: 64vh; display: flex; align-items: center; justify-content: center; padding: 2rem 1rem; }
+        .term-window {
+            width: 100%; max-width: 620px;
+            background: #05070d; border: 1px solid var(--line); border-radius: 10px;
+            box-shadow: 0 26px 60px rgba(0,0,0,0.6); overflow: hidden;
+            font-family: 'JetBrains Mono', ui-monospace, monospace;
+        }
+        .term-bar {
+            display: flex; align-items: center; gap: .45rem;
+            padding: .6rem .85rem; background: #0b0f18;
+            border-bottom: 1px solid var(--line);
+        }
+        .term-bar i { width: 11px; height: 11px; border-radius: 50%; display: inline-block; }
+        .term-bar .d1 { background: var(--red); } .term-bar .d2 { background: var(--yellow); } .term-bar .d3 { background: var(--green-b); }
+        .term-bar .path { margin-left: .6rem; color: var(--muted); font-size: .76rem; letter-spacing: .3px; }
+        .term-body { padding: 1.4rem 1.3rem 1.6rem; font-size: .92rem; line-height: 1.7; }
+        .term-body .l { margin: 0; white-space: pre-wrap; word-break: break-word; }
+        .term-body .p { color: var(--green-b); } /* $ prompt */
+        .term-body .cmd { color: #c7cfda; }
+        .term-body .code { display: inline-block; padding: .05rem .5rem; border-radius: 5px; font-weight: 500; }
+        .term-body .fail { color: var(--red); }
+        .term-body .warn { color: var(--yellow); }
+        .term-body .ok   { color: var(--green-b); }
+        .term-body .msg  { color: var(--fg); margin: .35rem 0 .9rem; font-family: 'Lato', sans-serif; }
+        .term-body .muted { color: var(--muted); }
+        .term-body a.back { color: var(--link); }
+        .term-body a.back:hover { color: #fff; text-decoration: underline; }
+        .term-body .caret { color: var(--yellow); animation: caretBlink 1.1s steps(1) infinite; }
+        @media (prefers-reduced-motion: reduce) { .term-body .caret { animation: none; } }
+        .term-code { font-size: 2.6rem; font-weight: 800; font-family: 'Tourney', system-ui, sans-serif;
+            letter-spacing: 2px; margin: 0 0 .2rem; color: var(--fg); }
+
+        /* ================================================================
+           NCTF26 — « Console de cyberdéfense » : chrome cinématique.
+           Profondeur (grille animée + scanlines + vignette), cadre HUD,
+           ruban d'état live. Tout est coupé sous prefers-reduced-motion.
+           ================================================================ */
+        /* Profondeur : grille qui dérive + scanlines + vignette */
+        body::before {
+            content: ""; position: fixed; inset: -46px; z-index: -2; pointer-events: none; opacity: .6;
+            background:
+                linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px) 0 0/46px 46px,
+                linear-gradient(90deg, rgba(255,255,255,.035) 1px, transparent 1px) 0 0/46px 46px;
+            -webkit-mask-image: radial-gradient(1200px 720px at 50% 6%, #000 45%, transparent 100%);
+                    mask-image: radial-gradient(1200px 720px at 50% 6%, #000 45%, transparent 100%);
+            animation: hudGrid 26s linear infinite;
+        }
+        body::after {
+            content: ""; position: fixed; inset: 0; z-index: -1; pointer-events: none;
+            background:
+                repeating-linear-gradient(0deg, rgba(0,0,0,0) 0 2px, rgba(0,0,0,.05) 2px 3px),
+                radial-gradient(130% 120% at 50% 28%, transparent 55%, rgba(0,0,0,.6) 100%);
+        }
+        @keyframes hudGrid { to { background-position: 46px 46px, 46px 46px; } }
+
+        /* Cadre HUD : crochets d'angle */
+        .hud-frame { position: fixed; inset: 10px; z-index: 50; pointer-events: none; }
+        .hud-frame i { position: absolute; width: 26px; height: 26px;
+            border: 2px solid rgba(255,206,0,.5); filter: drop-shadow(0 0 6px rgba(255,206,0,.22)); }
+        .hud-frame .tl { top:0; left:0; border-right:0; border-bottom:0; }
+        .hud-frame .tr { top:0; right:0; border-left:0; border-bottom:0; }
+        .hud-frame .bl { bottom:0; left:0; border-right:0; border-top:0; }
+        .hud-frame .br { bottom:0; right:0; border-left:0; border-top:0; }
+
+        /* Ruban d'état : barre console fixée en bas. On réserve la hauteur de la
+           barre (30px) + une marge confortable pour que le footer ne la touche pas. */
+        body { padding-bottom: 56px; }
+        .footer { margin-bottom: 8px; }
+        .hud-bar {
+            position: fixed; left:0; right:0; bottom:0; z-index: 60; height: 30px;
+            display: flex; align-items: center; gap: 1.1rem; padding: 0 .9rem; overflow: hidden;
+            font-family: 'JetBrains Mono', monospace; font-size: .72rem; letter-spacing: .6px;
+            color: #c7cfda; background: rgba(0,3,10,.92); border-top: 1px solid var(--line);
+            backdrop-filter: blur(6px);
+        }
+        .hud-bar::before {
+            content: ""; position: absolute; left:0; right:0; top:0; height: 2px;
+            background: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%);
+            background-size: 200% 100%; animation: hudSweep 6s linear infinite;
+        }
+        @keyframes hudSweep { to { background-position: 200% 0; } }
+        .hud-bar .seg { display: inline-flex; align-items: center; gap: .4rem; white-space: nowrap; }
+        .hud-bar .k { color: var(--muted); } .hud-bar .v { color: #fff; }
+        .hud-bar .brand { color: var(--yellow); font-weight: 700; }
+        .hud-bar .grow { flex: 1; }
+        .hud-bar .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green-b);
+            box-shadow: 0 0 8px var(--green-b); animation: hudPulse 1.8s ease-in-out infinite; }
+        .hud-bar.frozen .dot { background: #7fb2ff; box-shadow: 0 0 8px #7fb2ff; }
+        @keyframes hudPulse { 0%,100% { opacity: 1; } 50% { opacity: .3; } }
+        .hud-bar .fb .k { color: var(--red); }
+        .hud-bar .fb .v { max-width: 34vw; overflow: hidden; text-overflow: ellipsis; }
+        .hud-bar .fb.fresh .v { animation: hudFb 1.2s ease-in-out 4; }
+        @keyframes hudFb { 50% { color: var(--red); } }
+        @media (max-width: 640px) { .hud-bar .hide-sm { display: none; } }
+
+        /* Néon maîtrisé sur les titres */
+        h1, .h1, .navbar-brand { text-shadow: 0 0 18px rgba(210,16,52,.18); }
+
+        /* Tuiles de challenge = « dossiers de mission » (sweep de décryptage) */
+        .challenge-button { position: relative; overflow: hidden; }
+        .challenge-button::after {
+            content: ""; position: absolute; inset: 0; pointer-events: none; opacity: 0;
+            background: linear-gradient(115deg, transparent 30%, rgba(255,206,0,.14) 50%, transparent 70%);
+            transform: translateX(-120%);
+        }
+        .challenge-button:hover::after { opacity: 1; animation: decrypt 1.1s ease; }
+        @keyframes decrypt { to { transform: translateX(120%); } }
+        .solved .challenge-button, .challenge-button.solved-challenge {
+            box-shadow: 0 0 0 1px var(--green-b), 0 0 22px rgba(23,176,107,.28) !important;
+        }
+
+        /* Boutons : éclat au survol */
+        .btn { position: relative; overflow: hidden; }
+        .btn::after { content: ""; position: absolute; top:0; left:-140%; width: 55%; height: 100%;
+            background: linear-gradient(100deg, transparent, rgba(255,255,255,.22), transparent);
+            transform: skewX(-18deg); }
+        .btn:hover::after { animation: shine .7s ease; }
+        @keyframes shine { to { left: 170%; } }
+
+        /* Allumage : léger fondu du contenu. Fill-mode `backwards`, jamais `both`
+           ou `forwards` : un transform qui persiste sur <main> en fait le référentiel
+           des position:fixed qu'il contient (fenêtre de challenge, alertes ezq) —
+           après un défilement, la fenêtre s'ouvrait hors écran, voile bloquant. */
+        main { animation: powerOn .5s ease backwards; }
+        @keyframes powerOn { from { opacity: 0; transform: translateY(6px); } to { opacity: 1; transform: none; } }
+
+        /* Dossiers de mission : le plateau /challenges en fiches classifiées */
+        #challenges-board { counter-reset: msn; }
+        .category-header h3 {
+            font-family: 'JetBrains Mono', monospace !important; font-weight: 700;
+            text-transform: uppercase; letter-spacing: 3px; font-size: .95rem; color: #d6dde6;
+        }
+        .category-header h3::before { content: "// "; color: var(--yellow); }
+        .challenge-button {
+            counter-increment: msn;
+            border-left: 3px solid rgba(255,206,0,.5) !important;
+            background-image:
+                linear-gradient(rgba(255,255,255,.02) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.02) 1px, transparent 1px) !important;
+            background-size: 22px 22px !important;
+        }
+        .challenge-button::before {
+            content: "MSN " counter(msn, decimal-leading-zero);
+            position: absolute; top: 6px; right: 9px; z-index: 2;
+            font-family: 'JetBrains Mono', monospace; font-size: .58rem; letter-spacing: 1px;
+            color: var(--muted); opacity: .85;
+        }
+        .challenge-button:hover { border-left-color: var(--yellow) !important; }
+        .solved .challenge-button, .challenge-button.solved-challenge { border-left-color: var(--green-b) !important; }
+        .challenge-button .corner-button-check { color: var(--green-b); filter: drop-shadow(0 0 6px rgba(23,176,107,.6)); }
+
+        @media (prefers-reduced-motion: reduce) {
+            body::before, .hud-bar::before, .hud-bar .dot,
+            .challenge-button:hover::after, .btn:hover::after, main { animation: none; }
+            main { opacity: 1; transform: none; }
+        }
+
+        /* ================================================================
+           NCTF26 — Finitions v2 : accessibilité clavier, barre de défilement
+           thématique, et "console d'accès" pour les pages d'authentification.
+           Purement additif, aucune animation nouvelle.
+           ================================================================ */
+        /* Anneau de focus clavier lisible (jaune Togo). :focus-visible ne
+           s'affiche qu'au clavier, jamais au clic souris — pas de gêne. */
+        a:focus-visible, button:focus-visible, .btn:focus-visible,
+        .nav-link:focus-visible, .challenge-submit:focus-visible,
+        .challenge-button:focus-visible, [tabindex]:focus-visible,
+        input:focus-visible, select:focus-visible, textarea:focus-visible,
+        summary:focus-visible {
+            outline: 2px solid var(--yellow);
+            outline-offset: 3px;
+            border-radius: 5px;
+        }
+
+        /* Barre de défilement dans l'esprit console (Firefox + WebKit) */
+        html { scrollbar-width: thin; scrollbar-color: #24303f #05070d; }
+        ::-webkit-scrollbar { width: 12px; height: 12px; }
+        ::-webkit-scrollbar-track { background: #05070d; }
+        ::-webkit-scrollbar-thumb {
+            background: #1c2431; border-radius: 8px;
+            border: 3px solid #05070d;
+        }
+        ::-webkit-scrollbar-thumb:hover { background: #2b3a4d; }
+        ::-webkit-scrollbar-corner { background: #05070d; }
+
+        /* Console d'accès : les pages login / inscription / reset — sobres et
+           un peu vides — reçoivent un panneau cadré (liseré tricolore + label
+           moniteur), au lieu d'un formulaire flottant. Ciblé par la classe de
+           route sur <body>, donc sans effet ailleurs. */
+        body.ep-auth-login .container > .row > [class*="col-"],
+        body.ep-auth-register .container > .row > [class*="col-"],
+        body.ep-auth-reset_password .container > .row > [class*="col-"],
+        body.ep-auth-confirm .container > .row > [class*="col-"] {
+            position: relative;
+            background: var(--panel);
+            border: 1px solid var(--line);
+            border-top: 3px solid transparent;
+            border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+            border-radius: var(--radius);
+            padding: 2rem 1.75rem 1.75rem;
+            margin-top: -1.25rem;
+            box-shadow: 0 22px 50px rgba(0,0,0,0.5);
+        }
+        body.ep-auth-login .container > .row > [class*="col-"]::before,
+        body.ep-auth-register .container > .row > [class*="col-"]::before,
+        body.ep-auth-reset_password .container > .row > [class*="col-"]::before,
+        body.ep-auth-confirm .container > .row > [class*="col-"]::before {
+            content: "// accès sécurisé";
+            display: block;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: .68rem; letter-spacing: 2px; text-transform: uppercase;
+            color: var(--muted); margin-bottom: 1rem;
+        }
+        /* rapproche le panneau du hero pour une composition plus intentionnelle */
+        body[class*="ep-auth-"] .jumbotron { margin-bottom: 1.5rem; }
+    </style>
+
+    <script type="text/javascript">
+        var init = {
+            'urlRoot': "{{ request.script_root }}",
+            'csrfNonce': "{{ Session.nonce }}",
+            'userMode': "{{ Configs.user_mode }}",
+            'userId': {{ Session.id }},
+            'start': {{ Configs.start | tojson }},
+            'end': {{ Configs.end | tojson }},
+            'freeze': {{ Configs.freeze | tojson }},
+            'theme_settings': {{ Configs.theme_settings | tojson }}
+        }
+    </script>
+
+    {{ Configs.theme_header }}
+</head>
+<body class="{% if request.endpoint %}ep-{{ request.endpoint|replace('.', '-') }}{% endif %}">
+
+    <div class="hud-frame" aria-hidden="true"><i class="tl"></i><i class="tr"></i><i class="bl"></i><i class="br"></i></div>
+
+    {% include "components/navbar.html" %}
+
+    <main role="main">
+        {% block content %}
+        {% endblock %}
+    </main>
+
+    <footer class="footer">
+        <div class="container text-center" style="display:flex;flex-direction:column;align-items:center;gap:.6rem;">
+            <a class="org-credit" href="https://cert.tg/" target="_blank" rel="noopener">
+                <img src="{{ url_for('views.themes', path='img/cert.png') }}" alt="CERT.tg">
+                <small>Organisé par CERT.tg</small>
+            </a>
+            <a href="https://ramses.dagban.tg/" target="_blank" rel="noopener">
+                <small>Powered by <strong>Hibris</strong> &middot; ramses.dagban.tg</small>
+            </a>
+        </div>
+    </footer>
+
+    <!-- Ruban d'état « console » : phase + compte à rebours live (ouverture -> gel -> clôture) -->
+    <div class="hud-bar" id="hud-bar" role="status" aria-live="off">
+        <span class="seg"><span class="dot"></span><span class="brand">NCTF26</span><span class="k">// console</span></span>
+        <span class="seg"><span class="k">phase</span><span class="v" id="hud-phase">—</span></span>
+        <span class="seg" id="hud-count-seg"><span class="k" id="hud-count-k">échéance</span><span class="v" id="hud-count">—</span></span>
+        <span class="seg fb hide-sm" id="hud-fb" hidden title="dernier first blood"><span class="k">🩸 first blood</span><span class="v" id="hud-fb-v">—</span></span>
+        <span class="grow"></span>
+        <span class="seg hide-sm"><span class="k">canal</span><span class="v">chiffré</span></span>
+        <span class="seg hide-sm"><span class="k">terminal</span><span class="v">sécurisé</span></span>
+    </div>
+    <script>
+    (function () {
+        var bar = document.getElementById("hud-bar");
+        if (!bar || !window.init) return;
+        var S = init.start ? init.start * 1000 : 0,
+            E = init.end ? init.end * 1000 : 0,
+            F = init.freeze ? init.freeze * 1000 : 0;
+        var phaseEl = document.getElementById("hud-phase"),
+            kEl = document.getElementById("hud-count-k"),
+            cEl = document.getElementById("hud-count"),
+            seg = document.getElementById("hud-count-seg");
+        function two(n) { return (n < 10 ? "0" : "") + n; }
+        function hms(ms) {
+            var s = Math.max(0, Math.floor(ms / 1000));
+            var d = Math.floor(s / 86400); s %= 86400;
+            var h = Math.floor(s / 3600); s %= 3600;
+            var m = Math.floor(s / 60); s %= 60;
+            return (d > 0 ? d + "j " : "") + two(h) + ":" + two(m) + ":" + two(s);
+        }
+        function tick() {
+            var now = Date.now(), phase, klabel = "", target = 0, frozen = false;
+            if (S && now < S) { phase = "ouverture imminente"; klabel = "ouverture dans"; target = S; }
+            else if (E && now >= E) { phase = "clôturé"; }
+            else if (F && now >= F) { phase = "en cours · scores gelés"; klabel = "clôture dans"; target = E; frozen = true; }
+            else if (F && now < F) { phase = "en cours"; klabel = "gel dans"; target = F; }
+            else if (E) { phase = "en cours"; klabel = "clôture dans"; target = E; }
+            else { phase = "terrain d'entraînement"; }
+            bar.classList.toggle("frozen", frozen);
+            phaseEl.textContent = phase;
+            if (target) { kEl.textContent = klabel; cEl.textContent = hms(target - now); seg.style.display = ""; }
+            else { seg.style.display = "none"; }
+        }
+        tick(); setInterval(tick, 1000);
+
+        // Dernier first blood (plugin firstblood). On interroge l'endpoint
+        // public mis en cache (10 s côté serveur) toutes les 45 s plutôt que
+        // d'ouvrir un second flux SSE par onglet : à 300 joueurs, c'est quelques
+        // requêtes/s servies depuis le cache, et rien de plus sur gunicorn.
+        var fbSeg = document.getElementById("hud-fb"), fbVal = document.getElementById("hud-fb-v"), fbLast = null;
+        var ROOT = (init.urlRoot || "");
+        function fbPoll() {
+            fetch(ROOT + "/plugins/firstblood/api/recent?limit=1", { credentials: "same-origin", headers: { "Accept": "application/json" } })
+                .then(function (r) { return r.ok ? r.json() : null; })
+                .then(function (j) {
+                    if (!j || !j.success || !j.data || !j.data.length) return;
+                    var d = j.data[0];
+                    fbVal.textContent = d.name + " · " + d.challenge;
+                    fbSeg.hidden = false;
+                    if (fbLast !== null && fbLast !== d.solve_id) { fbSeg.classList.remove("fresh"); void fbSeg.offsetWidth; fbSeg.classList.add("fresh"); }
+                    fbLast = d.solve_id;
+                })
+                .catch(function () { /* plugin absent : segment caché */ });
+        }
+        fbPoll(); setInterval(function () { if (!document.hidden) fbPoll(); }, 45000);
+    })();
+    </script>
+
+    <script defer src="{{ url_for('views.themes', path='js/vendor.bundle.js') }}"></script>
+    <script defer src="{{ url_for('views.themes', path='js/core.js') }}"></script>
+    <script defer src="{{ url_for('views.themes', path='js/helpers.js') }}"></script>
+
+    {% block entrypoint %}
+    <script defer src="{{ url_for('views.themes', path='js/pages/main.js') }}"></script>
+    {% endblock %}
+
+    {% block scripts %}{% endblock %}
+    {{ Plugins.scripts }}
+    {{ Configs.theme_footer }}
+
+</body>
+</html>

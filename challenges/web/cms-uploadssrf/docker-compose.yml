@@ -1,0 +1,13 @@
+# Local run notes for web-cms-uploadssrf (STUB).
+#   docker build -t ctf-web-cms-uploadssrf:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  web-cms-uploadssrf:
+    image: ctf-web-cms-uploadssrf:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

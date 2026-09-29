@@ -1,0 +1,12 @@
+# /etc/logrotate.d/app
+/var/log/app/*.log {
+    daily
+    rotate 7
+    missingok
+    compress
+    # postrotate scripts run AS ROOT (logrotate itself runs as root from
+    # /etc/cron.daily). This hook therefore writes with root privileges.
+    postrotate
+        /usr/local/sbin/rotate-hook.sh >/dev/null 2>&1 || true
+    endscript
+}

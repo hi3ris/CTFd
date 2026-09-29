@@ -1,0 +1,82 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>King of the Hill</h1>
+	</div>
+</div>
+<div class="container">
+	<div id="koth-admin"><p class="text-muted">Chargement…</p></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer>
+(function () {
+	"use strict";
+	var URLROOT = (window.init && init.urlRoot) || "";
+	var box = document.getElementById("koth-admin");
+
+	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+	function dur(s){ if(s==null) return "—"; s=Math.max(0,s|0); var h=(s/3600)|0; s-=h*3600; var m=(s/60)|0; return (h?h+"h ":"")+m+"m"; }
+	function yn(b){ return b ? '<span class="badge badge-success">oui</span>' : '<span class="badge badge-secondary">non</span>'; }
+
+	function render(s){
+		if (!s.active){
+			box.innerHTML = '<div class="alert alert-warning">Le plugin KotH est inactif '
+				+ '(il faut <code>KOTH_SCORER_SECRET</code>, <code>KOTH_GLOBAL_SECRET</code> et au moins une colline valide dans <code>KOTH_HILLS</code>).</div>';
+			return;
+		}
+		var head = '<div class="row mb-3">'
+			+ pill("Scoring", s.scoring ? "actif" : "en pause", s.scoring ? "success" : "secondary")
+			+ pill("Temps de jeu", s.ctftime ? "en cours" : "hors jeu", s.ctftime ? "success" : "secondary")
+			+ pill("Pause", s.paused ? "OUI" : "non", s.paused ? "danger" : "secondary")
+			+ pill("Gel scoreboard", s.frozen ? "gelé" : "non", s.frozen ? "info" : "secondary")
+			+ pill("Tick", s.tick + "s", "dark")
+			+ pill("Fenêtre fraîcheur", s.fresh_window + "s", "dark")
+			+ pill("Dernier tick", s.last_tick_seconds!=null ? "il y a "+s.last_tick_seconds+"s" : "—",
+				(s.last_tick_seconds!=null && s.last_tick_seconds <= s.tick*2) ? "success" : "warning")
+			+ pill("Temps restant", dur(s.remaining_seconds), "dark")
+			+ '</div>';
+
+		var cards = s.hills.map(function(h){
+			var k = h.king || {};
+			var throne = !k.online ? '<span class="text-danger">hors ligne'+(h.error?' ('+esc(h.error)+')':'')+'</span>'
+				: (k.holder ? '<b>'+esc(k.holder)+'</b> <span class="text-muted">· '+esc(h.holder_token||'')+' · règne '+dur(k.reign_seconds)+(k.fresh?'':' <span class="text-danger">(expiré)</span>')+'</span>'
+					: '<span class="text-muted">trône vacant</span>');
+			var top = (h.top||[]).map(function(t,i){ return '<tr><td>'+(i+1)+'</td><td>'+esc(t.name)+'</td><td class="text-right">'+t.score+'</td></tr>'; }).join('')
+				|| '<tr><td colspan="3" class="text-muted">—</td></tr>';
+			return '<div class="card mb-3"><div class="card-body">'
+				+ '<h4 class="card-title">'+esc(h.name)+' <small class="text-muted">'+esc(h.id)+'</small></h4>'
+				+ '<table class="table table-sm"><tbody>'
+				+   tr("Trône", throne)
+				+   tr("Points / tick", h.points)
+				+   tr("Retournements", k.takeovers||0)
+				+   tr("Points déjà attribués", h.awarded_points + ' <span class="text-muted">('+h.awarded_ticks+' ticks)</span>')
+				+   tr("Plafond restant", h.cap_remaining!=null ? '≈ '+h.cap_remaining+' pts' : '—')
+				+   tr("Secret dédié", yn(h.own_secret))
+				+   tr("URL interne", '<code>'+esc(h.url)+'</code>')
+				+   tr("URL joueur", '<code>'+esc(h.player_url)+'</code>')
+				+ '</tbody></table>'
+				+ '<table class="table table-sm"><thead><tr><th>#</th><th>Équipe</th><th class="text-right">Points KotH</th></tr></thead><tbody>'+top+'</tbody></table>'
+				+ '</div></div>';
+		}).join('');
+		box.innerHTML = head + cards;
+	}
+	function pill(label, val, color){
+		return '<div class="col-md-3 col-6 mb-2"><div class="text-muted" style="font-size:.72rem;text-transform:uppercase;letter-spacing:1px">'+esc(label)+'</div>'
+			+ '<span class="badge badge-'+color+'" style="font-size:.9rem">'+esc(val)+'</span></div>';
+	}
+	function tr(k,v){ return '<tr><th style="width:220px">'+esc(k)+'</th><td>'+v+'</td></tr>'; }
+
+	function tick(){
+		fetch(URLROOT + "/plugins/koth/api/admin", {headers:{"Accept":"application/json"}, credentials:"same-origin"})
+			.then(function(r){ return r.ok ? r.json() : null; })
+			.then(function(s){ if (s) render(s); })
+			.catch(function(){});
+	}
+	tick(); setInterval(tick, 5000);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+name: oracle-canary-decoy
+author: dagbanjaphet
+category: ai
+description: |-
+  **ChannelBot** ships as `oracle.py` (`respond(prompt)`). Ask it for the flag
+  and it gives you one right away -- but submitting that answer will not score.
+  ChannelBot serves different channels, and only one of them is telling the
+  truth.
+
+  Offline only -- no network, no real model. Call the shipped oracle, reach the
+  privileged channel, and recover the real flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{r34l_fl4g_l1v3s_1n_4dm1n_ch4nn3l}
+hints:
+  - content: >-
+      The flag it hands out on the first try is a canary -- a decoy planted to
+      catch quick submissions. There is a second, privileged path in the code.
+    cost: 15
+    key: h1
+  - content: >-
+      The real flag is served only on the admin channel, unlocked by an
+      `X-Auth` header. The token that opens it lives in the source, obfuscated.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      `_TOK` is the maintenance token XORed byte-by-byte with 0x5b. Undo the XOR
+      to get the token string, then send `X-Auth: <token>` before your request.
+    cost: 40
+    key: h3
+    requirements: [h2]
+tags:
+  - ai
+  - guardrail-bypass
+  - reversing
+  - medium
+files:
+  - oracle.py
+state: visible
+version: "0.1"

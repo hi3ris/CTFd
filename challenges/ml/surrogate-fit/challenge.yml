@@ -1,0 +1,49 @@
+name: surrogate-fit
+author: dagbanjaphet
+category: ml
+description: |-
+  A hidden model is a black box: you feed it a vector, it returns a number.
+  `query_log.npz` is a captured log of inputs `X` and the exact outputs `y` the
+  model returned for them, collected within a fixed query budget. Reconstruct the
+  model well enough to read out its internal parameters -- they are the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{least_squares_clones_the_oracle}
+hints:
+  - content: >-
+      The responses are noise-free and scale linearly with the inputs. The oracle
+      is a plain linear map `y = X @ w` -- there is no bias and no nonlinearity to
+      fight.
+    cost: 15
+    key: h1
+  - content: >-
+      With more logged queries than input dimensions and a full-rank `X`, fit `w`
+      by least squares (`numpy.linalg.lstsq`).
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The recovered weight vector is already the flag: round each entry to the
+      nearest integer and read the values as ASCII characters.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ml
+  - model-extraction
+  - regression
+  - medium
+files:
+  - query_log.npz
+  - README.md
+state: visible
+version: "0.1"

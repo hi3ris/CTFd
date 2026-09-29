@@ -1,0 +1,43 @@
+name: dfa-oracle
+author: dagbanjaphet
+category: misc
+description: |-
+  `automaton.json` describes a deterministic finite automaton: an alphabet, a
+  set of states, a start state, accepting states, and a transition table. Its
+  language contains exactly one string. Find that string.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{regular_languages_have_one_word}
+hints:
+  - content: >-
+      The state names are opaque and the transitions are shuffled, so you cannot
+      just read the answer off. Treat it as a graph and search from the start
+      state.
+    cost: 15
+    key: h1
+  - content: >-
+      Every wrong symbol leads to a single non-accepting trap state that only
+      loops back to itself, so exactly one path reaches the accepting state. A
+      breadth-first search from `start` recovers that path; the symbols along it
+      are the flag.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - misc
+  - automata
+  - graph-search
+  - medium
+files:
+  - automaton.json
+state: visible
+version: "0.1"

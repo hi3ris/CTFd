@@ -1,0 +1,44 @@
+name: keystore-alias
+author: dagbanjaphet
+category: mobile
+description: |-
+  `entvault.apk` ships a custom keystore blob (`assets/vault.keystore`) holding
+  several alias entries, plus the decompiled code that reads it. The app unlocks
+  one specific alias to reveal an enterprise license.
+
+  Recover that license. It is the flag. No device required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{k3yst0r3_al14s_d3r1v4t10n}
+hints:
+  - content: >-
+      `KeyDeriver.java` documents the whole binary format of `vault.keystore`
+      (magic "AKS1", count, then per entry aliasLen/alias/salt(16)/encLen/enc)
+      and which alias the app unlocks. There is one decoy alias.
+    cost: 20
+    key: h1
+  - content: >-
+      Parse the entries. For the target alias: `master = sha256(alias || salt ||
+      PASSPHRASE)`, then keystream `ks[i]=sha256(master||byte(i/32))[i%32]`, and
+      `plain = enc XOR ks`. PASSPHRASE is the hardcoded constant in the class.
+    cost: 45
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - keystore
+  - hard
+files:
+  - entvault.apk
+state: visible
+version: "0.1"

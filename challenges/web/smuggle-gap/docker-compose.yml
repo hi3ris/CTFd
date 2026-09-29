@@ -1,0 +1,25 @@
+# Local run notes for authors / playtesters. In production the platform
+# instancier builds/starts one container per team and injects FLAG /
+# CHALLENGE_SECRET. This compose file is only for local build + smoke test.
+#
+#   docker compose up --build
+#   # then:
+#   python3 solution/solve.py http://localhost:8080
+#
+services:
+  smuggle-gap:
+    build:
+      context: .
+    image: ctf-smuggle-gap:latest
+    ports:
+      - "8080:8080"
+    environment:
+      # Local demo secret ONLY -- never ship this. In the arena the instancier
+      # injects the real per-team value.
+      CHALLENGE_SECRET: "localdemolocaldemolocaldemolocaldemo"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    pids_limit: 128
+    mem_limit: 128m
+    restart: unless-stopped

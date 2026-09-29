@@ -1,0 +1,5 @@
+{
+  "_comment": "gs://kekeli-prod-artifacts/releases/RELEASE_TOKEN.enc (sealed).",
+  "seal": "XOR keystream = SHA256(service-account key private_key_id)",
+  "ciphertext_b64": "whA7TVZVXAbrMvEpMoPfMOjWnBB79ddvE5c28LpeUTcLqOQk"
+}

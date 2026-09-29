@@ -1,0 +1,23 @@
+{
+  "platform": "mastodon.social",
+  "accounts": [
+    {
+      "username": "lome_ultras",
+      "display_name": "Ultras Lomé",
+      "email": "fan.club@mailtg.tg",
+      "note": "supporters, actus du foot togolais"
+    },
+    {
+      "username": "shadowscribe",
+      "display_name": "s.",
+      "email": "s.scribe.228@mailtg.tg",
+      "note": "je change de pseudo partout, mais jamais d'adresse mail. opsec 101."
+    },
+    {
+      "username": "kara_market",
+      "display_name": "Marché de Kara",
+      "email": "market@mailtg.tg",
+      "note": "petites annonces"
+    }
+  ]
+}

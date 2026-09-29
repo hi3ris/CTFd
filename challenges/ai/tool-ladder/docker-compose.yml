@@ -1,0 +1,13 @@
+# Local run notes for ai-tool-ladder (STUB).
+#   docker build -t ctf-ai-tool-ladder:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  ai-tool-ladder:
+    image: ctf-ai-tool-ladder:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

@@ -1,0 +1,12 @@
+{
+  "name": "calendar",
+  "description": "Team calendar helper.",
+  "tools": [
+    {
+      "name": "next_event",
+      "trust": "public",
+      "description": "Return the next scheduled event. No side effects.",
+      "inputSchema": {"type": "object", "properties": {}}
+    }
+  ]
+}

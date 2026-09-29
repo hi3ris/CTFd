@@ -1,0 +1,16 @@
+[Unit]
+Description=CTFd - sauvegarde automatique (dump verifie + S3)
+After=docker.service
+Requires=docker.service
+
+[Service]
+Type=oneshot
+User=ubuntu
+Group=ubuntu
+Environment=CTFD_REPO=/opt/ctfd/CTFd
+Environment=BACKUP_DIR=/opt/ctfd/backups
+ExecStart=/opt/ctfd/CTFd/deploy/scripts/backup.sh
+TimeoutStartSec=20min
+Nice=10
+IOSchedulingClass=best-effort
+IOSchedulingPriority=7

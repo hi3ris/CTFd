@@ -1,0 +1,43 @@
+name: pyc-ghost
+author: dagbanjaphet
+category: reverse
+description: |-
+  We recovered `vault.pyc`, a compiled Python module. Run it and it asks for the
+  flag, answering "correct" or "nope". The flag text is not in the file.
+
+  Recover the flag it accepts. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{marsh4l_unp1ckl3d_th3_c0de}
+hints:
+  - content: >-
+      It is a marshalled CPython .pyc. Strip the 16-byte header and
+      `marshal.loads` the rest (or use a decompiler / `dis`) to read the code.
+      The flag is computed, not stored.
+    cost: 15
+    key: h1
+  - content: >-
+      The target is `DATA[i] ^ keystream[i]`, where the keystream comes from a
+      linear congruential generator whose multiplier, increment and seed are all
+      visible in the bytecode. Lift those constants, reproduce the keystream and
+      XOR it against DATA -- or just call the reconstruction function directly.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - reverse
+  - python
+  - medium
+files:
+  - vault.pyc
+state: visible
+version: "0.1"

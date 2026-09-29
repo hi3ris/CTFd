@@ -1,0 +1,45 @@
+name: layered-png
+author: dagbanjaphet
+category: stego
+description: |-
+  `layers.png` is a plain RGB gradient — or so it appears. The name is a hint
+  that there is more than one thing to peel back. Dig until you reach the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{peel_the_layers_png_zip_flag}
+hints:
+  - content: >-
+      The gradient hides a bitstream. Collect the least-significant bit of every
+      colour byte (R, G, B in order) and reassemble bytes from them.
+    cost: 20
+    key: h1
+  - content: >-
+      The recovered byte stream starts with a 4-byte big-endian length, followed
+      by exactly that many bytes of data. Those bytes are a ZIP archive (`PK`).
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Open the extracted ZIP: it contains `stage2.txt`. Its contents are base64;
+      decode them to get the flag.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - stego
+  - lsb
+  - multi-stage
+  - hard
+files:
+  - layers.png
+state: visible
+version: "0.1"

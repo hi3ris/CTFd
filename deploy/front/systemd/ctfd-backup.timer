@@ -1,0 +1,11 @@
+[Unit]
+Description=CTFd - sauvegarde automatique toutes les 15 min (le script decide selon la fenetre du CTF)
+
+[Timer]
+OnCalendar=*:0/15
+RandomizedDelaySec=30
+Persistent=true
+Unit=ctfd-backup.service
+
+[Install]
+WantedBy=timers.target

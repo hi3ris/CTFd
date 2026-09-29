@@ -1,0 +1,13 @@
+# Local run notes for blockchain-bridgepool-reentry (STUB).
+#   docker build -t ctf-blockchain-bridgepool-reentry:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  blockchain-bridgepool-reentry:
+    image: ctf-blockchain-bridgepool-reentry:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

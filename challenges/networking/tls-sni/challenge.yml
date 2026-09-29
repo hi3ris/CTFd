@@ -1,0 +1,55 @@
+name: tls-sni
+author: dagbanjaphet
+category: networking
+description: |-
+  A single TLS ClientHello was captured as raw bytes (`clienthello.bin`, with
+  `clienthello.hex` for convenience). No keys, no decryption — just the
+  handshake structure.
+
+  Parse the record, find where the client says which server it wants to reach,
+  and decode what is hidden there. That is the flag. (Grepping the file for
+  `NCTF{` will only find a decoy.)
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{tls_client_hello_sni_extension_parsed_no_crypto}
+hints:
+  - content: >-
+      Walk the layers: a TLS record header (type 0x16, version, length), then a
+      handshake header (type 0x01 = ClientHello, 3-byte length), then
+      client_version, 32-byte random, session_id, cipher_suites, compression,
+      and finally the extensions block.
+    cost: 15
+    key: h1
+  - content: >-
+      Each extension is type(2) + length(2) + body. The one you want is
+      server_name (SNI), extension type 0x0000. Its body is
+      list_len(2) + name_type(1=host_name) + name_len(2) + hostname.
+    cost: 25
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The SNI hostname is dot-separated hex labels followed by the fixed suffix
+      ".v.nctf". Drop that suffix, concatenate the remaining labels, and
+      hex-decode to get the flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - networking
+  - tls
+  - binary-parsing
+  - medium
+files:
+  - clienthello.bin
+  - clienthello.hex
+state: visible
+version: "0.1"

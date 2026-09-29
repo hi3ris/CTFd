@@ -1,0 +1,18 @@
+# Shared KotH hill service. Runs ONE container for the whole event (not per
+# team). Reached by players through the front reverse proxy / FRP, and by CTFd
+# internally on the compose network as http://koth-throne:8080.
+#
+#   SCORER_SECRET       must equal the CTFd plugin's KOTH_SCORER_SECRET.
+#   KOTH_THRONE_HILL_KEY set it to keep the exploit key stable across restarts;
+#                        leave empty to let the container generate a random one.
+services:
+  koth-throne:
+    build: .
+    image: ctf-koth-throne:latest
+    restart: unless-stopped
+    environment:
+      SCORER_SECRET: ${KOTH_SCORER_SECRET:?set KOTH_SCORER_SECRET}
+      HILL_KEY: ${KOTH_THRONE_HILL_KEY:-}
+      SKEW: "45"
+    expose:
+      - "8080"

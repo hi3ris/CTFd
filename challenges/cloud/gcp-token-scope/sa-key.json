@@ -1,0 +1,10 @@
+{
+  "type": "service_account",
+  "project_id": "kekeli-media-212121",
+  "private_key_id": "0a1b2c3d4e5f60718293a4b5c6d7e8f900112233",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIBVAIBADANBgkqhkiG9w0BAQEFAASCAT4wggE6AgEAAkEA0FAKEdevKEYdoNOTuse\nTHISisAfakeDEVELOPMENTkeyForCTFonlyAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA\nAAAAAAAAAAAAAAAAAAAAAAIDAQABAkEAfakefakefakefakefakefakefakefakefake\nfakefakefakefakefakefakefakefakefakefakefakefakefakefakefakefQIhAPfa\n-----END PRIVATE KEY-----\n",
+  "client_email": "ci-helper@kekeli-media-212121.iam.gserviceaccount.com",
+  "client_id": "104729183746501928374",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token"
+}

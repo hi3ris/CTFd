@@ -1,0 +1,44 @@
+name: affine-relay
+author: dagbanjaphet
+category: crypto
+description: |-
+  We intercepted a single scrambled memo, `cipher.txt`. The courier ran every
+  alphabetic character through one fixed substitution rule and left spaces and
+  punctuation exactly where they were, so the shape of the message is intact.
+
+  The plaintext contains the extraction phrase verbatim. Recover it.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{affine_ciphers_are_just_linear_maps_mod_twenty_six}
+hints:
+  - content: >-
+      Each letter maps to another letter by a single reversible arithmetic rule
+      over the 26-letter alphabet. Only letters change; everything else is
+      preserved, including the braces around the phrase you want.
+    cost: 10
+    key: h1
+  - content: >-
+      It is an affine cipher: E(x) = (a*x + b) mod 26, with `a` coprime to 26.
+      There are only 12 * 26 = 312 possible keys, so brute-force all of them and
+      keep the decryption that contains "NCTF{".
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - crypto
+  - classical
+  - affine
+  - beginner
+files:
+  - cipher.txt
+state: visible
+version: "0.1"

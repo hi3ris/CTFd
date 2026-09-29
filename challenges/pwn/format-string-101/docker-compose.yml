@@ -1,0 +1,36 @@
+# Run notes for format-string-101.
+#
+# The platform instancier builds/starts one container PER TEAM and injects that
+# team's TEAM_SECRET. This compose file documents the runtime contract and is
+# handy for local playtesting.
+#
+#   Build the image (name matters -- `make push-images` matches ^ctf-):
+#     docker build -t ctf-format-string-101:latest .
+#
+#   Run one instance locally:
+#     TEAM_SECRET=playtest-team-01 docker compose up
+#
+#   Then solve it:
+#     python3 solution/solve.py localhost 9101
+#
+# In the arena the flag is derived from the real per-team TEAM_SECRET; locally
+# it falls back to a dev value (see flag.py). Nothing sensitive is baked in.
+services:
+  format-string-101:
+    build: .
+    image: ctf-format-string-101:latest
+    environment:
+      # Per-team secret. In production this is set by the instancier, never here.
+      - TEAM_SECRET=${TEAM_SECRET:-local-dev-secret}
+    ports:
+      - "9101:9101"
+    read_only: true
+    security_opt:
+      - no-new-privileges:true
+    deploy:
+      resources:
+        limits:
+          cpus: "0.50"
+          memory: 128M
+          pids: 64
+    restart: unless-stopped

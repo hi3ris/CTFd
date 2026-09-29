@@ -1,0 +1,26 @@
+name: html-entities
+author: dagbanjaphet
+category: warmup
+description: |-
+  `page_snippet.txt` is a run of `&#NNN;` codes -- the kind a web page
+  uses to spell out characters. Turn each code back into its character
+  and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{ampersand_hash_entities}
+tags:
+  - warmup
+  - web
+  - encoding
+  - beginner
+files:
+  - page_snippet.txt
+state: visible
+version: "0.1"

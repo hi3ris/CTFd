@@ -1,0 +1,31 @@
+name: rot47-decode
+author: dagbanjaphet
+category: warmup
+description: |-
+  `secret.txt` is a jumble of visible punctuation and characters. It is
+  the flag with every printable symbol rotated by a fixed amount across a
+  94-character range. Undo the rotation and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{rot47_shifts_the_glyphs}
+hints:
+  - content: >-
+      This is ROT47: rotate each printable ASCII char (`!` through `~`, codes 33-126) by 47. Applying ROT47 again reverses it.
+    cost: 10
+    key: h1
+tags:
+  - warmup
+  - classical
+  - rot47
+  - beginner
+files:
+  - secret.txt
+state: visible
+version: "0.1"

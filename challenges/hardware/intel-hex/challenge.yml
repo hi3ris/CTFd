@@ -1,0 +1,45 @@
+name: intel-hex
+author: dagbanjaphet
+category: hardware
+description: |-
+  `image.hex` is a dump of a microcontroller's memory in a common text hex
+  format used by flashing tools. Once you rebuild the memory image, the flag
+  sits at offset `0x40`, but it will not read as text straight away - the bytes
+  went through a simple reversible transform on their way to the chip.
+
+  Reconstruct memory, read offset `0x40`, and undo the transform.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{intel_hex_offset_nibble_swap}
+hints:
+  - content: >-
+      This is Intel HEX. Each line is `:LL AAAA TT DD.. CC` - a byte count, a
+      16-bit address, a record type (00 = data, 01 = end), the data bytes, and a
+      checksum. Reassemble the data bytes into a flat image indexed by address.
+    cost: 10
+    key: h1
+  - content: >-
+      At offset 0x40 the bytes look scrambled because each byte's two nibbles
+      are swapped (0x4E stored as 0xE4). Swap the high and low nibble of every
+      byte back to get the ASCII flag.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - hardware
+  - intel-hex
+  - memory-dump
+  - beginner
+files:
+  - image.hex
+state: visible
+version: "0.1"

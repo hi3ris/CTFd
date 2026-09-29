@@ -1,0 +1,57 @@
+{% macro render_extra_fields(fields, show_labels=True, show_optionals=True, show_descriptions=True) -%}
+    {% for field in fields %}
+    <div class="form-group">
+        {% if field.field_type == "text" %}
+            {% if show_labels %}
+                <b>{{ field.label }}</b>
+            {% endif %}
+
+            {% if show_optionals %}
+                {% if field.flags.required is false %}
+                    <small class="float-right text-muted">Optional</small>
+                {% endif %}
+            {% endif %}
+
+            {% if "universit" in (field.label.text | default("") | lower) %}
+                {# Champ « Université » : liste déroulante (options dans
+                   components/universites_options.html), pas un champ libre. #}
+                <select name="{{ field.name }}" id="{{ field.id }}" class="form-control"
+                        {% if field.flags.required %}required{% endif %}>
+                    <option value="">— choisir votre université —</option>
+                    {% set _uni_selected = field.data %}
+                    {% include "components/universites_options.html" %}
+                </select>
+            {% else %}
+                {{ field(class="form-control") }}
+            {% endif %}
+
+            {% if show_descriptions %}
+                {% if field.description %}
+                <small class="form-text text-muted">
+                    {{ field.description }}
+                </small>
+                {% endif %}
+            {% endif %}
+        {% elif field.field_type == "boolean" %}
+            <div class="form-check">
+                {{ field(class="form-check-input") }}
+                {{ field.label(class="form-check-label") }}
+
+                {% if show_optionals %}
+                    {% if field.flags.required is false %}
+                        <sup class="text-muted">Optional</sup>
+                    {% endif %}
+                {% endif %}
+            </div>
+
+            {% if show_descriptions %}
+                {% if field.description %}
+                <small class="form-text text-muted">
+                    {{ field.description }}
+                </small>
+                {% endif %}
+            {% endif %}
+        {% endif %}
+    </div>
+    {% endfor %}
+{%- endmacro %}

@@ -1,0 +1,43 @@
+name: stack-smash-reveal
+author: dagbanjaphet
+category: pwn
+description: |-
+  You are given a single x86-64 Linux binary, `chall`. It reads some input and
+  normally just prints `bye`. There is a function in the binary that decodes and
+  prints a flag, but it is never called on the normal path.
+
+  Reach that function and capture what it prints.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{ret2win_no_canary_no_pie_smashed}
+hints:
+  - content: >-
+      Check how much data the input read accepts versus the size of the buffer
+      it lands in. What sits just past the end of that buffer on the stack?
+    cost: 10
+    key: h1
+  - content: >-
+      There is no stack canary and no PIE. Overflow the buffer to overwrite the
+      saved return address with the fixed address of the reveal function
+      (`win`). Add one `ret` gadget before it to keep the stack 16-byte aligned.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - pwn
+  - stack-overflow
+  - ret2win
+  - beginner
+files:
+  - chall
+state: visible
+version: "0.1"

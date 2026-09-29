@@ -1,0 +1,60 @@
+name: lockfile-integrity-drift
+author: dagbanjaphet
+category: supplychain
+description: |-
+  On vous fournit un `package-lock.json` et les archives `.tgz` qu'il verrouille.
+  Le lockfile épingle une empreinte d'intégrité pour chaque dépendance, mais une
+  des archives livrées ne serait plus celle d'origine.
+
+  Identifiez l'archive dont le sha512 ne correspond pas à son empreinte épinglée.
+  Ce qui a été ajouté à cette archive — la cause exacte de l'écart — porte le
+  flag, mais il n'est ni en clair ni en base64 : il faut le reconstruire.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{1ntegrity_hash_mismatch_carries_flag_d3e1}
+hints:
+  - content: >-
+      Le champ `integrity` est une SRI : `sha512-` suivi du hash SHA-512 encodé
+      en base64. Vous pouvez le recalculer vous-même sur chaque `.tgz`.
+    cost: 15
+    key: h1
+  - content: >-
+      Une seule archive ne produit pas le hash épinglé. Son membre gzip est
+      pourtant un paquet parfaitement bénin (l'installer ou faire `zgrep`/`tar`
+      ne révèle rien) : l'altération est un bloc d'octets ajouté *après* le flux
+      gzip. Ce bloc — exactement ce qui fait diverger le sha512 — est le flag
+      chiffré. Récupérez les octets qui suivent le membre gzip (par exemple via
+      `zlib` et `unused_data`).
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Le bloc ajouté est le flag XORé avec un keystream dérivé de l'empreinte
+      `integrity` *épinglée* de cette même dépendance (le champ `sha512-...` du
+      lockfile) : keystream = SHA512(integrity_string || compteur_32bits_BE).
+      XORez le bloc avec ce keystream pour lire le flag.
+    cost: 40
+    key: h3
+    requirements: [h2]
+tags:
+  - supplychain
+  - lockfile
+  - integrity
+  - medium
+files:
+  - package-lock.json
+  - left-pad-1.3.0.tgz
+  - ansi-styles-6.2.1.tgz
+  - semver-7.5.4.tgz
+  - minimist-1.2.8.tgz
+state: visible
+version: "0.1"

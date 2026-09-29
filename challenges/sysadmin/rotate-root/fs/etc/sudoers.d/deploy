@@ -1,0 +1,4 @@
+# /etc/sudoers.d/deploy
+# Let the deploy user trigger a rotation hook without a password.
+# (Combined with the root postrotate context, this is the privilege path.)
+deploy ALL=(root) NOPASSWD: /usr/local/sbin/rotate-hook.sh

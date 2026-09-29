@@ -1,0 +1,20 @@
+{
+  "account": "kekelistorage",
+  "containers": [
+    {
+      "name": "public-samples",
+      "access": "blob",
+      "blobs": [
+        "logo.png"
+      ]
+    },
+    {
+      "name": "private-releases",
+      "access": "private",
+      "blobs": [
+        "media-svc/RELEASE_NOTES.enc",
+        "media-svc/CHANGELOG.txt"
+      ]
+    }
+  ]
+}

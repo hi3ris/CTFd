@@ -1,0 +1,558 @@
+<!--
+  ============================================================================
+  NCTF26 — page d'accueil : cinématique d'introduction + bloc hero
+  ============================================================================
+  OÙ :  Admin  ->  Pages  ->  page « / » (route vide, index)  ->  éditeur,
+        bouton </> (HTML)  ->  coller TOUT ce bloc  ->  Save.
+
+  Ce bloc est autonome : styles + script inclus, tout est préfixé .nctf-* /
+  NCTF_INTRO pour ne rien casser. Il reprend les couleurs et polices du thème
+  hibris (drapeau Togo, Tourney, JetBrains Mono), déjà chargées par le thème.
+
+  ⚙️  TOUT SE CONFIGURE EN BAS, dans l'objet `NCTF_INTRO` (début du <script>) :
+      mode    "once"   -> l'intro ne joue QU'UNE FOIS par navigateur (défaut)
+              "always" -> elle rejoue à chaque visite (mode vidéoprojecteur)
+              "off"    -> désactivée, on arrive direct sur le hero
+      version  incrémentez (2, 3, …) pour la re-montrer à TOUT LE MONDE après
+               avoir changé le contenu
+      speed    1 = normal, 0.7 = plus rapide, 1.5 = plus lent
+      puis les DONNÉES affichées : boot, stats, secteurs, agenda, final.
+      Changer un chiffre ici suffit : la cinématique se reconstruit toute seule.
+
+  Le joueur peut toujours passer l'intro (bouton « passer », touche Échap) et
+  la revoir depuis le hero (« revoir l'intro »). Elle est automatiquement
+  désactivée si le visiteur a demandé « animations réduites » dans son OS.
+
+  NB : comme le bloc <style> déjà utilisé, le <script> suppose que la
+  sanitisation HTML de CTFd est désactivée (HTML_SANITIZATION, valeur par
+  défaut). Si vous l'activez un jour, l'intro ne se lancera plus et seul le
+  hero s'affichera — le site reste parfaitement utilisable.
+  ============================================================================
+-->
+<style>
+  .nctf-hero * { box-sizing: border-box; }
+  .nctf-hero {
+    --red:#d21034; --yellow:#ffce00; --green:#006a4e; --green-b:#17b06b;
+    --link:#f9d77e; --muted:#9aa4b2; --line:#1c2431;
+    position: relative; margin: -1rem 0 2.5rem; padding: 3.4rem 1.25rem 3rem;
+    text-align: center; overflow: hidden; border-radius: 12px;
+    background: #05070d;
+    border: 1px solid var(--line);
+    border-top: 4px solid transparent;
+    border-image: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%) 1;
+  }
+  .nctf-hero .eyebrow {
+    font-family: 'JetBrains Mono', ui-monospace, monospace;
+    text-transform: uppercase; letter-spacing: 5px; font-size: .74rem;
+    color: var(--yellow); margin: 0 0 1rem;
+  }
+  .nctf-hero h1 {
+    font-family: 'Tourney', system-ui, sans-serif; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 3px; line-height: .98;
+    font-size: clamp(2.6rem, 8vw, 5.2rem); margin: 0; color: #fff;
+    position: relative; display: inline-block;
+  }
+  .nctf-hero h1 .dot { color: var(--red); }
+  /* photo de fond (NCTF_INTRO.images.bg) : sujet à droite, fondu vers le noir à
+     gauche pour garder le texte lisible ; posée par le script, rien sans fichier */
+  .nctf-hero .bg, .nctf-intro .bg {
+    position: absolute; inset: 0; z-index: 0; pointer-events: none;
+    background-position: right center; background-size: cover; background-repeat: no-repeat;
+  }
+  .nctf-hero .bg::after, .nctf-intro .bg::after {
+    content: ""; position: absolute; inset: 0;
+    background: linear-gradient(90deg, #05070d 30%, rgba(5,7,13,.72) 62%, rgba(5,7,13,.28) 100%),
+                linear-gradient(180deg, rgba(5,7,13,.35), rgba(5,7,13,0) 30%, rgba(5,7,13,0) 70%, rgba(5,7,13,.6));
+  }
+  .nctf-hero > *:not(.bg) { position: relative; z-index: 1; }
+  .nctf-hero .lead {
+    font-family: 'Lato', system-ui, sans-serif; color: #d6dde6;
+    font-size: clamp(1rem, 2.4vw, 1.22rem); line-height: 1.6;
+    max-width: 40rem; margin: 1.2rem auto 0;
+  }
+  .nctf-hero .lead b { color: #fff; }
+  .nctf-hero .cta {
+    display: flex; gap: .8rem; justify-content: center; flex-wrap: wrap; margin-top: 2rem;
+  }
+  .nctf-hero .btn {
+    font-family: 'Lato', sans-serif; font-weight: 700; letter-spacing: .4px;
+    padding: .72rem 1.4rem; border-radius: 8px; text-decoration: none;
+    display: inline-block; transition: transform .12s ease, filter .12s, box-shadow .12s;
+  }
+  .nctf-hero .btn-red { background: var(--red); color: #fff; box-shadow: 0 8px 22px rgba(210,16,52,.3); }
+  .nctf-hero .btn-red:hover { transform: translateY(-2px); filter: brightness(1.08); color:#fff; }
+  .nctf-hero .btn-ghost { background: transparent; color: #fff; border: 1px solid var(--line); }
+  .nctf-hero .btn-ghost:hover { transform: translateY(-2px); border-color: var(--yellow); color: var(--yellow); }
+  .nctf-hero .cats { display: flex; gap: .5rem; justify-content: center; flex-wrap: wrap; margin-top: 2.4rem; }
+  .nctf-hero .cat {
+    font-family: 'JetBrains Mono', monospace; font-size: .72rem;
+    color: #c7cfda; background: #0b0f18; border: 1px solid var(--line);
+    border-radius: 6px; padding: .28rem .6rem; letter-spacing: .5px;
+  }
+  .nctf-hero .meta {
+    display: flex; gap: 2.6rem; justify-content: center; flex-wrap: wrap;
+    margin-top: 2.6rem; padding-top: 1.8rem; border-top: 1px solid var(--line);
+  }
+  .nctf-hero .meta .n {
+    font-family: 'Tourney', system-ui, sans-serif; font-weight: 800;
+    font-size: 1.8rem; line-height: 1; color: #fff;
+  }
+  .nctf-hero .meta .l {
+    font-family: 'JetBrains Mono', monospace; font-size: .68rem;
+    letter-spacing: 1.5px; color: var(--muted); text-transform: uppercase; margin-top: .35rem;
+  }
+  /* petit lien discret pour rejouer la cinématique */
+  .nctf-replay {
+    margin-top: 1.6rem; background: none; border: 0; cursor: pointer;
+    font-family: 'JetBrains Mono', monospace; font-size: .68rem; letter-spacing: 1.5px;
+    text-transform: uppercase; color: var(--muted); opacity: .8;
+    transition: color .12s, opacity .12s;
+  }
+  .nctf-replay:hover { color: var(--yellow); opacity: 1; }
+  .nctf-replay::before { content: "\25B6"; margin-right: .5ch; font-size: .6rem; }
+
+  /* ========================================================================
+     CINÉMATIQUE D'INTRODUCTION — plein écran, séquencée, « intro de jeu »
+     ======================================================================== */
+  .nctf-intro {
+    position: fixed; inset: 0; z-index: 9999; overflow: hidden;
+    background: #03050b;
+    display: flex; flex-direction: column;
+    font-family: 'JetBrains Mono', ui-monospace, monospace; color: #c7cfda;
+    --red:#d21034; --yellow:#ffce00; --green:#006a4e; --green-b:#17b06b;
+    --muted:#9aa4b2; --line:#1c2431;
+  }
+  .nctf-intro[hidden] { display: none !important; }
+  /* fond : la photo (NCTF_INTRO.images.bg) avec un fondu vers le noir à gauche —
+     pas de grille animée ni de balayage « écran cathodique » */
+  .nctf-intro .top, .nctf-intro .stage, .nctf-intro .prog, .nctf-intro .hint { position: relative; z-index: 2; }
+  .nctf-intro.out { animation: introOut .55s ease forwards; }
+  @keyframes introOut { to { opacity: 0; visibility: hidden; transform: scale(1.03); } }
+
+  /* barre du haut : marque + bouton passer */
+  .nctf-intro .top {
+    position: relative; z-index: 5; display: flex; align-items: center; gap: 1rem;
+    padding: clamp(.8rem, 2.5vw, 1.4rem) clamp(1rem, 4vw, 2.6rem);
+    font-size: .7rem; letter-spacing: 2px; text-transform: uppercase;
+  }
+  .nctf-intro .top .bd { color: var(--yellow); font-weight: 700; }
+  .nctf-intro .top .sep { color: var(--muted); }
+  .nctf-intro .top .grow { flex: 1; }
+  .nctf-intro .skip {
+    background: transparent; border: 1px solid var(--line); border-radius: 999px;
+    color: var(--muted); cursor: pointer; padding: .42rem 1rem;
+    font-family: inherit; font-size: .68rem; letter-spacing: 1.5px; text-transform: uppercase;
+    transition: color .12s, border-color .12s;
+  }
+  .nctf-intro .skip:hover, .nctf-intro .skip:focus-visible { color: var(--yellow); border-color: var(--yellow); }
+
+  /* scène centrale : les tableaux s'empilent et se relaient */
+  .nctf-intro .stage {
+    position: relative; z-index: 5; flex: 1;
+    display: flex; align-items: center; justify-content: center;
+    padding: 0 clamp(1rem, 5vw, 3rem);
+  }
+  .nctf-intro .sc {
+    position: absolute; width: 100%; max-width: 62rem; text-align: center;
+    opacity: 0; visibility: hidden; transform: translateY(10px);
+  }
+  .nctf-intro .sc.on {
+    opacity: 1; visibility: visible; transform: none;
+    transition: opacity .5s ease, transform .5s ease;
+  }
+
+  /* — scène BOOT — */
+  .nctf-intro .boot { text-align: left; max-width: 44rem; margin: 0 auto;
+    font-size: clamp(.74rem, 1.7vw, .95rem); line-height: 2.1; }
+  .nctf-intro .boot .ln { opacity: 0; display: flex; gap: .8rem; align-items: baseline; }
+  .nctf-intro .sc.on .boot .ln { animation: introLn .3s ease forwards; }
+  .nctf-intro .boot .ln .p { color: var(--green-b); }
+  .nctf-intro .boot .ln .t { flex: 1; }
+  .nctf-intro .boot .ln .ok { color: var(--green-b); white-space: nowrap; }
+  .nctf-intro .boot .ln .on { color: var(--yellow); font-weight: 700; white-space: nowrap; }
+  @keyframes introLn { from { opacity: 0; transform: translateX(-8px); } to { opacity: 1; transform: none; } }
+
+  /* — logos (NCTF_INTRO.images) — */
+  /* le mot-symbole CERT.tg est noir sur transparent : on le pose sur un cartouche blanc */
+  .nctf-intro .top .bd img { height: 22px; width: auto; display: block; background: #fff; padding: 3px 8px; border-radius: 6px; box-sizing: content-box; }
+  .nctf-intro .logo { display: block; margin: 0 auto 1.2rem; height: clamp(96px, 20vh, 190px); width: auto; }
+  .nctf-intro .sc.on .logo { animation: introBig .7s ease both; }
+  .nctf-hero .logo { display: block; margin: 0 auto 1rem; height: clamp(80px, 14vw, 140px); width: auto; }
+
+  /* — scène TITRE — */
+  .nctf-intro .big {
+    font-family: 'Tourney', system-ui, sans-serif; font-weight: 800; color: #fff;
+    text-transform: uppercase; letter-spacing: 4px; line-height: .95;
+    font-size: clamp(2.8rem, 12vw, 7rem); margin: 0;
+  }
+  .nctf-intro .big .dot { color: var(--red); }
+  .nctf-intro .sc.on .big { animation: introBig .7s cubic-bezier(.2,.9,.3,1.3) both; }
+  @keyframes introBig { from { opacity: 0; transform: translateY(14px); } to { opacity: 1; transform: none; } }
+  .nctf-intro .sub {
+    margin-top: 1.4rem; font-size: clamp(.76rem, 2vw, 1rem);
+    letter-spacing: 4px; text-transform: uppercase; color: var(--muted);
+  }
+  .nctf-intro .rule {
+    height: 3px; width: min(30rem, 70%); margin: 1.8rem auto 0; border-radius: 2px;
+    background: linear-gradient(90deg, var(--green) 0 33%, var(--yellow) 33% 66%, var(--red) 66% 100%);
+    transform: scaleX(0); transform-origin: center;
+  }
+  .nctf-intro .sc.on .rule { animation: introRule .8s ease .25s forwards; }
+  @keyframes introRule { to { transform: scaleX(1); } }
+
+  /* — titres de scène — */
+  .nctf-intro .cap {
+    font-size: .72rem; letter-spacing: 5px; text-transform: uppercase;
+    color: var(--yellow); margin-bottom: 2rem;
+  }
+  .nctf-intro .cap::before { content: "// "; color: var(--muted); }
+
+  /* — scène STATS — */
+  .nctf-intro .stats { display: flex; flex-wrap: wrap; justify-content: center; gap: clamp(1.4rem, 6vw, 4.5rem); }
+  .nctf-intro .stats .n {
+    font-family: 'Tourney', system-ui, sans-serif; font-weight: 800; color: #fff;
+    font-size: clamp(2.4rem, 7vw, 4rem); line-height: 1;
+  }
+  .nctf-intro .stats .l { margin-top: .6rem; font-size: .68rem; letter-spacing: 2px; text-transform: uppercase; color: var(--muted); }
+
+  /* — scène SECTEURS — */
+  .nctf-intro .sectors { display: flex; flex-wrap: wrap; justify-content: center; gap: .55rem; }
+  .nctf-intro .sectors .s {
+    display: inline-flex; align-items: baseline; gap: .5rem;
+    border: 1px solid var(--line); border-radius: 8px; background: #080c15;
+    padding: .45rem .85rem; font-size: clamp(.7rem, 1.6vw, .84rem);
+    opacity: 0; transform: translateY(8px) scale(.96);
+  }
+  .nctf-intro .sc.on .sectors .s { animation: introChip .34s cubic-bezier(.2,.9,.3,1.3) forwards; }
+  @keyframes introChip { to { opacity: 1; transform: none; } }
+  .nctf-intro .sectors .s .k { color: #e7ecf3; }
+  .nctf-intro .sectors .s .v { color: var(--yellow); font-weight: 700; }
+
+  /* — scène AGENDA — */
+  .nctf-intro .agenda { display: flex; flex-direction: column; gap: 1rem; max-width: 46rem; margin: 0 auto; }
+  .nctf-intro .agenda .row {
+    display: flex; flex-wrap: wrap; align-items: baseline; gap: .6rem 1.2rem;
+    text-align: left; border-left: 3px solid var(--line); padding: .7rem 0 .7rem 1.1rem;
+    opacity: 0; transform: translateX(-10px);
+  }
+  .nctf-intro .sc.on .agenda .row { animation: introRow .45s ease forwards; }
+  @keyframes introRow { to { opacity: 1; transform: none; } }
+  .nctf-intro .agenda .row.a { border-left-color: var(--yellow); }
+  .nctf-intro .agenda .row.b { border-left-color: var(--red); }
+  .nctf-intro .agenda .ph { font-family: 'Tourney', system-ui, sans-serif; font-weight: 800;
+    text-transform: uppercase; letter-spacing: 2px; font-size: 1.15rem; color: #fff; min-width: 15rem; }
+  .nctf-intro .agenda .dt { color: var(--yellow); font-weight: 700; min-width: 11rem; }
+  @media (max-width: 760px) {
+    .nctf-intro .agenda .ph, .nctf-intro .agenda .dt { min-width: 0; }
+  }
+  /* la description prend toujours sa propre ligne : les deux entrées ont la
+     même structure (titre + dates, puis détail) quelle que soit leur longueur */
+  .nctf-intro .agenda .ds { color: var(--muted); flex: 1 0 100%; }
+
+  /* — scène FINALE — */
+  .nctf-intro .go { font-family: 'Tourney', system-ui, sans-serif; font-weight: 800; color: #fff;
+    text-transform: uppercase; letter-spacing: 3px; font-size: clamp(1.8rem, 6vw, 3.4rem); margin: 0; }
+  .nctf-intro .flagfmt { margin-top: 1.6rem; font-size: clamp(.8rem, 2vw, 1.05rem); color: var(--muted); }
+  .nctf-intro .flagfmt code { color: var(--green-b); background: #080c15;
+    border: 1px solid var(--line); border-radius: 6px; padding: .2rem .6rem; }
+
+  /* barre de progression en bas */
+  .nctf-intro .prog { position: relative; z-index: 5; height: 2px; background: rgba(255,255,255,.06); }
+  .nctf-intro .prog i { display: block; height: 100%; width: 0;
+    background: linear-gradient(90deg, var(--green), var(--yellow), var(--red)); }
+  .nctf-intro .hint {
+    position: relative; z-index: 5; text-align: center; color: var(--muted);
+    font-size: .62rem; letter-spacing: 2px; text-transform: uppercase;
+    padding: .7rem 1rem calc(.9rem + env(safe-area-inset-bottom, 0px));
+  }
+  @media (prefers-reduced-motion: reduce) { .nctf-intro { display: none !important; } }
+</style>
+
+<!-- ===================== CINÉMATIQUE (remplie par le script) ================ -->
+<div class="nctf-intro" id="nctf-intro" hidden role="dialog" aria-label="Introduction NCTF26">
+  <div class="bg" data-bg aria-hidden="true"></div>
+  <div class="top">
+    <span class="bd" data-bd>NCTF26</span>
+    <span class="sep">// séquence d'introduction</span>
+    <span class="grow"></span>
+    <button type="button" class="skip" data-skip>passer</button>
+  </div>
+  <div class="stage" data-stage></div>
+  <div class="prog"><i data-prog></i></div>
+  <div class="hint">échap ou « passer » pour aller directement au site</div>
+</div>
+
+<!-- ============================== HERO ===================================== -->
+<div class="nctf-hero">
+  <div class="bg" data-bg aria-hidden="true"></div>
+  <img class="logo" data-logo alt="" hidden>
+  <p class="eyebrow">// ctf national &middot; édition 2026</p>
+  <h1>NCTF<span class="dot">26</span></h1>
+  <p class="lead">
+    La compétition nationale de cybersécurité du Togo. Analyse, exploite,
+    défends&nbsp;— en équipe, contre la montre. <b>Présélection en ligne du
+    23 au 25 octobre</b> (53&nbsp;h, non-stop), <b>finale à Lomé les 29–30
+    octobre</b>. Format des flags&nbsp;: <code>NCTF{...}</code>.
+  </p>
+
+  <div class="cta">
+    <a class="btn btn-red" href="/challenges">Entrer dans l'arène</a>
+    <a class="btn btn-ghost" href="/scoreboard">Voir le classement</a>
+    <a class="btn btn-ghost" href="/register">Créer mon équipe</a>
+  </div>
+
+  <div class="cats">
+    <span class="cat">web</span>
+    <span class="cat">pwn</span>
+    <span class="cat">reverse</span>
+    <span class="cat">crypto</span>
+    <span class="cat">forensics</span>
+    <span class="cat">blockchain</span>
+    <span class="cat">cloud</span>
+    <span class="cat">ai / ml</span>
+    <span class="cat">osint</span>
+    <span class="cat">+10 autres</span>
+  </div>
+
+  <div class="meta">
+    <div><div class="n">203</div><div class="l">épreuves</div></div>
+    <div><div class="n">19</div><div class="l">catégories</div></div>
+    <div><div class="n">300+</div><div class="l">joueurs attendus</div></div>
+    <div><div class="n">10</div><div class="l">équipes &middot; finale</div></div>
+  </div>
+
+  <button type="button" class="nctf-replay" data-replay>revoir l'intro</button>
+</div>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ======================================================================
+     ⚙️  CONFIGURATION — c'est ICI qu'on règle tout.
+     ====================================================================== */
+  var NCTF_INTRO = {
+    /* --- comportement ------------------------------------------------- */
+    mode: "once",      // "once" (1 fois/navigateur) | "always" | "off"
+    version: 1,        // incrémenter pour la re-montrer à tout le monde
+    speed: 1,          // 1 = normal · 0.7 = plus rapide · 1.5 = plus lent
+
+    /* --- images (CTFd/themes/hibris/static/img/nctf/, voir son README) ---
+       Tout est optionnel : fichier absent = texte de repli, fond noir.     */
+    images: {
+      bg:   "/themes/hibris/static/img/nctf/intro-bg.jpg",   // la fille, visage en binaire
+      logo: "/themes/hibris/static/img/nctf/logo-ctf.png",   // Capture the Flag + drapeaux
+      cert: "/themes/hibris/static/img/nctf/logo-cert.png"   // CERT.tg}<
+    },
+
+    /* --- identité ----------------------------------------------------- */
+    brand: "NCTF",
+    brandDot: "26",    // partie colorée en rouge
+    tagline: "Championnat national de cybersécurité · Togo",
+
+    /* --- scène 1 : démarrage console ---------------------------------- */
+    boot: [
+      ["nctf.core :: initialisation du terminal", "ok"],
+      ["authentification opérateur", "ok"],
+      ["liaison arène chiffrée (AES-256)", "ok"],
+      ["chargement de 203 épreuves · 19 secteurs", "ok"],
+      ["console cyberdéfense", "EN LIGNE"]
+    ],
+
+    /* --- scène 3 : les chiffres (comptés à l'écran) -------------------- */
+    statsCap: "l'arsenal",
+    stats: [
+      { n: 203, l: "épreuves" },
+      { n: 19,  l: "catégories" },
+      { n: 177, l: "à télécharger" },
+      { n: 26,  l: "instances par équipe" }
+    ],
+
+    /* --- scène 4 : les secteurs (catégorie + nombre d'épreuves) -------- */
+    sectorsCap: "les 19 secteurs",
+    sectors: [
+      { k: "warmup", n: 16 }, { k: "web", n: 13 }, { k: "pwn", n: 13 },
+      { k: "crypto", n: 13 }, { k: "forensics", n: 13 }, { k: "misc", n: 13 },
+      { k: "reverse", n: 12 }, { k: "ai", n: 12 }, { k: "supplychain", n: 11 },
+      { k: "ml", n: 11 }, { k: "blockchain", n: 10 }, { k: "ppc", n: 9 },
+      { k: "networking", n: 9 }, { k: "sysadmin", n: 8 }, { k: "stego", n: 8 },
+      { k: "osint", n: 8 }, { k: "mobile", n: 8 }, { k: "hardware", n: 8 },
+      { k: "cloud", n: 8 }
+    ],
+
+    /* --- scène 5 : le calendrier -------------------------------------- */
+    agendaCap: "le calendrier",
+    agenda: [
+      { ph: "Présélection", dt: "23 → 25 octobre", ds: "en ligne · 53 h non-stop · par équipe" },
+      { ph: "Finale",       dt: "29 → 30 octobre", ds: "Lomé · 10 équipes · 24 h" }
+    ],
+
+    /* --- scène 6 : le mot de la fin ----------------------------------- */
+    goText: "Bienvenue dans l'arène",
+    flagFormat: "NCTF{...}",
+    flagLabel: "format des flags"
+  };
+
+  /* ======================================================================
+     Lecteur — au-delà d'ici, il n'y a plus rien à régler.
+     ====================================================================== */
+  var root = document.getElementById("nctf-intro");
+  if (!root) return;
+  (function applyImages(){
+    var im = NCTF_INTRO.images || {};
+    var hero = document.querySelector(".nctf-hero");
+    function bg(el, url){ if (el && url){ var probe = new Image(); probe.onload = function(){ el.style.backgroundImage = "url('" + url + "')"; }; probe.src = url; } }
+    bg(root.querySelector("[data-bg]"), im.bg);
+    bg(hero && hero.querySelector("[data-bg]"), im.bg);
+    var heroLogo = hero && hero.querySelector("[data-logo]");
+    if (heroLogo && im.logo){ heroLogo.onload = function(){ heroLogo.hidden = false; }; heroLogo.src = im.logo; }
+    var bd = root.querySelector("[data-bd]");
+    if (bd && im.cert){ var i = new Image(); i.alt = "CERT.tg"; i.onload = function(){ bd.textContent = ""; bd.appendChild(i); }; i.src = im.cert; }
+  })();
+  var stage = root.querySelector("[data-stage]");
+  var progEl = root.querySelector("[data-prog]");
+  var CFG = NCTF_INTRO;
+  var KEY = "nctf-intro-seen-v" + CFG.version;
+  var timers = [], playing = false, raf = 0;
+
+  function logoTag(){
+    var u = (CFG.images || {}).logo;
+    return u ? '<img class="logo" src="' + esc(u) + '" alt="" onerror="this.remove()">' : "";
+  }
+  function esc(s) { var d = document.createElement("div"); d.textContent = s == null ? "" : String(s); return d.innerHTML; }
+  function ms(x) { return Math.max(0, Math.round(x * (Number(CFG.speed) || 1))); }
+  function reduced() { return window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches; }
+
+  /* --- construction des scènes à partir de la config ------------------ */
+  function buildScenes() {
+    var s = [];
+
+    s.push({ d: 2400, html:
+      '<div class="boot">' + CFG.boot.map(function (b, i) {
+        var tag = b[1] === "ok"
+          ? '<span class="ok">[ ok ]</span>'
+          : '<span class="on">' + esc(b[1]) + '</span>';
+        return '<div class="ln" style="animation-delay:' + ms(160 + i * 380) + 'ms">'
+             + '<span class="p">&gt;</span><span class="t">' + esc(b[0]) + '</span>' + tag + '</div>';
+      }).join("") + '</div>' });
+
+    s.push({ d: 2000, html:
+      logoTag() + '<h2 class="big">' + esc(CFG.brand) + '<span class="dot">' + esc(CFG.brandDot) + '</span></h2>'
+      + '<div class="rule"></div>'
+      + '<p class="sub">' + esc(CFG.tagline) + '</p>' });
+
+    s.push({ d: 2500, html:
+      '<p class="cap">' + esc(CFG.statsCap) + '</p><div class="stats">'
+      + CFG.stats.map(function (t) {
+          return '<div><div class="n" data-count="' + Number(t.n) + '">0</div>'
+               + '<div class="l">' + esc(t.l) + '</div></div>';
+        }).join("") + '</div>' });
+
+    s.push({ d: 2700, html:
+      '<p class="cap">' + esc(CFG.sectorsCap) + '</p><div class="sectors">'
+      + CFG.sectors.map(function (c, i) {
+          return '<span class="s" style="animation-delay:' + ms(60 + i * 55) + 'ms">'
+               + '<span class="k">' + esc(c.k) + '</span><span class="v">' + Number(c.n) + '</span></span>';
+        }).join("") + '</div>' });
+
+    s.push({ d: 2300, html:
+      '<p class="cap">' + esc(CFG.agendaCap) + '</p><div class="agenda">'
+      + CFG.agenda.map(function (a, i) {
+          return '<div class="row ' + (i === 0 ? "a" : "b") + '" style="animation-delay:' + ms(120 + i * 320) + 'ms">'
+               + '<span class="ph">' + esc(a.ph) + '</span>'
+               + '<span class="dt">' + esc(a.dt) + '</span>'
+               + '<span class="ds">' + esc(a.ds) + '</span></div>';
+        }).join("") + '</div>' });
+
+    s.push({ d: 1900, html:
+      logoTag() + '<h2 class="go">' + esc(CFG.goText) + '</h2>'
+      + '<div class="rule"></div>'
+      + '<p class="flagfmt">' + esc(CFG.flagLabel) + ' &nbsp;<code>' + esc(CFG.flagFormat) + '</code></p>' });
+
+    return s;
+  }
+
+  /* --- compteurs animés ----------------------------------------------- */
+  function runCounters(el) {
+    el.querySelectorAll("[data-count]").forEach(function (n) {
+      var to = Number(n.getAttribute("data-count")) || 0, t0 = 0, dur = ms(900);
+      (function step(t) {
+        if (!t0) t0 = t;
+        var k = dur ? Math.min(1, (t - t0) / dur) : 1;
+        n.textContent = Math.round(to * (1 - Math.pow(1 - k, 3)));
+        if (k < 1) requestAnimationFrame(step);
+      })(0 || performance.now());
+    });
+  }
+
+  /* --- lecture --------------------------------------------------------- */
+  function clearTimers() { timers.forEach(clearTimeout); timers = []; cancelAnimationFrame(raf); }
+
+  function end() {
+    if (!playing) return;
+    playing = false;
+    clearTimers();
+    root.classList.add("out");
+    setTimeout(function () {
+      root.hidden = true;
+      root.classList.remove("out");
+      stage.innerHTML = "";
+      document.documentElement.style.overflow = "";
+      document.removeEventListener("keydown", onKey);
+    }, 600);
+    try { localStorage.setItem(KEY, "1"); } catch (e) { /* navigation privée */ }
+  }
+
+  function onKey(e) { if (e.key === "Escape") end(); }
+
+  function play() {
+    if (playing || reduced()) return;
+    var scenes = buildScenes();
+    var total = scenes.reduce(function (a, s) { return a + ms(s.d); }, 0);
+    playing = true;
+    stage.innerHTML = scenes.map(function () { return '<div class="sc"></div>'; }).join("");
+    var els = stage.querySelectorAll(".sc");
+    root.hidden = false;
+    root.classList.remove("out");
+    document.documentElement.style.overflow = "hidden";
+    document.addEventListener("keydown", onKey);
+    var btn = root.querySelector("[data-skip]");
+    if (btn) { try { btn.focus({ preventScroll: true }); } catch (e) { /* vieux navigateur */ } }
+
+    var at = 0;
+    scenes.forEach(function (sc, i) {
+      timers.push(setTimeout(function () {
+        els.forEach(function (e) { e.classList.remove("on"); });
+        els[i].innerHTML = sc.html;
+        els[i].classList.add("on");
+        runCounters(els[i]);
+      }, at));
+      at += ms(sc.d);
+    });
+    timers.push(setTimeout(end, at));
+
+    // barre de progression
+    var t0 = performance.now();
+    (function tickProg(t) {
+      if (!playing) return;
+      var k = Math.min(1, (t - t0) / total);
+      if (progEl) progEl.style.width = (k * 100).toFixed(2) + "%";
+      if (k < 1) raf = requestAnimationFrame(tickProg);
+    })(performance.now());
+  }
+
+  /* --- déclenchement ---------------------------------------------------- */
+  var skipBtn = root.querySelector("[data-skip]");
+  if (skipBtn) skipBtn.addEventListener("click", end);
+
+  var replay = document.querySelector("[data-replay]");
+  if (replay) {
+    if (reduced()) replay.hidden = true;
+    replay.addEventListener("click", function () { clearTimers(); playing = false; play(); });
+  }
+
+  var seen = false;
+  try { seen = localStorage.getItem(KEY) === "1"; } catch (e) { seen = false; }
+  if (CFG.mode === "always" || (CFG.mode === "once" && !seen)) play();
+})();
+</script>

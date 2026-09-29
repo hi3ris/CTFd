@@ -1,0 +1,49 @@
+name: gf2-cipher
+author: dagbanjaphet
+category: misc
+description: |-
+  `system.json` gives you a square binary matrix `A` and a bit vector `b`. There
+  is exactly one bit vector `x` that reproduces `b`. Recover `x` and read it as
+  bytes to get the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{linear_over_gf2_is_gaussian}
+hints:
+  - content: >-
+      "Reproduces b" means `A x = b` where every add is XOR and every multiply
+      is AND -- arithmetic over GF(2). Each matrix row is packed as an integer
+      whose bit j is column j; `b` is a bit string.
+    cost: 22
+    key: h1
+  - content: >-
+      `A` is n x n and non-singular, so the system has a unique solution. Run
+      Gaussian elimination over GF(2) (row operations are just XORs). Solving is
+      fast even by hand-rolled bit tricks.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Once you have `x`, its bits are the flag's bits, MSB-first within each
+      byte: bit `8*j + k` is bit `7-k` of byte `j`. Pack 8 bits per byte and
+      decode as ASCII.
+    cost: 68
+    key: h3
+    requirements: [h2]
+tags:
+  - misc
+  - crypto
+  - linear-algebra
+  - hard
+files:
+  - system.json
+state: visible
+version: "0.1"

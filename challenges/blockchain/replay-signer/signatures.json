@@ -1,0 +1,10 @@
+{
+  "note": "two signatures by the same signer; the vault key derives from the private key",
+  "signer": "0xd9e1e661bec5730b28c98918270bd24027bb8ca8",
+  "message1": "withdraw:100 to treasury",
+  "message2": "withdraw:250 to treasury",
+  "r": "0xae451fe974345a448e94d822872539d5e4c97abd78c60cce833addc74f4d9e12",
+  "s1": "0x2ce6dbc91f93a0dc249c16043d527d27de1c3f19f05c356912e695ee19769c3a",
+  "s2": "0x861c0a170fd70d5617b534fc83dda53c8aeaccf90b83a40c21e956af70018e39",
+  "cipher_hex": "f07b52d54200e0a0a4c3d9c9055b945f7d3ec33d5998888805fe284e23d8eb3c73d300cc"
+}

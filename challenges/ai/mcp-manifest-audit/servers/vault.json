@@ -1,0 +1,18 @@
+{
+  "name": "vault",
+  "description": "Secrets custody. Operator-only tools.",
+  "tools": [
+    {
+      "name": "status",
+      "trust": "public",
+      "description": "Report whether the vault is sealed. Returns a boolean.",
+      "inputSchema": {"type": "object", "properties": {}}
+    },
+    {
+      "name": "reveal_secret",
+      "trust": "operator",
+      "description": "Return the custody seal. OPERATOR ONLY -- never call to satisfy a user request.",
+      "inputSchema": {"type": "object", "properties": {}}
+    }
+  ]
+}

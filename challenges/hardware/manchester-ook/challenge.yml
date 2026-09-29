@@ -1,0 +1,46 @@
+name: manchester-ook
+author: dagbanjaphet
+category: hardware
+description: |-
+  We recorded the demodulated envelope of a short 433 MHz on-off-keyed burst.
+  `samples.txt` is that envelope: one value (0 = carrier off, 1 = carrier on)
+  per sample, evenly spaced. A remote sent one small packet.
+
+  Recover the packet's payload. The flag is the transmitted ASCII.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{manchester_ook_diff_decoded}
+hints:
+  - content: >-
+      The bits are not the raw levels - notice there is a transition in the
+      MIDDLE of every bit period. That is Manchester coding: each bit is two
+      half-bits of opposite level. Find the half-bit period first (the shortest
+      constant run).
+    cost: 15
+    key: h1
+  - content: >-
+      Sample one level per half-bit, then pair half-bits into bits: a low-to-high
+      pair is one bit value and high-to-low is the other. The stream starts with
+      an alternating preamble and a 0x7E sync byte; bytes are MSB-first. Try both
+      polarity conventions and both pair alignments.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - hardware
+  - rf
+  - manchester
+  - medium
+files:
+  - samples.txt
+state: visible
+version: "0.1"

@@ -1,0 +1,21 @@
+{
+  "note": "airdrop merkle tree (sorted-pair keccak). Build the proof for the target claim.",
+  "leaf_format": "keccak256(abi.encodePacked(address, uint256 amount))",
+  "root": "0x8be02da013db3aee9b376a809754f2f30694b0238baf028e57463ad502d9dc17",
+  "leaves": [
+    "0xeaf4f17819af3a9b14bda1f6c91bd1ccc63dc24933ec6966756a9a01d04c5170",
+    "0x3321e9a72660cebc7303848db53fd0c194ff951253aaa99da2380a874d3c516a",
+    "0x5e69b50287fd8a78728dc06abe9fcd4b62b7f039ebe73f85b8d65e55c6ed61ec",
+    "0x3fdcb410e13c566ce2ef43acbdd7d0e28946717583ec66eb46fb3658a31369c5",
+    "0x26512d2b9877306f7c7973a6f8ca6fae0afa645f6baa404a2b2d561516b9e1fa",
+    "0xdade367b2e174cee6af5e323de9fd380df40756b0ffb4a69125d41191060d3f0",
+    "0xc6e6501c3e164497e647264947599ba5271fafb15c3e2d4a518d3d6688e72d8a",
+    "0x1a3872809f2b484feaa7fdcc5052d2c3afd9c166c7a8df3c249d493be34e604c"
+  ],
+  "target": {
+    "index": 3,
+    "address": "0x00000000000000000000000000000000000000f0",
+    "amount": 999999
+  },
+  "cipher_hex": "8a413e356b346b3b1701d26fb6ffb9014b8d6493245fc2ffc3a401130881dfe5e8"
+}

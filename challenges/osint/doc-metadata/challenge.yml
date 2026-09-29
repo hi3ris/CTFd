@@ -1,0 +1,54 @@
+name: doc-metadata
+author: dagbanjaphet
+category: osint
+description: |-
+  Six communiqués « officiels » (`.docx`) ont fuité. Ils sont tous signés
+  publiquement « Cellule Comms CERT.tg », mais quelqu'un à l'intérieur a bâclé le
+  nettoyage des métadonnées.
+
+  Recomposez ce que cette personne a laissé filer dans les propriétés des
+  fichiers. La chaîne reconstituée est le flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{ooxml_core_xml_lastmodifiedby_leak}
+hints:
+  - content: >-
+      Un `.docx` est une archive ZIP. Regardez `docProps/core.xml` dans chacun :
+      l'auteur affiché n'est pas forcément celui qui a réellement édité.
+    cost: 10
+    key: h1
+  - content: >-
+      Plusieurs documents ont le même `cp:lastModifiedBy` (le vrai rédacteur).
+      Chacun porte un fragment dans `cp:keywords`.
+    cost: 15
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Ne gardez que les documents modifiés par l'initié `afanou.k`, triez-les par
+      `dcterms:created`, puis concaténez leurs `cp:keywords` dans cet ordre.
+    cost: 22
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - metadata
+  - ooxml
+  - easy
+files:
+  - communique_01_alerte.docx
+  - communique_02_maj.docx
+  - communique_03_hausse_tarifs.docx
+  - communique_04_dementi.docx
+  - communique_05_bilan.docx
+  - communique_06_annexe.docx
+state: visible
+version: "0.1"

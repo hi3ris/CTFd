@@ -1,0 +1,50 @@
+name: keygen-me
+author: dagbanjaphet
+category: reverse
+description: |-
+  `chall` is a stripped x86-64 "ACME license validator". Give it a license key
+  and it says accepted or invalid. Exactly one key is accepted, and it tells you
+  the flag comes from decoding that key.
+
+  Find the license key it accepts and recover the flag. No network required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{keyg3n_solv3d_th3_serial}
+hints:
+  - content: >-
+      The key is 48 symbols from the base32 alphabet (A-Z, 2-7), grouped in
+      eights. `check()` reads each symbol as its 5-bit index and enforces a
+      relation between neighbouring symbols against a fixed target array.
+    cost: 25
+    key: h1
+  - content: >-
+      The constraints are a triangular chain: `v[0] == t[0]` and `(v[i] +
+      3*v[i-1] + 7*i + 0x1B) % 32 == t[i]`. Solve it top-down with `v[i] = (t[i]
+      - 3*v[i-1] - 7*i - 0x1B) % 32`. The solution is unique.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The solved symbols are not decoration — they are the base32 encoding of the
+      flag. Repack the 48 five-bit values into bytes (base32-decode) and you get
+      NCTF{...}. The flag is never stored in the binary, only its constraints.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - reverse
+  - keygen
+  - hard
+files:
+  - chall
+state: visible
+version: "0.1"

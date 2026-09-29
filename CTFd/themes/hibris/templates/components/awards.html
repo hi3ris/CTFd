@@ -1,0 +1,50 @@
+{#
+  Rendu des « Awards » d'un compte, avec REGROUPEMENT des points King of the Hill.
+
+  Le scorer KotH insère un Award par tick tenu (catégorie `koth:<hill-id>`), ce
+  qui ferait des milliers de cartes identiques sur une page d'équipe. Ce macro
+  fusionne chaque colline en UNE carte récapitulative (« The Throne — 1 240 pts
+  KotH · 248 ticks ») et rend les autres awards normalement, inchangés. Purement
+  d'affichage : le scoring et le gel du scoreboard reposent toujours sur les
+  lignes Awards en base, jamais sur ce regroupement.
+#}
+{% macro award_cards(awards) %}
+	{% set ns = namespace(regular=[], cats=[]) %}
+	{% for a in awards %}
+		{% if a.category and a.category.startswith("koth:") %}
+			{% if a.category not in ns.cats %}{% set ns.cats = ns.cats + [a.category] %}{% endif %}
+		{% else %}
+			{% set ns.regular = ns.regular + [a] %}
+		{% endif %}
+	{% endfor %}
+
+	{% for cat in ns.cats %}
+		{% set group = awards | selectattr('category', 'equalto', cat) | list %}
+		{% set total = group | sum(attribute='value') %}
+		{% set first = group | first %}
+		{% set label = (first.name.split(' — ') | first) if first.name else cat.split(':') | last %}
+		<div class="col-md-3 col-sm-6">
+			<p class="text-center">
+				<i class="award-icon award-{{ first.icon or 'crown' }} fa-2x"></i>
+				<br>
+				<strong>{{ label }}</strong>
+			</p>
+			<p class="text-center">King of the Hill</p>
+			<p class="text-center">{{ group | length }} tick{{ 's' if group | length > 1 else '' }}</p>
+			<p class="text-center">{{ total }}</p>
+		</div>
+	{% endfor %}
+
+	{% for award in ns.regular %}
+		<div class="col-md-3 col-sm-6">
+			<p class="text-center">
+				<i class="award-icon award-{{ award.icon }} fa-2x"></i>
+				<br>
+				<strong>{{ award.name }}</strong>
+			</p>
+			{% if award.category %}<p class="text-center">{{ award.category }}</p>{% endif %}
+			{% if award.description %}<p class="text-center">{{ award.description }}</p>{% endif %}
+			<p class="text-center">{{ award.value }}</p>
+		</div>
+	{% endfor %}
+{% endmacro %}

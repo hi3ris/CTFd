@@ -1,0 +1,45 @@
+name: fermat-twins
+author: dagbanjaphet
+category: crypto
+description: |-
+  A 1024-bit RSA public key `pubkey.pem` and a hex ciphertext `ciphertext.txt`.
+  The message was encrypted with textbook RSA (no padding) and it is the flag.
+
+  The key generator took a shortcut when it picked the two primes. Factor the
+  modulus and decrypt.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 150
+type: dynamic
+extra:
+  initial: 150
+  decay: 35
+  minimum: 50
+flags:
+  - NCTF{fermat_factoring_when_p_and_q_are_neighbours}
+hints:
+  - content: >-
+      A 1024-bit modulus is not factorable in general, so the weakness must be
+      in how the primes were chosen. Look at how far apart p and q are.
+    cost: 10
+    key: h1
+  - content: >-
+      The two primes are very close together. Use Fermat factorization: write
+      n = a^2 - b^2, start a at ceil(sqrt(n)) and increment until a^2 - n is a
+      perfect square, giving p = a - b and q = a + b. Then decrypt normally with
+      d = e^{-1} mod (p-1)(q-1).
+    cost: 20
+    key: h2
+    requirements: [h1]
+tags:
+  - crypto
+  - rsa
+  - fermat
+  - easy
+files:
+  - pubkey.pem
+  - ciphertext.txt
+state: visible
+version: "0.1"

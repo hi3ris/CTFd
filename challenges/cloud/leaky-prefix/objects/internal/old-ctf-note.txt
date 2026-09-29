@@ -1,0 +1,1 @@
+legacy scratch: NCTF{not_the_flag_internal_only}

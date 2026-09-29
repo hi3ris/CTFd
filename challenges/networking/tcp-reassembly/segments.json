@@ -1,0 +1,153 @@
+{
+  "note": "one TCP direction; absolute 32-bit seq numbers; ISN is in the SYN segment; payload is hex; reassemble by byte offset.",
+  "segments": [
+    {
+      "seq": 4294967204,
+      "flags": [
+        "ACK"
+      ],
+      "data": "5f7769"
+    },
+    {
+      "seq": 4294967169,
+      "flags": [
+        "ACK"
+      ],
+      "data": "4e4354467b7463705f726561"
+    },
+    {
+      "seq": 4294967175,
+      "flags": [
+        "ACK"
+      ],
+      "data": "63705f726561"
+    },
+    {
+      "seq": 4294967221,
+      "flags": [
+        "ACK"
+      ],
+      "data": "616e645f64"
+    },
+    {
+      "seq": 4294967201,
+      "flags": [
+        "ACK"
+      ],
+      "data": "736571"
+    },
+    {
+      "seq": 4294967168,
+      "flags": [
+        "SYN"
+      ],
+      "data": ""
+    },
+    {
+      "seq": 4294967216,
+      "flags": [
+        "ACK"
+      ],
+      "data": "6f756e645f"
+    },
+    {
+      "seq": 4294967196,
+      "flags": [
+        "ACK"
+      ],
+      "data": "6c7574655f"
+    },
+    {
+      "seq": 4294967185,
+      "flags": [
+        "ACK"
+      ],
+      "data": "626c795f6279"
+    },
+    {
+      "seq": 4294967231,
+      "flags": [
+        "FIN",
+        "ACK"
+      ],
+      "data": ""
+    },
+    {
+      "seq": 4294967207,
+      "flags": [
+        "ACK"
+      ],
+      "data": "74685f777261"
+    },
+    {
+      "seq": 4294967221,
+      "flags": [
+        "ACK"
+      ],
+      "data": "616e645f64"
+    },
+    {
+      "seq": 4294967213,
+      "flags": [
+        "ACK"
+      ],
+      "data": "706172"
+    },
+    {
+      "seq": 4294967207,
+      "flags": [
+        "ACK"
+      ],
+      "data": "74685f777261"
+    },
+    {
+      "seq": 4294967226,
+      "flags": [
+        "ACK"
+      ],
+      "data": "656475707d"
+    },
+    {
+      "seq": 4294967169,
+      "flags": [
+        "ACK"
+      ],
+      "data": "4e4354467b74"
+    },
+    {
+      "seq": 4294967201,
+      "flags": [
+        "ACK"
+      ],
+      "data": "7365715f7769"
+    },
+    {
+      "seq": 4294967185,
+      "flags": [
+        "ACK"
+      ],
+      "data": "626c795f6279"
+    },
+    {
+      "seq": 4294967191,
+      "flags": [
+        "ACK"
+      ],
+      "data": "5f6162736f"
+    },
+    {
+      "seq": 4294967181,
+      "flags": [
+        "ACK"
+      ],
+      "data": "7373656d626c795f6279"
+    },
+    {
+      "seq": 4294967181,
+      "flags": [
+        "ACK"
+      ],
+      "data": "7373656d"
+    }
+  ]
+}

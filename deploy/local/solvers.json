@@ -1,0 +1,679 @@
+[
+ {
+  "challenge": "agent-tool-abuse",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "MODEL_BACKEND=stub TEAM_SECRET=local-demo-team-secret python3 solution/solve.py  (default: deterministic in-process stub self-test, no live target). Live helper: python3 solution/solve.py --live http://{HOST}:{PORT}",
+  "target_source": "none",
+  "target_details": "Default mode (no args) runs stub_test(), which drives the app via Flask's app.test_client() in-process against the imported app module -- no host/port, no network. It requires env MODEL_BACKEND=stub and TEAM_SECRET=local-demo-team-secret (it validates the returned flag against flag.flag('local-demo-team-secret')). The --live mode reads the target URL from argv: sys.argv[1]=='--live' and sys.argv[2]==URL, then POSTs to URL.rstrip('/')+'/chat'. The app itself serves on port 8080 (internal_port 8080). --live is only an interactive stdin helper (input('you> ')), NOT an automated solver.",
+  "needs_artifacts": [
+   "app/app.py",
+   "app/tools.py",
+   "app/prompts.py",
+   "app/model_backends.py",
+   "flag.py"
+  ],
+  "py_deps": [
+   "Flask",
+   "requests"
+  ],
+  "system_deps": [],
+  "flag_output": "Stub self-test prints the flag (lines 'flag from tool :' and 'flag from flag.py:') and 'ALL CHECKS PASSED'; it raises AssertionError on failure. It does NOT produce a per-team NCTF{...} against a live instance. In --live mode the flag would appear in the printed CUSTODIAN disburse tool-result JSON (key 'flag') once the gate unseals.",
+  "dev_flag_fallback": "flag.py get_flag() returns NCTF{ CHALLENGE_SECRET[:24] } when FLAG/CHALLENGE_SECRET set; with both unset it derives CHALLENGE_SECRET = HMAC_SHA256(TEAM_SECRET or 'local-dev-secret', 'ai-agent-tool-abuse') and returns NCTF{ that[:24] }. The stub solver instead calls flag.flag('local-demo-team-secret') = NCTF{ HMAC_SHA256('local-demo-team-secret','ai-agent-tool-abuse')[:24] }.",
+  "runtime_seconds_estimate": 5,
+  "blockers": "The default solve.py mode is only a deterministic offline STUB self-test (mechanism proof), NOT a real solve: it forces MODEL_BACKEND=stub and uses Flask's in-process test_client, so it never touches a live instance and only verifies the flag equals the local-dev HMAC derivation. The actual solve is a stored cross-agent prompt injection requiring a live tool-capable LLM (llama3.1:8b via an Ollama backend behind an admission gateway needing OLLAMA_URL + AI_PROXY_TOKEN) to be jailbroken twice; the --live mode is an interactive stdin helper with no automated payload. So there is no automatable end-to-end solver against a served instance -- needs GPU-backed model, external gateway, and manual/iterative jailbreaking.",
+  "dir": "ai/agent-tool-abuse"
+ },
+ {
+  "challenge": "ai0-leaked-transcript",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py public/transcript.json",
+  "target_source": "none",
+  "target_details": "Static challenge, no network target. Optional argv[1] is the path to transcript.json; if omitted, defaults to <solver dir>/../public/transcript.json resolved from the script's own location. No env reads.",
+  "needs_artifacts": [
+   "public/transcript.json"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line (sole stdout line): NCTF{sy5t3m_pr0mpt_r3v34l3d}",
+  "dev_flag_fallback": "n/a",
+  "runtime_seconds_estimate": 1,
+  "blockers": "",
+  "dir": "ai/ai0-leaked-transcript"
+ },
+ {
+  "challenge": "ai1-naive-guard",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py http://{HOST}:{PORT}",
+  "target_source": "argv",
+  "target_details": "Base URL is argv[1] (sys.argv[1]), required; script exits with usage 'usage: solve.py http://HOST:8080' if missing. It is rstrip('/')-normalized, then POSTs go to {base}/chat and {base}/verify. Internal/exposed service port is 8080 (docker-compose maps 8080:8080; challenge.yml internal_port 8080, connection_info http://{host}:8080/). No env vars read; nothing hardcoded for host. Code example: http://HOST:8080",
+  "needs_artifacts": [],
+  "py_deps": [
+   "requests"
+  ],
+  "system_deps": [],
+  "flag_output": "Printed to stdout. On success prints a '[+] SECRET: <sigma>' line and a '[+] FLAG:   <flag>' line, where flag comes from the /verify JSON response 'flag' field. Flag is NOT reliably the last line and there is no exit-code signal; harness should regex NCTF{...} in stdout.",
+  "dev_flag_fallback": "Local demo: docker-compose sets TEAM_SECRET=local-demo-team-secret, from which the service derives CHALLENGE_SECRET=HMAC_SHA256(TEAM_SECRET,\"ai-ai1-naive-guard\") and thus flag NCTF{CHALLENGE_SECRET[:24]} and SIGMA secret HMAC(CHALLENGE_SECRET,\"guard-secret\")[:16]. flag.py's own bare fallback uses TEAM_SECRET env or \"local-dev-secret\".",
+  "runtime_seconds_estimate": 120,
+  "blockers": "Requires a live per-team instance backed by an Ollama server running llama3.1:8b (multi-GB model). The solver prompt-injects a real LLM to leak the SIGMA secret, which is non-deterministic and not guaranteed to succeed on a given persona/run - README notes payloads may need per-persona tuning. Needs the served guard container plus an Ollama sidecar (several-GB one-time model pull; heavy CPU/GPU); external network for image/model pull. Not runnable against static artifacts. No interactive prompts.",
+  "dir": "ai/ai1-naive-guard"
+ },
+ {
+  "challenge": "ai2-output-filter",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {URL}",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] is the full base URL (e.g. http://{HOST}:{PORT}), trailing slash stripped; if absent it defaults to the hardcoded \"http://localhost:8080\". No env vars read. Container internal port 8080; docker-compose maps 8080:8080. Solver hits GET /filter-policy, POST /chat, POST /verify.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line in the form \"[+] FLAG: NCTF{...}\" on stdout (regex NCTF\\{[0-9a-f]{24}\\}); non-zero exit via sys.exit on failure",
+  "dev_flag_fallback": "With FLAG/CHALLENGE_SECRET unset, flag.py falls back to TEAM_SECRET env (default \"local-dev-secret\"): NCTF{HMAC_SHA256(\"local-dev-secret\",\"ai-ai2-output-filter\")[:24]}. Note docker-compose sets TEAM_SECRET=\"local-dev-team-secret\" (different from flag.py's default); README quotes the local-dev flag as NCTF{f4d7d2743edd33f25f52656b}. Guarded value = \"SIGMA-\" + HMAC_SHA256(CHALLENGE_SECRET,\"guarded\")[:16].",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Needs a live instance (docker compose up --build, port 8080). Solver is stdlib-only, non-interactive, no external network. Minor: the README dev flag and the flag.py default TEAM_SECRET differ from the docker-compose TEAM_SECRET, so the harness should verify the flag by running flag.py with the same TEAM_SECRET/CHALLENGE_SECRET the container received rather than trusting the README literal.",
+  "dir": "ai/ai2-output-filter"
+ },
+ {
+  "challenge": "ai3-tool-abuse",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "Offline deterministic self-test (no live instance, in-process Flask test client with stub backend): cd /home/user/CTFd/challenges/ai/ai3-tool-abuse && MODEL_BACKEND=stub TEAM_SECRET=local-demo-team-secret python3 solution/solve.py . Live helper (interactive stdin REPL, not automated): python3 solution/solve.py --live {URL}  (e.g. http://{HOST}:{PORT})",
+  "target_source": "argv",
+  "target_details": "Only in --live mode: argv[1] must be the literal \"--live\" and argv[2] is the full base URL (e.g. http://HOST:8080); it POSTs to {URL}/chat. With no argv, it runs the stub self-test which never touches the network: it imports app/app.py and flag.py in-process via Flask test_client, sets env defaults MODEL_BACKEND=stub and TEAM_SECRET=local-demo-team-secret (os.environ.setdefault, so pre-set values are respected), and asserts the tool flag equals flag.flag(\"local-demo-team-secret\") -- overriding TEAM_SECRET/FLAG will make the final assertion fail. No default host/port; no hardcoded localhost.",
+  "needs_artifacts": [
+   "app/app.py",
+   "app/tools.py",
+   "app/prompts.py",
+   "app/model_backends.py",
+   "flag.py"
+  ],
+  "py_deps": [
+   "flask",
+   "requests"
+  ],
+  "system_deps": [],
+  "flag_output": "Stub mode: printed as \"   flag from tool  : NCTF{...}\" (regex NCTF\\{[0-9a-f]{24}\\} in stdout), followed by \"ALL CHECKS PASSED\"; exit code 0 on success, AssertionError otherwise. Live mode: printed inside tool-event JSON lines and \">>> GATE UNSEALED\" when solved.",
+  "dev_flag_fallback": "NCTF{ HMAC_SHA256(\"local-dev-secret\", \"ai-ai3-tool-abuse\")[:24] } via get_flag() when FLAG/CHALLENGE_SECRET unset (TEAM_SECRET env overrides the dev secret; compose/solver use TEAM_SECRET=local-demo-team-secret)",
+  "runtime_seconds_estimate": 5,
+  "blockers": "The solver does NOT automatically solve a live instance. Default mode is an offline stub-backend self-test of the tool loop (needs MODEL_BACKEND=stub and the app source importable; the stub turns [[...]] control lines into tool calls and is not the real model). --live mode is an interactive stdin REPL for manual social engineering of a live llama3.1:8b via Ollama (docker-compose needs an ollama service with the model pulled, multi-GB, ideally GPU). A real automated live solve would require a non-deterministic jailbreak of the LLM; none is scripted.",
+  "dir": "ai/ai3-tool-abuse"
+ },
+ {
+  "challenge": "commit-bias",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py handout/ledger.coinvault",
+  "target_source": "argv",
+  "target_details": "Static challenge, no host/port. Optional argv[1] = path to ledger file; defaults to <script_dir>/../handout/ledger.coinvault (resolved relative to solve.py's own location, so it works from any cwd).",
+  "needs_artifacts": [
+   "handout/ledger.coinvault"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line of stdout in the form \"[+] FLAG = NCTF{...}\" (regex NCTF{...} in stdout)",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{c0mmit_r3v34l_but_th3_dr4ws_w3re_l1n34rly_l1nk3d} in challenge.yml, baked into the ledger by gen.py)",
+  "runtime_seconds_estimate": 1,
+  "blockers": "",
+  "dir": "crypto/commit-bias"
+ },
+ {
+  "challenge": "lcg-casino",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] = host (default \"127.0.0.1\" if omitted), sys.argv[2] = port (default 9021 if omitted). No env vars read. Raw TCP line-delimited JSON, not HTTP. Container internal port 9021 (docker-compose maps 9021:9021).",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed to stdout as \"[+] FLAG: NCTF{...}\" (last line); regex NCTF\\{[0-9a-f]{24}\\} in stdout. Exits 1 on state desync.",
+  "dev_flag_fallback": "\"NCTF{\" + HMAC_SHA256(key=TEAM_SECRET env or \"local-dev-secret\", msg=\"crypto-lcg-casino\")[:24] + \"}\"; docker-compose sets TEAM_SECRET=local-demo-team-secret giving NCTF{47547aa24dc7b899f6f305c5}",
+  "runtime_seconds_estimate": 5,
+  "blockers": "",
+  "dir": "crypto/lcg-casino"
+ },
+ {
+  "challenge": "nonce-sense",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solve.py /home/user/CTFd/challenges/crypto/nonce-sense/capture.json  (or run from solution/ dir: python3 solve.py ../capture.json)",
+  "target_source": "none",
+  "target_details": "Static challenge, no network target. solve.py takes an optional argv[1] = path to capture.json; if omitted it defaults to the literal \"../capture.json\" (relative to CWD). Optional env var M sets the lattice subset size (default 58). Optional fpylll is used if importable, else pure-Python LLL fallback. No host/port anywhere.",
+  "needs_artifacts": [
+   "capture.json"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints to stdout; final line is \"[+] FLAG = NCTF{...}\" and the private key on the preceding line. Flag matches regex NCTF{<32 hex>}. Expected: NCTF{1b147fde539c254a8e9bc83bb0b5516d}",
+  "dev_flag_fallback": "n/a (static flag; flag.py just derives NCTF{sha256(\"%064x\"%d)[:32]} from the hardcoded private key d, no FLAG/CHALLENGE_SECRET env involved)",
+  "runtime_seconds_estimate": 180,
+  "blockers": "None for automated run. Pure Python, offline, reads only capture.json. Note: without fpylll installed the bundled pure-Python integer LLL is used, which can take tens of seconds to a few minutes; fpylll (if present) makes it sub-second.",
+  "dir": "crypto/nonce-sense"
+ },
+ {
+  "challenge": "padding-oracle-lite",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "host = sys.argv[1] (default \"127.0.0.1\"), port = int(sys.argv[2]) (default 9007). Connects via socket.create_connection((host, port), timeout=30). Speaks the POP1 binary framing over raw TCP. Internal container port is 9007.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints \"[+] FLAG: NCTF{...}\" to stdout on success (op == OP_FLAG); on rejection prints \"[-] rejected: ...\" and exits 1. Flag is not the last line (recovered token lines precede it, but FLAG line is last on success).",
+  "dev_flag_fallback": "flag.py get_flag() falls back to HMAC_SHA256(TEAM_SECRET or \"local-dev-secret\", \"crypto-padding-oracle-lite\")[:24] wrapped as NCTF{...} when FLAG and CHALLENGE_SECRET env are unset. docker-compose sets TEAM_SECRET=local-demo-team-secret. The live server generates a random per-instance AES key/IV and token; the flag is emitted by the running service after a correct SUBMIT, not computed by the solver.",
+  "runtime_seconds_estimate": 30,
+  "blockers": "Requires a live service instance (team_instance) reachable over raw TCP on port 9007; solver connects via a plain socket, so the harness must provide host/port of a running container. No offline/static solve is possible — the flag only exists after a correct SUBMIT against the live per-team instance.",
+  "dir": "crypto/padding-oracle-lite"
+ },
+ {
+  "challenge": "tlv-vault",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py",
+  "target_source": "none",
+  "target_details": "No network target. Solver takes no argv and reads no env vars; it locates artifacts relative to its own file location: os.path.join(dirname(__file__), \"..\", \"public\", \"*.vlt\"). Must be run from its in-tree location (cwd-independent).",
+  "needs_artifacts": [
+   "public/vault_01.vlt",
+   "public/vault_02.vlt",
+   "public/vault_03.vlt",
+   "public/vault_04.vlt",
+   "public/vault_05.vlt",
+   "public/vault_06.vlt",
+   "public/vault_07.vlt",
+   "public/vault_08.vlt"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line (\"FLAG: NCTF{...}\"), also per-vault line for vault_05.vlt contains NCTF{...}; exit code 0 on success, 1 if no flag found",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{r3c0rds_n0t_byt3s_x0r_v4ult} in challenge.yml)",
+  "runtime_seconds_estimate": 1,
+  "blockers": "",
+  "dir": "crypto/tlv-vault"
+ },
+ {
+  "challenge": "audio-fsk",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/forensics/audio-fsk && python3 solution/solve.py transmission.wav",
+  "target_source": "argv",
+  "target_details": "Static challenge, no host/port. sys.argv[1] = path to the WAV file; defaults to the relative path \"../transmission.wav\" when omitted (i.e. it assumes cwd is solution/). Pass the WAV path explicitly to be cwd-independent.",
+  "needs_artifacts": [
+   "transmission.wav"
+  ],
+  "py_deps": [
+   "numpy"
+  ],
+  "system_deps": [],
+  "flag_output": "printed as last line in the form \"FLAG: NCTF{...}\" (regex NCTF{...} in stdout); prints \"[!] decode failed\" and exits 1 on failure",
+  "dev_flag_fallback": "n/a (no flag.py; flag is baked into transmission.wav: NCTF{c0nt1nu0us_ph4se_fsk_96baud_9e3a})",
+  "runtime_seconds_estimate": 15,
+  "blockers": "",
+  "dir": "forensics/audio-fsk"
+ },
+ {
+  "challenge": "dns-exfil",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/forensics/dns-exfil && python3 solution/solve.py capture.pcap",
+  "target_source": "argv",
+  "target_details": "Static challenge; no host/port. sys.argv[1] is the pcap path (optional); when omitted it defaults to the relative literal \"../capture.pcap\", which only resolves if cwd is solution/. Pass the pcap path explicitly (capture.pcap relative to the challenge dir or an absolute path).",
+  "needs_artifacts": [
+   "capture.pcap"
+  ],
+  "py_deps": [
+   "scapy"
+  ],
+  "system_deps": [],
+  "flag_output": "Prints the decoded note to stdout, then a final line \"[+] FLAG: NCTF{...}\" (regex CTF\\{[^}]+\\} on stdout; the flag is the last line). On failure exits non-zero via sys.exit with a \"[!]\" message.",
+  "dev_flag_fallback": "NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d} (static; flag.py prints this with no args, and it is not driven by FLAG/CHALLENGE_SECRET env vars — an optional argv[1] team secret yields an HMAC variant that is not used by the static pcap)",
+  "runtime_seconds_estimate": 5,
+  "blockers": "",
+  "dir": "forensics/dns-exfil"
+ },
+ {
+  "challenge": "evasion-timeline",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py sysmon.jsonl",
+  "target_source": "argv",
+  "target_details": "Static challenge, no network target. sys.argv[1] = path to sysmon.jsonl; defaults to the relative literal \"../sysmon.jsonl\" if omitted (so it only works without an argument when cwd is solution/). No env vars read.",
+  "needs_artifacts": [
+   "sysmon.jsonl"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line \"[+] FLAG: NCTF{...}\" (regex NCTF{...} in stdout); also returned from main(). Exits non-zero if anomaly count != 1.",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{ppid_sp00f_dead_parent_6284} baked into sysmon.jsonl, listed in challenge.yml)",
+  "runtime_seconds_estimate": 2,
+  "blockers": "",
+  "dir": "forensics/evasion-timeline"
+ },
+ {
+  "challenge": "sram-retention",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py retention.dump",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] = path to the dump file to decode; if omitted defaults to the relative path \"../retention.dump\" (i.e. assumes cwd is solution/). No host/port; static challenge. Run from the challenge dir with an explicit path as shown, or cd into solution/ and run with no args.",
+  "needs_artifacts": [
+   "retention.dump"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last (only) line of stdout: NCTF{sram_retention_bank_interleave}",
+  "dev_flag_fallback": "NCTF{sram_retention_bank_interleave} (flag.py prints STATIC_FLAG when TEAM_SECRET env is unset; the platform-uniform HMAC scheme keys on TEAM_SECRET, not FLAG/CHALLENGE_SECRET)",
+  "runtime_seconds_estimate": 1,
+  "blockers": "",
+  "dir": "forensics/sram-retention"
+ },
+ {
+  "challenge": "usb-keystrokes",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/forensics/usb-keystrokes && python3 solution/solve.py capture.pcap",
+  "target_source": "argv",
+  "target_details": "No host/port (static challenge). argv[1] = path to the pcap; defaults to the relative literal \"capture.pcap\" (resolved against cwd) when argv[1] is absent. No env vars read.",
+  "needs_artifacts": [
+   "capture.pcap"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line in the form \"flag:       NCTF{...}\" (regex NCTF{...} in stdout); preceded by \"device addresses...\" and \"passphrase:\" lines",
+  "dev_flag_fallback": "NCTF{Bl4ck_H4t_USB_2026} (static flag; flag.py reads no env vars, `python3 flag.py` prints it, `python3 flag.py <TEAM_SECRET>` prints an unused HMAC variant)",
+  "runtime_seconds_estimate": 1,
+  "blockers": "",
+  "dir": "forensics/usb-keystrokes"
+ },
+ {
+  "challenge": "esolang-jail",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "Positional argv: sys.argv[1] = host, sys.argv[2] = port (int). No defaults; both are required (exits 2 with usage if fewer than 2 args given). Example from docstring: python3 solve.py localhost 9301. Container internal port is 9301.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints \"[+] FLAG: NCTF{...}\" to stdout and returns exit code 0 on success; regex NCTF\\{[^}]+\\} extracted from the REPL response. On failure prints to stderr and returns 1.",
+  "dev_flag_fallback": "flag.py get_flag() resolves FLAG env verbatim, else NCTF{CHALLENGE_SECRET[:24]}, else derives from TEAM_SECRET (default \"local-dev-secret\") as NCTF{HMAC_SHA256(TEAM_SECRET,\"misc-esolang-jail\")[:24]}. entrypoint.sh sets FLAG env on the interpreter process and writes /flag/flag.txt.",
+  "runtime_seconds_estimate": 20,
+  "blockers": "Requires a live TCP instance (served team_instance). The solver connects to a running interpreter served via socat on port 9301; a container built from the Dockerfile (or docker-compose up) must be running and reachable. No other blockers (uses only Python stdlib, no interactive prompts).",
+  "dir": "misc/esolang-jail"
+ },
+ {
+  "challenge": "git-archaeology",
+  "served": false,
+  "entry": "solution/solve.sh",
+  "invocation": "bash solution/solve.sh logparse-cli.tar.gz",
+  "target_source": "argv",
+  "target_details": "Static challenge, no host/port. argv[1] = optional path to logparse-cli.tar.gz; defaults to $(dirname \"$0\")/../logparse-cli.tar.gz (i.e. the challenge-root tarball). Extracts into a mktemp dir, cd's into logparse-cli/, finds the dangling commit via `git log -g --grep='temp: real token'` (fallback `git fsck --no-reflogs`), then `git show <sha>:config.ini | grep -oE 'CTF\\{[^}]+\\}'`.",
+  "needs_artifacts": [
+   "logparse-cli.tar.gz"
+  ],
+  "py_deps": [],
+  "system_deps": [
+   "bash",
+   "git",
+   "tar",
+   "awk",
+   "grep"
+  ],
+  "flag_output": "printed as last line of stdout (only stdout line; note grep pattern extracts 'CTF{...}' so output is 'CTF{d4ngling_c0mmit_lives_in_ref10g}' without the leading 'N' -- harness should match with regex CTF\\{[^}]+\\} or accept substring). Diagnostics go to stderr.",
+  "dev_flag_fallback": "n/a (no flag.py; static flag in challenge.yml: NCTF{d4ngling_c0mmit_lives_in_ref10g})",
+  "runtime_seconds_estimate": 2,
+  "blockers": "None. Note: solve.sh grep pattern is 'CTF\\{[^}]+\\}' so the printed flag lacks the leading 'N' (prints CTF{...} rather than NCTF{...}); a harness doing exact-match on the full flag will fail unless it matches by substring/regex. build_repo.sh may need running if the tarball is missing (git required; it does not run gc).",
+  "dir": "misc/git-archaeology"
+ },
+ {
+  "challenge": "polyglot-onion",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py keepsake.png",
+  "target_source": "argv",
+  "target_details": "Static challenge, no host/port. Optional argv[1] = path to keepsake.png; defaults to ../keepsake.png relative to solve.py (i.e. the challenge root). No env vars read.",
+  "needs_artifacts": [
+   "keepsake.png"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line of stdout (NCTF{...}); preceding lines are \"[layer N] detected ...\" progress",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{magic_byt3s_unm4sk_3v3ry_l4y3r} in challenge.yml)",
+  "runtime_seconds_estimate": 1,
+  "blockers": "",
+  "dir": "misc/polyglot-onion"
+ },
+ {
+  "challenge": "proto-fuzz",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "host = sys.argv[1] (default \"127.0.0.1\"); port = int(sys.argv[2]) (default 9109). Internal container port is 9109.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints flag on last line as \"[+] FLAG: NCTF{...}\"; also a regex CTF{...} match appears in stdout. Exits 1 if no flag found.",
+  "dev_flag_fallback": "flag.py get_flag() with FLAG and CHALLENGE_SECRET env unset returns NCTF{ + HMAC_SHA256(TEAM_SECRET or \"local-dev-secret\", \"misc-proto-fuzz\")[:24] + }",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires a live FZLP/1 TCP server (server.py / ctf-proto-fuzz container) reachable at host:port; the solver does not start any target itself.",
+  "dir": "misc/proto-fuzz"
+ },
+ {
+  "challenge": "timing-channel",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py capture.pcap",
+  "target_source": "none",
+  "target_details": "Static challenge, no network target. Solver takes the pcap path as argv[1]; if omitted it defaults to the hardcoded relative path \"../capture.pcap\" (relative to the solution/ dir). Pass the capture path explicitly, e.g. capture.pcap from the challenge dir.",
+  "needs_artifacts": [
+   "capture.pcap"
+  ],
+  "py_deps": [
+   "scapy"
+  ],
+  "system_deps": [],
+  "flag_output": "Printed to stdout: the decoded flag line \"[+] FLAG: NCTF{...}\"; the decoded text is also printed on its own line just above. Not strictly the last line, but the \"[+] FLAG:\" line contains NCTF{...}.",
+  "dev_flag_fallback": "n/a (static challenge; flag.py has no dev-mode env fallback — it prints the fixed STATIC_FLAG NCTF{silence_between_beats_speaks}, or an HMAC per-team flag only if given a TEAM_SECRET argument)",
+  "runtime_seconds_estimate": 5,
+  "blockers": "",
+  "dir": "misc/timing-channel"
+ },
+ {
+  "challenge": "adversarial-gate",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {URL}",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] is the base URL (e.g. http://HOST:8080); trailing slash stripped. If argv[1] is absent it defaults to the hardcoded \"http://localhost:8080\". No env vars are read. The solver POSTs JSON {\"badge\": base64(QGP1)} to {URL}/submit and, only if handout/app files are missing, fetches weights.npz, denied_badge.npy, gatemodel.py from {URL}/assets/. Container internal port 8080 (docker-compose maps 8080:8080).",
+  "needs_artifacts": [
+   "handout/gatemodel.py",
+   "handout/weights.npz",
+   "handout/denied_badge.npy"
+  ],
+  "py_deps": [
+   "numpy"
+  ],
+  "system_deps": [],
+  "flag_output": "printed in the last stdout line as `[*] server: {json}` where the JSON contains \"flag\":\"NCTF{...}\" — regex NCTF{...} in stdout",
+  "dev_flag_fallback": "NCTF{ + HMAC_SHA256(TEAM_SECRET default \"local-dev-secret\", \"ml-adversarial-gate\")[:24] + } (docker-compose sets TEAM_SECRET=\"local-demo-team-secret\", which yields a different value; compute with `python3 flag.py <secret>`)",
+  "runtime_seconds_estimate": 15,
+  "blockers": "",
+  "dir": "ml/adversarial-gate"
+ },
+ {
+  "challenge": "model-inversion",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py http://{HOST}:{PORT}",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] is the full base URL (e.g. http://HOST:8080); trailing slash stripped. If argv[1] is absent, defaults to hardcoded \"http://localhost:8080\". Passing \"--offline\" as any argv runs a local simulation with no server (exit 0 on success). No env vars are read. Endpoints used: POST {URL}/query, POST {URL}/submit, and GET {URL}/assets/weights.npz only if no local weights.npz found.",
+  "needs_artifacts": [
+   "handout/model.py",
+   "handout/weights.npz"
+  ],
+  "py_deps": [
+   "numpy"
+  ],
+  "system_deps": [],
+  "flag_output": "printed in the last stdout line as \"[*] server: {json}\" where the JSON contains \"flag\":\"NCTF{...}\" -- regex NCTF{...} in stdout",
+  "dev_flag_fallback": "NCTF{ + HMAC_SHA256(\"local-dev-secret\", \"ml-model-inversion\")[:24] + } (TEAM_SECRET env defaults to \"local-dev-secret\"; docker-compose sets TEAM_SECRET=\"local-demo-team-secret\", so a compose-run instance yields NCTF{HMAC_SHA256(\"local-demo-team-secret\",\"ml-model-inversion\")[:24]})",
+  "runtime_seconds_estimate": 5,
+  "blockers": "",
+  "dir": "ml/model-inversion"
+ },
+ {
+  "challenge": "pickle-rce",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py http://{HOST}:{PORT}",
+  "target_source": "argv",
+  "target_details": "argv[1] = base URL (default \"http://127.0.0.1:9080\" if omitted); argv[2] = optional flag path override (default \"/flag\"). The solver appends \"/validate\" to the base URL. The service listens on internal_port 9080 (published as 9080 in docker-compose). Harness should pass the full base URL as argv[1], e.g. http://<host>:9080.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints the full service JSON response, then on success prints a line \"FLAG: NCTF{...}\" (regex CTF\\{[^}]*\\} matched against model_summary) and exits 0; exits 1 with a stderr message if no flag found.",
+  "dev_flag_fallback": "flag.py get_flag() falls back (when FLAG and CHALLENGE_SECRET env are unset) to NCTF{ + HMAC_SHA256(TEAM_SECRET default \"local-dev-secret\", \"ml-pickle-rce\").hexdigest()[:24] + }. entrypoint.sh writes this to /flag inside the container.",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires a live challenge container running (served team_instance). The solver only reads /flag by achieving RCE against the running service on port 9080; no offline/static path. Needs network access to the instance host:port.",
+  "dir": "ml/pickle-rce"
+ },
+ {
+  "challenge": "boot2root-linux",
+  "served": true,
+  "entry": "solution/solve.sh",
+  "invocation": "./solution/solve.sh {URL}   (e.g. ./solution/solve.sh http://{HOST}:{PORT})",
+  "target_source": "argv",
+  "target_details": "Positional argv[1]",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [
+   "bash",
+   "curl",
+   "base64",
+   "grep"
+  ],
+  "flag_output": "Prints \"[+] flag: NCTF{...}\" to stdout on success; on failure exits 1 and dumps the raw /diag response to stderr. Flag is matched via regex NCTF\\{[^}]*\\} from the /diag response.",
+  "dev_flag_fallback": "In dev with FLAG and CHALLENGE_SECRET unset, flag.py derives NCTF{ + HMAC_SHA256(TEAM_SECRET or \"local-dev-secret\", \"pwn-boot2root-linux\").hexdigest()[:24] + }",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires a live per-team container instance (type: team_instance) built from the Dockerfile (image ctf-boot2root-linux:latest) and reachable at the passed URL. The harness must build/launch the container and pass its host:port; the solver itself needs no interactive input.",
+  "dir": "pwn/boot2root-linux"
+ },
+ {
+  "challenge": "format-string-101",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "Host and port are positional argv: sys.argv[1]=HOST, sys.argv[2]=PORT (connect() uses remote(sys.argv[1], int(sys.argv[2])) when len(sys.argv) >= 3). With no args it falls back to process([\"../chall\"]) spawning the local binary relative to the solution/ dir. Container internal_port is 9101; docker-compose maps 9101:9101, so local playtest target is localhost 9101.",
+  "needs_artifacts": [],
+  "py_deps": [
+   "pwntools"
+  ],
+  "system_deps": [],
+  "flag_output": "Solver prints \"[+] FLAG: NCTF{...}\" to stdout after reading the service's \"flag: \" line. The flag itself matches regex NCTF{...}.",
+  "dev_flag_fallback": "flag.py get_flag(): if FLAG unset and CHALLENGE_SECRET unset, derives from TEAM_SECRET (default \"local-dev-secret\") as NCTF{ HMAC_SHA256(TEAM_SECRET, \"pwn-format-string-101\").hexdigest()[:24] }.",
+  "runtime_seconds_estimate": 15,
+  "blockers": "Requires a live TCP service instance (served, type team_instance). The solver needs a running container (docker build -t ctf-format-string-101:latest . then TEAM_SECRET=... docker compose up, exposing localhost:9101) or a per-team host:port. Needs pwntools installed. The no-arg local fallback (process([\"../chall\"])) requires the compiled ./chall binary present and must be run with CWD inside solution/ since it uses the relative path \"../chall\".",
+  "dir": "pwn/format-string-101"
+ },
+ {
+  "challenge": "heap-note",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "Target read from sys.argv[1] (host) and sys.argv[2] (port) via start(): if len(sys.argv) >= 3, remote(sys.argv[1], int(sys.argv[2])). Service internal port is 9022 (connection_info: nc {host} 9022). With no argv it runs locally, spawning ../handout/ld-2.31.so ../handout/chall with LD_LIBRARY_PATH=../handout — no host/port hardcoded for remote.",
+  "needs_artifacts": [
+   "handout/chall",
+   "handout/libc.so.6",
+   "handout/ld-2.31.so"
+  ],
+  "py_deps": [
+   "pwntools"
+  ],
+  "system_deps": [],
+  "flag_output": "Flag printed as the last line of stdout (via print(flag)); also logged as \"FLAG: ...\" with log.success. Parsed from server output after \"flag: \".",
+  "dev_flag_fallback": "flag.py get_flag() returns FLAG env verbatim if set; else NCTF{CHALLENGE_SECRET[:24]} if CHALLENGE_SECRET set; else derive_flag(TEAM_SECRET or \"local-dev-secret\") = \"NCTF{\" + HMAC_SHA256(team_secret, \"pwn-heap-note\")[:24] + \"}\"",
+  "runtime_seconds_estimate": 15,
+  "blockers": "Served challenge: needs a live instance (Docker image ctf-heap-note:latest on internal port 9022) reachable at HOST/PORT. Local mode (no argv) requires the FLAG/CHALLENGE_SECRET/TEAM_SECRET env for the win() output to contain a real flag, and executing the pinned glibc 2.31 handout binary via ld-2.31.so.",
+  "dir": "pwn/heap-note"
+ },
+ {
+  "challenge": "ret2csu-ish",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {HOST} {PORT}",
+  "target_source": "argv",
+  "target_details": "sys.argv[1]=host, sys.argv[2]=port (int), used only when len(sys.argv)>=3. With no args it runs the local ./chall via process() with env FLAG=NCTF{local-playtest-flag}. Internal service port is 9111 (socat TCP-LISTEN), so for a local container the call is `python3 solution/solve.py localhost 9111`. No env var reads for target.",
+  "needs_artifacts": [
+   "chall"
+  ],
+  "py_deps": [
+   "pwntools"
+  ],
+  "system_deps": [],
+  "flag_output": "Prints raw shell output to stdout; on success logs `flag: NCTF{...}` via pwntools log.success after regex CTF\\{[^}]*\\} match. If no match it drops to io.interactive(). No exit-code signal.",
+  "dev_flag_fallback": "When FLAG and CHALLENGE_SECRET env are unset, flag.py derives from TEAM_SECRET (default \"local-dev-secret\") as NCTF{ + HMAC_SHA256(TEAM_SECRET,\"pwn-ret2csu-ish\")[:24] + }",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires a live served instance (team_instance): binary served over socat/TCP with a per-connection landing key read from the banner, so it needs a running container. It reads the fresh 8-bit landing key live and preimages the ROP chain; replay/static solving is impossible. The solver spawns an interactive shell over the socket. Needs the 'chall' ELF present next to the solver for ELF/ROP symbol resolution. Local no-arg mode requires a Linux x86-64 host able to run ./chall. Falls back to io.interactive() if flag regex fails, which would hang a non-interactive harness.",
+  "dir": "pwn/ret2csu-ish"
+ },
+ {
+  "challenge": "maze-vm",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/reverse/maze-vm && python3 solution/solve.py chall",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] = path to the chall ELF binary (exactly one argument required; usage error otherwise). No host/port; static challenge. The solver also executes the binary via subprocess (stdin = recovered input + newline) to confirm the flag, so the binary must be runnable (x86-64 Linux ELF, dynamically linked against libc).",
+  "needs_artifacts": [
+   "chall"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed as last line: \"[+] FLAG: NCTF{...}\" (regex NCTF{...} in stdout); asserts fail with non-zero exit if recovery/verification fails",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{m4ze_vm_thr34d3d} in challenge.yml)",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires ability to execute the x86-64 Linux ELF `chall` (subprocess call for final verification); if chall is missing it can be rebuilt with `make` (needs gcc and python3).",
+  "dir": "reverse/maze-vm"
+ },
+ {
+  "challenge": "packed-vm-lite",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/reverse/packed-vm-lite/solution && python3 solve.py ../vmcheck",
+  "target_source": "argv",
+  "target_details": "No host/port (static challenge). Optional argv[1] = path to the vmcheck ELF; if given, the solver runs the binary with the recovered serial on stdin and asserts 'Correct!' in stdout. With no argv it just prints the serial/flag computed from hardcoded KEY/TARGET tables.",
+  "needs_artifacts": [
+   "vmcheck"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed to stdout as 'flag:  NCTF{...}' (and again from binary output when argv[1] given); regex NCTF{...} in stdout",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{vm_bytec0de_1s_n0t_h4rd!} in challenge.yml)",
+  "runtime_seconds_estimate": 1,
+  "blockers": "Optional binary verification requires running the x86-64 Linux ELF 'vmcheck' (must be executable); omit argv[1] to skip.",
+  "dir": "reverse/packed-vm-lite"
+ },
+ {
+  "challenge": "strings-lie",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/reverse/strings-lie && python3 solution/solve.py chall",
+  "target_source": "argv",
+  "target_details": "Static challenge, no host/port. sys.argv[1] is the path to the 'chall' ELF binary; defaults to '../chall' (relative to cwd, so it only works when run from solution/). Pass the absolute or repo-relative path to chall explicitly.",
+  "needs_artifacts": [
+   "chall"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed to stdout on the last line as 'flag       : NCTF{...}' (preceded by a 'passphrase :' line); regex NCTF\\{[^}]*\\} matches it. Exits 1 with 'no solution found' on stderr if not found.",
+  "dev_flag_fallback": "n/a (no flag.py; static flag NCTF{str1ngs_l1e_read_the_c0de} in challenge.yml)",
+  "runtime_seconds_estimate": 5,
+  "blockers": "",
+  "dir": "reverse/strings-lie"
+ },
+ {
+  "challenge": "synthvm",
+  "served": false,
+  "entry": "solution/solve.py",
+  "invocation": "cd /home/user/CTFd/challenges/reverse/synthvm && python3 solution/solve.py ./synthvm",
+  "target_source": "argv",
+  "target_details": "sys.argv[1] = path to the synthvm ELF binary (required; exits with usage message if missing). No host/port/URL — static challenge. The solver also executes the binary (subprocess.run([path], input=flag)) to verify, so the artifact must be executable (x86-64 Linux ELF). Exit code 0 only if the binary prints \"Access granted\"; if the binary cannot be run, it prints a warning and exits 0 without verification.",
+  "needs_artifacts": [
+   "synthvm"
+  ],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "printed to stdout as \"[*] recovered flag: NCTF{...}\" (third line, not the last line — followed by \"[*] binary says: ...\"); use regex NCTF\\{[^}]*\\} on stdout. Exit code 0 on verified success, 1 on verification failure.",
+  "dev_flag_fallback": "NCTF{synthvm_d1sp4tch_rem4pped_at_runtime} (static; flag.py ignores TEAM_SECRET/env entirely)",
+  "runtime_seconds_estimate": 2,
+  "blockers": "The prebuilt synthvm binary is present in the challenge dir; if it is absent it must be built via Dockerfile/Makefile (gcc, python3, make). Verification step requires running an x86-64 Linux ELF locally.",
+  "dir": "reverse/synthvm"
+ },
+ {
+  "challenge": "graphql-introspection-maze",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py http://{HOST}:{PORT}",
+  "target_source": "argv",
+  "target_details": "Target base URL is sys.argv[1] (e.g. http://HOST:8080). Defaults to http://localhost:8080 when argv[1] is absent. Solver POSTs to base + \"/graphql\". Container internal_port is 8080; docker-compose maps host 8080:8080.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Printed as the last stdout line in the form \"FLAG: NCTF{...}\". Intermediate steps also print the flag via redeemWarrant payload.",
+  "dev_flag_fallback": "In local dev with FLAG and CHALLENGE_SECRET unset, flag.py derives NCTF{HMAC_SHA256(TEAM_SECRET,\"web-graphql-introspection-maze\")[:24]} using TEAM_SECRET (default \"local-dev-secret\"); docker-compose sets TEAM_SECRET=\"local-demo-team-secret\". The server emits the flag only after the ROOT effect.",
+  "runtime_seconds_estimate": 10,
+  "blockers": "Requires a live challenge instance (served, team_instance). Must run with a single gunicorn worker since session clearance is in-process. No other blockers; uses only stdlib and no network beyond the target.",
+  "dir": "web/graphql-introspection-maze"
+ },
+ {
+  "challenge": "jwt-cousin",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py http://{HOST}:{PORT}",
+  "target_source": "argv",
+  "target_details": "Base URL is argv[1] (e.g. http://HOST:8080). If omitted, defaults to hardcoded \"http://localhost:8080\". The solver strips a trailing slash and appends paths /api/login, /api/admin/rotate. Container internal_port is 8080; docker-compose maps host 8080:8080.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints \"FLAG: NCTF{...}\" as the last stdout line on success; the flag value comes from the JSON field r[\"flag\"] in the /api/admin/rotate response. On failure exits with code 1.",
+  "dev_flag_fallback": "flag.py get_flag() falls back to HMAC_SHA256(TEAM_SECRET or \"local-dev-secret\", \"web-jwt-cousin\")[:24] wrapped as NCTF{...}; docker-compose sets TEAM_SECRET=local-demo-team-secret for local builds.",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires a live challenge instance (team_instance) reachable over HTTP on the given host:port; solver uses only stdlib urllib so no package installs needed.",
+  "dir": "web/jwt-cousin"
+ },
+ {
+  "challenge": "race-the-coupon",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {URL}",
+  "target_source": "argv",
+  "target_details": "argv[1] = base URL of the live instance (e.g. http://{HOST}:{PORT}); defaults to http://localhost:8080 if omitted. Optional argv[2] = number of concurrent requests (default 20). Server listens on internal port 8080.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Printed to stdout as a line \"[+] FLAG: NCTF{...}\" (regex CTF\\{[^}]+\\} extracted from the redeem/wallet JSON). Exit code 0 on success, 1 if no overdraft achieved.",
+  "dev_flag_fallback": "In dev mode (FLAG and CHALLENGE_SECRET unset), flag.py falls back to derive_flag(TEAM_SECRET) = \"NCTF{\" + HMAC_SHA256(TEAM_SECRET, \"web-race-the-coupon\")[:24] + \"}\", with TEAM_SECRET defaulting to \"local-dev-secret\".",
+  "runtime_seconds_estimate": 10,
+  "blockers": "Requires a live per-team instance (served challenge); the flag is only emitted by the server after a genuine concurrency race overdraws the wallet, so a running container reachable over the network is mandatory. Success is probabilistic (scheduling-dependent) and may need retries with higher concurrency. Container must run gunicorn with -w 1 --threads N (single worker, shared in-memory state) for the race to be reachable.",
+  "dir": "web/race-the-coupon"
+ },
+ {
+  "challenge": "smuggle-gap",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py {URL}",
+  "target_source": "argv",
+  "target_details": "TARGET = sys.argv[1], default http://localhost:8080; edge port 8080.",
+  "needs_artifacts": [],
+  "py_deps": [],
+  "system_deps": [],
+  "flag_output": "Prints \"[+] FLAG: NCTF{...}\" to stdout (regex NCTF{...} extracted from raw HTTP response); exit 0 on success, 1 if no flag found.",
+  "dev_flag_fallback": "flag.py get_flag() precedence: FLAG env verbatim, else \"NCTF{\"+CHALLENGE_SECRET[:24]+\"}\", else LOCAL DEV derive_flag(TEAM_SECRET or \"local-dev-secret\") = \"NCTF{\"+HMAC_SHA256(secret,\"web-smuggle-gap\")[:24]+\"}\". docker-compose sets CHALLENGE_SECRET=\"localdemolocaldemolocaldemolocaldemo\" giving NCTF{localdemolocaldemolocald}.",
+  "runtime_seconds_estimate": 5,
+  "blockers": "Requires a live challenge instance (team_instance, edge on port 8080). Harness must pass the instance URL as argv[1]; default localhost:8080 only works if container is running locally (docker compose up --build).",
+  "dir": "web/smuggle-gap"
+ },
+ {
+  "challenge": "ssrf-metadata-decoy",
+  "served": true,
+  "entry": "solution/solve.py",
+  "invocation": "python3 solution/solve.py http://{HOST}:{PORT}",
+  "target_source": "argv",
+  "target_details": "Base URL is argv[1]; defaults to hardcoded http://localhost:8080 if absent.",
+  "needs_artifacts": [],
+  "py_deps": [
+   "requests"
+  ],
+  "system_deps": [],
+  "flag_output": "Flag printed to stdout on a line prefixed \"[+] FLAG: \" (regex NCTF{...} appears there); exit code 0 on success, 1 if not found.",
+  "dev_flag_fallback": "flag.py get_flag() falls back to NCTF{ HMAC_SHA256(\"local-dev-secret\", \"web-ssrf-metadata-decoy\")[:24] } when FLAG and CHALLENGE_SECRET env vars are unset (TEAM_SECRET defaults to \"local-dev-secret\").",
+  "runtime_seconds_estimate": 10,
+  "blockers": "Requires a live per-team container (type: team_instance) with only port 8080 published; the solver needs a running instance reachable at the given host:port. No other blockers (no interactive prompts, no GPU).",
+  "dir": "web/ssrf-metadata-decoy"
+ }
+]

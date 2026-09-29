@@ -1,0 +1,51 @@
+Cousin SSO -- token format (partial, internal notes)
+====================================================
+
+These are the notes we managed to recover about the "Cousin" token. They are
+INCOMPLETE on purpose -- fill in the gaps from the live service, which is the
+only source of truth.
+
+Layout
+------
+A token is TWO dot-separated parts:
+
+    <payload>.<sig>
+
+  * <payload> is base64url(JSON), no '=' padding.
+  * <sig>     is a lowercase hex string.
+
+There is NO header segment. This is NOT a JWT. JWT libraries and jwt.io will
+either refuse it or "verify" it against the wrong bytes. Do not go down the
+alg:none / RS256->HS256 / kid-injection rabbit holes; the `alg` field in the
+payload is vestigial and the verifier ignores it.
+
+Payload claims (seen so far)
+----------------------------
+    sub   subject / account name        (string)
+    role  authorization level           (guest | staff | admin)
+    exp   unix expiry                    (int)
+    v     token version                 (int, currently 1)
+    alg   "HS256"  -- decorative, ignored on verify
+
+Signature
+---------
+    sig = first 32 hex chars of  HMAC_SHA256( SERVER_KEY, C )
+
+...where C is a "canonical claim string": the server does NOT sign the raw
+base64 payload. It rebuilds C from the claims itself, using a fixed order and
+a fixed SUBSET of them, joined `key=value` with ';' separators. We never fully
+pinned down *which* claims go into C -- and, more usefully, which ones do not.
+
+SERVER_KEY is per-instance and not recoverable; brute force is not the path.
+
+Samples: see tokens.txt (produced by a demo instance whose SERVER_KEY differs
+from your live one, so their signatures won't validate against yours -- they
+are for studying STRUCTURE, not for replay).
+
+Working questions
+-----------------
+  * Exactly which claims does C contain?  (Change one claim at a time against
+    the live /api/whoami and /api/admin/rotate oracle and watch what still
+    verifies.)
+  * If a claim is outside C, what does that let you do to it without breaking
+    the signature?

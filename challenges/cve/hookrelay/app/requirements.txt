@@ -1,0 +1,6 @@
+# CVE-2022-24439: GitPython < 3.1.30 does not validate the clone URL, so an
+# ext:: transport is executed as a shell command. 3.1.29 is the vulnerable pin.
+# DO NOT bump: the fix (3.1.30) closes the challenge.
+GitPython==3.1.29
+Flask==3.0.3
+Werkzeug==3.0.3

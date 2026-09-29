@@ -1,0 +1,25 @@
+name: rot13-decode
+author: dagbanjaphet
+category: warmup
+description: |-
+  `secret.txt` reads almost like the flag, but every letter has been
+  rotated halfway around the alphabet. Rotate it back and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{rot13_twice_is_nothing}
+tags:
+  - warmup
+  - classical
+  - rot13
+  - beginner
+files:
+  - secret.txt
+state: visible
+version: "0.1"

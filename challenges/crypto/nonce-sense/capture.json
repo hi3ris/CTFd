@@ -1,0 +1,321 @@
+{
+  "curve": "secp256k1",
+  "note": "ECDSA signatures produced by a hardware wallet with a faulty RNG. hash: z = int(sha256(msg)) mod n. Public key Q below; recover the private key d.",
+  "Q": {
+    "x": "0x7aedb60a3f271fdde31aac26c7d7542541954c47892b54bb44dd253df23d5f71",
+    "y": "0x1591f602e006dfc5001347013eee1db6604af851d08cf1bfca9c92f1e845f6f8"
+  },
+  "n": "0xfffffffffffffffffffffffffffffffebaaedce6af48a03bbfd25e8cd0364141",
+  "signatures": [
+    {
+      "msg": "transfer #0047: pay invoice INV-2026-00342",
+      "r": "0x258504a759b8be61bb145d8208931e990544ae30eef19b2e4bfe4fe1655779f7",
+      "s": "0xd51baa2e2933fda80718ccd1941309e3f89b311f25679f241dd4cc54c07eca2d"
+    },
+    {
+      "msg": "transfer #0031: pay invoice INV-2026-00230",
+      "r": "0x778d13be762f8ecf466d7491742db23253939d8e8536d2290de3ba3520a30d01",
+      "s": "0x6b155df0753911cad72397f2ff84137e4cfea1949829b53dbd9edf7e66365b47"
+    },
+    {
+      "msg": "transfer #0016: pay invoice INV-2026-00125",
+      "r": "0xa2078eb5d5aaa16ce26bd1b9979f26e5f3611f402881f2acb220cafab0638ecc",
+      "s": "0x5f562b6a2c91379a575e9c4a4a4dbfbc8fed73ca380016fe559a4e8969fb7739"
+    },
+    {
+      "msg": "transfer #0055: pay invoice INV-2026-00398",
+      "r": "0x7a7aa4d0c38c2f7405563bfbf4852f1960267d3f512732e1758de7784e20834e",
+      "s": "0x2fda1d24e14c06b7d82b6ed7e603213a30303ad8a49da7ba1602377ebbed06"
+    },
+    {
+      "msg": "transfer #0002: pay invoice INV-2026-00027",
+      "r": "0xa3c8f4485a656fc9d084318ed4639c654b686df344e7a55a392cd7c744ef120c",
+      "s": "0xa9852b0e3d0d3f0efa65fb0c5e2852df96adcfd9ae3afae0568289ce13346f9c"
+    },
+    {
+      "msg": "transfer #0040: pay invoice INV-2026-00293",
+      "r": "0x50050febe5dd1d657f583824bca683adc4a2ee2ed55cd2b344eff2f55d1d9386",
+      "s": "0x3a8505bf7aa8a5855819defd4eea0be808e58111c7fe9c05e194a71e001c3c8e"
+    },
+    {
+      "msg": "transfer #0057: pay invoice INV-2026-00412",
+      "r": "0x7923f5bd41513d77315d8c76b3a53f64f56b233aa5f09626fa2a8d4405805186",
+      "s": "0x2faa6c3d3cf46aa57ef16f453064b4d6a980f9f1eb690de6f272bf5e017e4e3"
+    },
+    {
+      "msg": "transfer #0049: pay invoice INV-2026-00356",
+      "r": "0x5829b831cfb741df256b52886ae70115265157b5d2b3d0efcce2ae2b2f19e02a",
+      "s": "0xfee7f1346a20b28b7ef4da06c0cf5503ebf5235840c767ca390b8f4ece578a8f"
+    },
+    {
+      "msg": "transfer #0024: pay invoice INV-2026-00181",
+      "r": "0xa720af6fa6304accdd8ac2c43763fc1b365581bc159e097ff628357178799194",
+      "s": "0x106ce7e883bca9895755220e0dd32cc3f1bb54072f83444a3bd6a453af390c95"
+    },
+    {
+      "msg": "transfer #0051: pay invoice INV-2026-00370",
+      "r": "0x3b15e6ace62893fcf76ae3f8bcdc1676cf1af46eaf334c9cb0c70ea5d6dc775d",
+      "s": "0x17b3d49caf5b4a3d79473b1bb01931ed05a48b76012ee200252856c4f0af0cc8"
+    },
+    {
+      "msg": "transfer #0046: pay invoice INV-2026-00335",
+      "r": "0xa1d341b56c8fd0111b174b6399458a77b5dbeaebbfc9a58c431196c523fafefe",
+      "s": "0x630ae99b808f0472c02c590d8785e0c637261417e714eab2532bcd2ce5f7f78b"
+    },
+    {
+      "msg": "transfer #0036: pay invoice INV-2026-00265",
+      "r": "0x55170e4d10cd14c973ea67bf4a4d47f18bb9a38075adff5e93c9a91c3aefc97d",
+      "s": "0xd1d465ecc0c821a12b6312ed5dd279548b8c55b61206b8c7074df92c3ad8ead6"
+    },
+    {
+      "msg": "transfer #0043: pay invoice INV-2026-00314",
+      "r": "0x18474d2e268f0a4e7c0169faf92169d2e86708b75bb8b0085adf785f81286940",
+      "s": "0x70e1851578f0e0393acc7ea7d569fe8ddd0cd730e53bd071bf7fcd73c702c88d"
+    },
+    {
+      "msg": "transfer #0028: pay invoice INV-2026-00209",
+      "r": "0x97f303bb0217de3fabdf39d229d94bf3db2be1411add130b295e4aa170a129de",
+      "s": "0xce28dd1cdb1577e6318853de9a5c7d3818e3301c4b2a5a8cd177e9fa8dbcf76e"
+    },
+    {
+      "msg": "transfer #0019: pay invoice INV-2026-00146",
+      "r": "0xef84986bbe6a84999d82097e2eec40c60db0db17641e35a631b1cdb18d3e3217",
+      "s": "0xe33af269a3bbc0ed97a118d270771bf964ae2d395e29a7938895a28b2578a9a6"
+    },
+    {
+      "msg": "transfer #0012: pay invoice INV-2026-00097",
+      "r": "0x91ab2271512d7bcb70bae6d59efe3b3105204a3416866937e33525d2c9492786",
+      "s": "0xf379e9a9a0e4cf5431ed917bc9944801790a657dc6dec76e14ce15723ad1fca0"
+    },
+    {
+      "msg": "transfer #0030: pay invoice INV-2026-00223",
+      "r": "0xf17c816494a54c71af7e8ec74ae74d6a3a4e1adfd8f98d7182fe79e4f206cfac",
+      "s": "0xfea724c44b5d10ac65afef276d92f25c412e5ea467b5854190f926c81888a8f3"
+    },
+    {
+      "msg": "transfer #0015: pay invoice INV-2026-00118",
+      "r": "0x8114463af12a117c0a7cf6dd32636a55985d46c5725d95ec6fd84f7222cbade8",
+      "s": "0xae5d402aeb3df2cf2e94ad72b495d34ef6363c480bb1eb30ed776771fe4d122c"
+    },
+    {
+      "msg": "transfer #0059: pay invoice INV-2026-00426",
+      "r": "0x6061a0c25549b0f5316e4426e0cfdbbcbdbdce6f4af1ffdd23a72f9d8ff7270c",
+      "s": "0x769eab7bfc8098fc2f1840f3c7fc1b2dbd80801f810130e637ee77973a39cb04"
+    },
+    {
+      "msg": "transfer #0011: pay invoice INV-2026-00090",
+      "r": "0x889b0c9807b85bac7fc694a39a31d0a49e9edc4dfaca523d98eff7ba4c516c6e",
+      "s": "0xe15867436cb3c791523b1497fa040ccbfb2e073fba081526795a7bf167369dbf"
+    },
+    {
+      "msg": "transfer #0022: pay invoice INV-2026-00167",
+      "r": "0xd0e9b016849987a152a0c52d9b885ed47b0752a87a5d8098f511c002c13788df",
+      "s": "0x305a7b69940e2bbc03523a8f77ac3ec3e67ff087837c332c846a4fd4fd70ee08"
+    },
+    {
+      "msg": "transfer #0029: pay invoice INV-2026-00216",
+      "r": "0x2f217ff1e50a9dbfa6e1386b2662d4183c5ca052aaa0d4f5d060782a2b81188c",
+      "s": "0x396bfe2cd4be1284e8da6bdd44b43f7142c341a1a907b426bbb9eb8f089a518e"
+    },
+    {
+      "msg": "URGENT: release escrow to account 0xBADF00D",
+      "r": "0x30fb69e4c4b4ba014066572d1d174607d1c77608168ef1a8882f5c3bdc721ac7",
+      "s": "0x9c61c12ecacd78ff43b3a48c01f35ab12511b0063125d04cab613f0a4f65b13b"
+    },
+    {
+      "msg": "transfer #0017: pay invoice INV-2026-00132",
+      "r": "0xe62c30375a32d3cb4daad0c939776734a6fc0ff9f3636e75b88374fb9e8978b4",
+      "s": "0xd6381fc8a11bbd2d4a2755c25b402500fae5923c2fe65e6265381bc778809f52"
+    },
+    {
+      "msg": "transfer #0038: pay invoice INV-2026-00279",
+      "r": "0x78f41df2feb714378d5a22bb90f16dce25e7720c3af4bdc21741015b17f3f0a2",
+      "s": "0x3678858fde0a097e109d3a210d8a9840683b06ebe8ee3d5d906c91057479dd"
+    },
+    {
+      "msg": "URGENT: release escrow to account 0xC0FFEE",
+      "r": "0x30fb69e4c4b4ba014066572d1d174607d1c77608168ef1a8882f5c3bdc721ac7",
+      "s": "0x76c72b3931da4bc013b3199b813d8b4fb2bb2b23070743b524a4e9d3752c281a"
+    },
+    {
+      "msg": "transfer #0050: pay invoice INV-2026-00363",
+      "r": "0x46d6e03557fee4c0e430c7a711294b869f20d2a61328f977f5f12e2511e3c1f7",
+      "s": "0xdb1f81448a298926be791f73cdd931975b5f3ca3db3da6490ff1b64d9ece4ecb"
+    },
+    {
+      "msg": "transfer #0010: pay invoice INV-2026-00083",
+      "r": "0x1953cd38cf8bf724c5e25177ae6fb124395cc1e28420e875f8f7fc77957d4211",
+      "s": "0x8a095a538ea262a231c71e41fd3fc0cd82b9a20ee5e5e1c45a816fd22bb00589"
+    },
+    {
+      "msg": "transfer #0056: pay invoice INV-2026-00405",
+      "r": "0x339cb2d7ac1bdbaeaf786fa06b43318c2e55557879533918494f3f7910e65519",
+      "s": "0xe959a9e34e81710c89b5dfb0e0bc23e76de8d937abf014f073240239b41b2f5c"
+    },
+    {
+      "msg": "transfer #0037: pay invoice INV-2026-00272",
+      "r": "0x55d3a071ad0de1a0905cdd70d21d4f318bb6607850479810e07dd97b6b0795a9",
+      "s": "0xc4c895aa2a34a2e129f54404bc5d91b9010eafc3df9fb06e35f1a100ddac52d9"
+    },
+    {
+      "msg": "transfer #0021: pay invoice INV-2026-00160",
+      "r": "0x8a41e8e84ce1b1b87024dfd7729ed0236960bf51d2e2fd32a2b1b4d3a10e02fe",
+      "s": "0x690e9fca1e1f43c6eb6991e803ed10d86d2755fb57c824bee5e8ea92940d8d8b"
+    },
+    {
+      "msg": "transfer #0045: pay invoice INV-2026-00328",
+      "r": "0x28d7235114f22019ae25602b6a37c7e15bea90f2cb4ab22b7f9103ce93c34aee",
+      "s": "0xa685d9c59284791bd2cd698dc0899c30f5259b153dacfb997334dfc03a4c8535"
+    },
+    {
+      "msg": "transfer #0053: pay invoice INV-2026-00384",
+      "r": "0x2ccfa1a2ace3dcc8e50ac4184c710abc3ce365a226ea23802b229887d9472038",
+      "s": "0xaf64f089344e80e1fa7675df38ed7b94a4ab4f30510687bef0119c8f39dad356"
+    },
+    {
+      "msg": "transfer #0020: pay invoice INV-2026-00153",
+      "r": "0x7b2b893c3145e6008139a1dda9d01c44fb310feeb0bf90654ee4c1395ad215f8",
+      "s": "0x5030d44612756d1da6ece2888f91b23b212b854a81c9207e001c174b81eb23d3"
+    },
+    {
+      "msg": "transfer #0001: pay invoice INV-2026-00020",
+      "r": "0x44364e3137f0989a0924e7b51ec5c1724b2efcdcf0ebb0e5832947e40a4dbef3",
+      "s": "0xe98d254425851c37d05531239008010c8ae763cd10f240628b9b6b61989bf395"
+    },
+    {
+      "msg": "transfer #0044: pay invoice INV-2026-00321",
+      "r": "0x39359e55aea28c0ec5b14c8d1e5c6f68dd7d965a4084170a71a7ed41a59d7493",
+      "s": "0x75aedbb7409dccb11e9482817c2e7e9386f95dd0b958eeebb646a43599654089"
+    },
+    {
+      "msg": "transfer #0033: pay invoice INV-2026-00244",
+      "r": "0x4872180d586b8d205c7a6d06d2295606c853f881c2305c80ff3a3bc9ca8e6962",
+      "s": "0x2a5a94f7bd91ec33afdcf6e017538406e7cac0b00317e64f80e5815a81af3669"
+    },
+    {
+      "msg": "transfer #0025: pay invoice INV-2026-00188",
+      "r": "0xa97f05b131361ee239505b481cb8d5f3a7441f8da44607bb1abe2029fe2c4aaa",
+      "s": "0x514d50696c012c5a2647d978a68f77e581b3ce71644efdc8eab2fddb302ca245"
+    },
+    {
+      "msg": "transfer #0039: pay invoice INV-2026-00286",
+      "r": "0xd9f0523791257c1b2ac3917c629d22c06f876fd10b56a6d121cf722a50c745b",
+      "s": "0x796a7638e4b521d1ce24394f4145f9563ed1dd2786437e7e8d3b95809b010329"
+    },
+    {
+      "msg": "transfer #0000: pay invoice INV-2026-00013",
+      "r": "0x72d54db4fa641637ae3e8be06d819157a9d4702265d01e1819e68059651df627",
+      "s": "0xf9f1b67e59840f6f682052ca1924c0747e6ad6d850749c3f46855372912d837a"
+    },
+    {
+      "msg": "transfer #0058: pay invoice INV-2026-00419",
+      "r": "0xdfcb23b4229068687c07384ea9374127a7e2e10741e1112784378c6cfcd9f195",
+      "s": "0xd9a4def9dd45fa9b9054a1211d98e8ff35cbae988117236c7a975e8eb00d59b9"
+    },
+    {
+      "msg": "transfer #0023: pay invoice INV-2026-00174",
+      "r": "0xf062d1c2e6f2b21cb0abb5c17cf003b2f6a647e8b9b7e83fd39954b274fb33ea",
+      "s": "0x6257dc5b4d76fba27398994bff7fd16c86e5bfcd7a3f1aebbd3d44b566b3a6af"
+    },
+    {
+      "msg": "transfer #0026: pay invoice INV-2026-00195",
+      "r": "0xc734067cd055281d2f32b5b939ca2e1f4f2b046cf47fe7a04e5f5ebf1969cb5d",
+      "s": "0xba896db3a3376fbe445504fe6bc79993775bbe1d76a3900eb80b84cac88d6db0"
+    },
+    {
+      "msg": "transfer #0052: pay invoice INV-2026-00377",
+      "r": "0xb3bee0721cdff71d5653c65d79ba1113221d28c154b872711061987ab78db6f7",
+      "s": "0xa34f28aa37904b6ed4f5184dd9e74f57daaebc8f7c9aca4dff2ad2f0a2dc50bd"
+    },
+    {
+      "msg": "transfer #0034: pay invoice INV-2026-00251",
+      "r": "0x6f30afe4f099ac96c2e7faf0813f8afe12993ee9674731328c348d104a47251b",
+      "s": "0x8f9b1dd423339803983c5ae1224409c5ab0b04d635ea223d4510ddedd2e05b68"
+    },
+    {
+      "msg": "transfer #0032: pay invoice INV-2026-00237",
+      "r": "0x786b70df335f7d5f30e9f2298906dc83bd8652f4ac948d0bcbbea6948503b790",
+      "s": "0x50e01ad83d4f3435e72d93cc02e2432acb79962e6cc8daff136ce31908cf78d7"
+    },
+    {
+      "msg": "transfer #0014: pay invoice INV-2026-00111",
+      "r": "0x107ba3dccc4e2792ea8beb712e74a7e64e31de78292af17111b471f40de847c1",
+      "s": "0x4dd5267e5a21c24e8f9052ec4545347599e62f65967cf84db62f1993e68f598"
+    },
+    {
+      "msg": "transfer #0042: pay invoice INV-2026-00307",
+      "r": "0x223b14ef8d15577b96503d485a5ecb49752c6d8fef9fa1a00cb9276f137a6a59",
+      "s": "0xa3b29e483def75a2628a46b88092046b6182cdc768d61d59355aa50436c9f285"
+    },
+    {
+      "msg": "transfer #0006: pay invoice INV-2026-00055",
+      "r": "0x2be41de6e39c7c43adb90ee83738b00652567d48494187b6a0b2231b21df25d2",
+      "s": "0x5d2053f95a969166418f85038f319188189f1c9bc1262fb976899b7dc3a7f376"
+    },
+    {
+      "msg": "transfer #0008: pay invoice INV-2026-00069",
+      "r": "0x66a35916431cc7c3d87e485c2ca14079555da385f7104e6942527fef71fc5269",
+      "s": "0x8883252521c149a8e8621130067f2b316bc9690e4cbfd01107ee3d29700636bb"
+    },
+    {
+      "msg": "transfer #0054: pay invoice INV-2026-00391",
+      "r": "0x4a43b302006e39d03af228139118d7506078c1e201882bb7a078d3c66d85c1a2",
+      "s": "0x37d0665de47ca7170240ac4e22b1c822b19c438de715fc03893dc58c60bc8695"
+    },
+    {
+      "msg": "transfer #0027: pay invoice INV-2026-00202",
+      "r": "0xfdc929df107e0593559d07c168b5dc141c2256bb195bd4896e2e6590903a6630",
+      "s": "0x86f2273086d9759e0b87107bb0eaeaf4dcbce3ef0e8ec0760e8a70d17a144f82"
+    },
+    {
+      "msg": "transfer #0041: pay invoice INV-2026-00300",
+      "r": "0x9e359c02ecbd826afc897506532e1b70c9cecd710c85e441c54c3aac059090ba",
+      "s": "0x377c30c21b7dfb228efd7a366d6f077162a02cf8e4134b4fc7a4e5a1f2123271"
+    },
+    {
+      "msg": "transfer #0018: pay invoice INV-2026-00139",
+      "r": "0xf10ce649544b883200a9ec7254500ac66f8dd0fab467030baa73d4a3a3a4b8b8",
+      "s": "0x48fbb45cf9562f13412dbc5f95e53950a069d8dfbf86e3710f47eade1a784208"
+    },
+    {
+      "msg": "transfer #0007: pay invoice INV-2026-00062",
+      "r": "0x9544bc76d6970e8824620cd29517bb92d759974c93674183c8f48bb184ca6806",
+      "s": "0x9ef4d4fe1f486e3b3edf549889bcb9189e8e8d86eed170cf9bb27051ee35166b"
+    },
+    {
+      "msg": "transfer #0003: pay invoice INV-2026-00034",
+      "r": "0x1792564b38186960f477b4b80cad4b0acea18ea75184e0d97820e1831b98bea3",
+      "s": "0x48f4662f689e1c6eeecad1a28c42b4cd24d57e4648ffd684377baf8fea2d888a"
+    },
+    {
+      "msg": "transfer #0009: pay invoice INV-2026-00076",
+      "r": "0x2cf0efe222cc7517314c74e548cb677e8106d61254e37145a0b00b9ab85494f6",
+      "s": "0xeb4ae8d4e79a84caddba451a1cc9d28e695217248310ba57a6bb0cbf8700696"
+    },
+    {
+      "msg": "transfer #0005: pay invoice INV-2026-00048",
+      "r": "0x7856c5d44630f3aa871c643ca769d220170619c0c4035a4616b7b6851a359d50",
+      "s": "0x1aac581d1b0c1588c4f2a6a7f9dcc19acc53d18d0f9f24577fb2660cfcf3e142"
+    },
+    {
+      "msg": "transfer #0004: pay invoice INV-2026-00041",
+      "r": "0x23c7b3fbf128a06503ef7c9956dcb18417ef0665adff314e477e97bd53a19215",
+      "s": "0x3b6708a14db153e30bf5b1b2efe3747ca9970e1582a824c1883da6246d18eb11"
+    },
+    {
+      "msg": "transfer #0013: pay invoice INV-2026-00104",
+      "r": "0x7b19a72231057f71697507a7dec0fc28cd183d0c3fd3f0a8917bf50d6ffe0f82",
+      "s": "0x9752b8b898c83ef6ea5887f539931d7e8e379099cd137856312864a108ea2dee"
+    },
+    {
+      "msg": "transfer #0048: pay invoice INV-2026-00349",
+      "r": "0xa16422366c21a6e4e98c29412ca877a4bdba8a9376b1e539b9d61bac0e682fdd",
+      "s": "0x245bc0b0d81d969409bc60c2a623b50919cb2ef50fb1195fe59d085fb84a381"
+    },
+    {
+      "msg": "transfer #0035: pay invoice INV-2026-00258",
+      "r": "0x708dce895ed4dd3e6b2f7bad9cb1a2103f8fc8c03c16bfbe7f4d4f4b038a9f1e",
+      "s": "0xd72c4c2e04a2c4339f98b2e38cb5ef715b4b24d9a120a1844d84ad4fe4d0448c"
+    }
+  ]
+}

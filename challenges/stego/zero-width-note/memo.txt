@@ -1,0 +1,7 @@
+Internal memo
+-------------
+
+Team, thanks for the quick turnaround on the release notes.​‌​​‌‌‌​​‌​​​​‌‌​‌​‌​‌​​​‌​​​‌‌​​‌‌‌‌​‌‌​‌‌‌‌​‌​​‌‌​​‌​‌​‌‌‌​​‌​​‌‌​‌‌‌‌​‌​‌‌‌‌‌​‌‌‌​‌‌‌​‌‌​‌​​‌​‌‌​​‌​​​‌‌‌​‌​​​‌‌​‌​​​​‌​‌‌‌‌‌​‌‌‌​​‌‌​‌‌‌​​​​​‌‌​​​​‌​‌‌​​​‌‌​‌‌​​‌​‌​‌‌‌​​‌‌​‌​‌‌‌‌‌​‌‌‌​​‌‌​‌‌‌​​​​​‌‌​​‌​‌​‌‌​​​​‌​‌‌​‌​‌‌​‌‌‌‌‌​‌ Please double-check the changelog before Friday and ping me with any
+questions. Great work this sprint.
+
+-- Ops

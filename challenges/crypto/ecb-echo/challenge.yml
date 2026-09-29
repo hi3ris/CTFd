@@ -1,0 +1,57 @@
+name: ecb-echo
+author: dagbanjaphet
+category: crypto
+description: |-
+  We tapped a device that encrypts data for us on request and logged everything
+  it did into `oracle_log.json`. Whatever we sent, the device appended its own
+  secret before encrypting, and its secret is the flag.
+
+  The log records the ciphertexts it produced for a range of our inputs. Recover
+  the appended secret from the log alone.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{ecb_leaks_appended_secrets_one_byte_per_query}
+hints:
+  - content: >-
+      The cipher is a block cipher in ECB mode: identical 16-byte plaintext
+      blocks always encrypt to identical ciphertext blocks, and the secret is
+      appended to whatever you send. The `probe` entries (input "A"*k) let you
+      confirm the block size and the secret length.
+    cost: 20
+    key: h1
+  - content: >-
+      This is the byte-at-a-time ECB attack. Send exactly enough filler that the
+      first unknown secret byte lands as the last byte of a block, then compare
+      that block against blocks where you supply a known guess in that last
+      position. The matching guess is the secret byte.
+    cost: 40
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The `queries` map is keyed by SHA256 of the attacker input, so you must
+      build each input yourself. For secret byte i, look up the filler-only
+      input `"A"*(15-(i%16))`, slice block `i//16` as the target, then for each
+      printable guess look up `filler || recovered_so_far || guess` and compare
+      the same block. The next input depends on the byte you just recovered, so
+      recover them in order and concatenate.
+    cost: 65
+    key: h3
+    requirements: [h2]
+tags:
+  - crypto
+  - aes
+  - ecb
+  - medium
+files:
+  - oracle_log.json
+state: visible
+version: "0.1"

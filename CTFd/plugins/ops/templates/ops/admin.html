@@ -1,0 +1,105 @@
+{% extends "admin/base.html" %}
+
+{% block content %}
+<div class="jumbotron">
+	<div class="container">
+		<h1>Ops <small class="text-muted">— tableau de bord opérateur</small></h1>
+	</div>
+</div>
+<div class="container-fluid" style="max-width:1400px">
+	<p class="text-muted">Lecture seule, rafraîchi toutes les 5 s. Rouge = ça brûle. Écran secondaire : <code>/plugins/ops/api/status</code>.</p>
+	<div id="ops-top" class="row mb-3"></div>
+	<div id="ops-grid" class="row"><div class="col-12 text-muted">Chargement…</div></div>
+</div>
+{% endblock %}
+
+{% block scripts %}
+<script defer>
+(function () {
+	"use strict";
+	var URLROOT = (window.init && init.urlRoot) || "";
+	var top = document.getElementById("ops-top"), grid = document.getElementById("ops-grid");
+
+	function esc(s){ var d=document.createElement("div"); d.textContent=s==null?"":String(s); return d.innerHTML; }
+	function dur(s){ if(s==null) return "—"; s=Math.max(0,s|0); var h=(s/3600)|0; s-=h*3600; var m=(s/60)|0; s-=m*60; return h?(h+"h "+m+"m"):(m?(m+"m "+s+"s"):(s+"s")); }
+	function bytes(b){ if(b==null) return "—"; var u=["o","Ko","Mo","Go"],i=0; while(b>=1024&&i<3){b/=1024;i++;} return b.toFixed(i?1:0)+" "+u[i]; }
+	function pill(label, value, cls){ return '<div class="col-auto mb-2"><span class="text-muted small">'+label+'</span><br><span class="badge badge-'+cls+'" style="font-size:1em">'+value+'</span></div>'; }
+	function card(title, body, cls){ return '<div class="col-lg-4 col-md-6 mb-3"><div class="card h-100 '+(cls?'border-'+cls:'')+'"><div class="card-body"><h5 class="card-title">'+title+'</h5>'+body+'</div></div></div>'; }
+	function tr(k, v){ return '<tr><th class="text-muted font-weight-normal" style="width:45%">'+k+'</th><td>'+v+'</td></tr>'; }
+	function table(rows){ return '<table class="table table-sm mb-0"><tbody>'+rows.join('')+'</tbody></table>'; }
+	function ok(b, yes, no){ return b ? '<span class="badge badge-success">'+(yes||"OK")+'</span>' : '<span class="badge badge-danger">'+(no||"KO")+'</span>'; }
+	function na(sec){ return sec && sec.available===false ? '<span class="text-muted">n/a'+(sec.error?' ('+esc(sec.error)+')':'')+'</span>' : null; }
+
+	function render(d){
+		var t=d.time, p=d.players, s=d.submissions, h=d.http, i=d.instancer, k=d.koth, f=d.firstblood, a=d.anticheat, he=d.health;
+		top.innerHTML =
+			pill("Temps de jeu", t.ctftime ? "en cours" : (t.ended ? "clôturé" : "pas commencé"), t.ctftime ? "success" : "secondary")
+			+ pill("Pause", t.paused ? "OUI" : "non", t.paused ? "danger" : "secondary")
+			+ pill("Gel", t.frozen ? "gelé" : "non", t.frozen ? "info" : "secondary")
+			+ pill("Reste", dur(t.remaining_seconds), "dark")
+			+ pill("Actifs 15 min", p.active_15min, "dark")
+			+ pill("Soumissions / min", s.per_min_last10, "dark")
+			+ pill("5xx Flask (10 min)", h.errors_5xx + " / " + h.requests, h.errors_5xx ? "danger" : "success")
+			+ pill("DB", he.db.ok ? he.db.ping_ms + " ms" : "KO", he.db.ok ? "success" : "danger")
+			+ pill("Redis", he.redis.ok===null ? "n/a" : (he.redis.ok ? he.redis.ping_ms + " ms" : "KO"), he.redis.ok===null ? "secondary" : (he.redis.ok ? "success" : "danger"))
+			+ pill("Dernier dump", he.backup.available ? "il y a " + dur(he.backup.age_seconds) : "aucun", he.backup.ok ? "success" : "danger")
+			+ pill("Rendu", d.render_ms + " ms", d.render_ms < 1000 ? "secondary" : "warning");
+
+		var cards = [];
+		cards.push(card("Joueurs", table([
+			tr("Mode", esc(p.mode)),
+			tr("Comptes visibles", p.users + (p.teams!=null ? ' <span class="text-muted">· '+p.teams+' équipes</span>' : '')),
+			tr("Actifs (15 min)", p.active_15min + ' <span class="text-muted small">'+esc(p.active_note)+'</span>'),
+			tr(p.teams!=null ? "Équipes avec ≥ 1 solve" : "Joueurs avec ≥ 1 solve", p.teams!=null ? p.teams_with_solve : p.users_with_solve)
+		])));
+		var lh = s.last_hour;
+		cards.push(card("Soumissions (dernière heure)", table([
+			tr("Bonnes / mauvaises / limitées", '<span class="text-success">'+lh.correct+'</span> / <span class="text-danger">'+lh.incorrect+'</span> / '+lh.ratelimited),
+			tr("Débit (10 min)", s.per_min_last10 + " / min"),
+			tr("Top tentés", (s.top_attempted||[]).map(function(c){ return esc(c.name)+' <span class="text-muted">('+c.attempts+')</span>'; }).join('<br>') || '—')
+		])));
+		cards.push(card("HTTP (" + h.window_min + " min)", table([
+			tr("Requêtes", h.requests),
+			tr("5xx Flask", h.errors_5xx + ' <span class="text-muted">('+(h.error_rate*100).toFixed(2)+' %)</span>'),
+			tr("Par minute", h.per_minute.map(function(b){ return b["5xx"] ? '<span class="text-danger">'+b.all+'/<b>'+b["5xx"]+'</b></span>' : b.all; }).join(' · '))
+		]), h.errors_5xx ? "danger" : ""));
+		cards.push(card("Instancier", na(i) || table([
+			tr("Actif", ok(i.active, "oui", "inactif (DOCKER_HOST vide)")),
+			tr("Instances vivantes", i.live + ' / ' + i.capacity + ' <span class="text-muted">(ports frp utilisés : '+i.ports_used+')</span>'),
+			tr("Par état", Object.keys(i.by_status||{}).map(function(k){ return esc(k)+' '+i.by_status[k]; }).join(' · ') || '—'),
+			tr("Plus ancienne", dur(i.oldest_age_seconds) + (i.ttl_seconds ? ' <span class="text-muted">/ TTL '+dur(i.ttl_seconds)+'</span>' : '')),
+			tr("Reaper", i.active ? ok(i.reaper_ok, "OK ("+dur(i.reaper_age_seconds)+")", i.reaper_age_seconds==null ? "jamais passé" : "en retard ("+dur(i.reaper_age_seconds)+")") : '<span class="text-muted">—</span>'),
+			tr("Top équipes", (i.per_team||[]).map(function(x){ return esc(x.name)+' <span class="text-muted">('+x.instances+')</span>'; }).join('<br>') || '—'),
+			tr("En erreur", (i.errors||[]).length ? '<span class="text-danger">'+i.errors.length+'</span> (équipes #'+i.errors.map(function(e){return e.account_id;}).join(', #')+')' : '0')
+		]), (i.available && ((i.errors||[]).length || (i.active && !i.reaper_ok))) ? "danger" : ""));
+		var kothBody = na(k);
+		if (!kothBody){
+			if (!k.active) kothBody = '<span class="text-muted">inactif (aucune colline)</span>';
+			else kothBody = table([tr("Scoring", ok(k.scoring, "actif", "en pause")), tr("Dernier tick", k.last_tick_age!=null ? "il y a "+dur(k.last_tick_age) : "—")]
+				.concat(k.hills.map(function(hh){ return tr(esc(hh.name), (hh.online ? ok(true, "en ligne") : ok(false, "hors ligne"+(hh.error?" · "+esc(hh.error):""))) + (hh.holder ? ' · '+esc(hh.holder)+(hh.fresh?'':' <span class="text-muted">(expiré)</span>') : ' · <span class="text-muted">vacant</span>')); })));
+		}
+		cards.push(card("Collines (KotH)", kothBody, (k.available && k.active && k.hills.some(function(hh){ return !hh.online; })) ? "danger" : ""));
+		cards.push(card("First blood · Anti-triche", table([
+			tr("Dernier first blood", na(f) || (f.last ? '<b>'+esc(f.last.name)+'</b> · '+esc(f.last.challenge)+' <span class="text-muted">('+esc(f.last.category)+')</span>' : '<span class="text-muted">aucun</span>')),
+			tr("Incidents anti-triche", na(a) || (a.scanned ? (a.incidents ? '<span class="badge badge-danger">'+a.incidents+'</span> ('+a.pairs+' paire'+(a.pairs>1?'s':'')+')' : '0') : '<span class="text-muted">pas encore scanné (ouvrir la page Anti-triche)</span>'))
+		]), (a.available && a.incidents) ? "warning" : ""));
+		var b = he.backup;
+		cards.push(card("Santé", table([
+			tr("Base", ok(he.db.ok) + ' <span class="text-muted">'+esc(he.db.dialect)+' · '+bytes(he.db.size_bytes)+(he.db.ok?' · '+he.db.ping_ms+' ms':'')+'</span>'),
+			tr("Redis", he.redis.ok===null ? '<span class="text-muted">'+esc(he.redis.note)+'</span>' : ok(he.redis.ok) + (he.redis.ok ? ' <span class="text-muted">'+he.redis.ping_ms+' ms</span>' : '')),
+			tr("Dernier dump OK", b.available ? (ok(b.ok, "il y a "+dur(b.age_seconds), b.age_seconds==null ? "jamais" : "il y a "+dur(b.age_seconds)+" (> "+dur(b.max_age_seconds)+")") + ' <span class="text-muted">'+esc(b.kind||'')+(b.s3?' · S3':' · local')+' · '+bytes(b.size)+'</span>' + (b.error ? '<br><span class="text-danger">'+esc(b.error)+'</span>' : '')) : '<span class="text-danger">'+esc(b.reason)+'</span>')
+		]), (!he.db.ok || he.redis.ok===false || !b.ok) ? "danger" : ""));
+		grid.innerHTML = cards.join('');
+	}
+
+	function load(){
+		fetch(URLROOT + "/plugins/ops/api/status", {credentials:"same-origin", headers:{"Accept":"application/json"}})
+			.then(function(r){ if(!r.ok) throw new Error("HTTP "+r.status); return r.json(); })
+			.then(function(j){ render(j.data); })
+			.catch(function(e){ top.innerHTML = '<div class="col-12"><div class="alert alert-danger">Erreur : '+esc(e.message)+'</div></div>'; });
+	}
+	load();
+	setInterval(function(){ if(!document.hidden) load(); }, 5000);
+})();
+</script>
+{% endblock %}

@@ -1,0 +1,50 @@
+name: trojan-trigger
+author: dagbanjaphet
+category: ml
+description: |-
+  `detector.npz` ships a hidden "detector" unit that scores an input with
+  `score(x) = c - || E @ x - m ||^2`. For ordinary inputs the unit stays quiet,
+  but it was planted with a secret trigger: one specific input drives its score
+  to the maximum. Recover the trigger that maximally activates the unit -- its
+  bytes are the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{pinv_wakes_the_dormant_neuron}
+hints:
+  - content: >-
+      `score(x)` is largest when the squared term is smallest. Maximizing the
+      unit means making `E @ x` equal the memory vector `m` as closely as
+      possible.
+    cost: 25
+    key: h1
+  - content: >-
+      Solve `E @ x = m` in the least-squares sense. Since `E` has full column
+      rank, the trigger is `x = pinv(E) @ m` and it hits the memory exactly.
+    cost: 45
+    key: h2
+    requirements: [h1]
+  - content: >-
+      The recovered trigger is the flag: round each coordinate to the nearest
+      integer and read the values as ASCII characters.
+    cost: 70
+    key: h3
+    requirements: [h2]
+tags:
+  - ml
+  - backdoor
+  - trojan
+  - hard
+files:
+  - detector.npz
+  - README.md
+state: visible
+version: "0.1"

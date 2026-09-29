@@ -1,0 +1,42 @@
+name: trailing-zip
+author: dagbanjaphet
+category: stego
+description: |-
+  This `banner.bmp` opens fine in any image viewer, but its file size seems far
+  too big for such a small picture. Figure out what else is riding along and
+  read the secret.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{zip_hides_past_the_pixels}
+hints:
+  - content: >-
+      A BMP header declares exactly how many pixel bytes follow. Anything after
+      that is dead weight the viewer ignores. Look at the raw bytes near the end
+      of the file.
+    cost: 10
+    key: h1
+  - content: >-
+      The trailing bytes are a ZIP archive (look for the `PK` signature). It is
+      a polyglot. Just open the file with an unzip tool or `zipfile` and read
+      the flag inside.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - stego
+  - polyglot
+  - appended-data
+  - beginner
+files:
+  - banner.bmp
+state: visible
+version: "0.1"

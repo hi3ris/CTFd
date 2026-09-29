@@ -1,0 +1,42 @@
+name: json-sift
+author: dagbanjaphet
+category: misc
+description: |-
+  We dumped 5000 telemetry events into a single JSON array (`telemetry.json`).
+  Most of it is noise. A small subset of the records was tagged by the
+  collector before it fell over, and those records each carry a single
+  character. Put the right characters in the right order and you get the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{jq_pipelines_beat_grep_every_time}
+hints:
+  - content: >-
+      Only some records matter. Look for the field combination that a record
+      has to satisfy on BOTH counts, not just one. Plenty of records match half
+      the condition -- those are decoys.
+    cost: 10
+    key: h1
+  - content: >-
+      Keep the records where `tag == "delta"` AND `active == true`, sort them by
+      `seq`, then concatenate every `ch` field. A one-line `jq` pipeline does it.
+    cost: 15
+    key: h2
+    requirements: [h1]
+tags:
+  - misc
+  - json
+  - data-wrangling
+  - beginner
+files:
+  - telemetry.json
+state: visible
+version: "0.1"

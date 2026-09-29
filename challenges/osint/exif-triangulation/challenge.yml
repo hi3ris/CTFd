@@ -1,0 +1,58 @@
+name: exif-triangulation
+author: dagbanjaphet
+category: osint
+description: |-
+  Quatre guetteurs ont photographié la même cible depuis des points différents.
+  Chaque cliché (`photo_*.jpg`) contient les métadonnées de prise de vue.
+
+  Recoupez les données de localisation contenues dans les images pour déterminer
+  la position exacte de la cible. Le flag est la coordonnée sur laquelle les
+  observations concordent, au format donné ci-dessous.
+
+  Le flag : NCTF{triangulated_<lat>n_<lon>e} où lat et lon sont en degrés
+  décimaux à 5 décimales, le point remplacé par « p »
+  (ex. NCTF{triangulated_6p12345n_1p23456e}).
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{triangulated_6p13042n_1p22295e}
+hints:
+  - content: >-
+      Les JPEG portent des métadonnées EXIF. Au-delà de la position du
+      photographe, cherchez la position de la CIBLE observée (GPS « Destination »).
+    cost: 15
+    key: h1
+  - content: >-
+      Chaque image stocke GPSDestLatitude / GPSDestLongitude : la cible visée par
+      ce guetteur. Trois clichés sur quatre pointent le même endroit ; le
+      quatrième s'est trompé de bâtiment (leurre).
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Lisez le GPSDest de chaque image, convertissez en degrés décimaux, prenez
+      la coordonnée majoritaire (arrondie à 5 décimales) et formatez-la comme
+      indiqué dans la description.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - osint
+  - exif
+  - geolocation
+  - medium
+files:
+  - photo_north.jpg
+  - photo_east.jpg
+  - photo_west.jpg
+  - photo_south.jpg
+state: visible
+version: "0.1"

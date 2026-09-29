@@ -1,0 +1,44 @@
+name: origin-story
+author: dagbanjaphet
+category: blockchain
+description: |-
+  You get `Vault.sol` and `vault.json` (a sealed note `cipher_hex` plus
+  the address you control). Nobody has taken ownership yet. Figure out
+  the single winning transaction, then unseal the note it protects.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{unprotected_init_takes_the_throne}
+hints:
+  - content: >-
+      Who is allowed to call initialize()? Read it very literally.
+    cost: 15
+    key: h1
+  - content: >-
+      It is unguarded: call initialize(yourAddress) to become owner. The note is sealed with the keccak256 of that call's raw calldata.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      calldata = keccak256('initialize(address)')[:4] ++ leftpad32(attacker). Seed = keccak256(calldata); keystream over it XORs cipher_hex.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - blockchain
+  - evm
+  - access-control
+  - medium
+files:
+  - Vault.sol
+  - vault.json
+state: visible
+version: "0.1"

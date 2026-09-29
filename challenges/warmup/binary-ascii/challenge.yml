@@ -1,0 +1,26 @@
+name: binary-ascii
+author: dagbanjaphet
+category: warmup
+description: |-
+  `bits.txt` is nothing but groups of eight `0`s and `1`s separated by
+  spaces. Each group is one character. Reassemble the message and read
+  the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{binary_ones_and_zeros}
+tags:
+  - warmup
+  - encoding
+  - binary
+  - beginner
+files:
+  - bits.txt
+state: visible
+version: "0.1"

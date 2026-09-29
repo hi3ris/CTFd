@@ -1,0 +1,50 @@
+name: poison-shift
+author: dagbanjaphet
+category: ml
+description: |-
+  `poisoned_train.npz` is a regression training set: features `X`, targets `y`,
+  a `record_id` per row, and a one-character `tag` per row. Most rows follow a
+  clean linear rule, but an attacker slipped in a batch of poisoned rows to drag
+  the fitted model off course. Find the poisoned rows; their tags, read in the
+  right order, spell the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{outlier_influence_tips_the_boundary}
+hints:
+  - content: >-
+      The clean rows lie on a single hyperplane `y = X @ w + b`. Fit a linear
+      model and see which rows it cannot explain.
+    cost: 15
+    key: h1
+  - content: >-
+      The poisoned rows are the large-residual outliers -- their labels sit far
+      off the plane the bulk of the data defines. Use a robust cutoff (e.g.
+      several MADs above the median residual).
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Take the outlier rows, sort them by `record_id` ascending, and read their
+      `tag` characters.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - ml
+  - data-poisoning
+  - outliers
+  - medium
+files:
+  - poisoned_train.npz
+  - README.md
+state: visible
+version: "0.1"

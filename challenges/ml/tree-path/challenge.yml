@@ -1,0 +1,46 @@
+name: tree-path
+author: dagbanjaphet
+category: ml
+description: |-
+  We recovered a trained binary decision tree from a classifier and dumped it to
+  `decision_tree.json`. Every internal node splits on a feature; every leaf
+  carries a single character. The children are stored in whatever order the
+  dump happened to serialize them, so reading the file top to bottom is
+  meaningless. The secret is spelled out by the leaves -- you just have to figure
+  out the canonical order in which to read them.
+
+  Recover that ordering and read the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 100
+type: dynamic
+extra:
+  initial: 100
+  decay: 40
+  minimum: 50
+flags:
+  - NCTF{gini_split_leaks_the_leaf_path}
+hints:
+  - content: >-
+      A leaf's position is fixed by the path taken from the root, not by where it
+      appears in the JSON. Walk the tree, tracking left/right at each step.
+    cost: 10
+    key: h1
+  - content: >-
+      Give the root index 1; going left sends you to `idx*2`, going right to
+      `idx*2+1`. Compute that index for every leaf, sort ascending, and
+      concatenate the characters.
+    cost: 10
+    key: h2
+    requirements: [h1]
+tags:
+  - ml
+  - decision-tree
+  - beginner
+files:
+  - decision_tree.json
+  - README.md
+state: visible
+version: "0.1"

@@ -1,0 +1,50 @@
+name: oracle-multi-turn
+author: dagbanjaphet
+category: ai
+description: |-
+  **WardenBot** ships as `oracle.py` with a `Session` class (and a `respond`
+  wrapper). Ask it for the diagnostic token straight away and it refuses. But a
+  conversation has a memory, and WardenBot's guard is not equally strict on
+  every turn.
+
+  Offline only -- no network, no real model. Drive the shipped oracle over more
+  than one turn to make it release the diagnostic token, which is the flag.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 450
+type: dynamic
+extra:
+  initial: 450
+  decay: 20
+  minimum: 100
+flags:
+  - NCTF{tw0_st3p_pr1m1ng_w34k3ns_th3_gu4rd}
+hints:
+  - content: >-
+      A single message never works. State is carried between turns on the same
+      Session, and the guard depends on that state.
+    cost: 20
+    key: h1
+  - content: >-
+      One kind of benign message flips an internal flag that lowers the guard.
+      It has nothing to do with asking for the token -- it establishes context.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Turn 1: a message that mentions an "authorized" "audit" (sets primed).
+      Turn 2: ask for the "diagnostic token" -- avoid the words flag/secret.
+    cost: 60
+    key: h3
+    requirements: [h2]
+tags:
+  - ai
+  - prompt-injection
+  - multi-turn
+  - hard
+files:
+  - oracle.py
+state: visible
+version: "0.1"

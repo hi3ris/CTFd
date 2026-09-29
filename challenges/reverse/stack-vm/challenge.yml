@@ -1,0 +1,50 @@
+name: stack-vm
+author: dagbanjaphet
+category: reverse
+description: |-
+  `chall` is a stripped x86-64 ELF. It asks for a key and either rejects it or
+  prints a flag. There is no obvious flag string in the file.
+
+  Work out the key it wants; the flag falls out once it is accepted. No network
+  required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{h4nd_traced_th3_st4ck_vm}
+hints:
+  - content: >-
+      The check is not written in native code — the binary embeds a tiny
+      bytecode interpreter and a small program it runs once per input byte. Find
+      the interpreter loop and read the opcode table.
+    cost: 15
+    key: h1
+  - content: >-
+      The program is a chain of XOR/ADD/SUB/ROL/ROR plus a position mix
+      (acc ^= index), ending in HALT. Every op is invertible, so each byte of the
+      target array maps back to exactly one key byte. Run the program in reverse.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Once the key is recovered, the flag is a second array XORed with the key
+      repeated (`flag_enc[i] ^ key[i % keylen]`). Feed the key back to the binary
+      or XOR-decrypt the array yourself.
+    cost: 45
+    key: h3
+    requirements: [h2]
+tags:
+  - reverse
+  - vm
+  - medium
+files:
+  - chall
+state: visible
+version: "0.1"

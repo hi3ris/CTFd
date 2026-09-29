@@ -1,0 +1,76 @@
+name: poisoned-pipeline
+author: dagbanjaphet
+category: supplychain
+type: team_instance
+description: |
+  **MiniCI.** Un runner de build partagé : `http://{host}:{port}`. N'importe qui
+  peut soumettre un pipeline et il **s'exécute sur le runner** :
+
+      POST /build
+      {"pipeline":[
+        {"stage":"build","run":"echo building..."},
+        {"stage":"deploy","run":"echo deploying..."}
+      ]}
+
+  Le secret de déploiement `DEPLOY_TOKEN` est **le flag**. Le runner le protège ;
+  à vous de le faire sortir. Rien n'est téléchargeable ; tout vit dans le runner.
+
+  Instance par équipe : chaque équipe a son runner et son flag. Bloqué ?
+  Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : `NCTF{...}`
+
+  Connexion : `http://{host}:{port}`
+
+# Dynamic scoring (medium).
+value: 350
+extra:
+  docker_image: ctf-poisoned-pipeline:latest
+  internal_port: 8080
+  initial: 350
+  decay: 25
+  minimum: 80
+
+# --- Per-team dynamic flag -------------------------------------------------
+# SERVED, per-team. No static flag ships. The runner derives it at runtime from
+# the injected CHALLENGE_SECRET (flag body = CHALLENGE_SECRET[:24]; see flag.py)
+# and only ever exposes it as the masked DEPLOY_TOKEN secret. team_hmac validates
+# it on submit.
+flags:
+  - type: team_hmac
+    content: supplychain-poisoned-pipeline
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant).
+hints:
+  - content: >-
+      Le secret n'est pas donné à tout le monde : il n'est injecté que dans les
+      étapes d'un certain `stage`. Trouvez lequel reçoit `DEPLOY_TOKEN`.
+    cost: 18
+    key: h1
+  - content: >-
+      Un `echo $DEPLOY_TOKEN` dans la bonne étape revient masqué (`***`). Le
+      runner ne redacte que la valeur **littérale** du secret dans les logs.
+    cost: 35
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Transformez le secret avant de l'afficher — `| base64`, `| rev`, `| xxd` :
+      la valeur encodée n'est plus le littéral, elle passe sous le masque.
+      Décodez le log et vous avez le flag.
+    cost: 52
+    key: h3
+    requirements: [h2]
+
+tags:
+  - supplychain
+  - ci-cd
+  - medium
+
+# challenge-id (HMAC / requirements wiring): supplychain-poisoned-pipeline
+connection_info: "http://{host}:{port}  (per-team instance; use the 'launch' button)"
+
+state: visible
+version: "0.1"
+
+# Image built from the Dockerfile here; must be named ctf-poisoned-pipeline:latest
+# so `deploy/local/build-images.sh` / `make push-images` pick it up.

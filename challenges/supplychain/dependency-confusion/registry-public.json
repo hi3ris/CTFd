@@ -1,0 +1,19 @@
+{
+  "name": "acme-telemetry",
+  "dist-tags": {
+    "latest": "9.9.9"
+  },
+  "versions": {
+    "9.9.9": {
+      "version": "9.9.9",
+      "dist": {
+        "tarball": "https://registry.npmjs.org/acme-telemetry/-/acme-telemetry-9.9.9.tgz",
+        "shasum": "1e07c285e16702afedc61d3db9186dbe841c23ed"
+      }
+    }
+  },
+  "time": {
+    "9.9.9": "1970-01-01T00:00:00.000Z"
+  },
+  "_registry": "https://registry.npmjs.org"
+}

@@ -1,0 +1,27 @@
+{
+  "name": "acme-cli",
+  "version": "2.1.0",
+  "lockfileVersion": 3,
+  "packages": {
+    "node_modules/left-pad": {
+      "version": "1.3.0",
+      "resolved": "https://registry.npmjs.org/left-pad/-/left-pad-1.3.0.tgz",
+      "integrity": "sha512-q+/AtvW7k2OgNWTSoPVS01jlen7IpEMUxfnivC/pApW25Sx/PcD5jCaqcvXTrIu3duQTUbXH6JRLq42I2qaHGQ=="
+    },
+    "node_modules/ansi-styles": {
+      "version": "6.2.1",
+      "resolved": "https://registry.npmjs.org/ansi-styles/-/ansi-styles-6.2.1.tgz",
+      "integrity": "sha512-6tMPPjitvMkglVz/cPPAuv2BPcy+x6IGdIICu3f8ZPm+SCE5s5KGsFBAfgMgkSSSsooEUFL3hncr+bkdGghx0w=="
+    },
+    "node_modules/semver": {
+      "version": "7.5.4",
+      "resolved": "https://registry.npmjs.org/semver/-/semver-7.5.4.tgz",
+      "integrity": "sha512-kF59EPeKaDzj1fYjXx/lW+nj4zlHGkYtQLRNUw0y52fOn5/ZBWi3M1WaD10XXflta0jYMwGzCScDEjagqfU+Bg=="
+    },
+    "node_modules/minimist": {
+      "version": "1.2.8",
+      "resolved": "https://registry.npmjs.org/minimist/-/minimist-1.2.8.tgz",
+      "integrity": "sha512-f8QE/SQ6hIalvho9EfiYyAD/N0wlYDsUjUAHU6E+maun52C0uNTYVJ2wLTMxSwODsAut4VjPB8S64Z0euoLEMw=="
+    }
+  }
+}

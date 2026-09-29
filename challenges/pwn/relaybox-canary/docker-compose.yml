@@ -1,0 +1,13 @@
+# Local run notes for pwn-relaybox-canary (STUB).
+#   docker build -t ctf-pwn-relaybox-canary:latest .
+#   docker compose up
+#   # browse http://localhost:8080/
+services:
+  pwn-relaybox-canary:
+    image: ctf-pwn-relaybox-canary:latest
+    build: .
+    ports:
+      - "8080:8080"
+    environment:
+      TEAM_SECRET: "devsecret"
+    restart: unless-stopped

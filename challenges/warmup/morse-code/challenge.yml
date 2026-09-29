@@ -1,0 +1,28 @@
+name: morse-code
+author: dagbanjaphet
+category: warmup
+description: |-
+  `signal.txt` is a line of dots (`.`) and dashes (`-`). Letters are
+  separated by spaces and words by ` / `. Decode the message, then wrap
+  the lowercase words with underscores as the flag body.
+
+  Example: if it spelled `HELLO WORLD`, the flag is `NCTF{hello_world}`.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{morse_code_is_easy}
+tags:
+  - warmup
+  - classical
+  - morse
+  - beginner
+files:
+  - signal.txt
+state: visible
+version: "0.1"

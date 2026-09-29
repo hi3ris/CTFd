@@ -1,0 +1,168 @@
+{
+  "Records": [
+    {
+      "eventTime": "2026-03-02T09:01:11Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "IAMUser",
+        "accessKeyId": "AKIAOPS0BACKUPBOT01",
+        "userName": "nightly-backup"
+      },
+      "requestParameters": {
+        "roleArn": "arn:aws:iam::333322221111:role/backup-writer",
+        "roleSessionName": "nightly-backup"
+      },
+      "responseElements": {
+        "credentials": {
+          "accessKeyId": "ASIA5BACKUP0SESSION02",
+          "expiration": "2026-03-02 09:01:11Z"
+        }
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:02:40Z",
+      "eventName": "PutObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "AssumedRole",
+        "accessKeyId": "ASIA5BACKUP0SESSION02",
+        "arn": "arn:aws:sts::333322221111:assumed-role/backup-writer/nightly-backup"
+      },
+      "requestParameters": {
+        "bucketName": "kekeli-backups",
+        "key": "db/2026-03-02.sql.gz"
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:05:03Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "IAMUser",
+        "accessKeyId": "AKIADEV0ALICE000001",
+        "userName": "alice-cli"
+      },
+      "requestParameters": {
+        "roleArn": "arn:aws:iam::333322221111:role/read-metrics",
+        "roleSessionName": "alice-cli"
+      },
+      "responseElements": {
+        "credentials": {
+          "accessKeyId": "ASIA5METRIC0SESSION3",
+          "expiration": "2026-03-02 09:05:03Z"
+        }
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:05:59Z",
+      "eventName": "GetMetricData",
+      "eventSource": "monitoring.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "AssumedRole",
+        "accessKeyId": "ASIA5METRIC0SESSION3",
+        "arn": "arn:aws:sts::333322221111:assumed-role/read-metrics/alice-cli"
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:07:22Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "IAMUser",
+        "accessKeyId": "AKIALEAK0MALLORY0001",
+        "userName": "session-9f2c"
+      },
+      "requestParameters": {
+        "roleArn": "arn:aws:iam::333322221111:role/support-readonly",
+        "roleSessionName": "session-9f2c"
+      },
+      "responseElements": {
+        "credentials": {
+          "accessKeyId": "ASIA5EXFIL0SESSION07",
+          "expiration": "2026-03-02 09:07:22Z"
+        }
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:07:58Z",
+      "eventName": "ListSecrets",
+      "eventSource": "secretsmanager.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "AssumedRole",
+        "accessKeyId": "ASIA5EXFIL0SESSION07",
+        "arn": "arn:aws:sts::333322221111:assumed-role/support-readonly/session-9f2c"
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:08:31Z",
+      "eventName": "GetSecretValue",
+      "eventSource": "secretsmanager.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "AssumedRole",
+        "accessKeyId": "ASIA5EXFIL0SESSION07",
+        "arn": "arn:aws:sts::333322221111:assumed-role/support-readonly/session-9f2c"
+      },
+      "requestParameters": {
+        "secretId": "arn:aws:secretsmanager:us-east-1:333322221111:secret:prod/customer-export-Kd93js"
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:09:12Z",
+      "eventName": "PutObject",
+      "eventSource": "s3.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "AssumedRole",
+        "accessKeyId": "ASIA5EXFIL0SESSION07",
+        "arn": "arn:aws:sts::333322221111:assumed-role/support-readonly/session-9f2c"
+      },
+      "requestParameters": {
+        "bucketName": "kekeli-scratch",
+        "key": "tmp/notes.bin"
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:10:44Z",
+      "eventName": "AssumeRole",
+      "eventSource": "sts.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "IAMUser",
+        "accessKeyId": "AKIADEV0BOB00000002",
+        "userName": "bob-cli"
+      },
+      "requestParameters": {
+        "roleArn": "arn:aws:iam::333322221111:role/read-metrics",
+        "roleSessionName": "bob-cli"
+      },
+      "responseElements": {
+        "credentials": {
+          "accessKeyId": "ASIA5DECOY0SESSION09",
+          "expiration": "2026-03-02 09:10:44Z"
+        }
+      }
+    },
+    {
+      "eventTime": "2026-03-02T09:11:20Z",
+      "eventName": "GetSecretValue",
+      "eventSource": "secretsmanager.amazonaws.com",
+      "awsRegion": "us-east-1",
+      "userIdentity": {
+        "type": "AssumedRole",
+        "accessKeyId": "ASIA5DECOY0SESSION09",
+        "arn": "arn:aws:sts::333322221111:assumed-role/read-metrics/bob-cli"
+      },
+      "requestParameters": {
+        "secretId": "arn:aws:secretsmanager:us-east-1:333322221111:secret:dev/grafana-Zz01"
+      }
+    }
+  ]
+}

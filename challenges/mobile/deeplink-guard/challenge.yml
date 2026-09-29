@@ -1,0 +1,45 @@
+name: deeplink-guard
+author: dagbanjaphet
+category: mobile
+description: |-
+  `VaultApp.ipa` registers a custom URL scheme and unlocks a "grant" screen only
+  when it is opened with one exact deeplink. The reconstructed router source and
+  the app's plists are all in the bundle.
+
+  Figure out the deeplink it accepts and recover the grant code it reveals. The
+  grant code is the flag. No device required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{d33plink_1ntent_extr4_pwn}
+hints:
+  - content: >-
+      An .ipa is a ZIP. Read `Info.plist` (the URL scheme) and
+      `DeepLinkRouter.swift`. The router validates scheme, host, path and a
+      `?code=` value, then decrypts `Secrets.plist`.
+    cost: 15
+    key: h1
+  - content: >-
+      The decryption key is the canonical winning deeplink itself:
+      `vaultapp://<host>/<path>?code=<code>`, built from the four constants in
+      the Swift. Ciphertext is XORed with `ks[i]=sha256(canonical||byte(i/32))[i%32]`.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - ios
+  - deeplink
+  - medium
+files:
+  - VaultApp.ipa
+state: visible
+version: "0.1"

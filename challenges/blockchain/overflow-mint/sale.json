@@ -1,0 +1,7 @@
+{
+  "note": "raw ciphertext of the flag; XOR key derives from the exploit input",
+  "cipher_hex": "6d809c10d9359a0ec33a2c7fd04c4516f6c959872344b79881cf2a5838a0b065faf6be44efb8",
+  "price": "0x1000000000000000000000000000000000000000000000000000000000000001",
+  "win_tokens": "0x100",
+  "budget_wei": 1000
+}

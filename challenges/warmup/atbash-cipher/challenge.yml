@@ -1,0 +1,25 @@
+name: atbash-cipher
+author: dagbanjaphet
+category: warmup
+description: |-
+  `secret.txt` was made by mirroring the alphabet: `A` swaps with `Z`,
+  `B` with `Y`, and so on. Mirror it back and read the flag.
+
+  Flag format: NCTF{...}
+value: 50
+type: dynamic
+extra:
+  initial: 50
+  decay: 30
+  minimum: 25
+flags:
+  - NCTF{atbash_mirrors_the_alphabet}
+tags:
+  - warmup
+  - classical
+  - atbash
+  - beginner
+files:
+  - secret.txt
+state: visible
+version: "0.1"

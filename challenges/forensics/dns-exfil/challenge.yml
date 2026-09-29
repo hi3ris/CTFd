@@ -1,0 +1,73 @@
+name: "DNS Exfil"
+author: "ctf-team"
+category: forensics
+description: |
+  Notre EDR a signalé un « agent de synchronisation » sur le poste d'un
+  développeur : il contactait une foule de sous-domaines étranges juste avant la
+  disparition d'un fichier. Nous avons récupéré une capture réseau (`capture.pcap`).
+
+  L'agent fait sortir des données de la machine. Réassemblez le flux tunnelisé
+  dans le bon ordre, décodez-le et lisez la note volée. Le jeton de récupération
+  (recovery token) contenu dans cette note est votre flag.
+
+  Notes :
+    * La capture contient du bruit DNS bénin, et certaines requêtes sont
+      retransmises (dupliquées).
+    * Un canal balise distinct est également présent. Tout ce qui se décode
+      « trop facilement » n'est pas le vrai canal de données.
+
+  Bloqué ? Des indices sont disponibles (ils coûtent quelques points).
+
+  Flag format : NCTF{...}  (lettres minuscules, chiffres et underscores).
+
+# This is a STATIC, downloadable forensics artifact: the challenge IS the pcap,
+# so the flag is baked into the captured data. No served component and no
+# per-team HMAC flag. flag.py documents the per-team scheme for uniformity only.
+#
+# No 'requirements' / prerequisite chain: this challenge is standalone.
+
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 40
+  minimum: 100
+
+flags:
+  - "NCTF{cu570m_b32_dns_tunn3l_r34ss3mbl3d}"
+
+# Indices progressifs (déverrouillage en chaîne, coût croissant). Le détail de
+# la technique n'est PAS dans la description : il se paie ici.
+hints:
+  - content: >-
+      L'agent communique par DNS. Isolez le canal d'exfiltration dans la capture
+      et ignorez le bruit bénin — concentrez-vous sur un seul type de requête
+      vers un seul domaine.
+    cost: 15
+    key: h1
+  - content: >-
+      Ce sont des requêtes DNS TXT vers `*.x.acme-updates.net`. L'agent annonce
+      son encodage avant d'émettre : une requête `init.<32 caractères>.…`
+      contient un alphabet base32 PERSONNALISÉ (une permutation de A–Z2–7). Un
+      décodeur base32 standard ne produit que du bruit.
+    cost: 30
+    key: h2
+    requirements: [h1]
+  - content: >-
+      Chaque requête de données vaut `<seq>.<chunk>.…`. Triez par `seq`,
+      dédupliquez, puis CONCATÉNEZ tous les chunks en un seul flux (l'encodage a
+      eu lieu sur le fichier entier, pas par paquet). Décodez ce flux en base32
+      5-bit MSB-first avec l'alphabet permuté (sans padding). Le recovery_token
+      de la note est le flag.
+    cost: 45
+    key: h3
+    requirements: [h2]
+
+files:
+  - capture.pcap
+
+tags:
+  - forensics
+  - medium
+
+connection_info: null

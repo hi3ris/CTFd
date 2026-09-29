@@ -1,0 +1,44 @@
+name: webview-bridge
+author: dagbanjaphet
+category: mobile
+description: |-
+  `hybridshop.apk` is a hybrid app: a WebView front-end talks to a native
+  JavaScript bridge. The bundled web assets and the decompiled bridge are both
+  in the APK. One bridge call returns a premium secret.
+
+  Recover that secret. It is the flag. No network or device required.
+
+  Stuck? Hints are available (they cost a few points).
+
+  Flag format: NCTF{...}
+value: 300
+type: dynamic
+extra:
+  initial: 300
+  decay: 25
+  minimum: 100
+flags:
+  - NCTF{js_br1dg3_l34ks_th3_s3cr3t}
+hints:
+  - content: >-
+      Read `assets/app.js` and the `@JavascriptInterface` class in the
+      decompiled sources. The JS calls one bridge method with a fixed token; the
+      Java method decrypts an embedded blob using that token.
+    cost: 15
+    key: h1
+  - content: >-
+      The token literal is in app.js. JsBridge XORs its base64 `ENC` with
+      `ks[i]=sha256(token||byte(i/32))[i%32]`. Pull both out and reproduce the
+      XOR.
+    cost: 30
+    key: h2
+    requirements: [h1]
+tags:
+  - mobile
+  - android
+  - webview-bridge
+  - medium
+files:
+  - hybridshop.apk
+state: visible
+version: "0.1"
