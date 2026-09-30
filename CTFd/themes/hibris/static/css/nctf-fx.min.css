@@ -1,0 +1,93 @@
+/* nctf-fx.css — calques « Fonds vivants » du thème hibris (voir js/nctf-fx.js).
+   Tous les calques sont fixes, sous le contenu (z-index -1, comme la grille
+   body::before) et ne captent aucun clic. Couleurs : tokens de base.html. */
+
+.nctf-fx {
+  position: fixed;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  z-index: -1;
+  pointer-events: none;
+}
+
+/* Orage : voile lumineux au moment d'un éclair (≤ 12 %, en haut de l'écran) */
+.nctf-veil {
+  opacity: 0;
+  background: radial-gradient(60% 70% at var(--fx, 50%) 0%, var(--flash), transparent 70%);
+  transition: opacity 0.18s ease-out;
+}
+
+/* La tuile frappée s'illumine 1.6 s. `filter` et non box-shadow : les tuiles
+   résolues portent déjà un box-shadow !important qu'une animation ne peut pas
+   surcharger. */
+.challenge-button.nctf-struck-fb {
+  animation: nctfStruckFb 1.6s ease-out;
+}
+.challenge-button.nctf-struck-solve {
+  animation: nctfStruckSolve 1.6s ease-out;
+}
+@keyframes nctfStruckFb {
+  0% { filter: brightness(1.9) drop-shadow(0 0 22px rgba(255, 206, 0, 0.9)); }
+  20% { filter: brightness(1.2) drop-shadow(0 0 18px rgba(210, 16, 52, 0.85)); }
+  100% { filter: none; }
+}
+@keyframes nctfStruckSolve {
+  0% { filter: brightness(1.6) drop-shadow(0 0 18px rgba(23, 176, 107, 0.9)); }
+  100% { filter: none; }
+}
+
+/* Course : l'éclair qui frappe un kart passe AU-DESSUS du contenu (effet de
+   420 ms, jamais un fond) ; il ne capte toujours aucun clic. */
+.nctf-fx.nctf-front {
+  z-index: 40;
+}
+.car-lane.nctf-struck-fb .car-wrap {
+  animation: nctfStruckFb 1.6s ease-out;
+}
+
+/* Aurore tricolore (pages statiques / accueil) */
+.nctf-aurora {
+  inset: -20%;
+  width: auto;
+  height: auto;
+  filter: blur(60px);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+}
+.nctf-aurora i {
+  position: absolute;
+  border-radius: 50%;
+}
+.nctf-aurora .a1 {
+  width: 60%; height: 42%; left: 2%; top: 38%;
+  background: var(--aurora-green);
+  animation: nctfAuroraA 24s ease-in-out infinite alternate;
+}
+.nctf-aurora .a2 {
+  width: 46%; height: 30%; left: 30%; top: 20%;
+  background: var(--aurora-yellow);
+  animation: nctfAuroraB 31s ease-in-out infinite alternate;
+}
+.nctf-aurora .a3 {
+  width: 52%; height: 40%; left: 52%; top: 4%;
+  background: var(--aurora-red);
+  animation: nctfAuroraC 27s ease-in-out infinite alternate;
+}
+@keyframes nctfAuroraA { to { transform: translate(18%, -14%) scale(1.15) rotate(8deg); } }
+@keyframes nctfAuroraB { to { transform: translate(-16%, 22%) scale(0.9) rotate(-10deg); } }
+@keyframes nctfAuroraC { to { transform: translate(-22%, 12%) scale(1.2) rotate(6deg); } }
+
+/* Radar et pluie : textures discrètes, jamais au niveau du texte */
+.nctf-radar { opacity: 0.9; }
+.nctf-cipher { opacity: 0.9; }
+
+/* Mode projecteur du classement : le radar reste, il occupe le vide à droite. */
+
+@media (prefers-reduced-motion: reduce) {
+  .nctf-aurora i { animation: none; }
+  .challenge-button.nctf-struck-fb,
+  .challenge-button.nctf-struck-solve { animation: none; outline: 2px solid var(--yellow); outline-offset: 3px; }
+  .car-lane.nctf-struck-fb .car-wrap { animation: none; outline: 2px solid var(--yellow); outline-offset: 3px; border-radius: 8px; }
+  .nctf-veil { display: none; }
+}
